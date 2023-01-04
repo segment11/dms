@@ -198,7 +198,7 @@ create table node_key_pair (
     id int auto_increment primary key,
     cluster_id int,
     ip varchar(20),
-    ssh_port short,
+    ssh_port int,
     user varchar(20),
     pass varchar(20),
     root_pass varchar(20),
