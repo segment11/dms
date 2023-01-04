@@ -1,0 +1,48 @@
+plugins {
+    id 'groovy'
+    id 'java'
+}
+
+group 'org.segment'
+version '1.0'
+
+final String artifactId = 'dms_common'
+
+repositories {
+    maven {
+        url 'https://maven.aliyun.com/repository/public'
+    }
+//    mavenCentral()
+}
+
+sourceSets {
+    main {
+        groovy {
+            srcDirs = ['src']
+        }
+    }
+    test {
+        groovy {
+            srcDirs = ['test']
+        }
+    }
+}
+
+compileGroovy {
+    groovyOptions.configurationScript = file("config.groovy")
+}
+
+dependencies {
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
+    compile group: 'org.codehaus.groovy', name: 'groovy', version: '2.4.19'
+
+    compile group: 'com.alibaba', name: 'fastjson', version: '1.2.83'
+    compile group: 'commons-net', name: 'commons-net', version: '3.6'
+
+    compile group: 'com.jcraft', name: 'jsch', version: '0.1.55'
+    compile group: 'commons-io', name: 'commons-io', version: '2.6'
+
+    compile project(':segmentd')
+
+    testCompile group: 'com.h2database', name: 'h2', version: '1.4.200'
+}
