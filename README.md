@@ -14,7 +14,7 @@ A docker instances manage system like k8s write in java/groovy, including web ui
 
 # run dms server
 
-- docker run -v /ws/dms:/ws/dms --name=dms --net=host segment/dms
+- docker run -v /ws/dms:/ws/dms --name=dms --net=host key232323/dms
 
 # steps compile and run
 
