@@ -12,7 +12,11 @@ A docker instances manage system like k8s write in java/groovy, including web ui
 - monitor by prometheus/auto reload jobs
 - traefik http gateway like k8s ingress
 
-# steps
+# run dms server
+
+- docker run -v /ws/dms:/ws/dms --name=dms --net=host segment/dms
+
+# steps compile and run
 
 - git clone dms -> /ws/dms
 - git clone segment/segmentd -> /ws/segmentd
@@ -20,7 +24,7 @@ A docker instances manage system like k8s write in java/groovy, including web ui
 - install Gradle
 - cd /ws/dms/dms_agent & gradle buildToRun
 - cd /ws/dms/dms & gradle buildToRun
-- cd /ws/dms/dms/build/libs & java -jar dms-1.0.jar
+- cd /ws/dms/dms/build/libs & java -cp . -jar dms_server-1.0.jar
 - cd /ws/dms/dms_agent/build/libs
 - vi conf.properties -> change serverHost -> your ip
 - java -Djava.library.path=. -cp . -jar dms_agent-1.0.jar
