@@ -23,12 +23,12 @@ A docker instances manage system like k8s write in java/groovy, including web ui
 - cd /ws/dms/dms/build/libs & java -jar dms-1.0.jar
 - cd /ws/dms/dms_agent/build/libs
 - vi conf.properties -> change serverHost -> your ip
-- java -jar dms_agent-1.0.jar
+- java -Djava.library.path=. -cp . -jar dms_agent-1.0.jar
 - open http://your-ip:5010/admin/login.html
 - user/password -> admin/admin
 
 ### TIPS:
-run 'java -jar dms-1.0.jar' on another node, will add this node to dms cluster.
+run 'java -Djava.library.path=. -cp . -jar dms_agent-1.0.jar' on another node, will add this node to dms cluster.
 
 
 # screenshots
