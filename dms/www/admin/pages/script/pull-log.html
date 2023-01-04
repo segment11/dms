@@ -1,0 +1,38 @@
+<div ng-controller="MainCtrl">
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Script Pull Log List</h5>
+                </div>
+                <div class="widget-content">
+                    <table class="table table-bordered table-striped">
+                        <tr>
+                            <th width="30%">Agent Host</th>
+                            <th width="50%">Pull Script Detail</th>
+                            <th width="20%">created date</th>
+                        </tr>
+                        <tr ng-repeat="one in ll">
+                            <td>{{one.agentHost}}</td>
+                            <td>
+                                <ul>
+                                    <li ng-repeat="x in one.content.list">
+                                        <span style="display: inline-block; width: 100px;">{{x.id}}:</span>
+                                        <span style="display: inline-block; width: 200px; text-align: left; background-color: silver;">{{x.name}}</span>
+                                    </li>
+                                </ul>
+                            </td>
+                            <td>{{one.createdDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+
+        </div><!-- /.row-fluid -->
+    </div>
+
+</div>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+
+<head>
+    <title> Docker Manage System </title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+    <link rel="stylesheet" href="assets/base.css" />
+    <link rel="stylesheet" href="assets/jsmind.css" />
+    <link rel="stylesheet" href="../m/tpl/css/font-awesome.min.css" />
+
+    <link rel="stylesheet" href="../m/tpl/css/bootstrap-custom.css" />
+    <link rel="stylesheet" href="../m/tpl/css/main.css" />
+    <link id="themes" rel="stylesheet" type="text/css" href="../m/tpl/css/themes/blue/default.css">
+
+    <link rel="stylesheet" href="../m/ng-ext/css/all.css" />
+    <link rel="stylesheet" href="../m/ng-ext/css/jquery-ui/jquery-ui-1.7.2.min.css" />
+</head>
+
+<body>
+    <div class="header">
+        <div class="title"><span>Docker Manage System</span></div>
+        <div class="opt">
+            <span id="link-logout"><i class="icon icon-power-off"></i> </span>
+            <span><i class="icon icon-home"></i></span>
+            <span class="user-info">
+                <b class="user-name"></b>
+                <img class="user-headimgurl" src="" />
+            </span>
+        </div>
+    </div>
+
+    <div id="sidebar">
+    </div>
+
+    <div id="main">
+    </div>
+
+    <script id="menu-tpl" type="text/x-template">
+    <#list data.list as one>
+        <div class="menu <#if (one_index == 0)>first</#if>">
+            <div class="menu-title">
+                <i class="menu-nav icon ${one.icon}"></i>
+                <div class="menu-title-text">
+                    ${one.title}
+                    <i class="icon icon-plus"></i>
+                </div>
+            </div>
+
+            <ul class="menu-list">
+                <#list one.list as sub>
+                    <li><i class="icon icon-caret-right"></i><i class="icon ${sub.icon}"></i><a href="#/page/${sub.page}">${sub.title}</a></li>
+                </#list>
+            </ul>
+        </div>
+    </#list>
+</script>
+
+</body>
+
+</html>
+
+<script type="text/javascript">
+    var appname = '/m';
+</script>
+<script src="../m/ng-ext/consts.js"></script>
+<script src="../m/ng-ext/all.js"></script>
+<script src="../m/ng-ext/ng.ext.js"></script>
+<script src="assets/jsmind.js"></script>
+<script src="assets/echarts.min.js"></script>
+<script src="assets/LAB.min.js"></script>
+<script src="assets/director.min.js"></script>
+<script src="index.js"></script>

@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+	<head>
+		<title> Test </title>
+	</head>
+
+	<body ng-controller="MyCtrl">
+	<div test-direct=""></div>
+	<div test-direct=""></div>
+	</body>
+</html>
+
+<script src="../angular.min.js"></script>
+<script language="javascript">
+var md = angular.module('md', []);
+
+md.directive('testDirect', function(){
+	return {
+		scope: {}, 
+		template: '<input ng-model="aa" /> {{aa}}', 
+		link: function(scope){
+			scope.aa = 'xxx';
+		}
+	};
+});
+
+md.controller('MyCtrl', function($scope, $compile){
+//	var tpl = '<div test-direct=""><input ng-model="aa" /> {{aa}}</div>';
+//
+//	var node = $compile(tpl)($scope);
+//	var node2 = $compile(tpl)($scope);
+//	angular.element(document.body).append(node);
+//	angular.element(document.body).append(node2);
+});
+
+angular.bootstrap(document, ['md']);
+</script>

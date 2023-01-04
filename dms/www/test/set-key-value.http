@@ -1,0 +1,6 @@
+PUT http://192.168.99.100:2379/v2/keys/name
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+
+value=kerry&ttl=10
+

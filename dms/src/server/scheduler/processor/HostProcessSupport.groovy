@@ -1,0 +1,188 @@
+package server.scheduler.processor
+
+import com.alibaba.fastjson.JSONObject
+import common.Conf
+import common.ContainerHelper
+import deploy.DeploySupport
+import deploy.InitAgentEnvSupport
+import deploy.OneCmd
+import ex.JobProcessException
+import groovy.transform.CompileStatic
+import groovy.util.logging.Slf4j
+import model.DeployFileDTO
+import model.NodeKeyPairDTO
+import model.server.CreateContainerConf
+import org.segment.d.json.JsonWriter
+import server.AgentCaller
+import server.InMemoryCacheSupport
+import transfer.ContainerInfo
+
+@CompileStatic
+@Singleton
+@Slf4j
+class HostProcessSupport {
+    static final int skipDeployFileId = 0
+
+    int startOneProcess(CreateContainerConf c, JobStepKeeper keeper) {
+        def deployFileIdList = c.conf.deployFileIdList
+
+        if (deployFileIdList.size() == 1 && deployFileIdList[0] == skipDeployFileId) {
+            log.info 'skip deploy'
+        } else {
+            if (!deployFileIdList) {
+                throw new JobProcessException('Run as a process need copy executable file!')
+            }
+
+            def deployFileList = new DeployFileDTO().whereIn('id', deployFileIdList).loadList()
+            if (!deployFileList) {
+                throw new JobProcessException('Deploy file not exists!')
+            }
+
+            def kp = new NodeKeyPairDTO(clusterId: c.clusterId, ip: c.nodeIp).one()
+            if (!kp) {
+                throw new JobProcessException('Deploy node not init!')
+            }
+
+            def clusterOne = InMemoryCacheSupport.instance.oneCluster(c.clusterId)
+            String proxyNodeIp = clusterOne.globalEnvConf.proxyNodeIp
+            def needProxy = proxyNodeIp && proxyNodeIp != kp.ip
+
+            for (deployFile in deployFileList) {
+                if (needProxy) {
+                    def r = AgentCaller.instance.doSshCopy(kp, deployFile.localPath, deployFile.destPath)
+                    log.info r ? r.toString() : '...'
+                } else {
+                    new InitAgentEnvSupport(c.clusterId, proxyNodeIp).copyFileIfNotExists(kp, deployFile.localPath)
+                }
+
+                def cmd = deployFile.initCmd
+                if (cmd) {
+                    String changedCmd
+                    if (cmd.contains('$destPath')) {
+                        changedCmd = cmd.replace('$destPath', deployFile.destPath)
+                    } else {
+                        changedCmd = cmd
+                    }
+                    def oneCmd = OneCmd.simple(changedCmd)
+
+                    if (needProxy) {
+                        def r = AgentCaller.instance.doSshExec(kp, oneCmd.cmd)
+                        log.info r ? r.toString() : '...'
+                    } else {
+                        DeploySupport.instance.exec(kp, oneCmd)
+                        if (!oneCmd.ok()) {
+                            throw new JobProcessException('Deploy file exec fail - ' + oneCmd.toString())
+                        }
+                    }
+                }
+            }
+        }
+
+        // dyn template
+        def fileVolumeList = c.conf.fileVolumeList
+        if (fileVolumeList) {
+            JSONObject updateTplR = AgentCaller.instance.agentScriptExe(c.clusterId, c.nodeIp, 'update tpl',
+                    [jsonStr: JsonWriter.instance.json(c)])
+            Boolean isErrorUpdateTpl = updateTplR.getBoolean('isError')
+            if (isErrorUpdateTpl && isErrorUpdateTpl.booleanValue()) {
+                throw new JobProcessException('update tpl fail - ' + fileVolumeList + ' - ' + updateTplR.getString('message'))
+            }
+            keeper.next(JobStepKeeper.Step.updateTpl, 'update tpl', fileVolumeList.toString())
+        }
+
+        // ***
+        int pid = startCmdWithSsh(c.conf.cmd, c.clusterId, c.appId, c.nodeIp, keeper)
+
+        // ***
+        ContainerInfo containerInfo = new ContainerInfo()
+        containerInfo.nodeIp = c.nodeIp
+        containerInfo.clusterId = c.clusterId
+        containerInfo.namespaceId = c.app.namespaceId
+        containerInfo.appName = c.app.name
+        containerInfo.appDes = c.app.des
+        containerInfo.id = ContainerHelper.generateProcessAsContainerId(c.appId, c.instanceIndex, pid)
+        containerInfo.names = [ContainerHelper.generateContainerName(c.appId, c.instanceIndex)]
+        containerInfo.image = 'refer deploy file:' + c.conf.deployFileIdList
+        containerInfo.imageId = 'refer deploy file:' + c.conf.deployFileIdList
+        containerInfo.command = c.conf.cmd
+        containerInfo.created = System.currentTimeMillis()
+
+        AgentCaller.instance.agentScriptExe(c.clusterId, c.nodeIp, 'set wrap container info',
+                [containerInfo: containerInfo])
+        keeper.next(JobStepKeeper.Step.wrapContainerInfo, 'set wrap container info')
+
+        pid
+    }
+
+    int startCmdWithSsh(String cmd, int clusterId, int appId, String nodeIp, JobStepKeeper keeper = null) {
+        // ***
+        def kp = new NodeKeyPairDTO(clusterId: clusterId, ip: nodeIp).one()
+        if (!kp) {
+            throw new JobProcessException('node ssh init not yet, ip: ' + nodeIp)
+        }
+        if (!kp.rootPass) {
+            throw new JobProcessException('node ssh root pass not set yet, ip: ' + nodeIp)
+        }
+
+        // guardian do job too fast
+        // agent not send yet
+        JSONObject getPidOldR = AgentCaller.instance.agentScriptExe(clusterId, nodeIp, 'get pid',
+                [cmd: cmd])
+        def pidAlreadyRun = getPidOldR.getInteger('pid')
+        if (pidAlreadyRun != null) {
+            return pidAlreadyRun
+        }
+
+        def clusterOne = InMemoryCacheSupport.instance.oneCluster(clusterId)
+        String proxyNodeIp = clusterOne.globalEnvConf.proxyNodeIp
+        def needProxy = proxyNodeIp && proxyNodeIp != kp.ip
+
+        String pwd = '/opt/dms/app_' + appId
+        String startCommand = "nohup ${cmd} > main.log 2>&1 &"
+        List<OneCmd> cmdList = [
+                new OneCmd(cmd: 'pwd', checker: OneCmd.keyword(kp.user + '@')),
+                new OneCmd(cmd: 'su', checker: OneCmd.keyword('Password:')),
+                new OneCmd(cmd: kp.rootPass, showCmdLog: false,
+                        checker: OneCmd.keyword('root@').failKeyword('failure')),
+                new OneCmd(cmd: 'mkdir -p ' + pwd, checker: OneCmd.any()),
+                new OneCmd(cmd: 'cd ' + pwd, checker: OneCmd.keyword(pwd)),
+                new OneCmd(cmd: startCommand, checker: OneCmd.any())
+        ]
+
+        if (needProxy) {
+            AgentCaller.instance.doSshShell(kp, cmdList, 30000)
+        } else {
+            DeploySupport.instance.exec(kp, cmdList, 30, true)
+            if (!cmdList.every { it.ok() }) {
+                throw new JobProcessException('ssh cmd exec error, ip: ' + nodeIp + ' last cmd: ' +
+                        cmdList.find { !it.ok() }.toString())
+            }
+        }
+
+        // wait process start
+        int maxWaitSeconds = Conf.instance.getInt('process.getPid.maxWaitSeconds', 5)
+        int count = 0
+        String errorMessage
+        while (count <= maxWaitSeconds) {
+            count++
+
+            Thread.sleep(1000)
+
+            JSONObject getPidR = AgentCaller.instance.agentScriptExe(clusterId, nodeIp, 'get pid',
+                    [cmd: cmd])
+            Boolean isErrorGetPid = getPidR.getBoolean('isError')
+            if (isErrorGetPid && isErrorGetPid.booleanValue()) {
+                errorMessage = getPidR.getString('message')
+                continue
+            }
+            if (keeper) {
+                keeper.next(JobStepKeeper.Step.startCmd, 'start cmd', cmd)
+            }
+            int pid = getPidR.getInteger('pid')
+            return pid
+        }
+
+        throw new JobProcessException('start cmd get pid fail - ' + cmd + ' - ' + errorMessage)
+    }
+
+}

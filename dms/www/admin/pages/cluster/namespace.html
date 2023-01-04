@@ -1,0 +1,87 @@
+<div ng-controller="MainCtrl">
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Namespace List</h5>
+                    <div class="actions">
+                        <button class="btn" ng-click="editOne = {}; ctrl.isShowAdd = true;">Add One</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div class="form-group">
+                        <label>Cluster: </label>
+                        <select ng-model="tmp.clusterId" ng-options="a.id as a.name for a in tmp.clusterList"
+                                style="width: 200px;">
+                            <option value="" selected>--/--</option>
+                        </select>
+                        <input type="text" ng-model="tmp.keyword" placeholder="Input Keyword"/>
+                        <button class="btn" ng-click="queryLl()">Query</button>
+                    </div>
+                    <table class="table table-bordered table-striped">
+                        <tr>
+                            <th width="10%">id</th>
+                            <th width="20%">name</th>
+                            <th width="30%">des</th>
+                            <th width="20%">updated date</th>
+                            <th></th>
+                        </tr>
+                        <tr ng-repeat="one in ll">
+                            <td>{{one.id}}</td>
+                            <td>{{one.name}}</td>
+                            <td>{{one.des}}</td>
+                            <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
+                            <td class="opts">
+                                <button class="btn btn-red" ng-click="delete(one)">Delete</button>
+                                <button class="btn" ng-click="edit(one)">Update</button>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 6px;" ui-pagi="" pager="pager" on-change-page="queryLl(cp, event)"></div>
+                </div>
+            </div>
+
+
+        </div><!-- /.row-fluid -->
+    </div>
+
+    <script type="text/x-template"
+            ui-dialog="{showModel: 'ctrl.isShowAdd', title: 'Add/Update Namespace', dialogId: 'dialogNamespace', lock: true, fixed: true, ext: {max: false}}">
+        <table class="table table-bordered table-striped m_top6" style="width: 600px;" ng-form="tmp.addForm">
+            <tr>
+                <td>ID</td>
+                <td>{{editOne.id}}</td>
+            </tr>
+            <tr>
+                <td>Updated Date</td>
+                <td>{{editOne.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
+            </tr>
+            <tr>
+                <td>Cluster</td>
+                <td>
+                    <select ng-model="editOne.clusterId" ng-options="a.id as a.name for a in tmp.clusterList"
+                            style="width: 120px;" ui-valid="r">
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>Name</td>
+                <td>
+                    <input type="text" ng-model="editOne.name" ui-valid="r"/>
+                </td>
+            </tr>
+            <tr>
+                <td>Des</td>
+                <td>
+                    <input type="text" ng-model="editOne.des"/>
+                </td>
+            </tr>
+        </table>
+        <button class="btn btn-blue" ng-click="save()">Save</button>
+        <button class="btn" ng-click="ctrl.isShowAdd = false">Close</button>
+    </script>
+
+</div>

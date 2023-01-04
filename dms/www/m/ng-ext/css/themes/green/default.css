@@ -1,0 +1,71 @@
+.nav-list>li.active {
+	border-top: 1px solid #71b914;
+}
+
+/**/
+.dropdown-yellow li a:hover{
+	background: #459c01;
+	color: #fff;
+}
+
+.breadcrumbs {
+	border-top: 2px solid #71b914;
+	background:#71b914;
+}
+.crumb-tabs li:hover{
+	background-color:#459c01!important;
+}
+.crumb-tabs li.active {
+	background-color:#FFFFFF;
+	color: #71b914;
+}
+.crumb-tabs li.active:hover {
+	color: #71b914!important;
+	background-color:#fff!important;
+}
+
+ /* -------siderBar----- */
+.sidebar{
+	box-shadow: 5px 5px 16px #E0E0E0;
+}
+.sidebar-shortcuts {
+	background-color: #71b914;
+}
+.menu-min .sidebar-shortcuts-large{
+	background: #71b914;
+}
+.nav-list>li>a>[class*="icon-"]:first-child{
+	color: #459c01;
+}
+
+.nav-list>li.active>a, .nav-list>li.active>a:hover, .nav-list>li.active>a:focus, .nav-list>li.active>a:active{
+	background: #71b910;
+	color: #fff;
+}
+.nav-list>li .submenu>li>a:hover{
+	color: #459c01;
+}
+.nav-list>li .submenu>li.active>a{
+	color:#459c01;
+}
+.menu-min .nav-list>li>a>.menu-text{
+	color: #459c01;
+}
+
+.nav-list>li>.submenu li>.submenu li.active>a {
+	color: #71b914
+}
+
+.nav-list>li>.submenu li>.submenu>li a:hover {
+	color: #71b914;
+	text-decoration: none;
+}
+
+.nav-list>li .submenu>li.active>a>[class*="icon-"]:first-child {
+	color: #71b914;
+}
+
+.nav-list>li>.submenu li>.submenu li.active>a>[class*="icon-"]:first-child {
+	display: inline-block;
+	color: #71b914;
+}

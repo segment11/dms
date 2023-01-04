@@ -1,0 +1,83 @@
+{include file="h.html"}
+	<body>
+		{include file="navbar.html"}
+
+		<div class="main-container" id="main-container">
+			<div class="main-container-inner">
+				<a class="menu-toggler" id="menu-toggler" href="#">
+					<span class="menu-text"></span>
+				</a>
+				{include file="sidebar.html"}
+
+				<div class="main-content"> 
+					{include file="tabbar.html"}
+
+					<div class="page-content" id="wrap-tabs"> 
+						<div id="tabContent_wrap_desktop" class="tab-content active"></div>
+					</div>
+					<!-- /.page-content --> 
+				</div>
+
+			</div>
+		</div>
+
+		{include file="sidebar-contextmenu.html"}
+
+		<script id="tplNav" type="text/x-template">
+		{include file="navtemplate.html"}
+		</script>
+
+</body>
+</html>
+
+{include file="script.html"}
+<script src="/m/tpl/js/sockjs-0.3.4.min.js"></script>
+
+{literal}
+<script type="text/javascript">
+
+$(function(){
+	$('#send-sock-msg').click(function(e){
+		send({action: 'bd-sockjs-test', val: $('input').val()});
+	});
+
+	var sock;
+	function send(message){
+		if(sock.readyState === SockJS.OPEN){
+			console.log('sending message')
+			sock.send(JSON.stringify(message));
+		}else{
+			console.log('The socket is not open.');
+		}
+	}
+
+	(function(){
+		var sockServerUrl = '/ws/socketio/';
+
+		sock = new SockJS(sockServerUrl);
+		sock.onopen = function(){
+			console.log('open');
+			send({action: 'm-login'});
+		};
+
+		sock.onmessage = function(e){
+			var data = e.data;
+			console.log(data);
+			var obj = JSON.parse(data);
+			// 签到实时刷新
+			if('bd-sign-log-refresh' == obj.action){
+				var tab = $('#tabContent_wrap_bd--sign-log-list');
+				if(tab.length){
+					tab.scope().$broadcast('refresh', {});
+				}
+			}
+		};
+	})();
+
+	window.onbeforeunload = function(){
+		if(sock)
+			sock.close();
+	};
+});
+</script>
+{/literal}

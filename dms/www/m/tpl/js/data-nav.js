@@ -1,0 +1,3 @@
+(function(){
+	PortalConf.navLl = {$navJsonStr};
+})();

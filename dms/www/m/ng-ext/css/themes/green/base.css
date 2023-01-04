@@ -1,0 +1,28 @@
+.widget-box{
+	border-top: 3px solid #71b914;
+}
+
+.btn{
+	background-color: #459c01;
+	border: none;
+}
+
+.btn:hover, .btn:focus, .btn:active, .btn.active, .btn.disabled, .btn[disabled]{
+	background-color: #71b914;
+}
+
+.row h5{
+	border-top: 3px solid #71b914;
+}
+
+.dataTables_paginate span .ui-state-disabled{
+	background: #459c01;
+}
+
+.ui_lt,.ui_rt,.ui_lb,.ui_rb,.ui_l,.ui_r {
+	background-image: url(../../../images/green_s.png) !important;
+}
+
+.ui_t,.ui_b {
+	background-image: url(../../../images/green_s2.png) !important;
+}

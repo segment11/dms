@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- Meta -->
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <!-- End of Meta -->
+
+    <!-- Page title -->
+    <title>Login</title>
+    <!-- End of Page title -->
+
+    <!-- Libraries -->
+    <link type="text/css" href="/admin/assets/login.css" rel="stylesheet"/>
+</head>
+
+<body>
+<div id="container">
+    <div class="logo">
+        <a href="#"><img src="/admin/assets/logo.png" alt=""/></a>
+    </div>
+    <div id="box">
+        <form method="post" action="/dms/login" onsubmit="check()">
+            <p class="main">
+                <label>User: </label>
+                <input id="user" name="user" placeholder="Input your user name" value="admin"/>
+                <label>Password: </label>
+                <input id="password" name="password" type="password" placeholder="Input your password" value=""/>
+            </p>
+            <p class="space">
+                <input type="submit" value="Login" class="login"/>
+            </p>
+            <p id="error-tips" style="display: none; color: darkred; margin-top: 10px;">User/Password not correct!</p>
+        </form>
+    </div>
+</div>
+
+</body>
+
+<script>
+    function check() {
+        var user = document.getElementById('user').value;
+        var password = document.getElementById('password').value;
+        if (!user || !password) {
+            alert('Please input user/password');
+            return false;
+        }
+        return true;
+    }
+
+    window.onload = function () {
+        var href = document.location.href;
+        if (href.indexOf('error') != -1) {
+            document.getElementById('error-tips').style.display = 'block';
+        }
+    };
+</script>
+
+</html>

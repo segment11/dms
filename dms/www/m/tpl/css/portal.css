@@ -1,0 +1,98 @@
+/** 
+use fonts
+.nav-list>li a>.icon-angle-up{
+  background:url(../images/up_link.png) no-repeat;
+}
+
+.nav-list>li a>.icon-angle-down{
+  background:url(../images/down_link.png) no-repeat;
+}
+
+.nav-list>li .submenu>li a>.icon-angle-up{
+  background:url(../images/small_up_link.png) no-repeat;
+}
+
+.nav-list>li .submenu>li a>.icon-angle-down{
+  background:url(../images/small_down_link.png) no-repeat;
+}
+*/
+
+.nav-list>li .submenu>li a>[class*="icon-"]:first-child{
+  height: 10px;
+}
+
+.nav-list-bottom{
+  background:url(../images/sanjiao_down.png) no-repeat;
+}
+
+.nav-list-top{
+  background:url(../images/sanjiao_up.png) no-repeat;
+}
+
+li [class*=" icon-"]{
+  width: 18px;
+}
+
+.nav-img  {
+	position: relative;
+}
+
+.nav-img.level1 {
+	left: 0px;
+}
+
+.nav-img.level2 {
+	left: 10px;
+}
+
+.nav-img.level3 {
+	left: 18px;
+}
+
+.nav-img.level4 {
+	left: 28px;
+}
+
+/*
+.icon-fullscreen{
+  position: relative;
+  top: 4px;
+  height: 18px;
+  background:url(../images/fx.png) no-repeat;
+}
+
+.icon-caret-down{
+  height: 10px;
+  background:url(../images/sj_down.png) no-repeat center;
+}
+
+.icon-user{
+  position: relative;
+  top: 2px;
+  height: 16px;
+  background:url(../images/user.png) no-repeat center;
+}
+
+.icon-off{
+  position: relative;
+  top: 2px;
+  height: 18px;
+  background:url(../images/exit.png) no-repeat center;
+}
+
+.icon-double-angle-left {
+  position: relative;
+  top: 2px;
+  width: 16px;
+  height: 16px;
+  background:url(../images/left-arrow.png) no-repeat center;
+}
+
+.icon-double-angle-right {
+  position: relative;
+  top: 2px;
+  width: 16px;
+  height: 16px;
+  background:url(../images/right-arrow.png) no-repeat center;
+}
+*/

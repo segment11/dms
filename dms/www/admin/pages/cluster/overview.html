@@ -1,0 +1,293 @@
+<div ng-controller="MainCtrl">
+
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Overview</h5>
+                    <div class="actions">
+                        <span>
+						Guardian is Running: <button class="btn btn-red"
+                                                     ng-click="toggleDMSGuardian()">{{tmp.isGuardianRunning}}</button>
+						</span>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div class="form-group">
+                        <label>Cluster: </label>
+                        <select ng-model="tmp.clusterId" ng-options="a.id as a.name for a in clusterList"
+                                style="width: 200px;" ng-change="onClusterChoose()">
+                        </select>
+                        <button class="btn"
+                                ng-click="ctrl.isShowNodeEvent = true; queryEventReasonLlForCluster()">View Event List
+                        </button>
+                        <span>
+						Is In Guard : <button class="btn btn-red"
+                                              ng-click="toggleClusterIsInGuard()">{{tmp.clusterChoose.isInGuard}}</button>
+						</span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div style="height: 200px; width: 300px;"
+                                 ui-chart-pie="{scopeDataName: 'appChartData', title: 'App'}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div style="height: 200px; width: 300px;"
+                                 ui-chart-pie="{scopeDataName: 'nodeChartData', title: 'Node'}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div style="height: 200px; width: 300px;"
+                                 ui-chart-pie="{scopeDataName: 'nodeMemChartData', title: 'Node Memory Usage GB'}"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div style="height: 200px; width: 300px;"
+                                 ui-chart-pie="{scopeDataName: 'nodeCpuChartData', title: 'Node Cpu Usage'}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Node List</h5>
+                </div>
+                <div class="widget-content">
+                    <table class="table table-bordered table-striped">
+                        <tr>
+                            <th width="20%">node ip</th>
+                            <th width="20%">tags</th>
+                            <th width="15%" class="grid-sorter ng-ui-sort-all"
+                                ng-class="{'ng-ui-sort-up': tmp.isSortUpCpu, 'ng-ui-sort-down': tmp.isSortDownCpu}"
+                                ng-click="sortCpu()">cpu percent<i></i></th>
+                            <th width="15%" class="grid-sorter ng-ui-sort-all"
+                                ng-class="{'ng-ui-sort-up': tmp.isSortUpMem, 'ng-ui-sort-down': tmp.isSortDownMem}"
+                                ng-click="sortMem()">memory usage<i></i></th>
+                            <th width="20%">updated date</th>
+                            <th></th>
+                        </tr>
+                        <tr ng-repeat="one in nodeList">
+                            <td>
+                                <span class="bg-success">{{one.nodeIp}}</span>
+                                <span class="bg-success" ng-show="one.isOk">Heart Beat Ok</span>
+                                <span class="bg-danger" ng-show="!one.isOk">Heart Beat Fail</span>
+                                <span class="bg-success" ng-show="one.isLiveCheckOk">Live Check Ok</span>
+                                <span class="bg-danger" ng-show="!one.isLiveCheckOk">Live Check Fail</span>
+                            </td>
+                            <td>
+                                <span class="bg-info" ng-repeat="tag in one.tagList">{{tag}}</span>
+                            </td>
+                            <td>
+                                vCore: <span class="bg-info">{{one.cpuVCore}}</span>
+                                <br/>
+                                Usage: <span class="bg-info">{{one.cpuUsedPercent}}%</span>
+                            </td>
+                            <td>
+                                Total: <span class="bg-info">{{one.memoryTotalMB}}MB</span>
+                                <br/>
+                                Usage: <span class="bg-info">{{one.memoryUsedPercent}}%</span>
+                            </td>
+                            <td>
+                                <p>Version: {{one.agentVersion}}</p>
+                                <p>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</p>
+                            </td>
+                            <td class="opts">
+                                <div class="btn-line">
+                                    <button class="btn" ng-click="updateTags(one.id, one.nodeIp, one.tags)">Update
+                                        Tags
+                                    </button>
+                                </div>
+                                <div class="btn-line">
+                                    <button class="btn" ng-show="!one.haveKeyPair" ng-click="initSshConnect(one)">SSH
+                                        Connect
+                                    </button>
+                                    <button class="btn" ng-show="one.haveKeyPair" ng-click="goToDeployPage(one)">
+                                        Deploy
+                                    </button>
+                                </div>
+                                <div class="btn-line">
+                                    <button class="btn" ng-click="showStats(one)">Stats</button>
+                                </div>
+                                <div class="btn-line">
+                                    <button class="btn"
+                                            ng-click="ctrl.isShowNodeEvent = true; queryEventReasonLl(one)">Event
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 6px;" ui-pagi="" pager="nodePager"
+                         on-change-page="changeNodeListPage(cp, event)">
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget-box">
+                <div class="widget-content">
+                    <ul class="nav nav-tabs" ui-tabs="{}">
+                        <li class="active"><a>Container List By App</a></li>
+                        <li><a>Container List By Node Ip</a></li>
+                    </ul>
+                    <div class="tabs active">
+                        <table class="table table-bordered table-striped">
+                            <tr ng-repeat="one in groupByApp">
+                                <td width="15%">
+                                    <span class="bg-tips">{{one.appName}}</span>
+                                    <span class="bg-info">Instances: {{one.list.length}}</span>
+                                    <span class="bg-info">Image: {{one.list[0].image | shortViewSuffix}}</span>
+                                    <button class="btn" ng-click="goAppOne(one)">Go</button>
+                                </td>
+                                <td>
+                                    <table class="table table-bordered table-striped">
+                                        <tr>
+                                            <th width="15%">Node Ip</th>
+                                            <th width="40%">Command</th>
+                                            <th width="15%">State</th>
+                                            <th width="15%">Status</th>
+                                        </tr>
+                                        <tr ng-repeat="x in one.list">
+                                            <td>
+                                                <span class="bg-success">{{x.nodeIp}}</span>
+                                            </td>
+                                            <td>
+                                                <p class="shell">{{x.command}}</p>
+                                            </td>
+                                            <td>
+                                                <span ng-class="{'bg-info': 'running' == x.state, 'bg-success': 'created' == x.state, 'bg-danger': 'exited' == x.state}">
+                                                    {{x.state}}</span>
+                                            </td>
+                                            <td>
+                                                <span class="bg-info">{{x.status}}</span>
+                                                <span class="bg-danger"
+                                                      ng-show="x.isLiveCheckOk != null && x.isLiveCheckOk === false">Live Check Fail</span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="tabs">
+                        <table class="table table-bordered table-striped">
+                            <tr ng-repeat="one in groupByNodeIp">
+                                <td>
+                                    <span class="bg-tips">{{one.key}}</span>
+                                </td>
+                                <td>
+                                    <table class="table table-bordered table-striped">
+                                        <tr>
+                                            <th width="20%">App</th>
+                                            <th width="50%">Command</th>
+                                            <th width="15%">State</th>
+                                            <th width="15%">Status</th>
+                                        </tr>
+                                        <tr ng-repeat="x in one.list">
+                                            <td>
+                                                <span class="bg-info">{{x.appName}}</span>
+                                                <p style="text-align: center;">{{x.appDes}}</p>
+                                            </td>
+                                            <td>
+                                                <p class="shell">{{x.command}}</p>
+                                            </td>
+                                            <td>
+                                                <span ng-class="{'bg-info': 'running' == x.state, 'bg-success': 'created' == x.state, 'bg-danger': 'exited' == x.state}">
+                                                    {{x.state}}</span>
+                                            </td>
+                                            <td>
+                                                <span class="bg-info">{{x.status}}</span>
+                                                <span class="bg-danger"
+                                                      ng-show="x.isLiveCheckOk != null && x.isLiveCheckOk === false">Live Check Fail</span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /.row-fluid -->
+
+    </div>
+
+    <script type="text/x-template"
+            ui-dialog="{showModel: 'ctrl.isShowNodeStats', title: 'Node Stats', dialogId: 'dialogNodeStats', lock: true, fixPosition: true, fixed: true, ext: {max: false}}">
+        <div class="form-group" style="width: 800px;">
+            <span class="bg-success" id="stats-node-ip">{{tmp.targetNode.nodeIp}}</span>
+        </div>
+
+        <div class="dialog_main_wrapper">
+            <ul class="nav nav-tabs" ui-tabs="{beforeFn: 'changeNodeStatsTab'}">
+                <li class="active"><a>File Systen Usage</a></li>
+                <li><a>Cpu Usage</a></li>
+                <li><a>Memory Usage</a></li>
+            </ul>
+            <div class="tabs active">
+                <table class="table table-bordered table-striped">
+                    <tr>
+                        <th width="40%">dir</th>
+                        <th width="20%">total</th>
+                        <th width="20%">free</th>
+                        <th width="20%">usage</th>
+                    </tr>
+                    <tr ng-repeat="x in tmp.targetNode.fsUsageList">
+                        <td>{{x.dirName | shortView}}</td>
+                        <td>{{x.total}} GB</td>
+                        <td>{{x.free}} GB</td>
+                        <td><span class="bg-info">{{x.usePercent}}%</span></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="tabs">
+                <div style="height: 400px;"
+                     ui-chart-line="{scopeDataName: 'tmp.nodeCpuChartData', name: 'Use Percent', title: 'Node Cpu Usage', width: 780}"></div>
+            </div>
+            <div class="tabs">
+                <div style="height: 400px;"
+                     ui-chart-line="{scopeDataName: 'tmp.nodeMemChartData', name: 'Use Percent', title: 'Node Memory Usage', width: 780}"></div>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/x-template"
+            ui-dialog="{showModel: 'ctrl.isShowNodeEvent', title: 'Event List', dialogId: 'dialogNodeEvent', width: '1200px', lock: true, fixPosition: true, fixed: true, ext: {max: false}}">
+
+        <div class="form-group">
+            <span style="margin-left: 20px; margin-right: 20px;" class="bg-info">{{tmp.eventTarget}}</span>
+            <label>reason: </label>
+            <select ng-model="tmp.reason" ng-options="a.reason as a.reason for a in tmp.reasonList"
+                    style="width: 200px;"
+                    ng-change="queryEventLl()">
+                <option value="" selected>--/--</option>
+            </select>
+        </div>
+        <table class="table table-bordered table-striped">
+            <tr>
+                <th width="10%">type</th>
+                <th width="20%">reason</th>
+                <th width="10%">result</th>
+                <th width="40%">message</th>
+                <th width="20%">created date</th>
+            </tr>
+            <tr ng-repeat="one in eventLl">
+                <td>{{one.type}}</td>
+                <td>{{one.reason}}</td>
+                <td>{{one.result}}</td>
+                <td>
+                    <p class="bg-info" style="text-align: left;">{{one.message}}</p>
+                </td>
+                <td>
+                    <span class="bg-success">{{one.createdDate | date:'yyyy/MM/dd HH:mm:ss'}}</div>
+                </td>
+            </tr>
+        </table>
+        <div style="margin-top: 6px;" ui-pagi="" pager="eventPager"
+             on-change-page="queryEventLl(cp, event)">
+        </div>
+    </script>
+</div>

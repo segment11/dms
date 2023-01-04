@@ -1,0 +1,28 @@
+.widget-box {
+	border-top: 3px solid #168dd6;
+}
+
+.btn {
+	background-color: #1A88D6;
+	border: none;
+}
+
+.btn:hover, .btn:focus, .btn:active, .btn.active, .btn.disabled, .btn[disabled]{
+	background-color: #168dd6;
+}
+
+.dataTables_paginate span .ui-state-disabled, .pagination.alternate li.active a{
+	background:#1A88D6;
+}
+
+.row h5 {
+	border-top: 3px solid #168dd6;
+}
+
+.ui_lt,.ui_rt,.ui_lb,.ui_rb,.ui_l,.ui_r {
+	background-image: url(../../../images/blue_s.png) !important;
+}
+
+.ui_t,.ui_b {
+	background-image: url(../../../images/blue_s2.png) !important;
+}

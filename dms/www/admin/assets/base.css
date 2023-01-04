@@ -1,0 +1,273 @@
+* {
+    margin: 0px;
+    padding: 0px;
+}
+
+ul li {
+    list-style: none;
+}
+
+body {
+    width: 100%;
+    height: 100%;
+    background: #fcfcfc;
+    line-height: 21px;
+    color: #555;
+    overflow-y: auto;
+}
+
+a {
+    color: #428bca;
+    text-decoration: none;
+}
+
+body a, body a:active, body a:link, body a:visited {
+    text-decoration: none;
+    color: #2a6496;
+}
+
+.header {
+    height: 40px;
+    width: 100%;
+    min-width: 500px;
+    background-color: #283649;
+
+    position: fixed;
+    right: 0;
+    left: 0;
+    top: 0;
+    z-index: 1030;
+}
+
+
+.header .title {
+    float: left;
+}
+
+.title span {
+    width: 400px;
+    height: 40px;
+    color: #e4e4e4;
+    text-align: left;
+    padding-left: 20px;
+    cursor: pointer;
+    line-height: 40px;
+    font-size: 18px;
+}
+
+#sidebar {
+    background-color: #1d2939;
+    position: fixed;
+    width: 15%;
+    height: 100%;
+    float: left;
+    padding: 0 15px;
+    /* min-width: 160px; */
+    overflow-y: auto;
+    z-index: 100;
+}
+
+.menu {
+    color: #e4e4e4;
+    padding-top: 1px;
+    border-radius: 2px;
+}
+
+.menu.first {
+    margin-top: 50px;
+}
+
+.menu-title {
+    background: #1d2939;
+    border: none;
+    color: #e4e4e4;
+    padding: 6px;
+    border-radius: 2px;
+}
+
+.menu-title.hover {
+    background: #fff;
+}
+
+.menu-title.hover i {
+    color: #1d2939;
+}
+
+.menu-title.hover .menu-title-text {
+    color: #1d2939;
+}
+
+.menu-title-text i {
+    display: block;
+    float: right;
+    font-size: 17px;
+    line-height: 24px;
+}
+
+.menu-title-text {
+    font-size: 14px;
+    color: #e4e4e4;
+    cursor: pointer;
+}
+
+.menu-title-text span {
+    display: block;
+    float: right;
+    font-size: 17px;
+    line-height: 24px;
+}
+
+.menu-list {
+    display: none;
+    border: none;
+    box-shadow: none;
+    position: relative;
+    background: #1d2939;
+    margin: 0;
+    border-radius: 0;
+}
+
+.menu-list li {
+    border: none;
+    padding: 5px 0 5px 15px;
+}
+
+.menu-list li a {
+    font-size: 13px;
+    color: #e4e4e4;
+    text-decoration: none;
+}
+
+.menu-list li i {
+    margin-right: 4px;
+}
+
+.menu-list li a:hover {
+    color: #428bca;
+}
+
+.menu-list li i {
+    margin-left: 10px;
+}
+
+.menu-nav {
+    margin-right: 10px;
+    display: block;
+    float: left;
+    position: relative;
+    font-size: 16px;
+    height: 25px;
+}
+
+.opt {
+    float: right;
+}
+
+.opt span {
+    width: 45px;
+    height: 40px;
+    color: #e4e4e4;
+    float: right;
+    text-align: center;
+    cursor: pointer;
+    line-height: 40px;
+    font-size: 18px;
+}
+
+.opt span.user-info {
+    width: auto;
+}
+
+.opt span:hover {
+    background: #e6e6e6;
+    color: #1d2939;
+}
+
+#main {
+    padding-left: 15%;
+    height: 100%;
+    position: relative;
+    top: 50px;
+}
+
+#sidebar .foot {
+    position: absolute;
+    bottom: 20px;
+    text-align: left;
+    color: white;
+    font-size: 24px;
+}
+
+pre {
+    text-align: left;
+    height: 100px;
+    overflow-y: scroll;
+}
+
+p {
+    margin: 0 0 10px;
+}
+
+p.bg-info, p.bg-success, p.bg-tips, p.bg-danger {
+    text-align: center;
+    margin: 4px;
+    padding: 4px 20px;
+}
+
+span.bg-info, span.bg-success, span.bg-tips, span.bg-danger {
+    display: block;
+    text-align: center;
+    margin: 4px;
+    padding: 4px 20px;
+}
+
+.bg-info {
+    background-color: #d9edf7 !important;
+}
+
+.bg-success {
+    background-color: #dff0d8 !important;
+}
+
+.bg-tips {
+    background-color: #1f4681 !important;
+    color: white;
+}
+
+.bg-danger {
+    background-color: #f2dede !important;
+}
+
+p.shell {
+    background-color: #837c7c;
+    color: white;
+    border-style: dashed;
+    border-color: blue;
+    border-width: 1px;
+    margin: 4px;
+    padding: 3px 5px;
+}
+
+.btn {
+    min-width: 100px;
+}
+
+.btn-line {
+    margin-bottom: 5px;
+}
+
+.ui_content td {
+    text-align: left !important;
+    padding-left: 10p !important;
+}
+
+p.input-tips {
+    text-align: left;
+    padding: 5px;
+    font-size: 13px;
+    width: 400px;
+}
+
+label {
+    margin-right: 5px;
+}

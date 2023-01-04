@@ -1,0 +1,141 @@
+.breadcrumbs {
+	border-top: 2px solid #e3e6e8;
+	background: #e3e6e8;
+	overflow: hidden!important;
+	line-height: 32px;
+}
+.crumb-tabs{
+	height: 34px;
+}
+.crumb-tabs li{
+	color: #7D7D7E!important;
+}
+.crumb-tabs li.active:hover {
+	color: #7D7D7E!important;
+}
+.crumb-tabs li.active {
+	background-color: #FFFFFF;
+	color: #7D7D7E;
+	border: 1px solid #ccc;
+	border-bottom-color: transparent;
+}
+.crumb-tabs li:hover {
+	background-color: #d7dbdd!important;
+	color:#7D7D7E!important;
+}
+.sidebar-shortcuts {
+	background-color: #e3e6e8;
+}
+.sidebar-shortcuts {
+	background-color: #e3e6e8;
+	border-bottom: 1px solid #ccc;
+}
+
+.nav-list>li {
+ 	border-top: none; 
+}
+
+.nav-list>li>a:hover {
+	background-color: #d7dbdd;
+	color: #616161;
+}
+.nav-list>li>a {background-color: #e3e6e8;}
+.nav-list>li>a>[class*="icon-"]:first-child {
+	color: #7D7D7E;
+}
+.nav-list>li>a:hover>[class*="icon-"]:first-child {
+	color: #7D7D7E;
+}
+.nav-list>li .submenu>li>a:hover {
+	color: #7D7D7E;
+	background: #d7dbdd;
+}
+.nav-list>li .submenu>li.active>a {
+	color: #347cb3;
+}
+
+.nav-list>li.active>a, .nav-list>li.active>a:hover, .nav-list>li.active>a:focus, .nav-list>li.active>a:active {
+	background: #d7dbdd;
+	color: #7D7D7E;
+}
+
+.nav-list>li.active>a>[class*="icon-"]:first-child {
+	color: #7D7D7E;
+}
+
+.nav-list>li a:hover>.arrow, .nav-list>li.active>a>.arrow, .nav-list>li.open>a>.arrow {
+	color: #7D7D7E;
+}
+
+.nav-list>li>.submenu li>.submenu>li>a>.arrow {
+	top: 11px;
+}
+
+.nav-list>li>.submenu li>.submenu>li a:hover{
+	color: #7D7D7E;
+	text-decoration: none;
+}
+
+.nav-list>li .submenu>li a>[class*="icon-"]:first-child {
+	color: #7D7D7E;
+}
+
+.nav-list>li .submenu>li.active>a>[class*="icon-"]:first-child {
+	color: #347cb3;
+}
+.nav-list>li .submenu>li a:hover>[class*="icon-"]:first-child {
+	color: #347cb3;
+	background:#d7dbdd;
+}
+
+.nav-list>li>a:hover:before{ 
+	background-color:#d7dbdd!important; 
+}
+.nav-list>li:hover{
+	border-top-color: #d7dbdd!important;
+}
+
+.menu-min .nav-list>li>a>.menu-text {
+	color: #7d7d7e;
+	background: #e3e6e8;
+}
+
+.breadcrumbs{
+	height: 37px;
+	line-height: 32px;
+}
+
+.bd1 {
+	width: 5000px;
+	border-top: 1px solid #ccc;
+}
+
+.widget-box {
+	border-top: 3px solid #7d7d7e;
+}
+
+.btn {
+	background-color: #98989C;
+  border: none;
+}
+
+.btn:hover, .btn:focus, .btn:active, .btn.active, .btn.disabled, .btn[disabled]{
+	background-color: #7d7d7e;
+}
+
+.dataTables_paginate span .ui-state-disabled, .pagination.alternate li.active a{
+	background:#98989C;
+}
+
+.row h5 {
+	border-top: 3px solid #7d7d7e;
+}
+
+.ui_lt,.ui_rt,.ui_lb,.ui_rb,.ui_l,.ui_r {
+	background-image: url(../../../images/gray_s.png) !important;
+}
+
+.ui_t,.ui_b {
+	background-image: url(../../../images/gray_s2.png) !important;
+}
+

@@ -1,0 +1,235 @@
+<!DOCTYPE HTML PUBLIC"-//W3C//DTD HTML4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+		<title>Demo</title>
+
+		<link rel="stylesheet" type="text/css" href="../css/bootstrap.min.css" />
+		<link rel="stylesheet" type="text/css" href="../css/icore-inner.css" />
+		<link rel="stylesheet" type="text/css" href="../css/themes/df/base.css" />
+
+		<link rel="stylesheet" type="text/css" href="../css/all.css" />
+		<link rel="stylesheet" type="text/css" href="../css/jquery-ui/jquery-ui-1.7.2.min.css" />
+		<link rel="stylesheet" type="text/css" href="../uploadify/uploadify.css" />
+	</head> 
+
+	<body>
+ 
+<div ng-controller="MyCtrl">
+<div class="container-fluid">
+
+	<div class="row-fluid">
+
+	<div class="widget-box">
+		<div class="widget-title"> 
+			<span class="icon"><i class="icon-info"></i></span>
+			<h5>uiTips</h5>
+		</div>
+		<div class="widget-content">
+			<button class="btn" ng-click="showAlert();">Alert</button>
+		</div>
+	</div>
+
+	<div class="widget-box">
+		<div class="widget-title"> 
+			<span class="icon"><i class="icon-time"></i></span>
+			<h5>uiDate</h5>
+		</div>
+		<div class="widget-content">
+			<form name="baseForm">
+			<span>
+				<input type="text" ng-model="handleTimeBegin" 
+					ui-date="{dateFormat: 'yy-mm-dd', timeFormat: '23:59:59', changeMonth: true, changeYear: true, showOtherMonths: true, showHour: false, showMinute: false}" 
+					ui-valid="datetime" />
+			</span>
+			&nbsp;-&nbsp;
+			<span>
+				<input type="text" ng-model="handleTimeEnd" 
+					ui-date="{dateFormat: 'yy-mm-dd 23:59', changeMonth: true, changeYear: true, showButtonPanel: true}" 
+					ui-valid-tips="止期比起期范围在7天内！"
+					ui-valid="datetime date:rangeout:handleTimeBegin:+0 date:range:handleTimeBegin:+7" />
+			</span>
+			</form>
+			<br />
+			{{baseForm.$valid}}
+		</div>
+	</div>
+
+	<div class="widget-box">
+		<div class="widget-title"> 
+			<span class="icon"><i class="icon-list"></i></span>
+			<h5>uiDropdown</h5>
+		</div>
+		<div class="widget-content">
+			<input type="text" ng-model="dropdownTest" ng-disabled="isGray" ui-valid="r" 
+				ui-editable="true" 
+				ui-dropdown="{editable: true, valueField: 'code', labelField: 'label', list: 'list', blankLabel: '--/--', heightStep: 10}" />
+			<br />
+			{{dropdownTest}}
+
+			<br />
+
+			<input type="text" style="width: 300px;" ng-model="dropdownTest2" ng-disabled="isGray" ui-valid="r" 
+				ui-dropdown="{valueField: 'code', labelField: 'label', queryUrl: 'testQuery.json', blankLabel: '--/--'}" />
+			<br />
+			{{dropdownTest2}}
+
+			<br />
+			
+			<span style="display: inline-blick; width: 600px;">
+			<input type="text" ng-model="dropdownTest3" ng-disabled="isGray" ui-valid="r" 
+				ui-dropdown="{valueField: 'code', labelField: 'label', list: 'list', multiple: true, blankLabel: '--/--'}" />
+			</span>
+			<br />
+			{{dropdownTest3}}
+
+			<br />
+		</div>
+	</div>
+
+	<div class="widget-box">
+		<div class="widget-title"> 
+			<span class="icon"><i class="icon-folder-open"></i></span>
+			<h5>uiDialog</h5>
+		</div>
+		<div class="widget-content">
+			<button class="btn" ng-click="openDialog();">Open</button>
+
+			<script type="text/x-template" 
+				ui-dialog="{showModel: 'ctrl.isDialogShowInner', title: 'title inner', dialogId: 'dialogB', lock: true, fixed: true, ext: {max: false}}">
+				inner content
+				<br />
+				<button class="btn" ng-click="ctrl.isDialogShowInner = false">Close inner</button>
+			</script>
+			<script type="text/x-template" 
+				ui-dialog="{showModel: 'ctrl.isDialogShow', titleModel: 'dialogTitle', dialogId: 'dialogA', lock: true, fixed: true, closeFn: 'fnClosed', closeForce: true, ext: {min: false}}">
+				<ul>
+					<li ng-repeat="one in testLl">
+					{{one}}
+					</li>
+				</ul>
+				<br />
+				<button class="btn" ng-click="ctrl.isDialogShowInner = true">Open inner</button>
+			</script>
+		</div>
+	</div>
+
+	<div class="widget-box">
+		<div class="widget-title"> 
+			<span class="icon"><i class="icon-desktop"></i></span>
+			<h5>uiTabs</h5>
+		</div>
+		<div class="widget-content">
+			<ul class="nav nav-tabs" ui-tabs="{targetIndex: 1, beforeFn: 'beforeFn'}"> 
+				<li class="active"><a>Tab1</a></li> 
+				<li><a>Tab2</a></li> 
+			</ul>
+			<div class="tabs active"> 
+				<p>Raw denim you probably haven't heard of them jean shorts Austin.</p> 
+			</div> 
+			<div class="tabs" is-link="noRepeat">
+				<script type="text/x-template">
+				<span>
+				{{tab2val}}
+				</span>
+				</script>
+			</div>
+		</div>
+	</div>
+
+	<div class="widget-box">
+		<div class="widget-title"> 
+			<span class="icon"><i class="icon-arrow-right"></i></span>
+			<h5>uiPagi</h5>
+		</div>
+		<div class="widget-content">
+			<ul>
+				<li ng-repeat="one in currentPageLl">
+					{{one.name}}
+				</li>
+			</ul>
+			<div style="margin-top: 6px;" ui-pagi="" 
+				pager="queryPager" on-change-page="changePage(cp, event)"></div>
+		</div>
+	</div>
+
+	<div class="widget-box">
+		<div class="widget-title"> 
+			<span class="icon"><i class="icon-list"></i></span>
+			<h5>uiSort</h5>
+		</div>
+		<div class="widget-content">
+			<table class="table table-bordered table-striped">
+			<thead>
+			<tr>
+				<th ui-sort="{targetModel: 'sortedList', field: 'age'}">年龄</th>
+				<th ui-sort="{targetModel: 'sortedList', field: 'name', sortLocale: true}">姓名</th>
+			</tr>
+			</thead>
+			<tbody>
+			<tr ng-repeat="one in sortedList" ng-class-even="'even'" ng-class-odd="'odd'">
+				<td>{{one.age}}</td>
+				<td>{{one.name}}</td>
+			</tr>
+			</tbody>
+			</table>
+		</div>
+	</div>
+
+	<div class="widget-box">
+		<div class="widget-title"> 
+			<span class="icon"><i class="icon-upload"></i></span>
+			<h5>uploadify</h5>
+		</div>
+		<div class="widget-content">
+			<span id="queue"></span>
+			<span id="btn-upload"
+				ext-uploadify="{uploader: 'ng-ext/demo/upload', multi: true, queueID: 'queue', paramsModel: 'test', fnSuccess: 'uploadSuccess'}"></span>
+		</div>
+	</div>
+
+	<div class="widget-box">
+		<div class="widget-title"> 
+			<span class="icon"><i class="icon-list"></i></span>
+			<h5>filter list</h5>
+		</div>
+		<div class="widget-content">
+			<div ext-filter-grid="{fn: 'gridClick', filter: 'name', tblId: 'tblTest'}" 
+				columns="columns" list="list4filter"></div>
+			Form $valid : {{gridForm0.$valid}}
+			<br />
+			<button class="btn" ng-click="next()">Next</button>
+		</div>
+	</div>
+
+	<div class="widget-box">
+		<div class="widget-title"> 
+			<span class="icon"><i class="icon-folder-open"></i></span>
+			<h5>tree</h5>
+		</div>
+		<div class="widget-content">
+			<div ext-tree="{fn: 'treeClick', choose: true, columns: 'columns4tree'}" list="list4tree"></div>
+			<div ext-tree="{fn: 'treeClick', choose: true}" list="list4tree2"></div>
+		</div>
+	</div>
+
+	</div><!-- /.row-fluid -->
+
+</div>
+</div>
+
+</body>
+</html>
+
+<script language="javascript">
+var appname = '../..';
+</script>
+
+<script src="../all.js"></script>
+<script src="../consts.js"></script>
+<script src="../ng.ext.js"></script>
+
+<script src="./hello.js"></script>

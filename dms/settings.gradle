@@ -1,0 +1,12 @@
+rootProject.name = 'dms_server'
+
+include ':segmentd'
+project(':segmentd').projectDir = new File(settingsDir, '../../segmentd')
+
+include ':segmentweb'
+project(':segmentweb').projectDir = new File(settingsDir, '../../segmentweb')
+
+include ':dms_common'
+project(':dms_common').projectDir = new File(settingsDir, '../dms_common')
+
+

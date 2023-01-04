@@ -1,0 +1,341 @@
+[ {
+  "name" : "timeout",
+  "description" : null,
+  "defaultValue" : "0",
+  "needRestart" : false
+}, {
+  "name" : "workers",
+  "description" : null,
+  "defaultValue" : "8",
+  "needRestart" : false
+}, {
+  "name" : "daemonize",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "cluster-enabled",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "maxclients",
+  "description" : null,
+  "defaultValue" : "10000",
+  "needRestart" : false
+}, {
+  "name" : "pidfile",
+  "description" : null,
+  "defaultValue" : "\"\"",
+  "needRestart" : false
+}, {
+  "name" : "slave-read-only",
+  "description" : null,
+  "defaultValue" : "yes",
+  "needRestart" : false
+}, {
+  "name" : "slave-priority",
+  "description" : null,
+  "defaultValue" : "100",
+  "needRestart" : false
+}, {
+  "name" : "tcp-backlog",
+  "description" : null,
+  "defaultValue" : "511",
+  "needRestart" : false
+}, {
+  "name" : "master-use-repl-port",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "use-rsid-psync",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "slave-serve-stale-data",
+  "description" : null,
+  "defaultValue" : "yes",
+  "needRestart" : false
+}, {
+  "name" : "slave-empty-db-before-fullsync",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "purge-backup-on-fullsync",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "max-replication-mb",
+  "description" : null,
+  "defaultValue" : "0",
+  "needRestart" : false
+}, {
+  "name" : "max-io-mb",
+  "description" : null,
+  "defaultValue" : "500",
+  "needRestart" : false
+}, {
+  "name" : "max-db-size",
+  "description" : null,
+  "defaultValue" : "0",
+  "needRestart" : false
+}, {
+  "name" : "max-backup-to-keep",
+  "description" : null,
+  "defaultValue" : "1",
+  "needRestart" : false
+}, {
+  "name" : "max-backup-keep-hours",
+  "description" : null,
+  "defaultValue" : "24",
+  "needRestart" : false
+}, {
+  "name" : "max-bitmap-to-string-mb",
+  "description" : null,
+  "defaultValue" : "16",
+  "needRestart" : false
+}, {
+  "name" : "slowlog-log-slower-than",
+  "description" : null,
+  "defaultValue" : "100000",
+  "needRestart" : false
+}, {
+  "name" : "slowlog-max-len",
+  "description" : null,
+  "defaultValue" : "128",
+  "needRestart" : false
+}, {
+  "name" : "supervised",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "profiling-sample-ratio",
+  "description" : null,
+  "defaultValue" : "0",
+  "needRestart" : false
+}, {
+  "name" : "profiling-sample-record-max-len",
+  "description" : null,
+  "defaultValue" : "256",
+  "needRestart" : false
+}, {
+  "name" : "profiling-sample-record-threshold-ms",
+  "description" : null,
+  "defaultValue" : "100",
+  "needRestart" : false
+}, {
+  "name" : "compaction-checker-range",
+  "description" : null,
+  "defaultValue" : "0-7",
+  "needRestart" : false
+}, {
+  "name" : "migrate-speed",
+  "description" : null,
+  "defaultValue" : "4096",
+  "needRestart" : false
+}, {
+  "name" : "migrate-pipeline-size",
+  "description" : null,
+  "defaultValue" : "16",
+  "needRestart" : false
+}, {
+  "name" : "migrate-sequence-gap",
+  "description" : null,
+  "defaultValue" : "10000",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.metadata_block_cache_size",
+  "description" : null,
+  "defaultValue" : "2048",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.subkey_block_cache_size",
+  "description" : null,
+  "defaultValue" : "2048",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.share_metadata_and_subkey_block_cache",
+  "description" : null,
+  "defaultValue" : "yes",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.row_cache_size",
+  "description" : null,
+  "defaultValue" : "0",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.max_open_files",
+  "description" : null,
+  "defaultValue" : "8096",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.write_buffer_size",
+  "description" : null,
+  "defaultValue" : "64",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.target_file_size_base",
+  "description" : null,
+  "defaultValue" : "128",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.max_write_buffer_number",
+  "description" : null,
+  "defaultValue" : "4",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.max_background_compactions",
+  "description" : null,
+  "defaultValue" : "4",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.max_background_flushes",
+  "description" : null,
+  "defaultValue" : "4",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.max_sub_compactions",
+  "description" : null,
+  "defaultValue" : "2",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.max_total_wal_size",
+  "description" : null,
+  "defaultValue" : "512",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.wal_ttl_seconds",
+  "description" : null,
+  "defaultValue" : "10800",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.wal_size_limit_mb",
+  "description" : null,
+  "defaultValue" : "16384",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.block_size",
+  "description" : null,
+  "defaultValue" : "16384",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.cache_index_and_filter_blocks",
+  "description" : null,
+  "defaultValue" : "yes",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.compression",
+  "description" : null,
+  "defaultValue" : "snappy",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.compaction_readahead_size",
+  "description" : null,
+  "defaultValue" : "2097152",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.delayed_write_rate",
+  "description" : null,
+  "defaultValue" : "0",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.enable_pipelined_write",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.level0_slowdown_writes_trigger",
+  "description" : null,
+  "defaultValue" : "20",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.level0_stop_writes_trigger",
+  "description" : null,
+  "defaultValue" : "40",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.level0_file_num_compaction_trigger",
+  "description" : null,
+  "defaultValue" : "4",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.stats_dump_period_sec",
+  "description" : null,
+  "defaultValue" : "0",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.disable_auto_compactions",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.enable_blob_files",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.min_blob_size",
+  "description" : null,
+  "defaultValue" : "4096",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.blob_file_size",
+  "description" : null,
+  "defaultValue" : "268435456",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.enable_blob_garbage_collection",
+  "description" : null,
+  "defaultValue" : "yes",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.blob_garbage_collection_age_cutoff",
+  "description" : null,
+  "defaultValue" : "25",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.level_compaction_dynamic_level_bytes",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.max_bytes_for_level_base",
+  "description" : null,
+  "defaultValue" : "268435456",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.max_bytes_for_level_multiplier",
+  "description" : null,
+  "defaultValue" : "10",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.write_options.sync",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.write_options.disable_wal",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.write_options.no_slowdown",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.write_options.low_pri",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+}, {
+  "name" : "rocksdb.write_options.memtable_insert_hint_per_batch",
+  "description" : null,
+  "defaultValue" : "no",
+  "needRestart" : false
+} ]

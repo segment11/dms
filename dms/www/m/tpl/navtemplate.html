@@ -1,0 +1,87 @@
+{literal}
+<#macro tplNav data>
+<#list data.ll as one>
+
+<li>
+	<a data-tab-id="${one.tabId}" 
+		<#if (one.subLl && one.subLl.length)> class="dropdown-toggle"</#if>
+		<#if (one.title)> title="${one.title}"</#if>>
+
+		<#if (one.img)>
+		<i class="${one.img} nav-img level1"></i>
+		</#if>
+		<span class="menu-text"> ${one.label} </span>
+		<#if (one.subLl && one.subLl.length)>
+		<b class="arrow icon-angle-down"></b>
+		</#if>
+	</a>
+
+	<#if (one.subLl && one.subLl.length)>
+	<ul class="submenu sub1">
+		<#list one.subLl as sub>
+		<li>
+			<a data-tab-id="${sub.tabId}" 
+				<#if (sub.subLl && sub.subLl.length)> class="dropdown-toggle"</#if>
+				<#if (sub.title)> title="${sub.title}"</#if>>
+				<#if (sub.img)>
+				<i class="${sub.img} nav-img level2"></i>
+				<#else>
+				<!-- <i class="icon-double-angle-right"></i> -->
+				</#if>
+				${sub.label}
+				<#if (sub.subLl && sub.subLl.length)>
+				<b class="arrow icon-angle-down"></b>
+				</#if>
+			</a>
+
+			<#if (sub.subLl && sub.subLl.length)>
+			<ul class="submenu sub2">
+				<#list sub.subLl as subsub>
+				<li>
+					<a data-tab-id="${subsub.tabId}" 
+						<#if (subsub.subLl && subsub.subLl.length)> class="dropdown-toggle"</#if>
+						<#if (subsub.title)> title="${subsub.title}"</#if>>
+						<#if (subsub.img)>
+						<i class="${subsub.img} nav-img level3"></i>
+						<#else>
+						<!-- <i class="icon-double-angle-right"></i> -->
+						</#if>
+						${subsub.label}
+						<#if (subsub.subLl && subsub.subLl.length)>
+						<b class="arrow icon-angle-down"></b>
+						</#if>
+					</a>
+
+					<#if (subsub.subLl && subsub.subLl.length)>
+					<ul class="submenu sub3">
+						<#list subsub.subLl as leaf>
+						<li>
+							<a data-tab-id="${leaf.tabId}" 
+								<#if (leaf.title)> title="${leaf.title}"</#if>>
+								<#if (leaf.img)>
+								<i class="${leaf.img} nav-img level4"></i>
+								<#else>
+								<!-- <i class="icon-double-angle-right"></i> -->
+								</#if>
+								${leaf.label}
+							</a>
+						</li>
+						</#list>
+					</ul>
+					</#if>
+
+				</li>
+				</#list>
+			</ul>
+			</#if>
+
+		</li>
+		</#list>
+	</ul>
+	</#if>
+
+</li>
+
+</#list>
+</#macro>
+{/literal}

@@ -1,0 +1,724 @@
+<div ng-controller="MainCtrl">
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Application List</h5>
+                    <div class="actions">
+                        <button class="btn" ng-click="add()">Add One</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div class="form-group">
+                        <label>Cluster: </label>
+                        <select ng-model="tmp.clusterId" ng-options="a.id as a.name for a in tmp.clusterList"
+                                style="width: 200px;" ng-change="onClusterChoose()">
+                            <option value="" selected>--/--</option>
+                        </select>
+                        <label>Namespace: </label>
+                        <select ng-model="tmp.namespaceId" ng-options="a.id as a.name for a in tmp.namespaceList"
+                                style="width: 200px;" ng-change="queryLl()">
+                            <option value="" selected>--/--</option>
+                        </select>
+                        <input type="text" ng-model="tmp.keyword" placeholder="Input Keyword"/>
+                        <button class="btn" ng-click="queryLl()">Query</button>
+                    </div>
+                    <table class="table table-bordered table-striped">
+                        <tr>
+                            <th width="10%">id</th>
+                            <th width="10%">name/des</th>
+                            <th width="20%">image/number</th>
+                            <th width="30%">operation</th>
+                            <th width="10%">updated date</th>
+                            <th></th>
+                        </tr>
+                        <tr ng-repeat="one in ll">
+                            <td>{{one.id}}</td>
+                            <td>
+                                {{one.name}}
+                                <br/>
+                                {{one.des}}
+                                <br/>
+                                <p ng-class="{'bg-info': one.status == 0, 'bg-danger': one.status == 1}">
+                                    {{one.status == 0 ? 'auto' : 'manual'}}</p>
+                                <p ng-show="one.jobConf" class="bg-danger">Cron Job</p>
+                                <p ng-show="!one.isLiveCheckOk" class="bg-danger">Live Check Fail</p>
+                            </td>
+                            <td>
+                                {{one.conf.group}}/{{one.conf.image}}
+                                <br/>
+                                Instance Number: <span class="bg-info">{{one.conf.containerNumber}}</span>
+                            </td>
+                            <td>
+                                <div class="btn-line">
+                                    <button class="btn" ng-click="confShow(one, 0)"
+                                            ng-class="{'btn-red': one.isConfLiveCheck}">Live Check
+                                    </button>
+                                    <button class="btn" ng-click="confShow(one, 1)"
+                                            ng-class="{'btn-red': one.isConfMonitor}">Monitor
+                                    </button>
+                                </div>
+                                <div class="btn-line">
+                                    <button class="btn" ng-click="confShow(one, 2)"
+                                            ng-class="{'btn-red': one.isConfAb}">AB Version
+                                    </button>
+                                    <button class="btn" ng-click="confShow(one, 3)"
+                                            ng-class="{'btn-red': one.isConfJob}">Job
+                                    </button>
+                                </div>
+                                <div class="btn-line">
+                                    <button class="btn" ng-click="confShow(one, 4)"
+                                            ng-class="{'btn-red': one.isConfGateway}">Gateway
+                                    </button>
+                                    <button class="btn" ng-click="confShow(one, 5)">Scale</button>
+                                </div>
+                            </td>
+                            <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
+                            <td class="opts">
+                                <div class="btn-line">
+                                    <button class="btn btn-red" ng-click="delete(one)">Delete</button>
+                                    <button class="btn" ng-click="edit(one)">Update</button>
+                                </div>
+                                <div class="btn-line">
+                                    <button class="btn btn-red" ng-click="setManual(one)">Manual/Auto</button>
+                                    <button class="btn" ng-click="go(one)">Go</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 6px;" ui-pagi="" pager="pager" on-change-page="queryLl(cp, event)"></div>
+                </div>
+            </div>
+
+
+        </div><!-- /.row-fluid -->
+    </div>
+
+    <script type="text/x-template"
+            ui-dialog="{showModel: 'ctrl.isShowConf', title: 'Add/Update Conf', dialogId: 'dialogAppConf', lock: true, fixed: true, ext: {max: false}}">
+
+        <h3>{{confOne.name}}</h3>
+        <div ng-form="tmp.confForm" style="height: 400px; overflow-x: hidden;">
+
+            <ul class="nav nav-tabs" ui-tabs="{targetIndex: tmp.confTabIndex, beforeFn: 'changeConfTab'}">
+                <li><a>Live Check</a></li>
+                <li><a>Monitor</a></li>
+                <li><a>AB Version</a></li>
+                <li><a>Job</a></li>
+                <li><a>Gateway</a></li>
+                <li><a>Scale</a></li>
+            </ul>
+            <div class="tabs">
+                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                    <tr>
+                        <td width="30%">interval seconds</td>
+                        <td>
+                            <select ng-model="confOne.liveCheckConf.intervalSeconds" ui-valid="r">
+                                <option value="30">30</option>
+                                <option value="60">60</option>
+                                <option value="120">120</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>is http request</td>
+                        <td>
+                            <input type="checkbox" ng-model="confOne.liveCheckConf.isHttpRequest"/>
+                        </td>
+                    </tr>
+                    <tr ng-show="confOne.liveCheckConf.isHttpRequest">
+                        <td>http request uri</td>
+                        <td>
+                            <input type="text" ng-model="confOne.liveCheckConf.httpRequestUri" style="width: 200px;"
+                                   ui-valid="{{confOne.liveCheckConf.isHttpRequest ? 'r uri' : 'uri'}}"
+                                   placeholder="/metrics"/>
+                        </td>
+                    </tr>
+                    <tr ng-show="confOne.liveCheckConf.isHttpRequest || confOne.liveCheckConf.isPortListen">
+                        <td>port</td>
+                        <td>
+                            <select ng-options="a.privatePort as a.privatePort for a in tmp.confPortList"
+                                    ng-model="confOne.liveCheckConf.port"
+                                    ui-valid="{{confOne.liveCheckConf.isHttpRequest || confOne.liveCheckConf.isPortListen ? 'r' : ''}}">
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>is port listen</td>
+                        <td>
+                            <input type="checkbox" ng-model="confOne.liveCheckConf.isPortListen"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>is shell script</td>
+                        <td>
+                            <input type="checkbox" ng-model="confOne.liveCheckConf.isShellScript"/>
+                        </td>
+                    </tr>
+                    <tr ng-show="confOne.liveCheckConf.isShellScript">
+                        <td>shell script</td>
+                        <td>
+					<textarea ng-model="confOne.liveCheckConf.shellScript" style="width: 400px; height: 200px;"
+                              ui-valid="{{confOne.liveCheckConf.isShellScript ? 'r' : ''}}"></textarea>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="tabs">
+                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                    <tr>
+                        <td>is first instance pull only</td>
+                        <td>
+                            <input type="checkbox" ng-model="confOne.monitorConf.isFirstInstancePullOnly"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%">interval seconds</td>
+                        <td>
+                            <select ng-model="confOne.monitorConf.intervalSeconds" ui-valid="r">
+                                <option value="30">30</option>
+                                <option value="60">60</option>
+                                <option value="120">120</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>is http request</td>
+                        <td>
+                            <input type="checkbox" ng-model="confOne.monitorConf.isHttpRequest"
+                                   ng-change="confOne.monitorConf.httpRequestUri = confOne.monitorConf.isHttpRequest ? '/metrics' : ''"/>
+                        </td>
+                    </tr>
+                    <tr ng-show="confOne.monitorConf.isHttpRequest">
+                        <td>http request uri</td>
+                        <td>
+                            <input type="text" ng-model="confOne.monitorConf.httpRequestUri" style="width: 200px;"
+                                   ui-valid="{{confOne.monitorConf.isHttpRequest ? 'r uri' : 'uri'}}"
+                                   placeholder="/metrics"/>
+                        </td>
+                    </tr>
+                    <tr ng-show="confOne.monitorConf.isHttpRequest">
+                        <td>port</td>
+                        <td>
+                            <select ng-options="a.privatePort as a.privatePort for a in tmp.confPortList"
+                                    ng-model="confOne.monitorConf.port"
+                                    ui-valid="{{confOne.monitorConf.isHttpRequest ? 'r' : ''}}">
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>is shell script</td>
+                        <td>
+                            <input type="checkbox" ng-model="confOne.monitorConf.isShellScript"/>
+                        </td>
+                    </tr>
+                    <tr ng-show="confOne.monitorConf.isShellScript">
+                        <td>shell script</td>
+                        <td>
+					<textarea ng-model="confOne.monitorConf.shellScript" style="width: 400px; height: 200px;"
+                              ui-valid="{{confOne.monitorConf.isShellScript ? 'r' : ''}}"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>metric format script content</td>
+                        <td>
+                            <textarea ng-model="confOne.monitorConf.metricFormatScriptContent"
+                                      style="width: 300px; height: 100px;"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>is scale auto</td>
+                        <td>
+                            <input type="checkbox" ng-model="confOne.monitorConf.isScaleAuto"/>
+                        </td>
+                    </tr>
+                    <tr ng-show="confOne.monitorConf.isScaleAuto">
+                        <td>min replica</td>
+                        <td>
+                            <input type="text" ng-model="confOne.monitorConf.scaleMin" style="width: 200px;"
+                                   ui-valid="{{confOne.monitorConf.isScaleAuto ? 'r int' : 'int'}}"/>
+                        </td>
+                    </tr>
+                    <tr ng-show="confOne.monitorConf.isScaleAuto">
+                        <td>max replica</td>
+                        <td>
+                            <input type="text" ng-model="confOne.monitorConf.scaleMax" style="width: 200px;"
+                                   ui-valid="{{confOne.monitorConf.isScaleAuto ? 'r int' : 'int'}}"/>
+                        </td>
+                    </tr>
+                    <tr ng-show="confOne.monitorConf.isScaleAuto">
+                        <td>is scale depend on cpu perc</td>
+                        <td>
+                            <input type="checkbox" ng-model="confOne.monitorConf.isScaleDependOnCpuPerc"/>
+                        </td>
+                    </tr>
+                    <tr ng-show="confOne.monitorConf.isScaleAuto && confOne.monitorConf.isScaleDependOnCpuPerc">
+                        <td>cpu perc</td>
+                        <td>
+                            <input type="text" ng-model="confOne.monitorConf.cpuPerc" style="width: 200px;"
+                                   ui-valid="{{confOne.monitorConf.isScaleDependOnCpuPerc ? 'r int' : 'int'}}"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="tabs">
+                <p class="input-tips">TIPS: For example, there are
+                    total 10
+                    instances of this application,
+                    if you fill instance number 2 means the first and second instances will use this container image
+                    given.</p>
+                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                    <tr>
+                        <td width="30%">image</td>
+                        <td>
+                            <input type="text" ng-model="confOne.abConf.image" style="width: 200px;"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%">tag</td>
+                        <td>
+                            <input type="text" ng-model="confOne.abConf.tag" style="width: 200px;"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%">instance number</td>
+                        <td>
+                            <input type="text" ng-model="confOne.abConf.containerNumber" style="width: 200px;"
+                                   ui-valid="int"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%">weight</td>
+                        <td>
+                            <input type="text" ng-model="confOne.abConf.weight" style="width: 200px;" ui-valid="int"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="tabs">
+                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                    <tr>
+                        <td width="30%">is on</td>
+                        <td>
+                            <input type="checkbox" ng-model="confOne.jobConf.isOn"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%">cron expression</td>
+                        <td>
+                            <input type="text" ng-model="confOne.jobConf.cronExp" style="width: 200px;"
+                                   ui-valid="cronExp"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="tabs">
+                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                    <tr>
+                        <td width="30%">cluster</td>
+                        <td>
+                            <select ng-model="confOne.gatewayConf.clusterId"
+                                    ng-options="a.id as a.name for a in tmp.gwClusterList"
+                                    style="width: 120px;" ng-change="onChooseGwCluster()">
+                                <option value="" selected>--/--</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%">frontend</td>
+                        <td>
+                            <select ng-model="confOne.gatewayConf.frontendId"
+                                    ng-options="a.id as a.name for a in tmp.gwFrontendList"
+                                    style="width: 200px;">
+                                <option value="" selected>--/--</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%">private port</td>
+                        <td>
+                            <select ng-options="a.privatePort as a.privatePort for a in tmp.confPortList"
+                                    ng-model="confOne.gatewayConf.containerPrivatePort" style="width: 80px;">
+                                <option value="" selected>--/--</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%">health check uri</td>
+                        <td>
+                            <input type="text" ng-model="confOne.gatewayConf.healthCheckUri" style="width: 200px;"
+                                   ui-valid="uri"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%">health check delay seconds</td>
+                        <td>
+                            <input type="text" ng-model="confOne.gatewayConf.healthCheckDelaySeconds"
+                                   style="width: 200px;" ui-valid="int"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%">health check interval seconds</td>
+                        <td>
+                            <input type="text" ng-model="confOne.gatewayConf.healthCheckIntervalSeconds"
+                                   style="width: 200px;" ui-valid="int"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%">health check total times</td>
+                        <td>
+                            <input type="text" ng-model="confOne.gatewayConf.healthCheckTotalTimes"
+                                   style="width: 200px;" ui-valid="int"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td width="30%">health check timeout seconds</td>
+                        <td>
+                            <input type="text" ng-model="confOne.gatewayConf.healthCheckTimeoutSeconds"
+                                   style="width: 200px;" ui-valid="int"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="tabs">
+                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                    <tr>
+                        <td width="60%">change instance number change</td>
+                        <td>
+                            <input type="text" ng-model="tmp.scaleNumber" style="width: 200px;"
+                                   ui-valid="int"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+        </div>
+        <button class="btn btn-blue" ng-click="saveConf()">Save</button>
+        <button class="btn" ng-click="ctrl.isShowConf = false">Close</button>
+    </script>
+
+    <script type="text/x-template"
+            ui-dialog="{showModel: 'ctrl.isShowAdd', title: 'Add/Update Application', dialogId: 'dialogApp', lock: true, fixed: true, ext: {max: false}}">
+
+        <h3>{{editOne.name}}</h3>
+        <div ng-form="tmp.addForm" style="height: 500px; overflow-x: hidden;">
+
+            <ul class="nav nav-tabs" ui-tabs="{digest: true, beforeFn: 'changeTab'}">
+                <li class="active"><a>Namespace</a></li>
+                <li><a>Image</a></li>
+                <li><a>Resource</a></li>
+                <li><a>Environment</a></li>
+                <li><a>Volume</a></li>
+                <li><a>Mount File</a></li>
+                <li><a>Network</a></li>
+            </ul>
+            <div class="tabs active">
+                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                    <tr>
+                        <td width="30%">ID</td>
+                        <td>{{editOne.id}}</td>
+                    </tr>
+                    <tr>
+                        <td>Updated Date</td>
+                        <td>{{editOne.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
+                    </tr>
+                    <tr>
+                        <td>Cluster</td>
+                        <td>
+                            <select ng-model="editOne.clusterId"
+                                    ng-options="a.id as a.name for a in tmp.clusterList" style="width: 120px;"
+                                    ui-valid="r"
+                                    ng-change="onClusterChoose()">
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Namespace</td>
+                        <td>
+                            <select ng-model="editOne.namespaceId"
+                                    ng-options="a.id as a.name for a in tmp.namespaceList" style="width: 200px;"
+                                    ui-valid="r">
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Name</td>
+                        <td>
+                            <input type="text" ng-model="editOne.name" ui-valid="r"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Des (Optional)</td>
+                        <td>
+                            <input type="text" ng-model="editOne.des"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Depend (Optional)</td>
+                        <td>
+                            <input type="text" ng-model="editOne.conf.dependAppIdList" width="300px"
+                                   ui-dropdown="{valueField: 'id', labelField: 'name', list: 'tmp.appOtherList', multiple: true, blankLabel: '--/--', widthMultipleInput: 300}"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="tabs">
+                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                    <tr>
+                        <td width="30%">Registry</td>
+                        <td>
+                            <select ng-model="editOne.conf.registryId"
+                                    ng-options="a.id as a.url for a in tmp.registryList" style="width: 300px;"
+                                    ui-valid="r"
+                                    ng-change="onClusterChoose()">
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Group</td>
+                        <td>
+                            <input type="text" ng-model="editOne.conf.group" ui-valid="r"/>
+                            Is Library<input type="checkbox" ng-model="tmp.isLibrary"
+                                             ng-change="editOne.conf.group =  tmp.isLibrary ? 'library' : ''"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Image</td>
+                        <td>
+                            <input type="text" ng-model="editOne.conf.image" ui-valid="r"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Tag</td>
+                        <td>
+                            <input type="text" ng-model="editOne.conf.tag" ui-valid="r"/>
+                            Is Latest<input type="checkbox" ng-model="tmp.isLatest"
+                                            ng-change="editOne.conf.tag =  tmp.isLatest ? 'latest' : ''"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Cmd (Optional)</td>
+                        <td>
+                            <input type="text" ng-model="editOne.conf.cmd" style="width:300px;"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>User (Optional)</td>
+                        <td>
+                            <input type="text" ng-model="editOne.conf.user"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Is Running As Process</td>
+                        <td>
+                            <p class="input-tips">TIPS: Set it true when you want run as a host process,
+                                rather than a docker container instance, like categraf, need not mount /.</p>
+                            <input type="checkbox" ng-model="editOne.conf.isRunningUnbox"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Copy Files</td>
+                        <td>
+                            <p class="input-tips">TIPS: DMS agent will copy these directories/files to target host.</p>
+                            <input type="text" ng-model="editOne.conf.deployFileIdList" width="300px"
+                                   ui-dropdown="{valueField: 'id', labelField: 'destPath', list: 'tmp.deployFileList', multiple: true, blankLabel: '--/--', widthMultipleInput: 300}"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="tabs">
+                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                    <tr>
+                        <td width="30%">Instance Number</td>
+                        <td>
+                            <input type="text" ng-model="editOne.conf.containerNumber" ui-valid="r int"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Is Create Parallel</td>
+                        <td>
+                            <input type="checkbox" ng-model="editOne.conf.isParallel"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Run on the same node</td>
+                        <td>
+                            <p class="input-tips">TIPS: Set it true when there are one or two nodes in cluster,
+                                run some applications need more than nodes' number, like zookeeper.</p>
+                            <input type="checkbox" ng-model="editOne.conf.isLimitNode"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Memory(MB)</td>
+                        <td>
+                            <input type="text" ng-model="editOne.conf.memMB" ui-valid="r int"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Cpu Share</td>
+                        <td>
+                            <input type="text" ng-model="editOne.conf.cpuShare" ui-valid="r int"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Cpu Fixed</td>
+                        <td>
+                            <input type="text" ng-model="editOne.conf.cpuFixed" ui-valid="r float"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Target Node Tag (Optional)</td>
+                        <td>
+                            <input type="text" ng-model="editOne.conf.targetNodeTagList" width="300px"
+                                   ui-dropdown="{valueField: 'tag', labelField: 'tag', list: 'tmp.nodeTagList', multiple: true, blankLabel: '--/--', widthMultipleInput: 300}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Target Node Ip (Optional)</td>
+                        <td>
+                            <input type="text" ng-model="editOne.conf.targetNodeIpList" width="300px"
+                                   ui-dropdown="{valueField: 'ip', labelField: 'ip', list: 'tmp.nodeIpList', multiple: true, blankLabel: '--/--', widthMultipleInput: 300}"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Exclude Node Tag (Optional)</td>
+                        <td>
+                            <input type="text" ng-model="editOne.conf.excludeNodeTagList" width="300px"
+                                   ui-dropdown="{valueField: 'tag', labelField: 'tag', list: 'tmp.nodeTagList', multiple: true, blankLabel: '--/--', widthMultipleInput: 300}"/>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="tabs">
+                <div style="margin: 5px;">
+                    <label>Is Privileged</label><input type="checkbox" ng-model="editOne.conf.isPrivileged"/>
+                </div>
+                <hr/>
+                <div style="margin: 5px;">
+                    <button class="btn" ng-click="editOne.conf.envList.push({})">Add One Env</button>
+                </div>
+                <div style="margin: 5px;" ng-repeat="param in editOne.conf.envList">
+			<span>Env Key&nbsp;<select ng-model="param.key" style="width: 150px;"
+                                       ng-options="a.env as a.env for a in tmp.imageEnvList">
+			</select></span>
+                    <span>Env Value&nbsp;<input type="text" ng-model="param.value" style="width: 200px;"/></span>
+                    <span>
+				<button class="btn" ng-click="editOne.conf.envList.remove(param)" style="min-width: 50px;">-</button>
+			</span>
+                </div>
+                <hr/>
+                <div style="margin: 5px;">
+                    <button class="btn" ng-click="editOne.conf.uLimitList.push({})">Add One ULimit</button>
+                </div>
+                <div style="margin: 5px;" ng-repeat="param in editOne.conf.uLimitList">
+                    <span>Name&nbsp;<input type="text" ng-model="param.name" class="input-short" ui-valid="r"/></span>
+                    <span>Soft&nbsp;<input type="text" ng-model="param.soft" class="input-short"
+                                           ui-valid="r int"/></span>
+                    <span>Hard&nbsp;<input type="text" ng-model="param.hard" class="input-short"
+                                           ui-valid="r int"/></span>
+                    <span>
+				<button class="btn" ng-click="editOne.conf.uLimitList.remove(param)" style="min-width: 50px;">-</button>
+			</span>
+                </div>
+            </div>
+            <div class="tabs">
+                <div style="margin: 5px;">
+                    <button class="btn" ng-click="editOne.conf.dirVolumeList.push({})">Add One Dir Volume Mount</button>
+                </div>
+                <div style="margin: 5px;" ng-repeat="param in editOne.conf.dirVolumeList">
+			<span>Node Dir&nbsp;<select ng-model="param.nodeVolumeId" style="width: 120px;"
+                                        ng-change="onChooseVolume(param)"
+                                        ng-options="a.id as a.dir for a in tmp.imageVolumeList">
+			</select></span>
+                    <span>Dist Dir Path&nbsp;<input type="text" ng-model="param.dist" style="width: 120px;"
+                                                    ui-valid="r dir"/></span>
+                    <span>Mode <select ng-model="param.mode" style="width: 80px;">
+                        <option value="ro">ro</option>
+                        <option value="rw">rw</option>
+                    </select></span>
+                    <span><button class="btn" ng-click="editOne.conf.dirVolumeList.remove(param)"
+                                  style="min-width: 50px;">-</button></span>
+                </div>
+            </div>
+            <div class="tabs">
+                <div style="margin: 5px;">
+                    <button class="btn" ng-click="editOne.conf.fileVolumeList.push({})">Add One File Volume Mount
+                    </button>
+                </div>
+                <div style="margin: 5px;" ng-repeat="param in editOne.conf.fileVolumeList">
+			<span>Template&nbsp;<select ng-model="param.imageTplId" style="width: 200px;"
+                                        ng-change="onChooseTpl(param)"
+                                        ng-options="a.id as a.name + ' - ' + a.des for a in tmp.imageTplList">
+			</select></span>
+                    <span>Dist File Path&nbsp;<input type="text" disabled ng-model="param.dist" style="width: 200px;"
+                                                     ui-valid="r dir"/></span>
+                    <br/>
+                    <span>Is Reload Interval&nbsp;<input type="checkbox" ng-model="param.isReloadInterval"/></span>&nbsp;&nbsp;
+                    <span>Is Parent Dir Mount&nbsp; - <b
+                            style="color: blue;">{{param.isParentDirMount ? 'Yes' : 'No'}}</b></span>
+                    <br/>
+                    <span style="margin-left: 20px;">
+				<button class="btn" ng-click="editOne.conf.fileVolumeList.remove(param)"
+                        style="min-width: 50px;">-</button>
+			</span>
+                    <div>Template Content&nbsp;<pre>{{param.content}}</pre>
+                    </div>
+                    <ul>
+                        <li ng-repeat="one in param.paramList" style="height: 30px;">
+                            <label style="width: 120px;">{{one.key}}</label>&nbsp;&nbsp;=&nbsp;&nbsp;<input type="text"
+                                                                                                            style="width: 300px;"
+                                                                                                            ng-model="one.value"
+                                                                                                            ui-valid="{{one.type == 'int' ? 'int' : ''}}"/>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="tabs">
+                <div style="margin: 5px;">
+                    <label>Network Mode</label>
+                    <select ng-model="editOne.conf.networkMode" style="width: 80px;" ui-valid="r">
+                        <option value="host">host</option>
+                        <option value="bridge">bridge</option>
+                        <option value="none">none</option>
+                    </select>
+                </div>
+                <div style="margin: 5px;">
+                    <label>Is Dns Using Cluster</label><input type="checkbox"
+                                                              ng-model="editOne.conf.isNetworkDnsUsingCluster"/>
+                </div>
+                <div style="margin: 5px;">
+                    <label>Is Hosts Using Cluster</label><input type="checkbox"
+                                                                ng-model="editOne.conf.isNetworkHostsUsingCluster"/>
+                </div>
+                <div style="margin: 5px;">
+                    <button class="btn" ng-click="editOne.conf.portList.push({})">Add One Port Listen</button>
+                </div>
+                <div style="margin: 5px;" ng-repeat="param in editOne.conf.portList">
+			<span>Listen Type&nbsp;<select ng-model="param.listenType" style="width: 80px;" ui-valid="r">
+				<option value="tcp">tcp</option>
+				<option value="udp">udp</option>
+			</select></span>
+                    <span>Private Port&nbsp;<select ng-model="param.privatePort" style="width: 80px;"
+                                                    ng-options="a.port as a.port for a in tmp.imagePortList">
+			</select></span>
+                    <span>Public Port&nbsp;<input type="text" ng-model="param.publicPort" class="input-short"
+                                                  ng-disabled="param.isGenerateByHost"
+                                                  ui-valid="{{param.isGenerateByHost ? 'int' : 'r int'}}"/>
+				Is generate by host<input type="checkbox" ng-model="param.isGenerateByHost"
+                                          ng-change="param.isGenerateByHost ? param.publicPort = '-1' : param.publicPort = param.privatePort"/>
+			</span>
+                    <span>
+				<button class="btn" ng-click="editOne.conf.portList.remove(param)" style="min-width: 50px;">-</button>
+			</span>
+                </div>
+            </div>
+
+        </div>
+        <button class="btn btn-blue" ng-click="save()">Save</button>
+        <button class="btn" ng-click="ctrl.isShowAdd = false">Close</button>
+    </script>
+
+</div>

@@ -1,0 +1,34 @@
+<!DOCTYPE HTML PUBLIC"-//W3C//DTD HTML4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"></meta>
+		<meta charset="utf-8"/>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+		<title></title>
+
+		<link rel="stylesheet" href="/m/tpl/css/bootstrap-custom.css" />
+		<link rel="stylesheet" href="/m/tpl/css/font-awesome.min.css" />
+		<link rel="stylesheet" href="/m/tpl/css/main.css" />
+
+		<link rel="stylesheet" href="/m/ng-ext/css/all.css" />
+		<link rel="stylesheet" href="/m/ng-ext/css/jquery-ui/jquery-ui-1.7.2.min.css" />
+		<link rel="stylesheet" href="/m/ng-ext/uploadify/uploadify.css" />
+
+		<link id="themes" rel="stylesheet" type="text/css" href="/m/tpl/css/themes/df/default.css" >
+	</head>
+	<body>
+	{$pluginHtml}
+	</body>
+</html>
+
+<script src="/m/ng-ext/consts.js"></script>
+<script src="/m/ng-ext/all.js"></script>
+<script src="/m/ng-ext/ng.ext.js"></script>
+
+<script src="{$pluginJsPath}"></script>
+
+<script type="text/javascript">
+angular.bootstrap(document, ['module_{$pluginId}']);
+</script>

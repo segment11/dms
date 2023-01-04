@@ -1,0 +1,161 @@
+<div ng-controller="MainCtrl">
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Container Cconfiguration Template List</h5>
+                    <div class="actions">
+                        <button class="btn" ng-click="editOne = {params: {paramList: []}}; ctrl.isShowAdd = true;">Add
+                            One
+                        </button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div class="form-group">
+                        <input type="text" ng-model="tmp.keyword" placeholder="Input Keyword"/>
+                        <button class="btn" ng-click="queryLl()">Query</button>
+                    </div>
+                    <table class="table table-bordered table-striped">
+                        <tr>
+                            <th width="5%">id</th>
+                            <th width="10%">image name</th>
+                            <th width="10%">name/des/type</th>
+                            <th width="30%">content/params</th>
+                            <th width="10%">mount dist</th>
+                            <th width="10%">updated date</th>
+                            <th></th>
+                        </tr>
+                        <tr ng-repeat="one in ll">
+                            <td>{{one.id}}</td>
+                            <td>{{one.imageName}}</td>
+                            <td>
+                                <span class="bg-info">{{one.name}}</span>
+                                <p>{{one.des}}</p>
+                                <p>{{one.tplType}}</p>
+                            </td>
+                            <td>
+                                <pre style="height: 200px;">{{one.content}}</pre>
+                                <div>
+                                    <ul>
+                                        <li ng-repeat="param in one.params.paramList">
+                                            {{param.name}}/{{param.type}}/{{param.defaultValue}}
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                            <td>{{one.mountDist | shortView}}</td>
+                            <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
+                            <td class="opts">
+                                <div class="btn-line">
+                                    <button class="btn btn-red" ng-click="delete(one)">Delete</button>
+                                </div>
+                                <div class="btn-line">
+                                    <button class="btn" ng-click="edit(one)">Update</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 6px;" ui-pagi="" pager="pager" on-change-page="queryLl(cp, event)"></div>
+                </div>
+            </div>
+
+
+        </div><!-- /.row-fluid -->
+    </div>
+
+    <script type="text/x-template"
+            ui-dialog="{showModel: 'ctrl.isShowAdd', title: 'Add/Update Container Configuration Template Define', dialogId: 'dialogTpl', lock: true, fixed: true, ext: {max: false}}">
+        <div style="height: 600px; overflow-y: auto; width: 800px;">
+            <table class="table table-bordered table-striped m_top6" ng-form="tmp.addForm">
+                <tr>
+                    <td>ID</td>
+                    <td>{{editOne.id}}</td>
+                </tr>
+                <tr>
+                    <td>Updated Date</td>
+                    <td>{{editOne.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
+                </tr>
+                <tr>
+                    <td>Image Name</td>
+                    <td>
+                        <input type="text" ng-model="editOne.imageName" ui-valid="r imageWithGroup"
+                               placeholder="library/nginx"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Name</td>
+                    <td>
+                        <input type="text" ng-model="editOne.name" ui-valid="r"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Des</td>
+                    <td>
+                        <input type="text" ng-model="editOne.des"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Tpl Type</td>
+                    <td>
+                        <select ng-model="editOne.tplType" class="btn-mid">
+                            <option value="mount" selected>mount</option>
+                            <option value="init">init</option>
+                            <option value="checkPre">checkPre</option>
+                            <option value="checkAfter">checkAfter</option>
+                        </select>
+                        <p ng-show="editOne.tplType == 'mount'">Groovy script that will generate a file for mounting by
+                            DMS when create a new container instances.</p>
+                        <p ng-show="editOne.tplType == 'init'">Execute shell(bash) script when create and start a new
+                            container.</p>
+                        <p ng-show="editOne.tplType == 'checkPre'">Groovy script return true/false, DMS will check this
+                            before create a new container instances.</p>
+                        <p ng-show="editOne.tplType == 'checkAfter'">Groovy script return true/false, DMS will check
+                            this after start a new container instances.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Mount Dist</td>
+                    <td>
+                        <input type="text" ng-model="editOne.mountDist"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Is Parent Directory Mount</td>
+                    <td>
+                        <input type="checkbox" ng-model="editOne.isParentDirMount"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Content</td>
+                    <td>
+                        <div style="margin: 5px;">
+                            <button class="btn" ng-click="editOne.params.paramList.push({})">Add One Param</button>
+                        </div>
+                        <textarea ng-model="editOne.content" style="width: 600px; height: 200px;"
+                                  ui-valid="r"></textarea>
+                        <div style="margin: 5px;" ng-repeat="param in editOne.params.paramList">
+                            <span>Name&nbsp;<input type="text" ng-model="param.name" ui-valid="r"
+                                                   style="width: 120px;"/></span>
+                            <span>Type&nbsp;<select ng-model="param.type" style="width: 80px;" ui-valid="r">
+						<option value="string" selected>string</option>
+						<option value="int">int</option>
+					</select></span>
+                            <span>Default Value&nbsp;<input type="text" ng-model="param.defaultValue"
+                                                            style="width: 150px;"
+                                                            ui-valid="{{param.type == 'int' ? 'int' : ''}}"/></span>
+                            <span>
+						<button class="btn" ng-click="editOne.params.paramList.remove(param)" style="min-width: 50px;">-</button>
+					</span>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <button class="btn btn-blue" ng-click="save()">Save</button>
+            <button class="btn" ng-click="ctrl.isShowAdd = false">Close</button>
+        </div>
+    </script>
+
+</div>

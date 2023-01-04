@@ -1,0 +1,2111 @@
+[ {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "ON",
+  "name" : "innodb_buffer_pool_load_at_startup",
+  "description" : "Specifies that, on MySQL server startup, the InnoDB buffer pool is automatically warmed up by loading the same pages it held at an earlier time. Typically used in combination with innodb_buffer_pool_dump_at_shutdown.",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~4294967295",
+  "defaultValue" : "4194304",
+  "name" : "bulk_insert_buffer_size",
+  "description" : "MyISAM uses a special tree-like cache to make bulk inserts faster for INSERT ... SELECT, INSERT ... VALUES (...), (...), ..., and LOAD DATA INFILE when adding data to nonempty tables. This variable limits the size of the cache tree in bytes per thread. Setting it to 0 disables this optimization. The default value is 8MB.",
+  "modifyValue" : "4194304",
+  "recommendValue" : "",
+  "currentValue" : "4194304",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "show_old_temporals",
+  "description" : "Whether SHOW CREATE TABLE output includes comments to flag temporal columns found to be in pre-5.6.4 format (TIME, DATETIME, and TIMESTAMP columns without support for fractional seconds precision). This variable is disabled by default. If enabled",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~1000",
+  "defaultValue" : "20",
+  "name" : "ft_query_expansion_limit",
+  "description" : "Number of best matches to use for query expansion",
+  "modifyValue" : "20",
+  "recommendValue" : "",
+  "currentValue" : "20",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~1024",
+  "defaultValue" : "1000",
+  "name" : "innodb_old_blocks_time",
+  "description" : "Move blocks to the 'new' end of the buffer pool if the first access was at least this many milliseconds ago. The timeout is disabled if 0.",
+  "modifyValue" : "1000",
+  "recommendValue" : "",
+  "currentValue" : "1000",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "131072~2147483647",
+  "defaultValue" : "262144",
+  "name" : "thread_stack",
+  "description" : "The stack size for each thread. The default of 192KB (256KB for 64-bit systems) is large enough for normal operation. If the thread stack size is too small, it limits the complexity of the SQL statements that the server can handle, the recursion depth of stored procedures, and other memory-consuming actions.",
+  "modifyValue" : "262144",
+  "recommendValue" : "",
+  "currentValue" : "262144",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "4194304~107374182400",
+  "defaultValue" : "2500000000",
+  "name" : "innodb_log_file_size",
+  "description" : "The size in bytes of each log file in a log group.",
+  "modifyValue" : "2500000000",
+  "recommendValue" : "",
+  "currentValue" : "2500000000",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "ja_JP|pt_BR|en_US",
+  "defaultValue" : "en_US",
+  "name" : "lc_time_names",
+  "description" : "This variable specifies the locale that controls the language used to display day and month names and abbreviations. This variable affects the output from the DATE_FORMAT(), DAYNAME() and MONTHNAME() functions. Locale names are POSIX-style values such as 'ja_JP' or 'pt_BR'. The default value is 'en_US' regardless of your system's locale setting.",
+  "modifyValue" : "en_US",
+  "recommendValue" : "",
+  "currentValue" : "en_US",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~1000",
+  "defaultValue" : "0",
+  "name" : "innodb_thread_concurrency",
+  "description" : "Helps in performance tuning in heavily concurrent environments. Sets the maximum number of threads allowed inside InnoDB. Value 0 will disable the thread throttling.",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~18446744073709551615",
+  "defaultValue" : "10000",
+  "name" : "sync_master_info",
+  "description" : "The effects of this variable on a replication slave depend on whether the slaves master_info_repository is set to FILE or TABLE, as explained in the following paragraphs.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~62",
+  "defaultValue" : "62",
+  "name" : "optimizer_search_depth",
+  "description" : "The maximum depth of search performed by the query optimizer. Values larger than the number of relations in a query result in better query plans, but take longer to generate an execution plan for a query. Values smaller than the number of relations in a query return an execution plan quicker, but the resulting plan may be far from being optimal. If set to 0, the system automatically picks a reasonable value.",
+  "modifyValue" : "62",
+  "recommendValue" : "",
+  "currentValue" : "62",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~9",
+  "defaultValue" : "6",
+  "name" : "innodb_compression_level",
+  "description" : "Specifies the level of zlib compression to use for InnoDB compressed tables and indexes. A higher value lets you fit more data onto a storage device, at the expense of more CPU overhead during compression. A lower value lets you reduce CPU overhead when storage space is not critical, or you expect the data is not especially compressible.",
+  "modifyValue" : "6",
+  "recommendValue" : "",
+  "currentValue" : "6",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "4~8388608",
+  "defaultValue" : "1024",
+  "name" : "max_sort_length",
+  "description" : "The number of bytes to use when sorting data values. The server uses only the first max_sort_length bytes of each value and ignores the rest. Consequently, values that differ only after the first max_sort_length bytes compare as equal for GROUP BY, ORDER BY, and DISTINCT operations.",
+  "modifyValue" : "1024",
+  "recommendValue" : "",
+  "currentValue" : "1024",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "4096~18446744073709547520",
+  "defaultValue" : "18446744073709547520",
+  "name" : "max_binlog_cache_size",
+  "description" : "max_binlog_cache_size sets the size for the transaction cache only.The visibility to sessions of max_binlog_cache_size matches that of the binlog_cache_size system variable.",
+  "modifyValue" : "18446744073709547520",
+  "recommendValue" : "",
+  "currentValue" : "18446744073709547520",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "134217728~2147483647",
+  "defaultValue" : "134217728",
+  "name" : "innodb_online_alter_log_max_size",
+  "description" : "Maximum modification log file size for online index creation",
+  "modifyValue" : "134217728",
+  "recommendValue" : "",
+  "currentValue" : "134217728",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "512~16384",
+  "defaultValue" : "1024",
+  "name" : "key_cache_block_size",
+  "description" : "The default size of key cache blocks",
+  "modifyValue" : "1024",
+  "recommendValue" : "",
+  "currentValue" : "1024",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "mysql_native_password_proxy_users",
+  "description" : "This variable controls whether the mysql_native_password built-in authentication plugin supports proxy users. It has no effect unless the check_proxy_users system variable is enabled.",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : " |set names utf8mb4|set names utf8|set default_collation_for_utf8mb4=utf8mb4_general_ci|set default_collation_for_utf8mb4=utf8mb4_general_ci;set names utf8mb4|set names utf8mb4 collate utf8mb4_general_ci",
+  "defaultValue" : " ",
+  "name" : "init_connect",
+  "description" : "Command(s) that are executed for each new connection",
+  "modifyValue" : " ",
+  "recommendValue" : "",
+  "currentValue" : " ",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~1000000",
+  "defaultValue" : "150000",
+  "name" : "innodb_adaptive_max_sleep_delay",
+  "description" : "Permits InnoDB to automatically adjust the value of innodb_thread_sleep_delay up or down according to the current workload. Any nonzero value enables automated, dynamic adjustment of the innodb_thread_sleep_delay value, up to the maximum value specified in the innodb_adaptive_max_sleep_delay option. The value represents the number of microseconds. This option can be useful in busy systems, with greater than 16 InnoDB threads. (In practice, it is most valuable for MySQL systems with hundreds or thousands of simultaneous connections.)",
+  "modifyValue" : "150000",
+  "recommendValue" : "",
+  "currentValue" : "150000",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~128",
+  "defaultValue" : "128",
+  "name" : "innodb_purge_rseg_truncate_frequency",
+  "description" : "Defines the frequency with which the purge system frees rollback segments in terms of the number of times that purge is invoked. An undo tablespace cannot be truncated until its rollback segments are freed. Normally, the purge system frees rollback segments once every 128 times that purge is invoked. The default value is 128. Reducing this value increases the frequency with which the purge thread frees rollback segments.",
+  "modifyValue" : "128",
+  "recommendValue" : "",
+  "currentValue" : "128",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1024~16384",
+  "defaultValue" : "8192",
+  "name" : "query_alloc_block_size",
+  "description" : "Allocation block size for query parsing and execution",
+  "modifyValue" : "8192",
+  "recommendValue" : "",
+  "currentValue" : "8192",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~1073741824",
+  "defaultValue" : "50",
+  "name" : "innodb_lock_wait_timeout",
+  "description" : "Timeout in seconds an InnoDB transaction may wait for a lock before being rolled back. Values above 100000000 disable the timeout.",
+  "modifyValue" : "50",
+  "recommendValue" : "",
+  "currentValue" : "50",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~32",
+  "defaultValue" : "1",
+  "name" : "innodb_purge_threads",
+  "description" : "Purge threads can be from 1 to 32. Default is 4.",
+  "modifyValue" : "1",
+  "recommendValue" : "",
+  "currentValue" : "1",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~100",
+  "defaultValue" : "5",
+  "name" : "innodb_compression_failure_threshold_pct",
+  "description" : "Defines the compression failure rate threshold for a table, as a percentage, at which point MySQL begins adding padding within compressed pages to avoid expensive compression failures. When this threshold is passed, MySQL begins to leave additional free space within each new compressed page, dynamically adjusting the amount of free space up to the percentage of page size specified by innodb_compression_pad_pct_max. A value of zero disables the mechanism that monitors compression efficiency and dynamically adjusts the padding amount.",
+  "modifyValue" : "5",
+  "recommendValue" : "",
+  "currentValue" : "5",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~70",
+  "defaultValue" : "50",
+  "name" : "innodb_compression_pad_pct_max",
+  "description" : "Specifies the maximum percentage that can be reserved as free space within each compressed page, allowing room to reorganize the data and modification log within the page when a compressed table or index is updated and the data might be recompressed. Only applies when innodb_compression_failure_threshold_pct is set to a nonzero value, and the rate of compression failures passes the cutoff point.",
+  "modifyValue" : "50",
+  "recommendValue" : "",
+  "currentValue" : "50",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "binlog_rows_query_log_events",
+  "description" : "The binlog_rows_query_log_events system variable affects row-based logging only. When enabled, it causes the MySQL Server to write informational log events such as row query log events into its binary log. This information can be used for debugging and related purposes.such as obtaining the original query issued on the master when it cannot be reconstructed from the row updates.",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~4294967295",
+  "defaultValue" : "0",
+  "name" : "max_execution_time",
+  "description" : "statement be interrupted if the executing time exceeds this value",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~4294967295",
+  "defaultValue" : "20",
+  "name" : "innodb_stats_persistent_sample_pages",
+  "description" : "The number of index pages to sample when estimating cardinality and other statistics for an indexed column, such as those calculated by ANALYZE TABLE. Increasing the value improves the accuracy of index statistics, which can improve the query execution plan, at the expense of increased I/O during the execution of ANALYZE TABLE for an InnoDB table.",
+  "modifyValue" : "20",
+  "recommendValue" : "",
+  "currentValue" : "20",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "32000000~1600000000",
+  "defaultValue" : "640000000",
+  "name" : "innodb_ft_total_cache_size",
+  "description" : "The total memory allocated, in bytes, for the InnoDB full-text search index cache for all tables. Creating numerous tables, each with a FULLTEXT search index, could consume a significant portion of available memory. innodb_ft_total_cache_size defines a global memory limit for all full-text search indexes to help avoid excessive memory consumption. If the global limit is reached by an index operation, a forced sync is triggered.",
+  "modifyValue" : "640000000",
+  "recommendValue" : "",
+  "currentValue" : "640000000",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "event_scheduler",
+  "description" : "Enable the event scheduler. Possible values are ON, OFF, and DISABLED (keep the event scheduler completely deactivated, it cannot be activated run-time)",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "fsync|O_DSYNC|littlesync|nosync|O_DIRECT|O_DIRECT_NO_FSYNC",
+  "defaultValue" : "O_DIRECT",
+  "name" : "innodb_flush_method",
+  "description" : "Defines the method used to flush data to InnoDB data files and log files, which can affect I/O throughput.",
+  "modifyValue" : "O_DIRECT",
+  "recommendValue" : "",
+  "currentValue" : "O_DIRECT",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~4294967295",
+  "defaultValue" : "100",
+  "name" : "eq_range_index_dive_limit",
+  "description" : "The optimizer will use existing index statistics instead of doing index dives for equality ranges if the number of equality ranges for the index is larger than or equal to this number. If set to 0, index dives are always used.",
+  "modifyValue" : "100",
+  "recommendValue" : "",
+  "currentValue" : "100",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~3600",
+  "defaultValue" : "10",
+  "name" : "connect_timeout",
+  "description" : "The number of seconds the mysqld server is waiting for a connect packet before responding with 'Bad handshake'",
+  "modifyValue" : "10",
+  "recommendValue" : "",
+  "currentValue" : "10",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~5000",
+  "defaultValue" : "300",
+  "name" : "innodb_purge_batch_size",
+  "description" : "Number of UNDO log pages to purge in one batch from the history list.",
+  "modifyValue" : "300",
+  "recommendValue" : "",
+  "currentValue" : "300",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~30",
+  "defaultValue" : "4",
+  "name" : "div_precision_increment",
+  "description" : "Precision of the result of '/' operator will be increased on that value",
+  "modifyValue" : "4",
+  "recommendValue" : "",
+  "currentValue" : "4",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "avoid_temporal_upgrade",
+  "description" : "This variable controls whether ALTER TABLE implicitly upgrades temporal columns found to be in pre-5.6.4 format (TIME, DATETIME, and TIMESTAMP columns without support for fractional seconds precision). Upgrading such columns requires a table rebuild, which prevents any use of fast alterations that might otherwise apply to the operation to be performed.",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~64",
+  "defaultValue" : "1",
+  "name" : "innodb_sync_array_size",
+  "description" : "Defines the size of the mutex/lock wait array. Increasing the value splits the internal data structure used to coordinate threads, for higher concurrency in workloads with large numbers of waiting threads. This setting must be configured when the MySQL instance is starting up, and cannot be changed afterward. Increasing the value is recommended for workloads that frequently produce a large number of waiting threads, typically greater than 768.",
+  "modifyValue" : "1",
+  "recommendValue" : "",
+  "currentValue" : "1",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "nulls_equal|nulls_unequal|nulls_ignored",
+  "defaultValue" : "nulls_equal",
+  "name" : "innodb_stats_method",
+  "description" : "Specifies how InnoDB index statistics collection code should treat NULLs. Possible values are NULLS_EQUAL (default), NULLS_UNEQUAL and NULLS_IGNORED",
+  "modifyValue" : "nulls_equal",
+  "recommendValue" : "",
+  "currentValue" : "nulls_equal",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~1073741824",
+  "defaultValue" : "31536000",
+  "name" : "lock_wait_timeout",
+  "description" : "This variable specifies the timeout in seconds for attempts to acquire metadata locks. The permissible values range from 1 to 31536000 (1 year). The default is 31536000.",
+  "modifyValue" : "31536000",
+  "recommendValue" : "",
+  "currentValue" : "31536000",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~18446744073709551615",
+  "defaultValue" : "30",
+  "name" : "net_read_timeout",
+  "description" : "Number of seconds to wait for more data from a connection before aborting the read",
+  "modifyValue" : "30",
+  "recommendValue" : "",
+  "currentValue" : "30",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "ON",
+  "name" : "innodb_deadlock_detect",
+  "description" : "This option is used to disable deadlock detection. On high concurrency systems, deadlock detection can cause a slowdown when numerous threads wait for the same lock. At times, it may be more efficient to disable deadlock detection and rely on the innodb_lock_wait_timeout setting for transaction rollback when a deadlock occurs.",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~64",
+  "defaultValue" : "4",
+  "name" : "innodb_write_io_threads",
+  "description" : "Number of background write I/O threads in InnoDB.",
+  "modifyValue" : "4",
+  "recommendValue" : "",
+  "currentValue" : "4",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "4096~18446744073709547520",
+  "defaultValue" : "18446744073709500000",
+  "name" : "max_binlog_stmt_cache_size",
+  "description" : "If nontransactional statements within a transaction require more than this many bytes of memory, the server generates an error. The minimum value is 4096. The maximum and default values are 4GB on 32-bit platforms and 16EB (exabytes) on 64-bit platforms.",
+  "modifyValue" : "18446744073709500000",
+  "recommendValue" : "",
+  "currentValue" : "18446744073709500000",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "innodb|crc32|none|strict_innodb|strict_crc32|strict_none",
+  "defaultValue" : "crc32",
+  "name" : "innodb_checksum_algorithm",
+  "description" : "Specifies how to generate and verify the checksum stored in the disk blocks of InnoDB tablespaces.",
+  "modifyValue" : "crc32",
+  "recommendValue" : "",
+  "currentValue" : "crc32",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "innodb_ft_enable_diag_print",
+  "description" : "Whether to enable additional full-text search (FTS) diagnostic output. This option is primarily intended for advanced FTS debugging and will not be of interest to most users. Output is printed to the error log and includes information",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "ON",
+  "name" : "innodb_ft_enable_stopword",
+  "description" : "Specifies that a set of stopwords is associated with an InnoDB FULLTEXT index at the time the index is created. If the innodb_ft_user_stopword_table option is set, the stopwords are taken from that table. Else, if the innodb_ft_server_stopword_table option is set, the stopwords are taken from that table. Otherwise, a built-in set of default stopwords is used.",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~18446744073709551615",
+  "defaultValue" : "20000",
+  "name" : "innodb_io_capacity",
+  "description" : "The innodb_io_capacity parameter sets an upper limit on the number of I/O operations performed per second by InnoDB background tasks, such as flushing pages from the buffer pool and merging data from the change buffer.",
+  "modifyValue" : "20000",
+  "recommendValue" : "",
+  "currentValue" : "20000",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~1024",
+  "defaultValue" : "2",
+  "name" : "slow_launch_time",
+  "description" : "If creating the thread takes longer than this value (in seconds), the Slow_launch_threads counter will be incremented",
+  "modifyValue" : "2",
+  "recommendValue" : "",
+  "currentValue" : "2",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "ON",
+  "name" : "innodb_table_locks",
+  "description" : "Enable InnoDB locking in LOCK TABLES",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "ON",
+  "name" : "innodb_stats_persistent",
+  "description" : "Specifies whether InnoDB index statistics are persisted to disk. Otherwise, statistics may be recalculated frequently which can lead to variations in query execution plans. This setting is stored with each table when the table is created. You can set innodb_stats_persistent at the global level before creating a table, or use the STATS_PERSISTENT clause of the CREATE TABLE and ALTER TABLE statements to override the system-wide setting and configure persistent statistics for individual tables.",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "262144~134217728",
+  "defaultValue" : "2097152",
+  "name" : "tmp_table_size",
+  "description" : "If an internal in-memory temporary table exceeds this size, MySQL will automatically convert it to an on-disk MyISAM table",
+  "modifyValue" : "2097152",
+  "recommendValue" : "",
+  "currentValue" : "2097152",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "ON",
+  "name" : "disconnect_on_expired_password",
+  "description" : "This variable controls how the server handles clients with expired passwords",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "InnoDB|innodb",
+  "defaultValue" : "InnoDB",
+  "name" : "default_storage_engine",
+  "description" : "The default storage engine for new tables",
+  "modifyValue" : "InnoDB",
+  "recommendValue" : "",
+  "currentValue" : "InnoDB",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "1600000~80000000",
+  "defaultValue" : "8000000",
+  "name" : "innodb_ft_cache_size",
+  "description" : "The memory allocated, in bytes, for the InnoDB FULLTEXT search index cache, which holds a parsed document in memory while creating an InnoDB FULLTEXT index. Index inserts and updates are only committed to disk when the innodb_ft_cache_size size limit is reached. innodb_ft_cache_size defines the cache size on a per table basis.",
+  "modifyValue" : "8000000",
+  "recommendValue" : "",
+  "currentValue" : "8000000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "4096~16777216",
+  "defaultValue" : "1048576",
+  "name" : "binlog_cache_size",
+  "description" : "The size of the transactional cache for updates to transactional engines for the binary log. If you often use transactions containing many statements, you can increase this to get more performance",
+  "modifyValue" : "1048576",
+  "recommendValue" : "",
+  "currentValue" : "1048576",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~99",
+  "defaultValue" : "75",
+  "name" : "innodb_max_dirty_pages_pct",
+  "description" : "Percentage of dirty pages allowed in bufferpool.",
+  "modifyValue" : "75",
+  "recommendValue" : "",
+  "currentValue" : "75",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "ON",
+  "name" : "innodb_disable_sort_file_cache",
+  "description" : "if ON, disable page cache when innodb using sort file",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1000000~4294967295",
+  "defaultValue" : "2000000000",
+  "name" : "innodb_ft_result_cache_limit",
+  "description" : "The InnoDB full-text search query result cache limit (defined in bytes) per full-text search query or per thread. Intermediate and final InnoDB full-text search query results are handled in memory. Use innodb_ft_result_cache_limit to place a size limit on the full-text search query result cache to avoid excessive memory consumption in case of very large InnoDB full-text search query results (millions or hundreds of millions of rows, for example). Memory is allocated as required when a full-text search query is processed. If the result cache size limit is reached, an error is returned indicating that the query exceeds the maximum allowed memory.",
+  "modifyValue" : "2000000000",
+  "recommendValue" : "",
+  "currentValue" : "2000000000",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0.1~31536000",
+  "defaultValue" : "1",
+  "name" : "long_query_time",
+  "description" : "Log all queries that have taken more than long_query_time seconds to execute to file. The argument will be treated as a decimal value with microsecond precision",
+  "modifyValue" : "1",
+  "recommendValue" : "",
+  "currentValue" : "1",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "10~86400",
+  "defaultValue" : "7200",
+  "name" : "interactive_timeout",
+  "description" : "The number of seconds the server waits for activity on an interactive connection before closing it",
+  "modifyValue" : "7200",
+  "recommendValue" : "",
+  "currentValue" : "7200",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~64",
+  "defaultValue" : "4",
+  "name" : "innodb_read_io_threads",
+  "description" : "Number of background read I/O threads in InnoDB.",
+  "modifyValue" : "4",
+  "recommendValue" : "",
+  "currentValue" : "4",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "1024~131072",
+  "defaultValue" : "4096",
+  "name" : "transaction_prealloc_size",
+  "description" : "There is a per-transaction memory pool from which various transaction-related allocations take memory. The initial size of the pool in bytes is transaction_prealloc_size. For every allocation that cannot be satisfied from the pool because it has insufficient memory available, the pool is increased by transaction_alloc_block_size bytes. When the transaction ends, the pool is truncated to transaction_prealloc_size bytes.",
+  "modifyValue" : "4096",
+  "recommendValue" : "",
+  "currentValue" : "4096",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "2097152~107374182400",
+  "defaultValue" : "1073741824",
+  "name" : "temptable_max_ram",
+  "description" : "Maximum amount of memory (in bytes) the TempTable storage engine is allowed to allocate from the main memory (RAM) before starting to store data on disk.",
+  "modifyValue" : "1073741824",
+  "recommendValue" : "",
+  "currentValue" : "1073741824",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "16384~1844674407370954752",
+  "defaultValue" : "67108864",
+  "name" : "max_heap_table_size",
+  "description" : "This variable sets the maximum size to which user-created MEMORY tables are permitted to grow. The value of the variable is used to calculate MEMORY table MAX_ROWS values. Setting this variable has no effect on any existing MEMORY table, unless the table is re-created with a statement such as CREATE TABLE or altered with ALTER TABLE or TRUNCATE TABLE. A server restart also sets the maximum size of existing MEMORY tables to the global max_heap_table_size value.",
+  "modifyValue" : "67108864",
+  "recommendValue" : "",
+  "currentValue" : "67108864",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "explicit_defaults_for_timestamp",
+  "description" : "This system variable determines whether the server enables certain nonstandard behaviors for default values and NULL-value handling in TIMESTAMP columns.",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~1000",
+  "defaultValue" : "64",
+  "name" : "innodb_autoextend_increment",
+  "description" : "The increment size (in megabytes) for extending the size of an auto-extending InnoDB system tablespace file when it becomes full. The default value is 64.",
+  "modifyValue" : "64",
+  "recommendValue" : "",
+  "currentValue" : "64",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION|STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION|NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION|NO_ENGINE_SUBSTITUTION",
+  "defaultValue" : "ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION",
+  "name" : "sql_mode",
+  "description" : "Syntax: sql-mode=mode[,mode[,mode...]]. See the manual for the complete list of valid sql modes",
+  "modifyValue" : "ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION",
+  "recommendValue" : "",
+  "currentValue" : "ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~4294967295",
+  "defaultValue" : "8",
+  "name" : "innodb_stats_transient_sample_pages",
+  "description" : "The number of index pages to sample when estimating cardinality and other statistics for an indexed column, such as those calculated by ANALYZE TABLE. The default value is 8. Increasing the value improves the accuracy of index statistics, which can improve the query execution plan, at the expense of increased I/O when opening an InnoDB table or recalculating statistics.",
+  "modifyValue" : "8",
+  "recommendValue" : "",
+  "currentValue" : "8",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "innodb_random_read_ahead",
+  "description" : "Enables the random read-ahead technique for optimizing InnoDB I/O.",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~18446744073709551615",
+  "defaultValue" : "8388608",
+  "name" : "range_optimizer_max_mem_size",
+  "description" : "The limit on memory consumption for the range optimizer. A value of 0 means “no limit.” If an execution plan considered by the optimizer uses the range access method but the optimizer estimates that the amount of memory needed for this method would exceed the limit, it abandons the plan and considers other plans. For more information, see Limiting Memory Use for Range Optimization.",
+  "modifyValue" : "8388608",
+  "recommendValue" : "",
+  "currentValue" : "8388608",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF|ALL",
+  "defaultValue" : "ON",
+  "name" : "delay_key_write",
+  "description" : "Type of DELAY_KEY_WRITE",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "3~1048576",
+  "defaultValue" : "65536",
+  "name" : "max_points_in_geometry",
+  "description" : "The maximum value of the points_per_circle argument to the ST_Buffer_Strategy() function.",
+  "modifyValue" : "65536",
+  "recommendValue" : "",
+  "currentValue" : "65536",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "OFF",
+  "defaultValue" : "OFF",
+  "name" : "general_log",
+  "description" : "Whether the general query log is enabled. The destination for log output is controlled by the log_output system variable.",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "1~31536000",
+  "defaultValue" : "86400",
+  "name" : "wait_timeout",
+  "description" : "The number of seconds the server waits for activity on a connection before closing it",
+  "modifyValue" : "86400",
+  "recommendValue" : "",
+  "currentValue" : "86400",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "0|1",
+  "defaultValue" : "1",
+  "name" : "log_bin_use_v1_row_events",
+  "description" : "If equal to 1 then version 1 row events are written to a row based binary log. If equal to 0, then the latest version of events are written. This option is useful during some upgrades.",
+  "modifyValue" : "1",
+  "recommendValue" : "",
+  "currentValue" : "1",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "OFF|ON",
+  "defaultValue" : "OFF",
+  "name" : "innodb_print_all_deadlocks",
+  "description" : "Print all deadlocks to MySQL error log (off by default)",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "4096~16777216",
+  "defaultValue" : "32768",
+  "name" : "binlog_stmt_cache_size",
+  "description" : "The size of the statement cache for updates to non-transactional engines for the binary log. If you often use statements updating a great number of rows, you can increase this to get more performance",
+  "modifyValue" : "32768",
+  "recommendValue" : "",
+  "currentValue" : "32768",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "READ-UNCOMMITTED|READ-COMMITTED|REPEATABLE-READ|SERIALIZABLE",
+  "defaultValue" : "READ-COMMITTED",
+  "name" : "transaction_isolation",
+  "description" : "Default transaction isolation level",
+  "modifyValue" : "READ-COMMITTED",
+  "recommendValue" : "",
+  "currentValue" : "READ-COMMITTED",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "ON",
+  "name" : "innodb_buffer_pool_dump_at_shutdown",
+  "description" : "Specifies whether to record the pages cached in the InnoDB buffer pool when the MySQL server is shut down, to shorten the warmup process at the next restart. Typically used in combination with innodb_buffer_pool_load_at_startup. The innodb_buffer_pool_dump_pct option defines the percentage of most recently used buffer pool pages to dump.",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "8192~1048576",
+  "defaultValue" : "8192",
+  "name" : "query_prealloc_size",
+  "description" : "Persistent buffer for query parsing and execution",
+  "modifyValue" : "8192",
+  "recommendValue" : "",
+  "currentValue" : "8192",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "100~4294967295",
+  "defaultValue" : "300",
+  "name" : "key_cache_age_threshold",
+  "description" : "This characterizes the number of hits a hot block has to be untouched until it is considered aged enough to be downgraded to a warm block. This specifies the percentage ratio of that number of hits to the total number of blocks in key cache",
+  "modifyValue" : "300",
+  "recommendValue" : "",
+  "currentValue" : "300",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1024~131072",
+  "defaultValue" : "8192",
+  "name" : "transaction_alloc_block_size",
+  "description" : "The amount in bytes by which to increase a per-transaction memory pool which needs memory. See the description of transaction_prealloc_size.",
+  "modifyValue" : "8192",
+  "recommendValue" : "",
+  "currentValue" : "8192",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~4294967295",
+  "defaultValue" : "1",
+  "name" : "optimizer_trace_limit",
+  "description" : "The maximum number of optimizer traces to display.",
+  "modifyValue" : "1",
+  "recommendValue" : "",
+  "currentValue" : "1",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "0|1",
+  "defaultValue" : "1",
+  "name" : "optimizer_prune_level",
+  "description" : "Controls the heuristics applied during query optimization to prune less-promising partial plans from the optimizer search space. A value of 0 disables heuristics so that the optimizer performs an exhaustive search. A value of 1 causes the optimizer to prune plans based on the number of rows retrieved by intermediate plans.",
+  "modifyValue" : "1",
+  "recommendValue" : "",
+  "currentValue" : "1",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~4294967295",
+  "defaultValue" : "0",
+  "name" : "innodb_max_purge_lag",
+  "description" : "Defines the maximum length of the purge queue. The default value of 0 indicates no limit (no delays).",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~100",
+  "defaultValue" : "25",
+  "name" : "innodb_buffer_pool_dump_pct",
+  "description" : "Specifies the percentage of the most recently used pages for each buffer pool to read out and dump. The range is 1 to 100. The default value is 25. For example, if there are 4 buffer pools with 100 pages each, and innodb_buffer_pool_dump_pct is set to 25, the 25 most recently used pages from each buffer pool are dumped.",
+  "modifyValue" : "25",
+  "recommendValue" : "",
+  "currentValue" : "25",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~99",
+  "defaultValue" : "0",
+  "name" : "innodb_max_dirty_pages_pct_lwm",
+  "description" : "Defines a low water mark representing the percentage of dirty pages at which preflushing is enabled to control the dirty page ratio. The default of 0 disables the pre-flushing behavior entirely",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~255",
+  "defaultValue" : "0",
+  "name" : "max_sp_recursion_depth",
+  "description" : "The number of times that any given stored procedure may be called recursively. The default value for this option is 0, which completely disables recursion in stored procedures. The maximum value is 255.",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "innodb_status_output_locks",
+  "description" : "Enables or disables the InnoDB Lock Monitor. When enabled, the InnoDB Lock Monitor prints additional information about locks in SHOW ENGINE INNODB STATUS output and in periodic output printed to the MySQL error log. Periodic output for the InnoDB Lock Monitor is printed as part of the standard InnoDB Monitor output. The standard InnoDB Monitor must therefore be enabled for the InnoDB Lock Monitor to print data to the MySQL error log periodically.",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "YES|NO",
+  "defaultValue" : "YES",
+  "name" : "updatable_views_with_limit",
+  "description" : "This variable controls whether updates to a view can be made when the view does not contain all columns of the primary key defined in the underlying table, if the update statement contains a LIMIT clause. (Such updates often are generated by GUI tools.) An update is an UPDATE or DELETE statement. Primary key here means a PRIMARY KEY, or a UNIQUE index in which no column can contain NULL.",
+  "modifyValue" : "YES",
+  "recommendValue" : "",
+  "currentValue" : "YES",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "full|minimal",
+  "defaultValue" : "full",
+  "name" : "binlog_row_image",
+  "description" : "Controls whether rows should be logged in 'FULL', 'NOBLOB' or 'MINIMAL' formats. 'FULL', means that all columns in the before and after image are logged. 'NOBLOB', means that mysqld avoids logging blob columns whenever possible (eg, blob column was not changed or is not part of primary key). 'MINIMAL', means that a PK equivalent (PK columns or full row if there is no PK in the table) is logged in the before image, and only changed columns are logged in the after image. (Default: FULL).",
+  "modifyValue" : "full",
+  "recommendValue" : "",
+  "currentValue" : "full",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~50",
+  "defaultValue" : "25",
+  "name" : "innodb_change_buffer_max_size",
+  "description" : "Maximum size for the InnoDB change buffer, as a percentage of the total size of the buffer pool. You might increase this value for a MySQL server with heavy insert, update, and delete activity, or decrease it for a MySQL server with unchanging data used for reporting.",
+  "modifyValue" : "25",
+  "recommendValue" : "",
+  "currentValue" : "25",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "innodb_optimize_fulltext_only",
+  "description" : "Changes the way OPTIMIZE TABLE operates on InnoDB tables. Intended to be enabled temporarily, during maintenance operations for InnoDB tables with FULLTEXT indexes.",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "10485760~18446744073709551615",
+  "defaultValue" : "1073741824",
+  "name" : "innodb_max_undo_log_size",
+  "description" : "Defines a threshold size for undo tablespaces. If an undo tablespace exceeds the threshold, it can be marked for truncation when innodb_undo_log_truncate is enabled. The default value is 1073741824 bytes (1024 MiB).",
+  "modifyValue" : "1073741824",
+  "recommendValue" : "",
+  "currentValue" : "1073741824",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "DATABASE|LOGICAL_CLOCK",
+  "defaultValue" : "LOGICAL_CLOCK",
+  "name" : "slave_parallel_type",
+  "description" : "This variable specifies the policy used to decide which transactions are allowed to execute in parallel on the slave. The variable has no effect on slaves for which multithreading is not enabled.When slave_preserve_commit_order=1 is set, you can only use LOGICAL_CLOCK.",
+  "modifyValue" : "LOGICAL_CLOCK",
+  "recommendValue" : "",
+  "currentValue" : "LOGICAL_CLOCK",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "innodb_adaptive_hash_index",
+  "description" : "Enable InnoDB adaptive hash index (enabled by default). Disable with --skip-innodb-adaptive-hash-index.",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~4294967295",
+  "defaultValue" : "30",
+  "name" : "innodb_sync_spin_loops",
+  "description" : "The number of times a thread waits for an InnoDB mutex to be freed before the thread is suspended.",
+  "modifyValue" : "30",
+  "recommendValue" : "",
+  "currentValue" : "30",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~18446744073709551615",
+  "defaultValue" : "60",
+  "name" : "net_write_timeout",
+  "description" : "Number of seconds to wait for a block to be written to a connection before aborting the write",
+  "modifyValue" : "60",
+  "recommendValue" : "",
+  "currentValue" : "60",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~31536000",
+  "defaultValue" : "0",
+  "name" : "flush_time",
+  "description" : "If this is set to a nonzero value, all tables are closed every flush_time seconds to free up resources and synchronize unflushed data to disk. This option is best used only on systems with minimal resources.",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "0|1",
+  "defaultValue" : "1",
+  "name" : "lower_case_table_names",
+  "description" : "If set to 1 table names are stored in lowercase on disk and table names will be case-insensitive. Should be set to 2 if you are using a case insensitive file system",
+  "modifyValue" : "1",
+  "recommendValue" : "",
+  "currentValue" : "1",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "sha256_password_proxy_users",
+  "description" : "This variable controls whether the sha256_password built-in authentication plugin supports proxy users. It has no effect unless the check_proxy_users system variable is enabled.",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "utf8|latin1|gbk|binary",
+  "defaultValue" : "binary",
+  "name" : "character_set_filesystem",
+  "description" : "The file system character set. This variable is used to interpret string literals that refer to file names, such as in the LOAD DATA INFILE and SELECT ... INTO OUTFILE statements and the LOAD_FILE() function. Such file names are converted from character_set_client to character_set_filesystem before the file opening attempt occurs. The default value is binary, which means that no conversion occurs. For systems on which multibyte file names are permitted, a different value may be more appropriate. For example, if the system represents file names using UTF-8, set character_set_filesystem to 'utf8'.",
+  "modifyValue" : "binary",
+  "recommendValue" : "",
+  "currentValue" : "binary",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "ON",
+  "name" : "innodb_flush_sync",
+  "description" : "The innodb_flush_sync parameter, which is enabled by default, causes the innodb_io_capacity setting to be ignored for bursts of I/O activity that occur at checkpoints. To adhere to the limit on InnoDB background I/O activity defined by the innodb_io_capacity setting, disable innodb_flush_sync.",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~1024",
+  "defaultValue" : "56",
+  "name" : "innodb_read_ahead_threshold",
+  "description" : "Number of pages that must be accessed sequentially for InnoDB to trigger a readahead.",
+  "modifyValue" : "56",
+  "recommendValue" : "",
+  "currentValue" : "56",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "0|1|2",
+  "defaultValue" : "1",
+  "name" : "concurrent_insert",
+  "description" : "Use concurrent insert with MyISAM. Possible values are NEVER, AUTO, ALWAYS",
+  "modifyValue" : "1",
+  "recommendValue" : "",
+  "currentValue" : "1",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "ON",
+  "name" : "slow_query_log",
+  "description" : "Specify the initial slow query log state. With no argument or an argument of 1, the --slow-query-log option enables the log. If omitted or given with an argument of 0, the option disables the log.",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1024~1048576",
+  "defaultValue" : "16384",
+  "name" : "net_buffer_length",
+  "description" : "Each client thread is associated with a connection buffer and result buffer. Both begin with a size given by net_buffer_length but are dynamically enlarged up to max_allowed_packet bytes as needed. The result buffer shrinks to net_buffer_length after each SQL statement.",
+  "modifyValue" : "16384",
+  "recommendValue" : "",
+  "currentValue" : "16384",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~70",
+  "defaultValue" : "10",
+  "name" : "innodb_adaptive_flushing_lwm",
+  "description" : "Defines the low water mark representing percentage of redo log capacity at which adaptive flushing is enabled.",
+  "modifyValue" : "10",
+  "recommendValue" : "",
+  "currentValue" : "10",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "ON",
+  "name" : "innodb_log_checksums",
+  "description" : "Enables or disables checksums for redo log pages. innodb_log_checksums replaces innodb_log_checksum_algorithm.",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "OFF|OWN_GTID|ALL_GTIDS",
+  "defaultValue" : "OFF",
+  "name" : "session_track_gtids",
+  "description" : "Controls a tracker for capturing GTIDs and returning them in the OK packet. Depending on the value of this option, at the end of executing a transaction, the GTIDs specified are captured by the tracker and appended to the OK packet.",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~1000000",
+  "defaultValue" : "10000",
+  "name" : "innodb_thread_sleep_delay",
+  "description" : "Time of innodb thread sleeping before joining InnoDB queue (usec). Value 0 disable a sleep",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "5~95",
+  "defaultValue" : "37",
+  "name" : "innodb_old_blocks_pct",
+  "description" : "Percentage of the buffer pool to reserve for 'old' blocks.",
+  "modifyValue" : "37",
+  "recommendValue" : "",
+  "currentValue" : "37",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "log_slow_admin_statements",
+  "description" : "Include slow administrative statements in the statements written to the slow query log",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "innodb_stats_on_metadata",
+  "description" : "Enable statistics gathering for metadata commands such as SHOW TABLE STATUS for tables that use transient statistics (off by default)",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "4~1844674407370954752",
+  "defaultValue" : "1024",
+  "name" : "group_concat_max_len",
+  "description" : "The maximum length of the result of function GROUP_CONCAT()",
+  "modifyValue" : "1024",
+  "recommendValue" : "",
+  "currentValue" : "1024",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "65536~67108864",
+  "defaultValue" : "1048576",
+  "name" : "innodb_sort_buffer_size",
+  "description" : "Specifies the size of sort buffers used to sort data during creation of an InnoDB index. The specified size defines the amount of data that is read into memory for internal sorting and then written out to disk. This process is referred to as a “run”. During the merge phase, pairs of buffers of the specified size are read in and merged. The larger the setting, the fewer runs and merges there are.",
+  "modifyValue" : "1048576",
+  "recommendValue" : "",
+  "currentValue" : "1048576",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "1~64",
+  "defaultValue" : "8",
+  "name" : "innodb_page_cleaners",
+  "description" : "The number of page cleaner threads that flush dirty pages from buffer pool instances. Page cleaner threads perform flush list and LRU flushing. A single page cleaner thread was introduced in MySQL 5.6 to offload buffer pool flushing work from the InnoDB master thread. In MySQL 5.7, InnoDB provides support for multiple page cleaner threads. A value of 1 maintains the pre-MySQL 5.7 configuration in which there is a single page cleaner thread. When there are multiple page cleaner threads, buffer pool flushing tasks for each buffer pool instance are dispatched to idle page cleaner threads. The innodb_page_cleaners default value was changed from 1 to 4 in MySQL 5.7. If the number of page cleaner threads exceeds the number of buffer pool instances",
+  "modifyValue" : "8",
+  "recommendValue" : "",
+  "currentValue" : "8",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~1000",
+  "defaultValue" : "6",
+  "name" : "innodb_spin_wait_delay",
+  "description" : "The maximum delay between polls for a spin lock. The low-level implementation of this mechanism varies depending on the combination of hardware and operating system, so the delay does not correspond to a fixed time interval. For more information, see Section 14.6.10, “Configuring Spin Lock Polling”.",
+  "modifyValue" : "6",
+  "recommendValue" : "",
+  "currentValue" : "6",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "262144~16777216",
+  "defaultValue" : "262144",
+  "name" : "myisam_sort_buffer_size",
+  "description" : "The buffer that is allocated when sorting the index when doing a REPAIR or when creating indexes with CREATE INDEX or ALTER TABLE",
+  "modifyValue" : "262144",
+  "recommendValue" : "",
+  "currentValue" : "262144",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~128",
+  "defaultValue" : "128",
+  "name" : "innodb_rollback_segments",
+  "description" : "Defines the number of rollback segments used by InnoDB.",
+  "modifyValue" : "128",
+  "recommendValue" : "",
+  "currentValue" : "128",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~1000",
+  "defaultValue" : "0",
+  "name" : "innodb_commit_concurrency",
+  "description" : "The number of threads that can commit at the same time. A value of 0 (the default) permits any number of transactions to commit simultaneously.",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "1~4294967295",
+  "defaultValue" : "5000",
+  "name" : "innodb_concurrency_tickets",
+  "description" : "Number of times a thread is allowed to enter InnoDB within the same SQL query after it has once got the ticket",
+  "modifyValue" : "5000",
+  "recommendValue" : "",
+  "currentValue" : "5000",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~65535",
+  "defaultValue" : "1",
+  "name" : "auto_increment_increment",
+  "description" : "Auto-increment columns are incremented by this",
+  "modifyValue" : "1",
+  "recommendValue" : "",
+  "currentValue" : "1",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "CRC32|NONE",
+  "defaultValue" : "CRC32",
+  "name" : "binlog_checksum",
+  "description" : "Type of BINLOG_CHECKSUM_ALG. Include checksum for log events in the binary log. Possible values are NONE and CRC32 default is CRC32.",
+  "modifyValue" : "CRC32",
+  "recommendValue" : "",
+  "currentValue" : "CRC32",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~838860",
+  "defaultValue" : "1024",
+  "name" : "max_length_for_sort_data",
+  "description" : "Max number of bytes in sorted records",
+  "modifyValue" : "1024",
+  "recommendValue" : "",
+  "currentValue" : "1024",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~65535",
+  "defaultValue" : "3000",
+  "name" : "back_log",
+  "description" : "The number of outstanding connection requests MySQL can have. This comes into play when the main MySQL thread gets very many connection requests in a very short time",
+  "modifyValue" : "3000",
+  "recommendValue" : "",
+  "currentValue" : "3000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~65535",
+  "defaultValue" : "64",
+  "name" : "max_error_count",
+  "description" : "The maximum number of error, warning, and information messages to be stored for display by the SHOW ERRORS and SHOW WARNINGS statements. This is the same as the number of condition areas in the diagnostics area, and thus the number of conditions that can be inspected by GET DIAGNOSTICS.",
+  "modifyValue" : "64",
+  "recommendValue" : "",
+  "currentValue" : "64",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~18446744073709551615",
+  "defaultValue" : "40000",
+  "name" : "innodb_io_capacity_max",
+  "description" : "If flushing activity falls behind, InnoDB can flush more aggressively than the limit imposed by innodb_io_capacity. innodb_io_capacity_max defines an upper limit the number of I/O operations performed per second by InnoDB background tasks in such situations.",
+  "modifyValue" : "40000",
+  "recommendValue" : "",
+  "currentValue" : "40000",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "ON",
+  "name" : "binlog_order_commits",
+  "description" : "When this variable is enabled on a master (the default), transactions are externalized in the same order as they are written to the binary log. If disabled, transactions may be committed in parallel. In some cases, disabling this variable might produce a performance increment.",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~4294967295",
+  "defaultValue" : "0",
+  "name" : "min_examined_row_limit",
+  "description" : "Queries that examine fewer than this number of rows are not logged to the slow query log.",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~16",
+  "defaultValue" : "3",
+  "name" : "innodb_ft_min_token_size",
+  "description" : "InnoDB Fulltext search minimum token size in characters",
+  "modifyValue" : "3",
+  "recommendValue" : "",
+  "currentValue" : "3",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~18446744073709551615",
+  "defaultValue" : "10000",
+  "name" : "sync_relay_log_info",
+  "description" : "Setting this variable takes effect for all replication channels immediately, including running channels.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "ON",
+  "name" : "innodb_stats_auto_recalc",
+  "description" : "Causes InnoDB to automatically recalculate persistent statistics after the data in a table is changed substantially. The threshold value is 10% of the rows in the table. This setting applies to tables created when the innodb_stats_persistent option is enabled. Automatic statistics recalculation may also be configured by specifying STATS_PERSISTENT=1 in a CREATE TABLE or ALTER TABLE statement. The amount of data sampled to produce the statistics is controlled by the innodb_stats_persistent_sample_pages configuration option.",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "100~1000",
+  "defaultValue" : "100",
+  "name" : "max_connect_errors",
+  "description" : "If there is more than this number of interrupted connections from a host this host will be blocked from further connections",
+  "modifyValue" : "100",
+  "recommendValue" : "",
+  "currentValue" : "100",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "128~4294967295",
+  "defaultValue" : "1048576",
+  "name" : "join_buffer_size",
+  "description" : "The minimum size of the buffer that is used for plain index scans, range index scans, and joins that do not use indexes and thus perform full table scans.",
+  "modifyValue" : "1048576",
+  "recommendValue" : "",
+  "currentValue" : "1048576",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "none|inserts|deletes|changes|purges|all",
+  "defaultValue" : "all",
+  "name" : "innodb_change_buffering",
+  "description" : "Whether InnoDB performs change buffering, an optimization that delays write operations to secondary indexes so that the I/O operations can be performed sequentially. Permitted values are described in the following table.",
+  "modifyValue" : "all",
+  "recommendValue" : "",
+  "currentValue" : "all",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~4294967295",
+  "defaultValue" : "16384",
+  "name" : "optimizer_trace_max_mem_size",
+  "description" : "The maximum cumulative size of stored optimizer traces.",
+  "modifyValue" : "16384",
+  "recommendValue" : "",
+  "currentValue" : "16384",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "0|1|2",
+  "defaultValue" : "2",
+  "name" : "innodb_autoinc_lock_mode",
+  "description" : "",
+  "modifyValue" : "2",
+  "recommendValue" : "",
+  "currentValue" : "2",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "OFF|ON",
+  "defaultValue" : "OFF",
+  "name" : "innodb_rollback_on_timeout",
+  "description" : "Roll back the complete transaction on lock wait timeout, for 4.x compatibility (disabled by default)",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "1~102400",
+  "defaultValue" : "102400",
+  "name" : "max_write_lock_count",
+  "description" : "After this many write locks, allow some read locks to run in between",
+  "modifyValue" : "102400",
+  "recommendValue" : "",
+  "currentValue" : "102400",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "master_verify_checksum",
+  "description" : "Enabling this variable causes the master to examine checksums when reading from the binary log. master_verify_checksum is disabled by default.in this case, the master uses the event length from the binary log to verify events, so that only complete events are read from the binary log.",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~18446744073709551615",
+  "defaultValue" : "18446744073709500000",
+  "name" : "max_join_size",
+  "description" : "Do not permit statements that probably need to examine more than max_join_size rows (for single-table statements) or row combinations (for multiple-table statements) or that are likely to do more than max_join_size disk seeks. By setting this value, you can catch statements where keys are not used properly and that would probably take a long time. Set it if your users tend to perform joins that lack a WHERE clause, that take a long time, or that return millions of rows.",
+  "modifyValue" : "18446744073709500000",
+  "recommendValue" : "",
+  "currentValue" : "18446744073709500000",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~3",
+  "defaultValue" : "2",
+  "name" : "log_error_verbosity",
+  "description" : "The log_error_verbosity system variable specifies the verbosity for handling events intended for the error log.",
+  "modifyValue" : "2",
+  "recommendValue" : "",
+  "currentValue" : "2",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~4294967295",
+  "defaultValue" : "0",
+  "name" : "log_throttle_queries_not_using_indexes",
+  "description" : "If log_queries_not_using_indexes is enabled, the log_throttle_queries_not_using_indexes variable limits the number of such queries per minute that can be written to the slow query log.",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~10000000",
+  "defaultValue" : "0",
+  "name" : "innodb_max_purge_lag_delay",
+  "description" : "Specifies the maximum delay in microseconds for the delay imposed by theinnodb_max_purge_lag configuration option. A nonzero value represents an upper limit on the delay period computed from the formula based on the value of innodb_max_purge_lag. The default of zero means that there is no upper limit imposed on the delay interval.",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "innodb_cmp_per_index_enabled",
+  "description" : "Enables per-index compression-related statistics in the INFORMATION_SCHEMA.INNODB_CMP_PER_INDEX table. Because these statistics can be expensive to gather, only enable this option on development, test, or slave instances during performance tuning related to InnoDB compressed tables.",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "0|1",
+  "defaultValue" : "0",
+  "name" : "low_priority_updates",
+  "description" : "INSERT/DELETE/UPDATE has lower priority than selects",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~65535",
+  "defaultValue" : "1",
+  "name" : "auto_increment_offset",
+  "description" : "Offset added to Auto-increment columns. Used when auto-increment-increment != 1",
+  "modifyValue" : "1",
+  "recommendValue" : "",
+  "currentValue" : "1",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "4096~18446744073709551615",
+  "defaultValue" : "4096",
+  "name" : "range_alloc_block_size",
+  "description" : "The size of blocks that are allocated when doing range optimization.",
+  "modifyValue" : "4096",
+  "recommendValue" : "",
+  "currentValue" : "4096",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "mysql_native_password|sha256_password|caching_sha2_password",
+  "defaultValue" : "mysql_native_password",
+  "name" : "default_authentication_plugin",
+  "description" : "The default authentication plugin.",
+  "modifyValue" : "mysql_native_password",
+  "recommendValue" : "",
+  "currentValue" : "mysql_native_password",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "32768~4294967295",
+  "defaultValue" : "2097152",
+  "name" : "sort_buffer_size",
+  "description" : "Each session that must perform a sort allocates a buffer of this size.",
+  "modifyValue" : "2097152",
+  "recommendValue" : "",
+  "currentValue" : "2097152",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : " |ALL_LOSSY|ALL_NON_LOSSY|ALL_SIGNED|ALL_UNSIGNED",
+  "defaultValue" : "",
+  "name" : "slave_type_conversions",
+  "description" : "Each thread that does a sequential scan for a MyISAM table allocates a buffer of this size (in bytes) for each table it scans. The value of this variable should be a multiple of 4KB.",
+  "modifyValue" : "",
+  "recommendValue" : "",
+  "currentValue" : "",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "16384~1073741824",
+  "defaultValue" : "1073741824",
+  "name" : "max_allowed_packet",
+  "description" : "The packet message buffer is initialized to net_buffer_length bytes, but can grow up to max_allowed_packet bytes when needed. This value by default is small, to catch large (possibly incorrect) packets.",
+  "modifyValue" : "1073741824",
+  "recommendValue" : "",
+  "currentValue" : "1073741824",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "8200~2147479552",
+  "defaultValue" : "1048576",
+  "name" : "read_buffer_size",
+  "description" : "Each thread that does a sequential scan for a MyISAM table allocates a buffer of this size (in bytes) for each table it scans. The value of this variable should be a multiple of 4KB.",
+  "modifyValue" : "1048576",
+  "recommendValue" : "",
+  "currentValue" : "1048576",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~16384",
+  "defaultValue" : "100",
+  "name" : "thread_cache_size",
+  "description" : "How many threads the server should cache for reuse. When a client disconnects, the client's threads are put in the cache if there are fewer than thread_cache_size threads there. Requests for threads are satisfied by reusing threads taken from the cache if possible, and only when the cache is empty is a new thread created. This variable can be increased to improve performance if you have a lot of new connections. Normally, this does not provide a notable performance improvement if you have a good thread implementation. However, if your server sees hundreds of connections per second you should normally set thread_cache_size high enough so that most new connections use cached threads. By examining the difference between the Connections and Threads_created status variables, you can see how efficient the thread cache is.",
+  "modifyValue" : "100",
+  "recommendValue" : "",
+  "currentValue" : "100",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "-2147483648~2147483647",
+  "defaultValue" : "-1",
+  "name" : "optimizer_trace_offset",
+  "description" : "The offset of optimizer traces to display.",
+  "modifyValue" : "-1",
+  "recommendValue" : "",
+  "currentValue" : "-1",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "ON",
+  "name" : "innodb_adaptive_flushing",
+  "description" : "Specifies whether to dynamically adjust the rate of flushing dirty pages in the InnoDB buffer pool based on the workload. Adjusting the flush rate dynamically is intended to avoid bursts of I/O activity.",
+  "modifyValue" : "ON",
+  "recommendValue" : "",
+  "currentValue" : "ON",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "log_queries_not_using_indexes",
+  "description" : "Log queries that are executed without benefit of any index to the slow log if it is open",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~64",
+  "defaultValue" : "16",
+  "name" : "table_open_cache_instances",
+  "description" : "The number of open tables cache instances.",
+  "modifyValue" : "16",
+  "recommendValue" : "",
+  "currentValue" : "16",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "0|1|2",
+  "defaultValue" : "0",
+  "name" : "innodb_flush_neighbors",
+  "description" : "Specifies whether flushing a page from the InnoDB buffer pool also flushes other dirty pages in the same extent.",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "1~64",
+  "defaultValue" : "8",
+  "name" : "innodb_buffer_pool_instances",
+  "description" : "The number of regions that the InnoDB buffer pool is divided into. For systems with buffer pools in the multi-gigabyte range, dividing the buffer pool into separate instances can improve concurrency, by reducing contention as different threads read and write to cached pages. Each page that is stored in or read from the buffer pool is assigned to one of the buffer pool instances randomly, using a hashing function. Each buffer pool manages its own free lists, flush lists, LRUs, and all other data structures connected to a buffer pool, and is protected by its own buffer pool mutex.",
+  "modifyValue" : "8",
+  "recommendValue" : "",
+  "currentValue" : "8",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "ON|OFF",
+  "defaultValue" : "OFF",
+  "name" : "performance_schema",
+  "description" : "Enable the performance schema..",
+  "modifyValue" : "OFF",
+  "recommendValue" : "",
+  "currentValue" : "OFF",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "1000",
+  "name" : "performance_schema_max_table_instances",
+  "description" : "Maximum number of instrumented tables.",
+  "modifyValue" : "1000",
+  "recommendValue" : "",
+  "currentValue" : "1000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "10000",
+  "name" : "performance_schema_max_index_stat",
+  "description" : "Maximum number of index statistics for instrumented tables.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~1048576",
+  "defaultValue" : "0",
+  "name" : "performance_schema_max_digest_sample_age",
+  "description" : "1",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~1048576",
+  "defaultValue" : "0",
+  "name" : "performance_schema_max_digest_length",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~4194304",
+  "defaultValue" : "100",
+  "name" : "performance_schema_max_prepared_statements_instances",
+  "description" : "Maximum number of instrumented prepared statements.",
+  "modifyValue" : "100",
+  "recommendValue" : "",
+  "currentValue" : "100",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "512~16384",
+  "defaultValue" : "4096",
+  "name" : "innodb_log_write_ahead_size",
+  "description" : "Log write ahead unit size to avoid read-on-write, it should match the OS cache block IO size.",
+  "modifyValue" : "4096",
+  "recommendValue" : "",
+  "currentValue" : "4096",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~256",
+  "defaultValue" : "0",
+  "name" : "performance_schema_max_mutex_classes",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "1000",
+  "name" : "performance_schema_max_socket_instances",
+  "description" : "Maximum number of opened instrumented sockets.",
+  "modifyValue" : "1000",
+  "recommendValue" : "",
+  "currentValue" : "1000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~1048576",
+  "defaultValue" : "0",
+  "name" : "performance_schema_error_size",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "10000",
+  "name" : "performance_schema_accounts_size",
+  "description" : "Maximum number of instrumented user@host accounts.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "0",
+  "name" : "performance_schema_events_stages_history_long_size",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1024",
+  "defaultValue" : "0",
+  "name" : "performance_schema_events_statements_history_size",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "10000",
+  "name" : "performance_schema_hosts_size",
+  "description" : "Maximum number of instrumented hosts.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "10000",
+  "name" : "performance_schema_max_cond_instances",
+  "description" : "Maximum number of instrumented condition objects.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "10000",
+  "name" : "performance_schema_max_table_lock_stat",
+  "description" : "Maximum number of lock statistics for instrumented tables.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "10000",
+  "name" : "performance_schema_max_table_handles",
+  "description" : "Maximum number of opened instrumented tables.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~1024",
+  "defaultValue" : "0",
+  "name" : "performance_schema_max_memory_classes",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "0",
+  "name" : "performance_schema_events_waits_history_long_size",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1024",
+  "defaultValue" : "0",
+  "name" : "performance_schema_events_stages_history_size",
+  "description" : "1",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "0",
+  "name" : "performance_schema_session_connect_attrs_size",
+  "description" : "1",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~256",
+  "defaultValue" : "0",
+  "name" : "performance_schema_max_thread_classes",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~104857600",
+  "defaultValue" : "10000",
+  "name" : "performance_schema_max_mutex_instances",
+  "description" : "",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "10000",
+  "name" : "performance_schema_max_metadata_locks",
+  "description" : "Maximum number of metadata locks.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "10000",
+  "name" : "performance_schema_digests_size",
+  "description" : "Size of the statement digest.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~256",
+  "defaultValue" : "0",
+  "name" : "performance_schema_max_rwlock_classes",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "100000",
+  "name" : "performance_schema_setup_actors_size",
+  "description" : "Maximum number of rows in SETUP_ACTORS.",
+  "modifyValue" : "100000",
+  "recommendValue" : "",
+  "currentValue" : "100000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "10000",
+  "name" : "performance_schema_setup_objects_size",
+  "description" : "Maximum number of rows in SETUP_OBJECTS.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "1000",
+  "name" : "performance_schema_max_file_instances",
+  "description" : "Maximum number of instrumented files.",
+  "modifyValue" : "1000",
+  "recommendValue" : "",
+  "currentValue" : "1000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~32768",
+  "defaultValue" : "0",
+  "name" : "performance_schema_max_file_handles",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "10000",
+  "name" : "performance_schema_users_size",
+  "description" : "Maximum number of instrumented users.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~256",
+  "defaultValue" : "0",
+  "name" : "performance_schema_max_statement_classes",
+  "description" : "1",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~104857600",
+  "defaultValue" : "10000",
+  "name" : "performance_schema_max_rwlock_instances",
+  "description" : "Maximum number of instrumented RWLOCK objects.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~256",
+  "defaultValue" : "0",
+  "name" : "performance_schema_max_socket_classes",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "10000",
+  "name" : "performance_schema_max_program_instances",
+  "description" : "Maximum number of instrumented programs.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~31536000",
+  "defaultValue" : "86400",
+  "name" : "information_schema_stats_expiry",
+  "description" : "The number of seconds after which mysqld server will fetch data from storage engine and replace the data in cache.",
+  "modifyValue" : "86400",
+  "recommendValue" : "",
+  "currentValue" : "86400",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~256",
+  "defaultValue" : "0",
+  "name" : "performance_schema_max_cond_classes",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~256",
+  "defaultValue" : "4",
+  "name" : "innodb_parallel_read_threads",
+  "description" : "Number of threads to do parallel read.",
+  "modifyValue" : "4",
+  "recommendValue" : "",
+  "currentValue" : "4",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~256",
+  "defaultValue" : "0",
+  "name" : "performance_schema_max_stage_classes",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "0",
+  "name" : "performance_schema_events_statements_history_long_size",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1024",
+  "defaultValue" : "0",
+  "name" : "performance_schema_events_transactions_history_size",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "0",
+  "name" : "performance_schema_events_transactions_history_long_size",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~256",
+  "defaultValue" : "0",
+  "name" : "performance_schema_max_file_classes",
+  "description" : "",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1048576",
+  "defaultValue" : "10000",
+  "name" : "performance_schema_max_thread_instances",
+  "description" : "Maximum number of instrumented threads.",
+  "modifyValue" : "10000",
+  "recommendValue" : "",
+  "currentValue" : "10000",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "0~256",
+  "defaultValue" : "1",
+  "name" : "performance_schema_max_statement_stack",
+  "description" : "1",
+  "modifyValue" : "1",
+  "recommendValue" : "",
+  "currentValue" : "1",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "",
+  "defaultValue" : "enabled=off,one_line=off",
+  "name" : "optimizer_trace",
+  "description" : "The optimizer_trace system variable has these on/off switches,enabled,one_line",
+  "modifyValue" : "enabled=off,one_line=off",
+  "recommendValue" : "",
+  "currentValue" : "enabled=off,one_line=off",
+  "needRestart" : false
+}, {
+  "types" : "int",
+  "ranges" : "0~1048576",
+  "defaultValue" : "0",
+  "name" : "performance_schema_max_sql_text_length",
+  "description" : "1",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "int",
+  "ranges" : "-1~1024",
+  "defaultValue" : "0",
+  "name" : "performance_schema_events_waits_history_size",
+  "description" : "1",
+  "modifyValue" : "0",
+  "recommendValue" : "",
+  "currentValue" : "0",
+  "needRestart" : true
+}, {
+  "types" : "string",
+  "ranges" : "index_merge=on,index_merge_union=on,index_merge_sort_union=on,index_merge_intersection=on,engine_condition_pushdown=on,index_condition_pushdown=on,mrr=on,mrr_cost_based=on,block_nested_loop=on,batched_key_access=off,materialization=on,semijoin=on,loosescan=on,firstmatch=on,subquery_materialization_cost_based=on,use_index_extensions=on",
+  "defaultValue" : "index_merge=on,index_merge_union=on,index_merge_sort_union=on,index_merge_intersection=on,engine_condition_pushdown=on,index_condition_pushdown=on,mrr=on,mrr_cost_based=on,block_nested_loop=on,batched_key_access=off,materialization=on,semijoin=on,loosescan=on,firstmatch=on,subquery_materialization_cost_based=on,use_index_extensions=on",
+  "name" : "optimizer_switch",
+  "description" : "The optimizer_switch system variable enables control over optimizer behavior.",
+  "modifyValue" : "index_merge=on,index_merge_union=on,index_merge_sort_union=on,index_merge_intersection=on,engine_condition_pushdown=on,index_condition_pushdown=on,mrr=on,mrr_cost_based=on,block_nested_loop=on,batched_key_access=off,materialization=on,semijoin=on,loosescan=on,firstmatch=on,subquery_materialization_cost_based=on,use_index_extensions=on",
+  "recommendValue" : "",
+  "currentValue" : "index_merge=on,index_merge_union=on,index_merge_sort_union=on,index_merge_intersection=on,engine_condition_pushdown=on,index_condition_pushdown=on,mrr=on,mrr_cost_based=on,block_nested_loop=on,batched_key_access=off,materialization=on,semijoin=on,loosescan=on,firstmatch=on,subquery_materialization_cost_based=on,use_index_extensions=on",
+  "needRestart" : false
+}, {
+  "types" : "string",
+  "ranges" : "",
+  "defaultValue" : "greedy_search=on,range_optimizer=on,dynamic_range=on,repeated_subselect=on",
+  "name" : "optimizer_trace_features",
+  "description" : "Those features can be excluded from tracing using the optimizer_trace_features system variable",
+  "modifyValue" : "greedy_search=on,range_optimizer=on,dynamic_range=on,repeated_subselect=on",
+  "recommendValue" : "",
+  "currentValue" : "greedy_search=on,range_optimizer=on,dynamic_range=on,repeated_subselect=on",
+  "needRestart" : false
+} ]

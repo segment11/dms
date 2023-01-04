@@ -1,0 +1,131 @@
+plugins {
+    id 'groovy'
+    id 'java'
+}
+
+group 'org.segment'
+version '1.0'
+
+final String artifactId = 'dms_server'
+
+repositories {
+//    maven {
+//        url 'https://maven.aliyun.com/repository/public'
+//    }
+    mavenCentral()
+}
+
+sourceSets {
+    main {
+        groovy {
+            srcDirs = ['src']
+        }
+        resources {
+            srcDirs = ['resources']
+        }
+    }
+    test {
+        groovy {
+            srcDirs = ['test']
+        }
+        resources {
+            srcDirs = ['test']
+        }
+    }
+}
+
+compileGroovy {
+    groovyOptions.configurationScript = file("config.groovy")
+}
+
+configurations {
+    runtime.exclude group: "org.slf4j", module: "slf4j-log4j12"
+    compile.exclude group: "org.slf4j", module: "slf4j-log4j12"
+}
+
+dependencies {
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.17.1'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.1'
+
+    compile group: 'org.codehaus.groovy', name: 'groovy', version: '2.4.19'
+
+    compile group: 'com.auth0', name: 'java-jwt', version: '4.2.1'
+    compile group: 'commons-codec', name: 'commons-codec', version: '1.14'
+    compile group: 'com.alibaba', name: 'fastjson', version: '1.2.83'
+    compile group: 'com.github.adyliu', name: 'zkclient', version: '2.2.0'
+
+    compile group: 'com.h2database', name: 'h2', version: '1.4.200'
+    compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.49'
+    compile group: 'org.postgresql', name: 'postgresql', version: '42.5.0'
+    compile group: 'redis.clients', name: 'jedis', version: '3.3.0'
+
+    compile group: 'it.sauronsoftware.cron4j', name: 'cron4j', version: '2.2.5'
+    compile group: 'com.github.kevinsawicki', name: 'http-request', version: '6.0'
+
+    compile group: 'io.prometheus', name: 'simpleclient', version: '0.6.0'
+    compile group: 'io.prometheus', name: 'simpleclient_httpserver', version: '0.6.0'
+
+    compile project(':dms_common')
+    compile project(':segmentd')
+    compile project(':segmentweb')
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'org.spockframework', name: 'spock-core', version: '1.3-groovy-2.4'
+}
+
+jar {
+    manifest {
+        attributes "Main-Class": 'RunServer'
+    }
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() || it.name.endsWith('.so') || it.name.endsWith('.dll') ? it : zipTree(it)
+        }
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+        exclude "conf.properties"
+    }
+    zip64 true
+}
+
+task copyWww(type: Copy) {
+    from 'www'
+    into "$buildDir/libs/www"
+}
+
+task copyConfDir(type: Copy) {
+    from 'conf'
+    into "$buildDir/libs/conf"
+}
+
+task copyScript(type: Copy) {
+    from '../dms_agent/src/script'
+    into "$buildDir/libs/dms_agent/src/script"
+}
+
+task copyTpl(type: Copy) {
+    from 'src/script/tpl'
+    into "$buildDir/libs/src/script/tpl"
+}
+
+task buildToRun(type: Copy) {
+    from 'src/conf.properties', 'src/log4j2.xml', 'init_h2.sql'
+    into "$buildDir/libs"
+}
+
+String libDir = 'dist'
+
+task buildToRunInGroovy(type: Copy) {
+    from configurations.runtime
+    into libDir
+}
+
+task clearLibDir(type: Delete) {
+    file(libDir).deleteDir()
+}
+
+buildToRun.dependsOn copyConfDir, copyScript, copyTpl, copyWww, jar

@@ -1,0 +1,868 @@
+input.date {
+	background: url('../images/date_picker.gif') no-repeat right;
+}
+
+input.date.ng-invalid {
+	background: url('../images/date_picker.gif') no-repeat right;
+	background-color: #ee82ee;
+}
+
+/* table tree */
+.ng-ui-table-tree {
+	
+}
+
+.ng-ui-table-tree li {
+	list-style: none;
+}
+
+.ng-ui-table-tree .expand {
+	line-height: 0;
+	margin: 0;
+	width: 18px;
+	height: 18px;
+	display: inline-block;
+	vertical-align: middle;
+	border: 0 none;
+	cursor: pointer;
+	outline: none;
+	background-color: transparent;
+	background-repeat: no-repeat;
+	background-attachment: scroll;
+	background-image: url('../images/zTreeStandard.png');
+	background-position: -74px -18px;
+}
+
+.ng-ui-table-tree .expand.collapse {
+	background-position: -92px 0;
+}
+
+.ng-ui-table-tree .leaf {
+	background-position: -56px -18px !important;
+}
+
+.ng-ui-table-tree .level1 {
+	margin-left: 10px;
+}
+
+.ng-ui-table-tree .level2 {
+	margin-left: 60px;
+}
+
+.ng-ui-table-tree .level3 {
+	margin-left: 110px;
+}
+
+.ng-ui-table-tree .level4 {
+	margin-left: 160px;
+}
+
+.ng-ui-table-tree .hide-level1 {
+	display: none;
+}
+
+.ng-ui-table-tree .hide-level2 {
+	display: none;
+}
+
+.ng-ui-table-tree .hide-level3 {
+	display: none;
+}
+
+.ng-ui-table-tree .hide-level4 {
+	display: none;
+}
+
+.ext-tree-choose-header {
+	border: 1px dotted #ccc;
+}
+
+.ext-but {
+	margin-right: 4px;
+}
+
+.table .ng-ui-sort-up i {
+	background: url('../images/sort_asc.png') no-repeat center right !important;
+}
+
+.table .ng-ui-sort-down i {
+	background: url('../images/sort_desc.png') no-repeat center right !important;
+}
+
+.table .ng-ui-sort-all i {
+	background: url('../images/sort_both.png') no-repeat center right;
+    width: 19px;
+    height: 19px;
+    float: right;
+}
+
+.dialog_main_wrapper {
+    height: 500px;
+    overflow-y: scroll;
+}
+
+/* dropdown */
+.pui-dropdown {
+    display: inline-block;
+    position: relative;
+    width: auto;
+    zoom: 1;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.pui-dropdown .pui-dropdown-trigger {
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    cursor: pointer;
+    width: 16px;
+    height: 100%;
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 0 3px;
+}
+
+.pui-dropdown .pui-dropdown-trigger  .ui-icon {
+    margin-top: 3px;
+}
+
+.pui-dropdown .pui-dropdown-label  {
+    display: block;
+    border: none;
+    white-space: nowrap;
+    overflow: hidden;
+    font-weight: normal;
+    width: 100%;
+    float:left;
+}
+
+.pui-dropdown.ui-state-disabled .pui-dropdown-trigger,
+.pui-dropdown.ui-state-disabled .pui-dropdown-label {
+    cursor: default;
+}
+
+.pui-dropdown label.pui-dropdown-label  {
+    cursor: pointer;
+}
+
+.pui-dropdown input.pui-dropdown-label  {
+    cursor: default;
+}
+
+.pui-dropdown-panel {
+    position: absolute;
+    height: auto;
+}
+
+.pui-dropdown-panel .pui-dropdown-items-wrapper {
+    overflow: auto;
+}
+
+.pui-dropdown-panel .pui-dropdown-item {
+    font-weight: normal;
+}
+
+.pui-dropdown-panel .pui-dropdown-item-group {
+    font-weight: bold;
+}
+
+.pui-dropdown-panel .pui-dropdown-list {
+    padding: 0.4em;
+    border: 0 none;
+}
+
+.pui-dropdown-panel .pui-dropdown-list-item {
+    border:0px none;
+    cursor:pointer;
+    margin:1px 0;
+    padding:3px 5px;
+    text-align:left;
+}
+
+.pui-dropdown-panel .pui-dropdown-filter {
+    width: 85%;
+    padding-right:15px;
+}
+
+.pui-dropdown-panel .pui-dropdown-filter-container {
+    position: relative;
+    margin: 0;
+    padding: 0.4em;
+    display: inline-block;
+}
+
+.pui-dropdown-panel .pui-dropdown-filter-container .ui-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.pui-dropdown.ui-state-disabled {
+	opacity: 1;
+	background-color: #f2f2f2;
+}
+
+.pui-inputtext {
+    margin: 0;
+    outline: medium none;
+    padding: 4px;
+    font-weight: normal;
+}
+
+/* Multiple Selection 
+    width: 400px;
+*/
+.pui-autocomplete-multiple {
+    clear: left;
+    cursor: text;
+    list-style-type: none;
+    margin: 0;
+    min-height: 1px;
+    overflow: hidden;
+    padding: 0px;
+}
+
+.pui-autocomplete-token {
+    cursor: default;
+    float: left;
+    overflow: hidden;
+    padding: 1px 3px;
+    white-space: nowrap;
+    position: relative;
+    margin:2px;
+}
+
+.pui-autocomplete-token-label {
+    display: block;
+    padding: 0em 2.1em 0em 0.5em;
+}
+
+.pui-autocomplete-token-icon {
+    margin-top: -9px;
+    position: absolute;
+    right: 0.2em;
+    top: 50%;
+    cursor: pointer;
+}
+
+.pui-autocomplete-input-token {
+    float: left;
+    list-style-type: none;
+    margin: 1px;
+    padding: 0;
+}
+
+.pui-autocomplete-input-token input.pui-inputtext {
+    border: 0 none;
+    width: 140px;
+    outline: medium none;
+    background-color: transparent;
+    margin: 0px;
+    padding: 4px;
+    box-shadow: none;
+}
+
+/* tip */
+.vtip {
+	position: absolute;
+	padding: 10px;
+	left: 5px;
+	font-size: 13px;
+	color: red;
+	background-color: white;
+	border: 1px solid #a6c9e2;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	z-index: 5000;
+}
+
+.vtip .vtip_arrow {
+	position: absolute;
+	top: -10px;
+	left: 5px
+}
+
+/* datepicker */
+.ui-datepicker {
+	z-index: 6000 !important;
+}
+
+.ui-helper-clearfix.ui-datepicker {
+	display: none;
+}
+
+.ui-datepicker-selected a {
+	color: blue !important;
+}
+
+/* lhgdialog */
+table.ui_border {
+	border: 0;
+	margin: 0;
+	border-collapse: collapse;
+}
+
+.ui_content {
+    width: 100%;
+	overflow-y: auto;
+}
+
+.ui_lock_scroll {
+	*overflow: hidden;
+}
+
+.ui_lock_scroll body {
+	overflow: hidden;
+}
+
+/*结构层*/
+.ui_content,.ui_title,.ui_buttons input {
+	font: 12px/1.333 tahoma, arial, \5b8b\4f53, sans-serif;
+}
+
+table.ui_border,table.ui_dialog {
+	width: auto;
+	border-spacing: 0;
+	*border-collapse: collapse;
+}
+
+.ui_border > tbody > tr > td {
+	padding: 0;
+}
+
+.ui_dialog {
+	background: #FFF;
+}
+
+/*标题部分开始*/
+.ui_title {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	display: block;
+	cursor: move;
+	background: #DDD;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	padding: 0 100px 0 0;
+}
+
+.ui_title_buttons {
+	position: absolute;
+	cursor: pointer;
+	font-size: 0;
+	letter-spacing: -.5em;
+}
+
+/*对齐自适应*/
+.ui_main {
+	min-width: 6em;
+	min-width: 0\9;
+	text-align: center;
+	overflow-y: auto;
+}
+
+.ui_content {
+	display: inline-block;
+	*display: inline;
+	zoom: 1;
+	text-align: left;
+}
+
+.ui_content.ui_state_full {
+	display: block;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0 !important;
+}
+
+.ui_content.ui_state_full iframe {
+	border-radius: 0 0 5px 5px;
+}
+
+.ui_loading {
+	width: 96px;
+	height: 32px;
+	text-align: left;
+	text-indent: -9999em;
+	overflow: hidden;
+	background: url(../images/loading.gif) no-repeat center center;
+}
+
+.ui_icon_bg {
+	margin: 20px 0 20px 15px;
+}
+
+/*标题纯CSS按钮开始 min 最小化，max最大化，res还原，rese恢复，close关闭*/
+.ui_min,.ui_max,.ui_close,.ui_res {
+	position: relative;
+	text-decoration: none;
+	letter-spacing: normal;
+	text-align: center;
+	display: inline-block;
+	*display: inline;
+	zoom: 1;
+	vertical-align: top;
+	font-family: tahoma, arial, \5b8b\4f53, sans-serif;
+}
+
+.ui_min b,.ui_max b,.ui_res_t,.ui_res_b {
+	display: block;
+	position: absolute;
+	overflow: hidden;
+	cursor: pointer;
+}
+
+.ui_close {
+	font-weight: 500;
+	text-decoration: none;
+	outline: 0 none;
+}
+
+.ui_close:hover {
+	text-decoration: none;
+}
+
+/*Tips部分*/
+.ui_state_tips .ui_main {
+	min-width: 3em;
+}
+
+.ui_state_tips .ui_content {
+	margin-top: -2px;
+	padding: 8px 10px !important;
+}
+
+.ui_state_tips .ui_icon_bg {
+	margin: 5px 0 6px 9px;
+}
+
+.ui_state_tips .ui_title,.ui_state_tips .ui_title_buttons,.ui_res {
+	display: none;
+}  /* 还原按钮也在这里隐藏，这样可节省代码，注间这段一定要写在上面那段代码的下面*/
+.ldg_lockmask {
+	background: #DCE2F1;
+	filter: alpha(opacity = 60);
+	opacity: .6;
+}
+
+/*==================制作新皮肤到这里结束复制==================*/ /*样式层开始*/
+.ui_inner {
+	background: #FFF;
+}
+
+.ui_title_bar {
+	width: 100%;
+	height: 0;
+	position: relative;
+	bottom: 24px;
+	_bottom: 0;
+	_margin-top: -24px;
+}
+
+.ui_title_buttons {
+	top: 2px;
+	right: 0;
+}
+
+.ui_title {
+	display: block;
+	font-weight: bold;
+	height: 22px;
+	line-height: 22px;
+	line-height: 24px\9;
+	color: #FFF;
+	background: none;
+	font-size: 14px;
+}
+
+.ui_lt,.ui_rt,.ui_lb,.ui_rb,.ui_l,.ui_r {
+	background-image: url(../images/lhgdialog/blue_s.png);
+	background-repeat: no-repeat;
+}
+
+.ui_lt {
+	width: 13px;
+	height: 33px;
+	background-position: -114px -2px !important;
+}
+
+.ui_rt {
+	width: 13px;
+	height: 33px;
+	background-position: -129px -2px !important;
+}
+
+.ui_lb {
+	width: 13px;
+	height: 13px;
+	background-position: -144px -22px;
+}
+
+.ui_rb {
+	width: 13px;
+	height: 13px;
+	background-position: -144px -3px;
+}
+
+.ui_t,.ui_b {
+	background-image: url(../images/lhgdialog/blue_s2.png);
+	background-repeat: repeat-x;
+}
+
+.ui_t {
+	background-position: 0 0;
+}
+
+.ui_b {
+	background-position: 0 -33px;
+}
+
+.ui_l,.ui_r {
+	background-repeat: repeat-y;
+}
+
+.ui_l {
+	background-position: 0 0;
+}
+
+.ui_r {
+	background-position: -15px 0;
+}
+
+/*标题纯CSS按钮定位部分*/
+.ui_min,.ui_max,.ui_close,.ui_res {
+	background-image: url(../images/lhgdialog/blue_s.png);
+	background-repeat: no-repeat;
+	margin-left: 3px;
+	color: #FFF;
+	width: 19px;
+	height: 18px;
+	line-height: 18px;
+}
+
+.ui_min {
+	background-position: -31px 0;
+	_background-position: 0 0;
+}
+
+.ui_min:hover {
+	background-position: -31px -19px;
+	_background-position: 0 -19px;
+}
+
+.ui_max {
+	background-position: -51px 0;
+	_background-position: -20px 0;
+}
+
+.ui_max:hover {
+	background-position: -51px -19px;
+	_background-position: -20px -19px;
+}
+
+.ui_res {
+	background-position: -91px 0;
+	_background-position: -60px 0;
+}
+
+.ui_res:hover {
+	background-position: -91px -19px;
+	_background-position: -60px -19px;
+}
+
+.ui_close {
+	background-position: -71px 0;
+	_z-index: 1;
+	font-size: 0;
+	line-height: 0;
+	overflow: hidden;
+	_background-position: -40px 0;
+	*margin-left: 0;
+}
+
+.ui_close:hover,.ui_close:focus {
+	background-position: -71px -19px;
+	_background-position: -40px -19px;
+}
+
+/*底部按钮样式*/
+.ui_buttons {
+	white-space: nowrap;
+	padding: 4px 8px;
+	text-align: right;
+	background-color: #F6F6F6;
+	border-top: solid 1px #DADEE5;
+}
+
+.ui_buttons input::-moz-focus-inner {
+	border: 0;
+	padding: 0;
+	margin: 0;
+}
+
+.ui_buttons input {
+	padding: 3px 10px 3px 12px;
+	padding: 5px 10px 2px 12px\0;
+	*padding: 4px 10px 2px 10px;
+	margin-left: 6px;
+	cursor: pointer;
+	display: inline-block;
+	text-align: center;
+	line-height: 1;
+	height: 23px;
+	letter-spacing: 3px;
+	overflow: visible;
+	color: #333;
+	border: solid 1px #999;
+	border-radius: 3px;
+	border-radius: 0\9;
+	background: #DDD;
+	background: linear-gradient(top, #FAFAFA, #E4E4E4);
+	background: -moz-linear-gradient(top, #FAFAFA, #E4E4E4);
+	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#FAFAFA),
+		to(#E4E4E4) );
+	background: -o-linear-gradient(top, #FAFAFA, #E4E4E4);
+	filter: progid : DXImageTransform.Microsoft.gradient ( startColorstr =
+		'#FAFAFA', endColorstr = '#E4E4E4' );
+	text-shadow: 0 1px 1px rgba(255, 255, 255, 1);
+	box-shadow: 0 1px 0 rgba(255, 255, 255, .7), 0 -1px 0 rgba(0, 0, 0, .09);
+	-moz-transition: -moz-box-shadow linear .2s;
+	-webkit-transition: -webkit-box-shadow linear .2s;
+	transition: box-shadow linear .2s;
+}
+
+.ui_buttons input:focus {
+	outline: 0 none;
+	box-shadow: 0 0 3px #0e78c9;
+}
+
+.ui_buttons input:hover {
+	color: #000;
+	border-color: #666;
+	box-shadow: none;
+}
+
+.ui_buttons input:active {
+	border-color: #666;
+	background: linear-gradient(top, #FAFAFA, #E4E4E4);
+	background: -moz-linear-gradient(top, #FAFAFA, #E4E4E4);
+	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#FAFAFA),
+		to(#E4E4E4) );
+	background: -o-linear-gradient(top, #FAFAFA, #E4E4E4);
+	filter: progid : DXImageTransform.Microsoft.gradient ( startColorstr =
+		'#FAFAFA', endColorstr = '#E4E4E4' );
+}
+
+.ui_buttons input[disabled] {
+	cursor: default;
+	color: #666;
+	background: #DDD;
+	border: solid 1px #999;
+	filter: alpha(opacity = 50);
+	opacity: .5;
+	box-shadow: none;
+}
+
+input.ui_state_highlight {
+	color: #FFF;
+	border: solid 1px #1c6a9e;
+	text-shadow: 0 -1px 1px #1c6a9e;
+	background: #2288cc;
+	background: linear-gradient(top, #33bbee, #2288cc);
+	background: -moz-linear-gradient(top, #33bbee, #2288cc);
+	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#33bbee),
+		to(#2288cc) );
+	background: -o-linear-gradient(top, #33bbee, #2288cc);
+	filter: progid : DXImageTransform.Microsoft.gradient ( startColorstr =
+		'#33bbee', endColorstr = '#2288cc' );
+}
+
+input.ui_state_highlight:hover {
+	color: #FFF;
+	border-color: #555;
+}
+
+input.ui_state_highlight:active {
+	border-color: #1c6a9e;
+	background: linear-gradient(top, #33bbee, #2288cc);
+	background: -moz-linear-gradient(top, #33bbee, #2288cc);
+	background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#33bbee),
+		to(#2288cc) );
+	background: -o-linear-gradient(top, #33bbee, #2288cc);
+	filter: progid : DXImageTransform.Microsoft.gradient ( startColorstr =
+		'#33bbee', endColorstr = '#2288cc' );
+}
+
+/*Tips 部分开始(可删除)*/
+.ui_state_tips .ui_lt,.ui_state_tips .ui_rt {
+	height: 13px;
+	background-repeat: no-repeat;
+	background-position: 0 0;
+}
+
+.ui_state_tips .ui_lt {
+	background-image: url(../images/lhgdialog/ie6/ui_lt2.png);
+}
+
+.ui_state_tips .ui_rt {
+	background-image: url(../images/lhgdialog/ie6/ui_rt2.png);
+}
+
+.ui_state_tips .ui_t {
+	background-image: url(../images/lhgdialog/ie6/ui_t2.png);
+	background-repeat: repeat-x;
+	background-position: 0 0;
+}
+
+/* pagination */
+.pagi {
+	text-align: center;
+	font-weight: normal;
+}
+
+.pagi span {
+	color: blue;
+	margin-right: 10px;
+}
+
+.pagi span.num {
+	color: red;
+}
+
+/*
+------------------------------
+	Angular
+------------------------------
+*/ 
+/* script after body so add this */
+.ng-cloak {
+	display: none;
+}
+
+input.ng-invalid, select.ng-invalid {
+	background-color: #ee82ee;
+}
+
+.pui-dropdown.ng-invalid, .pui-autocomplete-multiple.ng-invalid {
+	border: 2px solid #ee82ee;
+}
+
+textarea.ng-invalid {
+	border: 1px solid #ee82ee;
+}
+
+textarea.ng-valid {
+	border: 1px solid #ccc;
+}
+
+input.ng-valid, select.ng-valid {
+	background-color: white;
+}
+
+input.ng-valid[disabled], select.ng-valid[disabled] {
+	background-color: #eee;
+}
+
+input.ng-invalid:focus, select.ng-invalid:focus {
+	background-color: white;
+}
+
+textarea.ng-invalid:focus {
+	border: 1px solid #ccc;
+}
+
+/* tabs */
+.tabs {
+	margin-top: 10px;
+	display: none;
+}
+
+.tabs.active {
+	display: block;
+}
+
+/* filter grid */
+.widget-content .grid-filter {
+	margin-bottom: 6px;
+}
+
+.btn-group button {
+	margin-right: 4px;
+}
+
+#loading-block {
+	width: 100%;
+	height: 100%;
+	position: fixed;
+	top: 0px;
+	opacity: .2;
+	filter: alpha(opacity = 20);
+	background-color: black;
+	z-index: 9990;
+	display: none;
+}
+
+#loading {
+	position: fixed;
+	left: 50%;
+	top: 50%;
+	width: 180px;
+	height: 20px;
+	margin: -10px 0 0 -90px;
+	color: #003366;
+	z-index: 9999;
+	display: none;
+
+	font-size: 14px;
+	font-weight: bold;
+
+	background-color: white;
+	background-image: url('../images/loading.gif');
+	background-repeat: no-repeat;
+	background-position: center left;
+	padding: 5px 0px 0px 20px;
+	text-align: left;
+}
+
+td.l {
+	text-align: right;
+	width: 25%;
+}
+
+td.r {
+	width: 75%;
+	text-align: left;
+	padding-left: 5px;
+}
+
+td.l2 {
+	text-align: right;
+	width: 20%;
+}
+
+td.r2 {
+	width: 30%;
+	text-align: left;
+	padding-left: 5px;
+}
+
+td.l3 {
+	text-align: right;
+	width: 12%;
+}
+
+td.r3 {
+	width: 21%;
+	text-align: left;
+	padding-left: 5px;
+}
+
+td.r3last {
+	width: 22%;
+	text-align: left;
+	padding-left: 5px;
+}
