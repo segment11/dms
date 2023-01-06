@@ -262,6 +262,17 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog, uiValid) {
         });
     };
 
+    $scope.removeNode = function (one) {
+        uiTips.confirm('Sure Remove Node - ' + one.ip + '?', function() {
+            $http.delete('/dms/node/agent/remove-node', {params: {id: one.id}}).success(function (data) {
+                if (data.flag) {
+                    var i = _.indexOf($scope.nodeList, one);
+                    $scope.nodeList.splice(i, 1);
+                }
+            });
+        }, null);
+    };
+
     $scope.editDeployFile = function (one) {
         $scope.editOneDeployFile = _.clone(one);
         $scope.ctrl.isShowAddDeployFile = true;

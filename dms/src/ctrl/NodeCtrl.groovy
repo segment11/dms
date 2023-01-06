@@ -264,6 +264,28 @@ h.group('/node') {
                     steps  : support.getSteps(kp),
                     message: 'please view log for detail']
         }
+    }.delete('/agent/remove-node') { req, resp ->
+        User u = req.session('user') as User
+        if (!u.isAdmin()) {
+            resp.halt(403, 'not admin')
+        }
+
+        def id = req.param('id')
+        assert id
+        def kp = new NodeKeyPairDTO(id: id as int).one()
+        assert kp
+
+        Event.builder().type(Event.Type.cluster).reason('remove node').
+                result(kp.ip).build().log('cluster id: ' + kp.clusterId).toDto().add()
+
+        new NodeKeyPairDTO(id: id as int).delete()
+
+        def node = new NodeDTO(clusterId: kp.clusterId, ip: kp.ip).one()
+        if (node) {
+            new NodeDTO(id: node.id).delete()
+        }
+
+        [flag: true]
     }.get('/list') { req, resp ->
         // :clusterId -> for other handler reuse this handler's code by set request attribute
         def clusterId = req.param('clusterId') ?: req.param(':clusterId')
