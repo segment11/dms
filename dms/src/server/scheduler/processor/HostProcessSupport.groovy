@@ -91,7 +91,8 @@ class HostProcessSupport {
         }
 
         // ***
-        int pid = startCmdWithSsh(c.conf.cmd, c.clusterId, c.appId, c.nodeIp, keeper)
+        String fixPwd = c.conf.envList.find { it.key == 'PWD' }?.value
+        int pid = startCmdWithSsh(fixPwd, c.conf.cmd, c.clusterId, c.appId, c.nodeIp, keeper)
 
         // ***
         ContainerInfo containerInfo = new ContainerInfo()
@@ -114,7 +115,7 @@ class HostProcessSupport {
         pid
     }
 
-    int startCmdWithSsh(String cmd, int clusterId, int appId, String nodeIp, JobStepKeeper keeper = null) {
+    int startCmdWithSsh(String fixPwd, String cmd, int clusterId, int appId, String nodeIp, JobStepKeeper keeper = null) {
         // ***
         def kp = new NodeKeyPairDTO(clusterId: clusterId, ip: nodeIp).one()
         if (!kp) {
@@ -137,7 +138,7 @@ class HostProcessSupport {
         String proxyNodeIp = clusterOne.globalEnvConf.proxyNodeIp
         def needProxy = proxyNodeIp && proxyNodeIp != kp.ip
 
-        String pwd = '/opt/dms/app_' + appId
+        String pwd = fixPwd ?: '/opt/dms/app_' + appId
         String startCommand = "nohup ${cmd} > main.log 2>&1 &"
         List<OneCmd> cmdList = [
                 new OneCmd(cmd: 'pwd', checker: OneCmd.keyword(kp.user + '@')),

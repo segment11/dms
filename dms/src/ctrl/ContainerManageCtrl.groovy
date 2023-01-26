@@ -264,7 +264,8 @@ private void callAgentScript(Req req, Resp resp, String scriptName) {
     if (ContainerHelper.isProcess(id) && appId && scriptName == 'container start') {
         def app = new AppDTO(id: appId).one()
         if (app.conf.isRunningUnbox) {
-            int pid = HostProcessSupport.instance.startCmdWithSsh(app.conf.cmd, app.clusterId, app.id, nodeIp)
+            String fixPwd = app.conf.envList.find { it.key == 'PWD' }?.value
+            int pid = HostProcessSupport.instance.startCmdWithSsh(fixPwd, app.conf.cmd, app.clusterId, app.id, nodeIp)
             JSONObject r = AgentCaller.instance.agentScriptExe(clusterId, nodeIp, 'replace pid', [appId: app.id, id: id, pid: pid])
             resp.end r.toJSONString()
             return

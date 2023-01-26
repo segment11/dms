@@ -2,6 +2,7 @@ package script.tpl
 
 import common.Conf
 
+def nodeIp = super.binding.getProperty('nodeIp') as String
 def instanceIndex = super.binding.getProperty('instanceIndex') as int
 def isMasterSlave = '1' == super.binding.getProperty('isMasterSlave')
 def dataDir = '/var/lib/mysql'
@@ -25,13 +26,13 @@ user = mysql
 symbolic-links = 0
 pid-file = /var/run/mysqld/mysqld.pid
 log-error = ${logDir}/mysqld.log
-innodb_use_native_aio = ${Conf.isWindows() ? 0 : 1}
-explicit_defaults_for_timestamp = on
+innodb-use-native-aio = ${Conf.isWindows() ? 0 : 1}
+explicit-defaults-for-timestamp = on
 #query
-slow_query_log = 1
-long_query_time = 2
-log_queries_not_using_indexes = 0
-slow_query_log_file = ${logDir}/slow.log
+slow-query-log = 1
+long-query-time = 2
+log-queries-not-using-indexes = 0
+slow-query-log-file = ${logDir}/slow.log
 ${customSegment}
 [client]
 socket=/var/run/mysqld/mysqld.sock
@@ -51,26 +52,29 @@ user = mysql
 symbolic-links = 0
 pid-file = /var/run/mysqld/mysqld.pid
 log-error = ${logDir}/mysqld.log
-innodb_use_native_aio = ${Conf.isWindows() ? 0 : 1}
-explicit_defaults_for_timestamp = on
+innodb-use-native-aio = ${Conf.isWindows() ? 0 : 1}
+explicit-defaults-for-timestamp = on
 #binlog
 server-id = 1
-log_bin = mysql-bin 
+report-host = ${nodeIp}
+gtid-mode = on
+enforce-gtid-consistency = on
+log-bin = mysql-bin 
 binlog-format = ROW
 log-slave-updates = on
-skip_slave_start = 1
-expire_logs_days = 7
-max_binlog_size = 1G
+skip-slave-start = 1
+expire-logs-days = 7
+max-binlog-size = 1G
 binlog-ignore-db = mysql
 binlog-ignore-db = sys
 binlog-ignore-db = information_schema
 binlog-ignore-db = performance_schema
 #query
-slow_query_log = 1
-long_query_time = 2
-log_queries_not_using_indexes = 0
-slow_query_log_file = ${logDir}/slow.log
-log_slow_slave_statements = 1
+slow-query-log = 1
+long-query-time = 2
+log-queries-not-using-indexes = 0
+slow-query-log-file = ${logDir}/slow.log
+log-slow-slave-statements = 1
 ${customSegment}
 [client]
 socket=/var/run/mysqld/mysqld.sock
@@ -89,24 +93,29 @@ user = mysql
 symbolic-links = 0
 pid-file = /var/run/mysqld/mysqld.pid
 log-error = ${logDir}/mysqld.log
-innodb_use_native_aio = ${Conf.isWindows() ? 0 : 1}
-explicit_defaults_for_timestamp = on
+innodb-use-native-aio = ${Conf.isWindows() ? 0 : 1}
+explicit-defaults-for-timestamp = on
 #binlog
 server-id = ${instanceIndex + 1}
-relay_log = slave-relay-bin
-log_slave_updates = 0
-read_only = 1
-expire_logs_days = 7
-max_binlog_size = 100m
-replicate_ignore_db = information_schema
-replicate_ignore_db = performance_schema
-replicate_ignore_db = mysql
-replicate_ignore_db = sys
+report-host = ${nodeIp}
+gtid-mode = on
+enforce-gtid-consistency = on
+log-bin = mysql-slave-bin
+binlog-format = ROW
+log-slave-updates = on
+skip-slave-start = 1
+read-only = 1
+expire-logs-days = 7
+max-binlog-size = 100m
+replicate-ignore-db = information_schema
+replicate-ignore-db = performance_schema
+replicate-ignore-db = mysql
+replicate-ignore-db = sys
 #query
-slow_query_log = 1
-long_query_time = 2
-log_queries_not_using_indexes = 0
-slow_query_log_file = ${logDir}/slow.log
+slow-query-log = 1
+long-query-time = 2
+log-queries-not-using-indexes = 0
+slow-query-log-file = ${logDir}/slow.log
 ${customSegment}
 [client]
 socket=/var/run/mysqld/mysqld.sock
