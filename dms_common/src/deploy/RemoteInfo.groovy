@@ -22,7 +22,8 @@ class RemoteInfo {
         remoteInfo.user = kp.user
         remoteInfo.password = kp.pass
         remoteInfo.rootPass = kp.rootPass
-        remoteInfo.isUsePass = kp.pass != null
+        // null or '' -> use private key
+        remoteInfo.isUsePass = !!kp.pass
         remoteInfo.privateKeyContent = kp.keyPrivate
         remoteInfo.privateKeySuffix = '.' + kp.keyType
         remoteInfo

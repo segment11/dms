@@ -31,10 +31,14 @@ class AgentConf {
 
     String collectDockerDaemon = '1'
 
+    String needRefreshLocalHosts = '0'
+
     String generate() {
         List<String> lines = []
         this.properties.each { k, v ->
-            lines << "${k}=${v ? v.toString() : ''}".toString()
+            if (k != 'class') {
+                lines << "${k}=${v ? v.toString() : ''}".toString()
+            }
         }
         lines << "server.runtime.jar=1"
         lines.join("\r\n")

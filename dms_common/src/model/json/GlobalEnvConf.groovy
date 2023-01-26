@@ -8,6 +8,7 @@ import org.segment.d.json.JSONFiled
 @ToString(includeNames = true)
 class GlobalEnvConf implements JSONFiled {
     String dnsServer
+    // use KVPair so the web javascript bind easy
     List<KVPair> skipConflictCheckVolumeDirList = []
     List<KVPair> envList = []
 
