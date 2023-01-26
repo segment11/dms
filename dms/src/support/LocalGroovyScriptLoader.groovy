@@ -9,7 +9,7 @@ import model.AgentScriptDTO
 @Slf4j
 class LocalGroovyScriptLoader {
     static void loadWhenFirstStart() {
-        def agentScriptOne = new AgentScriptDTO().queryFields('id').where('1=1').one()
+        def agentScriptOne = new AgentScriptDTO().queryFields('id').noWhere().one()
         if (!agentScriptOne) {
             load()
         }

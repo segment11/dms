@@ -12,9 +12,9 @@ def h = ChainHandler.instance
 
 h.group('/gw/cluster') {
     h.get('/list') { req, resp ->
-        new GwClusterDTO().where('1=1').loadList()
+        new GwClusterDTO().noWhere().loadList()
     }.get('/list/simple') { req, resp ->
-        new GwClusterDTO().where('1=1').queryFields('id,name,des').loadList()
+        new GwClusterDTO().noWhere().queryFields('id,name,des').loadList()
     }.delete('/delete') { req, resp ->
         User u = req.session('user') as User
         if (!u.isAdmin()) {

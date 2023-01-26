@@ -10,7 +10,7 @@ import model.json.GlobalEnvConf
 class FirstClusterCreate {
     static void create() {
         def clusterOne = new ClusterDTO().queryFields('id,name').
-                where('1=1').one()
+                noWhere().one()
         if (!clusterOne) {
             new ClusterDTO(id: 1, name: 'Cluster For Test', secret: '1', isInGuard: false,
                     globalEnvConf: new GlobalEnvConf()).add()

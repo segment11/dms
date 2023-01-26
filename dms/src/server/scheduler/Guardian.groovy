@@ -57,7 +57,7 @@ class Guardian extends IntervalJob {
 
         log.info 'i am alive'
 
-        def clusterList = new ClusterDTO().where('1=1').loadList()
+        def clusterList = new ClusterDTO().noWhere().loadList()
         for (cluster in clusterList) {
             if (!cluster.isInGuard) {
                 continue

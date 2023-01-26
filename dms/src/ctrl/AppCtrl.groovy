@@ -38,12 +38,12 @@ h.get('/api/image/pull/hub/info') { req, resp ->
 h.group('/app') {
     h.group('/option') {
         h.get('/list') { req, resp ->
-            def clusterList = new ClusterDTO().where('1=1').queryFields('id,name').loadList()
-            def namespaceList = new NamespaceDTO().where('1=1').queryFields('id,cluster_id,name').loadList()
-            def registryList = new ImageRegistryDTO().where('1=1').queryFields('id,url').loadList()
-            def nodeList = new NodeDTO().where('1=1').queryFields('ip,tags,clusterId').loadList()
-            def appOtherList = new AppDTO().where('1=1').queryFields('id,cluster_id,name').loadList()
-            def deployFileList = new DeployFileDTO().where('1=1').queryFields('id,dest_path').loadList()
+            def clusterList = new ClusterDTO().noWhere().queryFields('id,name').loadList()
+            def namespaceList = new NamespaceDTO().noWhere().queryFields('id,cluster_id,name').loadList()
+            def registryList = new ImageRegistryDTO().noWhere().queryFields('id,url').loadList()
+            def nodeList = new NodeDTO().noWhere().queryFields('ip,tags,clusterId').loadList()
+            def appOtherList = new AppDTO().noWhere().queryFields('id,cluster_id,name').loadList()
+            def deployFileList = new DeployFileDTO().noWhere().queryFields('id,dest_path').loadList()
             // for skip
             deployFileList << new DeployFileDTO(id: 0, destPath: '/tmp/ignore')
 
@@ -101,7 +101,7 @@ h.group('/app') {
         final int pageSize = 10
 
         def keyword = req.param('keyword')
-        def pager = new AppDTO().where('1=1').where(!!clusterId && !namespaceId, 'cluster_id = ?', clusterId).
+        def pager = new AppDTO().noWhere().where(!!clusterId && !namespaceId, 'cluster_id = ?', clusterId).
                 where(!!namespaceId, 'namespace_id = ?', namespaceId).
                 where(!!keyword, '(name like ?) or (des like ?)',
                         '%' + keyword + '%', '%' + keyword + '%').loadPager(pageNum, pageSize)

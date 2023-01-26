@@ -93,12 +93,12 @@ h.group('/permit') {
         def keyword = req.param('keyword')
         def permitType = req.param('permitType')
         def resourceId = req.param('resourceId')
-        Pager<UserPermitDTO> pager = new UserPermitDTO().where('1=1').where(!!keyword, 'user like ?',
+        Pager<UserPermitDTO> pager = new UserPermitDTO().noWhere().where(!!keyword, 'user like ?',
                 '%' + keyword + '%').where(!!permitType, 'permit_type=?', permitType).
                 where(!!resourceId, 'resource_id=?', resourceId as Integer).loadPager(pageNum, pageSize)
         if (pager.list) {
-            def clusterList = new ClusterDTO().where('1=1').queryFields('id,name').loadList()
-            def namespaceList = new NamespaceDTO().where('1=1').queryFields('id,name').loadList()
+            def clusterList = new ClusterDTO().noWhere().queryFields('id,name').loadList()
+            def namespaceList = new NamespaceDTO().noWhere().queryFields('id,name').loadList()
             for (one in pager.list) {
                 UserPermitDTO permit = one
                 if (permit.permitType == 'cluster') {
@@ -160,11 +160,11 @@ h.group('/permit') {
     }.get('/resource/list') { req, resp ->
         def permitType = req.param('permitType')
         if (PermitType.cluster.name() == permitType) {
-            return new ClusterDTO().where('1=1').queryFields('id,name').loadList()
+            return new ClusterDTO().noWhere().queryFields('id,name').loadList()
         } else if (PermitType.namespace.name() == permitType) {
-            return new NamespaceDTO().where('1=1').queryFields('id,name').loadList()
+            return new NamespaceDTO().noWhere().queryFields('id,name').loadList()
         } else if (PermitType.app.name() == permitType) {
-            return new AppDTO().where('1=1').queryFields('id,name').loadList()
+            return new AppDTO().noWhere().queryFields('id,name').loadList()
         }
     }
 }

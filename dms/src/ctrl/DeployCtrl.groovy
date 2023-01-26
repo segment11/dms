@@ -49,7 +49,7 @@ h.get('/deploy/node-file/list') { req, resp ->
     }
 
     def keyword = req.param('keyword')
-    def deployFileList = new DeployFileDTO().where('1=1').
+    def deployFileList = new DeployFileDTO().noWhere().
             where(!!keyword, '(dest_path like ?) or (local_path like ?)',
                     '%' + keyword + '%', '%' + keyword + '%').loadList()
 
@@ -118,7 +118,7 @@ h.get('/deploy/node-file/list') { req, resp ->
 h.group('/deploy-file') {
     h.get('/list') { req, resp ->
         def keyword = req.param('keyword')
-        def deployFileList = new DeployFileDTO().where('1=1').
+        def deployFileList = new DeployFileDTO().noWhere().
                 where(!!keyword, '(dest_path like ?) or (local_path like ?)',
                         '%' + keyword + '%', '%' + keyword + '%').loadList()
         [deployFileList: deployFileList]

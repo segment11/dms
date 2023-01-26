@@ -31,7 +31,7 @@ h.group('/event') {
             event.result = appId
         } else {
             if (!type && !reason) {
-                event.where('1=1')
+                event.noWhere()
             }
         }
         event.orderBy('id desc')

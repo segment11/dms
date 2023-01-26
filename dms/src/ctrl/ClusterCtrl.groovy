@@ -23,9 +23,9 @@ h.get('/guard/toggle') { req, resp ->
 
 h.group('/cluster') {
     h.get('/list') { req, resp ->
-        new ClusterDTO().where('1=1').loadList()
+        new ClusterDTO().noWhere().loadList()
     }.get('/list/simple') { req, resp ->
-        def list = new ClusterDTO().where('1=1').queryFields('id,name,des,is_in_guard').loadList()
+        def list = new ClusterDTO().noWhere().queryFields('id,name,des,is_in_guard').loadList()
         [list: list, isGuardianRunning: Guardian.instance.isRunning]
     }.delete('/delete') { req, resp ->
         User u = req.session('user') as User

@@ -76,9 +76,9 @@ class InMemoryCacheSupport extends IntervalJob {
             isLeader = true
         }
 
-        appList = new AppDTO().where('1=1').
+        appList = new AppDTO().noWhere().
                 queryFields('id,name,namespaceId,clusterId,status,conf,monitorConf,liveCheckConf').loadList()
-        clusterList = new ClusterDTO().where('1=1').loadList()
+        clusterList = new ClusterDTO().noWhere().loadList()
 
         if (intervalCount % 10 == 0) {
             log.info 'load app, app size: {}', appList.size()
