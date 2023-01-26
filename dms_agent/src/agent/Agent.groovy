@@ -26,8 +26,7 @@ class Agent extends IntervalJob {
 
     int serverPort
 
-    // no need in general
-    // unless agent node ip can not access to dms server
+    // no need if agent can directly visit dms server
     String proxyNodeIp
 
     int proxyNodePort
@@ -43,6 +42,8 @@ class Agent extends IntervalJob {
     String nodeIp
 
     String authToken
+
+    boolean needRefreshLocalHosts = false
 
     DockerClient docker
 
@@ -72,6 +73,8 @@ class Agent extends IntervalJob {
 
         proxyNodeIp = c.get('proxyNodeIp')
         proxyNodePort = c.getInt('proxyNodePort', Const.AGENT_HTTP_LISTEN_PORT)
+
+        needRefreshLocalHosts = c.isOn('needRefreshLocalHosts')
 
         auth()
         sigar = new Sigar()
@@ -403,7 +406,9 @@ class Agent extends IntervalJob {
 
     @Override
     void doJob() {
-        AgentHelper.instance.refreshClusterHosts(clusterId)
+        if (needRefreshLocalHosts) {
+            AgentHelper.instance.refreshClusterHosts(clusterId)
+        }
         sendNode()
         sendContainer()
     }
