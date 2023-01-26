@@ -22,10 +22,12 @@ h.post('/login') { req, resp ->
     String password = req.param('password')
     assert user && password
 
+    def passwordMd5 = DigestUtils.md5Hex(password)
+
     if ('admin' == user) {
-        def adminPassword = Conf.instance.get('adminPassword')
-        if (adminPassword) {
-            if (password == adminPassword) {
+        def adminPasswordMd5 = Conf.instance.get('adminPassword')
+        if (adminPasswordMd5) {
+            if (passwordMd5 == adminPasswordMd5) {
                 def u = new User()
                 u.name = user
                 u.permitList << User.PermitAdmin

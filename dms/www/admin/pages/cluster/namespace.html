@@ -15,6 +15,7 @@
                     <div class="form-group">
                         <label>Cluster: </label>
                         <select ng-model="tmp.clusterId" ng-options="a.id as a.name for a in tmp.clusterList"
+                                ng-change="queryLl()"
                                 style="width: 200px;">
                             <option value="" selected>--/--</option>
                         </select>

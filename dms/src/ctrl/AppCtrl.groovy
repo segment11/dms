@@ -287,7 +287,7 @@ h.group('/app') {
         if (one.liveCheckConf && one.liveCheckConf.isShellScript) {
             def app = new AppDTO(id: one.id).queryFields('conf').one()
             if (app.conf.isRunningUnbox) {
-                return [message: 'run as process not support shell live check!']
+                return [message: 'Run as process not support shell live check!']
             }
         }
 

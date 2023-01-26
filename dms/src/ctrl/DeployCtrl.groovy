@@ -144,10 +144,10 @@ h.group('/deploy-file') {
         // check if local file exists
         def f = new File(one.localPath)
         if (!f.exists()) {
-            return [flag: false, message: 'file not exists: ' + one.localPath]
+            return [flag: false, message: 'File not exists: ' + one.localPath]
         }
         if (f.isDirectory()) {
-            return [flag: false, message: 'file should not be a directory: ' + one.localPath]
+            return [flag: false, message: 'File should not be a directory: ' + one.localPath]
         }
         one.fileLen = f.length()
         one.updatedDate = new Date()

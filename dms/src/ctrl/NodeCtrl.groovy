@@ -45,7 +45,7 @@ h.group('/node') {
         assert kp
 
         if (!kp.pass && !kp.keyPrivate) {
-            resp.halt(500, 'Node key pair password/key private required!')
+            resp.halt(500, 'Node key pair password or key private required!')
         }
 
         Event.builder().type(Event.Type.cluster).reason('reset root password').
@@ -57,12 +57,12 @@ h.group('/node') {
             boolean isDone = support.resetRootPassword(kp)
             return [flag   : isDone,
                     steps  : support.getSteps(kp),
-                    message: 'please view log for detail']
+                    message: 'Please view log for detail']
         } else {
             def r = AgentCaller.instance.doSshResetRootPassword(kp)
             return [flag   : r.getBoolean('flag').booleanValue(),
                     steps  : r.getJSONArray('steps'),
-                    message: 'please view log for detail']
+                    message: 'Please view log for detail']
         }
     }.post('/key-pair/init') { req, resp ->
         User u = req.session('user') as User
@@ -155,7 +155,7 @@ h.group('/node') {
         assert kp
 
         if (!kp.rootPass) {
-            return [flag: false, message: 'root password need init']
+            return [flag: false, message: 'Root password need init']
         }
 
         Event.builder().type(Event.Type.cluster).reason('init agent').
@@ -167,12 +167,12 @@ h.group('/node') {
             boolean isDone = support.initOtherNode(kp)
             return [flag   : isDone,
                     steps  : support.getSteps(kp),
-                    message: 'please view log for detail']
+                    message: 'Please view log for detail']
         } else {
             def r = AgentCaller.instance.doSshInitAgent(kp)
             return [flag   : r.getBoolean('flag').booleanValue(),
                     steps  : r.getJSONArray('steps'),
-                    message: 'please view log for detail']
+                    message: 'Please view log for detail']
         }
     }.post('/agent/start') { req, resp ->
         User u = req.session('user') as User
@@ -188,7 +188,7 @@ h.group('/node') {
         assert kp
 
         if (!kp.rootPass) {
-            return [flag: false, message: 'root password need init']
+            return [flag: false, message: 'Root password need init']
         }
 
         Event.builder().type(Event.Type.cluster).reason('start agent').
@@ -210,7 +210,7 @@ h.group('/node') {
             boolean isDone = support.startAgentCmd(kp)
             return [flag   : isDone,
                     steps  : support.getSteps(kp),
-                    message: 'please view log for detail']
+                    message: 'Please view log for detail']
         } else {
             List steps = []
             def copyR = AgentCaller.instance.doSshCopyAgentConf(kp, agentConf)
@@ -219,14 +219,14 @@ h.group('/node') {
             if (!isCopyOk) {
                 return [flag   : isCopyOk,
                         steps  : steps,
-                        message: 'please view log for detail']
+                        message: 'Please view log for detail']
             }
             def startR = AgentCaller.instance.doSshStartAgent(kp)
             def isStartOk = startR.getBoolean('flag').booleanValue()
             steps.addAll startR.getJSONArray('steps')
             return [flag   : isStartOk,
                     steps  : steps,
-                    message: 'please view log for detail']
+                    message: 'Please view log for detail']
         }
     }.post('/agent/stop') { req, resp ->
         User u = req.session('user') as User
@@ -242,7 +242,7 @@ h.group('/node') {
         assert kp
 
         if (!kp.rootPass) {
-            return [flag: false, message: 'root password need init']
+            return [flag: false, message: 'Root password need init']
         }
 
         Event.builder().type(Event.Type.cluster).reason('stop agent').
@@ -256,13 +256,13 @@ h.group('/node') {
             boolean isDone = support.stopAgent(kp)
             return [flag   : isDone,
                     steps  : support.getSteps(kp),
-                    message: 'please view log for detail']
+                    message: 'Please view log for detail']
         } else {
             def stopR = AgentCaller.instance.doSshStopAgent(kp)
             def isDone = stopR.getBoolean('flag').booleanValue()
             return [flag   : isDone,
                     steps  : support.getSteps(kp),
-                    message: 'please view log for detail']
+                    message: 'Please view log for detail']
         }
     }.delete('/agent/remove-node') { req, resp ->
         User u = req.session('user') as User

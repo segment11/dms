@@ -55,8 +55,7 @@ class Guardian extends IntervalJob {
         failGuardAppIdListCopy.clear()
         failAppJobIdListCopy.clear()
 
-        Event.builder().type(Event.Type.cluster).reason('do guard job').
-                result(Utils.localIp()).build().log('i am alive').toDto().add()
+        log.info 'i am alive'
 
         def clusterList = new ClusterDTO().where('1=1').loadList()
         for (cluster in clusterList) {

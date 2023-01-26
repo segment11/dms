@@ -263,7 +263,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog, uiValid) {
     };
 
     $scope.removeNode = function (one) {
-        uiTips.confirm('Sure Remove Node - ' + one.ip + '?', function() {
+        uiTips.confirm('Sure Remove Node - ' + one.ip + '?', function () {
             $http.delete('/dms/node/agent/remove-node', {params: {id: one.id}}).success(function (data) {
                 if (data.flag) {
                     var i = _.indexOf($scope.nodeList, one);
@@ -312,7 +312,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog, uiValid) {
     };
 
     $scope.deleteDeployFile = function (one) {
-        uiTips.confirm('Sure Delete (not local file) - ' + one.id + '?', function () {
+        uiTips.confirm('Sure Delete (not local file) - ' + one.localPath + '?', function () {
             $http.delete('/dms/deploy-file/delete', {params: {id: one.id}}).success(function (data) {
                 if (data.flag) {
                     var i = _.indexOf($scope.deployFileList, one);

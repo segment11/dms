@@ -29,7 +29,7 @@ h.post('/agent/image/init/load') { req, resp ->
     assert kp
 
     if (!kp.rootPass) {
-        return [flag: false, message: 'root password need init']
+        return [flag: false, message: 'Root password need init']
     }
 
     def clusterOne = InMemoryCacheSupport.instance.oneCluster(kp.clusterId)
@@ -41,12 +41,12 @@ h.post('/agent/image/init/load') { req, resp ->
         if (!isCopyDone) {
             return [flag   : isCopyDone,
                     steps  : support.getSteps(kp),
-                    message: 'please view log for detail']
+                    message: 'Please view log for detail']
         }
         boolean isLoadOk = support.loadDockerImage(kp, localFilePath)
         return [flag   : isLoadOk,
                 steps  : support.getSteps(kp),
-                message: 'please view log for detail']
+                message: 'Please view log for detail']
     } else {
         List steps = []
         def copyR = AgentCaller.instance.doSshCopy(kp, localFilePath, localFilePath,
@@ -56,14 +56,14 @@ h.post('/agent/image/init/load') { req, resp ->
         if (!isCopyOk) {
             return [flag   : isCopyOk,
                     steps  : steps,
-                    message: 'please view log for detail']
+                    message: 'Please view log for detail']
         }
         def loadR = AgentCaller.instance.doSshLoadDockerImage(kp, localFilePath)
         def isLoadOk = loadR.getBoolean('flag').booleanValue()
         steps.addAll loadR.getJSONArray('steps')
         return [flag   : isLoadOk,
                 steps  : steps,
-                message: 'please view log for detail']
+                message: 'Please view log for detail']
     }
 }
 
