@@ -42,6 +42,14 @@ h.group('/cluster') {
         if (namespaceList) {
             resp.halt(500, 'has namespace - ' + namespaceList.collect { it.name })
         }
+
+        // key pair
+        def kpList = new NodeKeyPairDTO(clusterId: id as int).
+                queryFields('id,ip').loadList()
+        if (kpList) {
+            resp.halt(500, 'has node key pair list - ' + kpList.collect { it.ip })
+        }
+
         new ClusterDTO(id: id as int).delete()
         [flag: true]
     }.post('/update') { req, resp ->
