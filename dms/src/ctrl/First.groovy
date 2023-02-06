@@ -18,12 +18,10 @@ h.exceptionHandler { req, resp, t ->
     def instance = Guardian.instance
     if (!instance.isCronJobRefreshDone) {
         resp.halt(500, 'cron job refresh fail')
-    } else if (instance.failAppJobIdList) {
-        resp.halt(500, 'fail application process job - ' + instance.failAppJobIdList)
-    } else if (instance.failGuardAppIdList) {
-        resp.halt(500, 'fail application guard - ' + instance.failGuardAppIdList)
-    } else if (instance.failHealthCheckAgentNodeIpList) {
-        resp.halt(500, 'fail agent health check - ' + instance.failHealthCheckAgentNodeIpList)
+    } else if (instance.failGuardAppIdSet) {
+        resp.halt(500, 'fail application guard - ' + instance.failGuardAppIdSet)
+    } else if (instance.failHealthCheckAgentNodeIpSet) {
+        resp.halt(500, 'fail agent health check - ' + instance.failHealthCheckAgentNodeIpSet)
     } else {
         'ok'
     }

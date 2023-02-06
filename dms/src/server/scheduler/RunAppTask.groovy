@@ -41,12 +41,18 @@ class RunAppTask implements Runnable {
         lock.exe {
             def cluster = new ClusterDTO(id: app.clusterId).one()
             List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, appId)
-            boolean isOk = Guardian.instance.guard(cluster, app, containerList)
+
+            def oneAppGuardian = new OneAppGuardian()
+            oneAppGuardian.cluster = cluster
+            oneAppGuardian.app = app
+            oneAppGuardian.containerList = containerList
+
+            boolean isOk = oneAppGuardian.guard()
             if (!isOk) {
                 // guard method create job already
                 def job = new AppJobDTO(appId: appId).orderBy('created_date desc').one()
                 if (job && job.status == AppJobDTO.Status.created.val) {
-                    Guardian.instance.process(job, containerList, false)
+                    oneAppGuardian.process(job, false)
                 }
             }
         }
