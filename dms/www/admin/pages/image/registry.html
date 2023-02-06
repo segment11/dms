@@ -59,7 +59,7 @@
                 <td>Name</td>
                 <td>
                     <input type="text" ng-model="editOne.name" ng-disabled="tmp.isLocal" ui-valid="r"/>
-                    Is Local(kpInner)<input type="checkbox" ng-model="tmp.isLocal"
+                    Is Local<input type="checkbox" ng-model="tmp.isLocal"
                                                 ng-change="editOne.name =  tmp.isLocal ? 'local' : ''"/>
                 </td>
             </tr>
@@ -67,7 +67,7 @@
                 <td>URL</td>
                 <td>
                     <input type="text" ng-model="editOne.url" ng-disabled="tmp.isLocal" ui-valid="r"
-                           placeholder="http://hub.docker.com"
+                           placeholder="https://hub.docker.com"
                            style="width: 300px;"/>
                 </td>
             </tr>
