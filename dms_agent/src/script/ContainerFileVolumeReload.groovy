@@ -11,6 +11,8 @@ import org.segment.web.common.CachedGroovyClassLoader
 import org.slf4j.LoggerFactory
 import support.ToJson
 
+import static common.ContainerHelper.isProcess
+
 DockerClient docker = super.binding.getProperty('docker') as DockerClient
 Map params = super.binding.getProperty('params') as Map
 
@@ -37,7 +39,7 @@ conf.fileVolumeList.findAll { it.isReloadInterval }.each { FileVolumeMount one -
              containerNumber : conf.containerNumber,
              imageTplId      : one.imageTplId], String)
 
-    if (one.isParentDirMount) {
+    if (one.isParentDirMount || isProcess(containerId)) {
         String fileLocal = one.dist
         // dyn
         String hostFileFinal

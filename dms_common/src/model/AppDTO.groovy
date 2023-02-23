@@ -3,9 +3,6 @@ package model
 import groovy.transform.CompileStatic
 import groovy.transform.ToString
 import model.json.*
-import org.segment.d.D
-import org.segment.d.Ds
-import org.segment.d.MySQLDialect
 
 @CompileStatic
 @ToString(includeNames = true, includeSuper = false)
@@ -36,6 +33,8 @@ class AppDTO extends BaseRecord<AppDTO> {
     LiveCheckConf liveCheckConf
 
     MonitorConf monitorConf
+
+    LogConf logConf
 
     ABConf abConf
 
