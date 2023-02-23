@@ -273,7 +273,7 @@ private void callAgentScript(Req req, Resp resp, String scriptName) {
     }
 
     def lock = SpiSupport.createLock()
-    lock.lockKey = 'operate app ' + (appId ?: u.name)
+    lock.lockKey = 'operate app ' + appId
     boolean isDone = lock.exe {
         JSONObject r = AgentCaller.instance.agentScriptExe(clusterId, nodeIp, scriptName, [id: id, readTimeout: readTimeout])
         resp.end r.toJSONString()
@@ -313,12 +313,16 @@ h.post('/api/container/create/tpl') { req, resp ->
     map.applications = ContainerMountFileGenerator.prepare(User.Admin, clusterId)
 
     // all, maybe too many jobs, only one cluster may be ok
-    // todo
-    List<AppDTO> appMonitorList = InMemoryCacheSupport.instance.appList.findAll {
-        (it.status == AppDTO.Status.auto.val && it.monitorConf != null) ||
-                (it.name.contains('dms_engula') && it.name.contains('monitor'))
+    def instance = InMemoryCacheSupport.instance
+    List<AppDTO> appMonitorList = instance.appList.findAll {
+        it.status == AppDTO.Status.auto.val && it.monitorConf != null && it.monitorConf
     }
     map.appMonitorList = appMonitorList
+
+    List<AppDTO> appLogList = instance.appList.findAll {
+        it.status == AppDTO.Status.auto.val && it.logConf != null && it.logConf
+    }
+    map.appLogList = appLogList
 
     def content = CachedGroovyClassLoader.instance.eval(tplOne.content, map)
     resp.end content

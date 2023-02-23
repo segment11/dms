@@ -1,46 +1,42 @@
 package script.tpl
 
-import model.server.ContainerMountTplHelper
+def esHost = super.binding.getProperty('esHost') as String
+def esPort = super.binding.getProperty('esPort') as int
+def adminPassword = super.binding.getProperty('adminPassword') as String
 
-def brokers = super.binding.getProperty('brokers').toString().trim()
-
-if (!brokers) {
-    def kafkaAppName = super.binding.getProperty('kafkaAppName') as String
-    ContainerMountTplHelper applications = super.binding.getProperty('applications') as ContainerMountTplHelper
-    ContainerMountTplHelper.OneApp kafkaApp = applications.app(kafkaAppName)
-    brokers = kafkaApp.allNodeIpList.collect { '"' + it + ':9092' + '"' }.join(',')
-} else {
-    brokers = '"' + brokers + '"'
-}
+// /home/admin/filebeat/filebeat -c /home/admin/filebeat/filebeat.yml
 
 """
 ---
 filebeat.prospectors: []
 
 filebeat.modules:
-  path: /filebeat/modules.d/*.yml
+  path: /home/admin/filebeat/modules.d/*.yml
   reload.enabled: false
  
 filebeat.config.prospectors:
-  path: /filebeat/conf.d/*.yml
+  path: /home/admin/filebeat/conf.d/*.yml
   enabled: true
-  
-filebeat.registry_file: /var/log/filebeat_registry
+  reload.enabled: true
+
+filebeat.registry_file: /var/log/filebeat/registry
 
 logging.files:
-  path: /var/log/filebeat_debug.log
+  path: /var/log/filebeat/info.log
 logging.level: info
 
 processors:
 - drop_fields:
     fields: ["@metadata", "beat", "input", "source", "offset", prospector]
     
-output.kafka:
-  hosts: [${brokers}]
-  topic: "%{[fields.log_topic]}"
-  partition.round_robin:
-    reachable_only: true
-  worker: 2
-  required_acks: 1
-  max_message_bytes: 10000000  
+setup.template.enabled: false
+setup.template.name: "xxoo"
+setup.template.pattern: "xxoo-*"
+
+output.elasticsearch:
+  hosts: ["http://${esHost}:${esPort}"]
+  index: "%{[fields.log_topic]}_%{+yyyy.MM.dd}"
+  path: "/es/"
+  username: "admin"
+  password: "${adminPassword}"
 """

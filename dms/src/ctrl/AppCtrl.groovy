@@ -111,6 +111,7 @@ h.group('/app') {
             def dto = it as AppDTO
             def map = dto.rawProps()
             map.isConfMonitor = dto.monitorConf as Boolean
+            map.isConfLog = dto.logConf as Boolean
             map.isConfGateway = dto.gatewayConf as Boolean
             map.isConfAb = dto.abConf as Boolean
             def isConfLiveCheck = dto.liveCheckConf as Boolean

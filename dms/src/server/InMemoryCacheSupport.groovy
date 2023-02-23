@@ -76,8 +76,7 @@ class InMemoryCacheSupport extends IntervalJob {
             isLeader = true
         }
 
-        appList = new AppDTO().noWhere().
-                queryFields('id,name,namespaceId,clusterId,status,conf,monitorConf,liveCheckConf').loadList()
+        appList = new AppDTO().noWhere().loadList()
         clusterList = new ClusterDTO().noWhere().loadList()
 
         if (intervalCount % 10 == 0) {

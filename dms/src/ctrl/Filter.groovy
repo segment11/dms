@@ -39,17 +39,9 @@ h.before('/**') { req, resp ->
     if (uri.contains('/api/')) {
         return
     }
-    // not rds module
-    if (uri.contains('/rds/')) {
-        return
-    }
-    // not engula module
-    if (uri.contains('/engula/')) {
-        return
-    }
 
-    if (uri.endsWith('/login') || uri.endsWith('/logout') ||
-            uri.endsWith('/agent/auth') || uri.endsWith('/hz')) {
+    List<String> skipEndsWithList = ['/login', '/logout', '/agent/auth', '/hz']
+    if (skipEndsWithList.any { uri.endsWith(it) }) {
         return
     }
 

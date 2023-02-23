@@ -1,5 +1,5 @@
 var md = angular.module('module_cluster/app', ['base']);
-md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
+md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
     $scope.ctrl = {};
     $scope.tmp = {pageNum: 1};
     $scope.editOne = {conf: {}};
@@ -36,6 +36,12 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
             $scope.ll = data.list;
             $scope.pager = {pageNum: data.pageNum, pageSize: data.pageSize, totalCount: data.totalCount};
             $scope.tmp.pageNum = data.pageNum;
+
+            _.each(data.list, function (it) {
+                if (!it.logConf) {
+                    it.logConf = {logFileList: []};
+                }
+            });
         });
     };
 
@@ -228,6 +234,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         var one = _.clone($scope.editOne);
         delete one.isConfLiveCheck;
         delete one.isConfMonitor;
+        delete one.isConfLog;
         delete one.isConfAb;
         delete one.isConfJob;
         delete one.isConfGateway;
@@ -268,18 +275,18 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         $scope.ctrl.isShowConf = true;
 
         // scale
-        if (5 == tabIndex) {
+        if (6 == tabIndex) {
             $scope.tmp.scaleNumber = one.conf.containerNumber;
         }
     };
 
     $scope.changeConfTab = function (index, triggerIndex) {
         $scope.tmp.confTabIndexTarget = index;
-        if (index == 0 || index == 1 || index == 4) {
+        if (index == 0 || index == 1 || index == 5) {
             $scope.tmp.confPortList = $scope.confOne.conf.portList;
         }
 
-        if (index == 4) {
+        if (index == 5) {
             $http.get('/dms/gw/cluster/list/simple').success(function (data) {
                 $scope.tmp.gwClusterList = data;
             });
@@ -339,10 +346,12 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         } else if (1 == tabIndex) {
             one.monitorConf = confOne.monitorConf;
         } else if (2 == tabIndex) {
-            one.abConf = confOne.abConf;
+            one.logConf = confOne.logConf;
         } else if (3 == tabIndex) {
-            one.jobConf = confOne.jobConf;
+            one.abConf = confOne.abConf;
         } else if (4 == tabIndex) {
+            one.jobConf = confOne.jobConf;
+        } else if (5 == tabIndex) {
             one.gatewayConf = confOne.gatewayConf;
         }
 

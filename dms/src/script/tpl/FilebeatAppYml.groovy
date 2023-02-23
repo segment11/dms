@@ -1,48 +1,81 @@
 package script.tpl
 
-// eg. path:topic,path2:topic2
-def pathTopicStr = super.binding.getProperty('pathTopic').toString()
-def nodeIp = super.binding.getProperty('nodeIp')
-def allAppTopic = super.binding.getProperty('allAppTopic')
-def allAppLogDir = super.binding.getProperty('allAppLogDir')
-def appIdList = super.binding.getProperty('appIdList') as List<Integer>
+import model.AppDTO
+import server.InMemoryAllContainerManager
+
+def nodeIp = super.binding.getProperty('nodeIp') as String
 
 def list = []
-pathTopicStr.split(',').each {
-    def arr = it.toString().split(':')
-    def path = arr[0]
-    def topic = arr[1]
 
-    list << """
+// dms server and dms agent
+list << """
 - type: log
   paths:
-    - ${path}
-  multiline.pattern: '^[[:space:]]+(at|\\.{3})[[:space:]]+\\b|^Caused by:'
+    - /opt/log/dms.log
+  multiline.pattern: '^[[:space:]]+(at|\\\\.{3})[[:space:]]+\\\\b|^Caused by:'
   multiline.negate: false
   multiline.match: after
   tail_files: true
   fields:
-    log_topic: ${topic}
+    log_topic: dms_server
     node_ip: ${nodeIp}
   enabled: true
 """
-}
 
-appIdList.each {
-    list << """
+list << """
 - type: log
   paths:
-    - "${allAppLogDir}/${it}/*log*"
-  multiline.pattern: '^[[:space:]]+(at|\\.{3})[[:space:]]+\\b|^Caused by:'
+    - /opt/log/dms_agent.log
+  multiline.pattern: '^[[:space:]]+(at|\\\\.{3})[[:space:]]+\\\\b|^Caused by:'
   multiline.negate: false
   multiline.match: after
   tail_files: true
   fields:
-    log_topic: ${allAppTopic}
-    app_id: ${it}
+    log_topic: dms_agent
     node_ip: ${nodeIp}
   enabled: true
 """
+
+List<AppDTO> appLogList = super.binding.getProperty('appLogList') as List<AppDTO>
+appLogList.each { app ->
+    def containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id, nodeIp)
+    // this node running a filebeat, but do not run the target application
+    if (containerList.size() == 0) {
+        return
+    }
+
+    def logConf = app.logConf
+    for (logFile in logConf.logFileList) {
+        if (logFile.isMultilineSupport) {
+            list << """
+- type: log
+  paths:
+    - ${logFile.pathPattern}
+  multiline.pattern: '${logFile.multilinePattern}'
+  multiline.negate: false
+  multiline.match: after
+  tail_files: true
+  fields:
+    log_topic: app_${app.id}
+    node_ip: ${nodeIp}
+    app_id: ${app.id}
+  enabled: true
+"""
+        } else {
+            list << """
+- type: log
+  paths:
+    - ${logFile.pathPattern}
+  tail_files: true
+  fields:
+    log_topic: app_${app.id}
+    node_ip: ${nodeIp}
+    app_id: ${app.id}
+  enabled: true
+"""
+        }
+    }
+
 }
 
 list.join("\r\n")

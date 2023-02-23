@@ -5,6 +5,7 @@ import model.AppDTO
 import model.ClusterDTO
 import model.NamespaceDTO
 import model.NodeDTO
+import model.NodeKeyPairDTO
 import org.segment.web.handler.ChainHandler
 import server.InMemoryAllContainerManager
 import server.scheduler.Guardian

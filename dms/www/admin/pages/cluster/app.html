@@ -63,17 +63,22 @@
                                 </div>
                                 <div class="btn-line">
                                     <button class="btn" ng-click="confShow(one, 2)"
-                                            ng-class="{'btn-red': one.isConfAb}">AB Version
+                                            ng-class="{'btn-red': one.isConfLog}">Log
                                     </button>
                                     <button class="btn" ng-click="confShow(one, 3)"
-                                            ng-class="{'btn-red': one.isConfJob}">Job
+                                            ng-class="{'btn-red': one.isConfAb}">AB Version
                                     </button>
                                 </div>
                                 <div class="btn-line">
                                     <button class="btn" ng-click="confShow(one, 4)"
+                                            ng-class="{'btn-red': one.isConfJob}">Job
+                                    </button>
+                                    <button class="btn" ng-click="confShow(one, 5)"
                                             ng-class="{'btn-red': one.isConfGateway}">Gateway
                                     </button>
-                                    <button class="btn" ng-click="confShow(one, 5)">Scale</button>
+                                </div>
+                                <div class="btn-line">
+                                    <button class="btn" ng-click="confShow(one, 6)">Scale</button>
                                 </div>
                             </td>
                             <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
@@ -101,18 +106,19 @@
             ui-dialog="{showModel: 'ctrl.isShowConf', title: 'Add/Update Conf', dialogId: 'dialogAppConf', lock: true, fixed: true, ext: {max: false}}">
 
         <h3>{{confOne.name}}</h3>
-        <div ng-form="tmp.confForm" style="height: 400px; overflow-x: hidden;">
+        <div ng-form="tmp.confForm" style="height: 400px; width: 800px; overflow-x: hidden;">
 
             <ul class="nav nav-tabs" ui-tabs="{targetIndex: tmp.confTabIndex, beforeFn: 'changeConfTab'}">
                 <li><a>Live Check</a></li>
                 <li><a>Monitor</a></li>
+                <li><a>Log</a></li>
                 <li><a>AB Version</a></li>
                 <li><a>Job</a></li>
                 <li><a>Gateway</a></li>
                 <li><a>Scale</a></li>
             </ul>
             <div class="tabs">
-                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                <table class="table table-bordered table-striped m_top6" style="width: 800px;">
                     <tr>
                         <td width="30%">interval seconds</td>
                         <td>
@@ -168,7 +174,7 @@
                 </table>
             </div>
             <div class="tabs">
-                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                <table class="table table-bordered table-striped m_top6" style="width: 800px;">
                     <tr>
                         <td>is first instance pull only</td>
                         <td>
@@ -265,6 +271,43 @@
                 </table>
             </div>
             <div class="tabs">
+                <div style="margin: 5px;">
+                    <button class="btn" ng-click="confOne.logConf.logFileList.push({})">Add One Log File Pattern
+                    </button>
+                </div>
+                <div style="margin: 5px;" ng-repeat="logFile in confOne.logConf.logFileList">
+                    <table class="table table-bordered table-striped m_top6" style="width: 800px;">
+                        <tr>
+                            <td colspan="2">
+                                <button class="btn" ng-click="confOne.logConf.logFileList.remove(logFile)"
+                                        style="min-width: 50px;">-
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>path pattern</td>
+                            <td>
+                                <input type="text" ng-model="logFile.pathPattern" style="width: 300px;"
+                                       ui-valid="r" placeholder="/opt/log/*log*"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>is multiline support</td>
+                            <td>
+                                <input type="checkbox" ng-model="logFile.isMultilineSupport"/>
+                            </td>
+                        </tr>
+                        <tr ng-show="logFile.isMultilineSupport">
+                            <td>multiline pattern</td>
+                            <td>
+                                <input type="text" ng-model="logFile.httpRequestUri" style="width: 300px;"
+                                       ui-valid="{{logFile.isMultilineSupport ? 'r' : ''}}" placeholder="^[[:space:]]+(at|\\\\.{3})[[:space:]]+\\\\b|^Caused by:"/>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="tabs">
                 <p class="input-tips">TIPS: For example, there are
                     total 10
                     instances of this application,
@@ -293,7 +336,8 @@
                     <tr>
                         <td width="30%">weight</td>
                         <td>
-                            <input type="text" ng-model="confOne.abConf.weight" style="width: 200px;" ui-valid="int"/>
+                            <input type="text" ng-model="confOne.abConf.weight" style="width: 200px;"
+                                   ui-valid="int"/>
                         </td>
                     </tr>
                 </table>
@@ -316,7 +360,7 @@
                 </table>
             </div>
             <div class="tabs">
-                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                <table class="table table-bordered table-striped m_top6" style="width: 800px;">
                     <tr>
                         <td width="30%">cluster</td>
                         <td>
@@ -384,7 +428,7 @@
                 </table>
             </div>
             <div class="tabs">
-                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                <table class="table table-bordered table-striped m_top6" style="width: 800px;">
                     <tr>
                         <td width="60%">change instance number change</td>
                         <td>
@@ -404,7 +448,7 @@
             ui-dialog="{showModel: 'ctrl.isShowAdd', title: 'Add/Update Application', dialogId: 'dialogApp', lock: true, fixed: true, ext: {max: false}}">
 
         <h3>{{editOne.name}}</h3>
-        <div ng-form="tmp.addForm" style="height: 500px; overflow-x: hidden;">
+        <div ng-form="tmp.addForm" style="height: 500px; width: 800px; overflow-x: hidden;">
 
             <ul class="nav nav-tabs" ui-tabs="{digest: true, beforeFn: 'changeTab'}">
                 <li class="active"><a>Namespace</a></li>
@@ -416,7 +460,7 @@
                 <li><a>Network</a></li>
             </ul>
             <div class="tabs active">
-                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                <table class="table table-bordered table-striped m_top6" style="width: 800px;">
                     <tr>
                         <td width="30%">ID</td>
                         <td>{{editOne.id}}</td>
@@ -466,7 +510,7 @@
                 </table>
             </div>
             <div class="tabs">
-                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                <table class="table table-bordered table-striped m_top6" style="width: 800px;">
                     <tr>
                         <td width="30%">Registry</td>
                         <td>
@@ -530,7 +574,7 @@
                 </table>
             </div>
             <div class="tabs">
-                <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+                <table class="table table-bordered table-striped m_top6" style="width: 800px;">
                     <tr>
                         <td width="30%">Instance Number</td>
                         <td>
