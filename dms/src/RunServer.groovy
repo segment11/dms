@@ -12,6 +12,7 @@ import org.segment.web.RouteServer
 import org.segment.web.common.CachedGroovyClassLoader
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
+import plugin.PluginManager
 import server.AgentCaller
 import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
@@ -29,6 +30,12 @@ def log = LoggerFactory.getLogger(this.getClass())
 // project work directory set
 def c = Conf.instance.resetWorkDir().load()
 log.info c.toString()
+
+if (new File(c.projectPath('/dms_server-1.0.jar')).exists()) {
+    c.on('server.runtime.jar')
+    log.info 'running in jar'
+}
+
 def srcDirPath = c.projectPath('/src')
 def resourceDirPath = c.projectPath('/resources')
 
@@ -78,6 +85,8 @@ def manager = InMemoryAllContainerManager.instance
 manager.init()
 manager.start()
 
+PluginManager.instance.loadDemo()
+
 def guardian = Guardian.instance
 guardian.interval = c.getInt('guardian.intervalSeconds', 10)
 guardian.start()
@@ -93,7 +102,6 @@ def server = RouteServer.instance
 server.loader = RouteRefreshLoader.create(loader.gcl).addClasspath(srcDirPath).addClasspath(resourceDirPath).
         addDir(c.projectPath('/src/ctrl')).jarLoad(c.isOn('server.runtime.jar'))
 server.webRoot = c.projectPath('/www')
-server.isStartMetricServer = false
 server.start(Const.SERVER_HTTP_LISTEN_PORT, localIp)
 
 // prometheus metrics

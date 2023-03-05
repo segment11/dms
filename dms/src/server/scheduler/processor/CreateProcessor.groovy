@@ -15,6 +15,8 @@ import model.json.ContainerResourceAsk
 import model.server.CreateContainerConf
 import org.segment.d.json.JsonWriter
 import org.segment.web.common.CachedGroovyClassLoader
+import plugin.Plugin
+import plugin.PluginManager
 import server.AgentCaller
 import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
@@ -515,6 +517,19 @@ class CreateProcessor implements GuardianProcessor {
             throw new JobProcessException('before check fail')
         }
 
+        // support dyn cmd using plugin expression
+        def plugin = PluginManager.instance.pluginList.
+                find { it.group() == confCopy.group && it.image() == confCopy.image }
+
+        if (confCopy.cmd?.contains('$')) {
+            confCopy.cmd = evalUsingPluginExpression(plugin, createContainerConf, confCopy.cmd)
+        }
+        for (kvPair in confCopy.envList) {
+            if (kvPair.value.toString().contains('$')) {
+                kvPair.value = evalUsingPluginExpression(plugin, createContainerConf, kvPair.value.toString())
+            }
+        }
+
         def createP = [jsonStr: JsonWriter.instance.json(createContainerConf)]
         ContainerConfigInfo containerConfigInfo = AgentCaller.instance.agentScriptExeAs(app.clusterId, nodeIp, 'container create',
                 ContainerConfigInfo, createP)
@@ -584,5 +599,28 @@ class CreateProcessor implements GuardianProcessor {
             boolean isOk = dnsOperator.put(generateContainerHostname(appId, instanceIndex), nodeIp, dnsTtl)
             keeper.next(JobStepKeeper.Step.updateDns, 'update dns', '', isOk)
         }
+    }
+
+    private String evalUsingPluginExpression(Plugin plugin, CreateContainerConf createContainerConf, String value) {
+        if (!plugin) {
+            return value
+        }
+
+        def expressions = plugin.expressions()
+        if (!expressions) {
+            return value
+        }
+
+        Map<String, Object> variables = [:]
+        variables.appId = createContainerConf.appId
+        variables.nodeIp = createContainerConf.nodeIp
+        variables.nodeIpList = createContainerConf.nodeIpList
+        variables.instanceIndex = createContainerConf.instanceIndex
+        expressions.each { k, v ->
+            def finalValue = CachedGroovyClassLoader.instance.eval(v, variables).toString()
+            value = value.replace('$' + k, finalValue)
+            value = value.replace('${' + k + '}', finalValue)
+        }
+        value
     }
 }
