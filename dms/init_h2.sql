@@ -92,6 +92,7 @@ create table app (
     conf text,
     gateway_conf varchar(2000),
     monitor_conf varchar(2000),
+    log_conf varchar(2000),
     ab_conf varchar(2000),
     job_conf varchar(2000),
     live_check_conf varchar(2000),
