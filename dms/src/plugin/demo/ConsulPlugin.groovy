@@ -11,7 +11,7 @@ import server.scheduler.checker.HealthCheckerHolder
 
 @CompileStatic
 @Slf4j
-class Consul extends BasePlugin {
+class ConsulPlugin extends BasePlugin {
     @Override
     String name() {
         'consul'
@@ -111,10 +111,5 @@ cmdArgs.join(' ')
 nodeIpList.collect { '--join ' + it }.join(' ')
 """
         r
-    }
-
-    @Override
-    boolean isRunning() {
-        true
     }
 }

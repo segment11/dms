@@ -9,9 +9,18 @@ import org.segment.web.common.CachedGroovyClassLoader
 @Singleton
 @Slf4j
 class PluginManager {
+
+    static String pluginsDirPath() {
+        Conf.instance.projectPath('/plugins')
+    }
+
+    static String pluginsResourceDirPath() {
+        Conf.instance.projectPath('/plugins_resources')
+    }
+
     List<Plugin> pluginList = []
 
-    private void add(Plugin plugin) {
+    private synchronized void add(Plugin plugin) {
         def name = plugin.name()
         def old = pluginList.find { it.name() == name }
         if (old) {
@@ -24,7 +33,8 @@ class PluginManager {
     }
 
     void loadDemo() {
-        loadPlugin('plugin.demo.Consul', true)
+        loadPlugin('plugin.demo.ConsulPlugin', true)
+        loadPlugin('plugin.demo2.ZookeeperPlugin', false)
     }
 
     void loadPlugin(String className, boolean isInClasspath = false) {
@@ -32,7 +42,7 @@ class PluginManager {
             def plugin = Class.forName(className).newInstance() as Plugin
             add(plugin)
         } else {
-            final String dir = Conf.instance.projectPath('/plugins')
+            final String dir = pluginsDirPath()
             def filePath = dir + '/' + className.replaceAll(/\./, '/') + '.groovy'
             def file = new File(filePath)
             if (!file.exists()) {

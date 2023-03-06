@@ -99,8 +99,8 @@ $(function () {
             ]
         },
         {
-            title: 'Plugin', icon: 'icon-code', list: [
-                {title: 'Plugin List', page: 'plugin_list', icon: 'icon-code'}
+            title: 'Plugin', icon: 'icon-cloud-upload', list: [
+                {title: 'Plugin List', page: 'plugin_list', icon: 'icon-cloud-upload'}
             ]
         }
     ];

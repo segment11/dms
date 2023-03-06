@@ -14,8 +14,8 @@ class CheckerHolder {
         if (old) {
             checkerList.remove(old)
         }
-        
+
         checkerList.add(checker)
-        log.info 'done add before/init/after checker - {}', checker.name()
+        log.info 'done add checker: {}, type: {}', checker.name(), checker.type().name()
     }
 }

@@ -40,7 +40,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
                     uiTips.tips(data.message);
                 }
             });
-        }, 'plugin.demo2.Consul');
+        }, 'plugin.demo2.ConsulPlugin');
     };
 
     $scope.delete = function (one) {
@@ -49,6 +49,22 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
                 if (data.flag) {
                     var i = _.indexOf($scope.ll, one);
                     $scope.ll.splice(i, 1);
+                } else {
+                    uiTips.tips(data.message);
+                }
+            });
+        }, null);
+    };
+
+    $scope.reload = function (one) {
+        uiTips.confirm('Sure Reload - ' + one.name + '?', function () {
+            uiTips.loading();
+            $http.post('/dms/plugin/load', {className: one.className}).success(function (data) {
+                uiTips.unloading();
+                if (data.flag) {
+                    $scope.queryLl();
+                } else {
+                    uiTips.tips(data.message);
                 }
             });
         }, null);

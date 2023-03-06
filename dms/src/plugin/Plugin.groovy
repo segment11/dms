@@ -23,6 +23,6 @@ interface Plugin {
 
     Map<String, String> expressions()
 
-    boolean isRunning()
+    Date loadTime()
 
 }

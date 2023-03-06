@@ -23,6 +23,7 @@
                             <th width="15%">registry</th>
                             <th width="20%">image</th>
                             <th width="20%">expressions</th>
+                            <th width="10%">load time</th>
                             <th></th>
                         </tr>
                         <tr ng-repeat="one in ll">
@@ -37,9 +38,13 @@
                                     <span class="bg-info">{{exp}}</span>
                                 </div>
                             </td>
+                            <td>{{one.loadTime | date:'yyyy/MM/dd HH:mm:ss'}}</td>
                             <td class="opts">
                                 <div class="btn-line">
                                     <button class="btn btn-red" ng-click="delete(one)">Delete</button>
+                                </div>
+                                <div class="btn-line">
+                                    <button class="btn" ng-click="reload(one)">Reload</button>
                                 </div>
                             </td>
                         </tr>

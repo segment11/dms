@@ -19,7 +19,7 @@ abstract class BasePlugin implements Plugin {
     }
 
     protected void addEnvIfNotExists(String name, String envName) {
-        def imageName = group() + '/' + image()
+        def imageName = imageName()
         def one = new ImageEnvDTO(imageName: imageName, env: envName).one()
         if (!one) {
             new ImageEnvDTO(imageName: imageName, name: name, env: envName).add()
@@ -27,7 +27,7 @@ abstract class BasePlugin implements Plugin {
     }
 
     protected void addPortIfNotExists(String name, int port) {
-        def imageName = group() + '/' + image()
+        def imageName = imageName()
         def one = new ImagePortDTO(imageName: imageName, port: port).one()
         if (!one) {
             new ImagePortDTO(imageName: imageName, name: name, port: port).add()
@@ -35,11 +35,15 @@ abstract class BasePlugin implements Plugin {
     }
 
     protected void addNodeVolumeForUpdate(String name, String dir) {
-        def imageName = group() + '/' + image()
+        def imageName = imageName()
         def one = new NodeVolumeDTO(imageName: imageName, dir: dir).one()
         if (!one) {
             new NodeVolumeDTO(imageName: imageName, name: name, dir: dir, clusterId: 1).add()
         }
+    }
+
+    String imageName() {
+        group() + '/' + image()
     }
 
     @Override
@@ -103,8 +107,10 @@ abstract class BasePlugin implements Plugin {
         r
     }
 
+    private Date loadTimeInner = new Date()
+
     @Override
-    boolean isRunning() {
-        false
+    Date loadTime() {
+        loadTimeInner
     }
 }

@@ -340,7 +340,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog, uiValid) {
         {file: 'pg_exporter.tar.gz', tag: 'latest', des: 'prom/postgres-exporter:latest'},
         {file: 'prometheus.tar.gz', tag: 'v2.25.0', des: 'prom/prometheus:v2.25.0'},
         {file: 'redis.tar.gz', tag: '6.2', des: 'library/redis:6.2'},
-        {file: 'zk.tar.gz', tag: '3.6', des: 'segment/zk:3.6'}
+        {file: 'zk.tar.gz', tag: '3.6.4', des: 'key232323/zookeeper:3.6.4'}
     ];
 
     $scope.loadImage = function (one) {

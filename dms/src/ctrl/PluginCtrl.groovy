@@ -33,8 +33,9 @@ h.group('/plugin') {
         def thisPageList = filterList[pager.start..<pager.end]
 
         [list     : thisPageList.collect {
-            [name : it.name(), version: it.version(), registry: it.registry(), group: it.group(),
-             image: it.image(), tag: it.tag(), expressions: it.expressions().keySet()]
+            [name       : it.name(), version: it.version(),
+             registry   : it.registry(), group: it.group(), image: it.image(), tag: it.tag(),
+             expressions: it.expressions().keySet(), loadTime: it.loadTime(), className: it.getClass().name]
         }, pageNum: pageNum, pageSize: pageSize, total: totalCount]
     }.post('/load') { req, resp ->
         def map = req.bodyAs(HashMap)
