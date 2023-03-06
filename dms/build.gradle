@@ -21,7 +21,7 @@ sourceSets {
             srcDirs = ['src', 'plugins']
         }
         resources {
-            srcDirs = ['resources']
+            srcDirs = ['resources', 'plugins_resources']
         }
     }
     test {
@@ -112,6 +112,16 @@ task copyTpl(type: Copy) {
     into "$buildDir/libs/src/script/tpl"
 }
 
+task copyPlugins(type: Copy) {
+    from 'plugins'
+    into "$buildDir/libs/plugins"
+}
+
+task copyPluginsResources(type: Copy) {
+    from 'plugins_resources'
+    into "$buildDir/libs/plugins_resources"
+}
+
 task buildToRun(type: Copy) {
     from 'src/conf.properties', 'src/log4j2.xml', 'init_h2.sql'
     into "$buildDir/libs"
@@ -128,4 +138,4 @@ task clearLibDir(type: Delete) {
     file(libDir).deleteDir()
 }
 
-buildToRun.dependsOn copyConfDir, copyScript, copyTpl, copyWww, jar
+buildToRun.dependsOn copyConfDir, copyScript, copyTpl, copyWww, copyPlugins, copyPluginsResources, jar
