@@ -9,7 +9,7 @@ import model.json.TplParamsConf
 class ImageTplDTO extends BaseRecord<ImageTplDTO> {
     @CompileStatic
     static enum TplType {
-        init, mount, checkPre, checkAfter
+        init, mount
     }
 
     Integer id

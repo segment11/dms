@@ -20,28 +20,26 @@
                     </div>
                     <table class="table table-bordered table-striped">
                         <tr>
-                            <th width="5%">id</th>
-                            <th width="10%">image name</th>
+                            <th width="15%">image name</th>
                             <th width="10%">name/des/type</th>
-                            <th width="30%">content/params</th>
-                            <th width="10%">mount dist</th>
+                            <th width="35%">content/params</th>
+                            <th width="20%">mount dist</th>
                             <th width="10%">updated date</th>
                             <th></th>
                         </tr>
                         <tr ng-repeat="one in ll">
-                            <td>{{one.id}}</td>
                             <td>{{one.imageName}}</td>
                             <td>
                                 <span class="bg-info">{{one.name}}</span>
                                 <p>{{one.des}}</p>
-                                <p>{{one.tplType}}</p>
+                                <span class="bg-tips">{{one.tplType}}</span>
                             </td>
                             <td>
                                 <pre style="height: 200px;">{{one.content}}</pre>
                                 <div>
                                     <ul>
                                         <li ng-repeat="param in one.params.paramList">
-                                            {{param.name}}/{{param.type}}/{{param.defaultValue}}
+                                            {{param.name}} / {{param.type}} : {{param.defaultValue}}
                                         </li>
                                     </ul>
                                 </div>
@@ -103,17 +101,11 @@
                         <select ng-model="editOne.tplType" class="btn-mid">
                             <option value="mount" selected>mount</option>
                             <option value="init">init</option>
-                            <option value="checkPre">checkPre</option>
-                            <option value="checkAfter">checkAfter</option>
                         </select>
                         <p ng-show="editOne.tplType == 'mount'">Groovy script that will generate a file for mounting by
                             DMS when create a new container instances.</p>
                         <p ng-show="editOne.tplType == 'init'">Execute shell(bash) script when create and start a new
                             container.</p>
-                        <p ng-show="editOne.tplType == 'checkPre'">Groovy script return true/false, DMS will check this
-                            before create a new container instances.</p>
-                        <p ng-show="editOne.tplType == 'checkAfter'">Groovy script return true/false, DMS will check
-                            this after start a new container instances.</p>
                     </td>
                 </tr>
                 <tr>
