@@ -113,7 +113,7 @@ h.group('/image/config') {
 
             def keyword = req.param('keyword')
             new NodeVolumeDTO().where('cluster_id = ?', clusterId).
-                    where(!!keyword, '(name like ?) or (des like ?)',
+                    where(!!keyword, '(image_name like ?) or (name like ?)',
                             '%' + keyword + '%', '%' + keyword + '%').loadPager(pageNum, pageSize)
         }.delete('/delete') { req, resp ->
             def id = req.param('id')
