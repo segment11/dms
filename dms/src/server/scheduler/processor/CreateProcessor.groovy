@@ -611,16 +611,26 @@ class CreateProcessor implements GuardianProcessor {
             return value
         }
 
+        log.info 'before eval expression: {}', value
+
         Map<String, Object> variables = [:]
         variables.appId = createContainerConf.appId
         variables.nodeIp = createContainerConf.nodeIp
         variables.nodeIpList = createContainerConf.nodeIpList
         variables.instanceIndex = createContainerConf.instanceIndex
+
+        variables.each { k, v ->
+            value = value.replace('$' + k, v.toString())
+            value = value.replace('${' + k + '}', v.toString())
+        }
+
         expressions.each { k, v ->
             def finalValue = CachedGroovyClassLoader.instance.eval(v, variables).toString()
             value = value.replace('$' + k, finalValue)
             value = value.replace('${' + k + '}', finalValue)
         }
+
+        log.info 'after eval expression: {}', value
         value
     }
 }

@@ -1,4 +1,4 @@
-package plugin.demo
+package plugin.demo2
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j

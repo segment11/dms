@@ -1,0 +1,54 @@
+<div ng-controller="MainCtrl">
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Plugin List</h5>
+                    <div class="actions">
+                        <button class="btn" ng-click="load()">Add One</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div class="form-group">
+                        <input type="text" ng-model="tmp.keyword" placeholder="Input Keyword"/>
+                        <button class="btn" ng-click="queryLl()">Query</button>
+                    </div>
+                    <table class="table table-bordered table-striped">
+                        <tr>
+                            <th width="15%">name</th>
+                            <th width="10%">version</th>
+                            <th width="15%">registry</th>
+                            <th width="20%">image</th>
+                            <th width="20%">expressions</th>
+                            <th></th>
+                        </tr>
+                        <tr ng-repeat="one in ll">
+                            <td>{{one.name}}</td>
+                            <td>
+                                <span class="bg-success">{{one.version}}</span>
+                            </td>
+                            <td>{{one.registry}}</td>
+                            <td>{{one.group}}/{{one.image}}:{{one.tag}}</td>
+                            <td>
+                                <div ng-repeat="exp in one.expressions">
+                                    <span class="bg-info">{{exp}}</span>
+                                </div>
+                            </td>
+                            <td class="opts">
+                                <div class="btn-line">
+                                    <button class="btn btn-red" ng-click="delete(one)">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 6px;" ui-pagi="" pager="pager" on-change-page="queryLl(cp, event)"></div>
+                </div>
+            </div>
+
+
+        </div><!-- /.row-fluid -->
+    </div>
+</div>

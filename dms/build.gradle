@@ -9,16 +9,16 @@ version '1.0'
 final String artifactId = 'dms_server'
 
 repositories {
-//    maven {
-//        url 'https://maven.aliyun.com/repository/public'
-//    }
+    maven {
+        url 'https://maven.aliyun.com/repository/public'
+    }
     mavenCentral()
 }
 
 sourceSets {
     main {
         groovy {
-            srcDirs = ['src']
+            srcDirs = ['src', 'plugins']
         }
         resources {
             srcDirs = ['resources']

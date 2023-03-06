@@ -97,6 +97,11 @@ $(function () {
                 {title: 'Script List', page: 'script_list', icon: 'icon-code'},
                 {title: 'Agent Visit History', page: 'script_pull-log', icon: 'icon-time'}
             ]
+        },
+        {
+            title: 'Plugin', icon: 'icon-code', list: [
+                {title: 'Plugin List', page: 'plugin_list', icon: 'icon-code'}
+            ]
         }
     ];
 

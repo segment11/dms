@@ -6,6 +6,7 @@ import groovy.util.logging.Slf4j
 import model.ImageEnvDTO
 import model.ImagePortDTO
 import model.ImageRegistryDTO
+import model.NodeVolumeDTO
 import org.segment.d.D
 
 @CompileStatic
@@ -30,6 +31,14 @@ abstract class BasePlugin implements Plugin {
         def one = new ImagePortDTO(imageName: imageName, port: port).one()
         if (!one) {
             new ImagePortDTO(imageName: imageName, name: name, port: port).add()
+        }
+    }
+
+    protected void addNodeVolumeForUpdate(String name, String dir) {
+        def imageName = group() + '/' + image()
+        def one = new NodeVolumeDTO(imageName: imageName, dir: dir).one()
+        if (!one) {
+            new NodeVolumeDTO(imageName: imageName, name: name, dir: dir, clusterId: 1).add()
         }
     }
 
