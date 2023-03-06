@@ -1,5 +1,6 @@
 package script
 
+import agent.support.ContainerLogViewCallback
 import com.github.dockerjava.api.DockerClient
 import common.Utils
 import org.slf4j.LoggerFactory
@@ -35,9 +36,15 @@ for (cmdLine in initCmd.readLines().findAll { it.trim() }) {
                 withAttachStdout(true).
                 withAttachStderr(true).
                 withCmd(cmd).exec()
-        def is = docker.execStartCmd(response.id).stdin
-        String shellResult = Utils.readFully(is)
-        list << shellResult
+
+        def callBack = new ContainerLogViewCallback()
+        docker.execStartCmd(response.id).exec(callBack)
+        def isOk = callBack.awaitCompletion(10, TimeUnit.SECONDS)
+        if (!isOk) {
+            log.error 'exec cmd timeout: {}', cmdLine
+            return [flag: false, message: 'exec cmd timeout: ' + cmdLine]
+        }
+        list << callBack.os.toString()
     }
 }
 
