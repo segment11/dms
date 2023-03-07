@@ -10,6 +10,7 @@ import model.AppJobDTO
 import model.ClusterDTO
 import org.segment.d.json.JsonWriter
 import server.AgentCaller
+import server.dns.DnsOperator
 import server.gateway.GatewayOperator
 import server.scheduler.checker.HealthCheckerHolder
 import server.scheduler.processor.CreateProcessor
@@ -19,8 +20,6 @@ import server.scheduler.processor.ScrollProcessor
 import spi.SpiSupport
 import transfer.ContainerInfo
 import transfer.ContainerInspectInfo
-
-import static common.ContainerHelper.generateContainerHostname
 
 @CompileStatic
 @Slf4j
@@ -170,13 +169,7 @@ class OneAppGuardian extends Thread {
             }
 
             // refresh dns
-            if (Conf.instance.isOn('interval.refreshDns')) {
-                def dnsOperator = SpiSupport.createDnsOperator()
-                def dnsTtl = Conf.instance.getInt('dnsTtl', 3600)
-                for (x in runningContainerList) {
-                    dnsOperator.put(generateContainerHostname(app.id, x.instanceIndex()), x.nodeIp, dnsTtl)
-                }
-            }
+            DnsOperator.refreshDns(cluster, app, runningContainerList)
 
             def containerNumber = app.conf.containerNumber
             if (containerNumber == runningContainerList.size()) {

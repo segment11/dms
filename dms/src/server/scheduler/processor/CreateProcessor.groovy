@@ -2,7 +2,6 @@ package server.scheduler.processor
 
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
-import common.Conf
 import common.ContainerHelper
 import common.Event
 import common.Utils
@@ -24,7 +23,6 @@ import server.gateway.GatewayOperator
 import server.scheduler.Guardian
 import server.scheduler.checker.Checker
 import server.scheduler.checker.CheckerHolder
-import spi.SpiSupport
 import transfer.ContainerConfigInfo
 import transfer.ContainerInfo
 import transfer.ContainerInspectInfo
@@ -32,8 +30,6 @@ import transfer.NodeInfo
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
-
-import static common.ContainerHelper.generateContainerHostname
 
 @CompileStatic
 @Slf4j
@@ -543,9 +539,6 @@ class CreateProcessor implements GuardianProcessor {
         }
         keeper.next(JobStepKeeper.Step.startContainer, 'start container', containerId)
 
-        // update dns
-        updateDns(app.id, instanceIndex, nodeIp, keeper)
-
         initCheck(createContainerConf, keeper, containerId)
         afterCheck(createContainerConf, keeper)
         new ContainerRunResult(nodeIp: nodeIp, containerConfig: containerConfigInfo, keeper: keeper)
@@ -566,7 +559,6 @@ class CreateProcessor implements GuardianProcessor {
         }
 
         int pid = HostProcessSupport.instance.startOneProcess(createContainerConf, keeper)
-        updateDns(app.id, instanceIndex, nodeIp, keeper)
 
         afterCheck(createContainerConf, keeper)
 
@@ -589,15 +581,6 @@ class CreateProcessor implements GuardianProcessor {
             if (!containerList || containerList.any { x -> !x.checkOk() }) {
                 throw new JobProcessException('wait depend app ready, app: ' + dependAppName)
             }
-        }
-    }
-
-    private void updateDns(int appId, int instanceIndex, String nodeIp, JobStepKeeper keeper) {
-        def dnsOperator = SpiSupport.createDnsOperator()
-        def dnsTtl = Conf.instance.getInt('dnsTtl', 3600)
-        if (dnsOperator) {
-            boolean isOk = dnsOperator.put(generateContainerHostname(appId, instanceIndex), nodeIp, dnsTtl)
-            keeper.next(JobStepKeeper.Step.updateDns, 'update dns', '', isOk)
         }
     }
 

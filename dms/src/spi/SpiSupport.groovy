@@ -4,11 +4,9 @@ import auth.DefaultLoginService
 import auth.LoginService
 import groovy.transform.CompileStatic
 import server.OneLock
-import server.dns.DnsOperator
 import server.hpa.DefaultScaleStrategy
 import server.hpa.ScaleStrategy
 import server.scheduler.Guardian
-import vendor.RemoteDnsOperator
 
 @CompileStatic
 class SpiSupport {
@@ -27,10 +25,5 @@ class SpiSupport {
     static ScaleStrategy createScaleStrategy() {
         ServiceLoader.load(ScaleStrategy, cl).find { it.class.name.startsWith('vendor') } as ScaleStrategy
                 ?: new DefaultScaleStrategy()
-    }
-
-    static DnsOperator createDnsOperator() {
-        ServiceLoader.load(DnsOperator, cl).find { it.class.name.startsWith('vendor') } as DnsOperator
-                ?: new RemoteDnsOperator()
     }
 }

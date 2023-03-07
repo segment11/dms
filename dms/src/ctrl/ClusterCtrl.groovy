@@ -1,13 +1,11 @@
 package ctrl
 
 import auth.User
-import model.AppDTO
 import model.ClusterDTO
 import model.NamespaceDTO
 import model.NodeDTO
 import model.NodeKeyPairDTO
 import org.segment.web.handler.ChainHandler
-import server.InMemoryAllContainerManager
 import server.scheduler.Guardian
 
 def h = ChainHandler.instance
@@ -90,39 +88,4 @@ h.group('/cluster') {
 
         [isInGuard: one.isInGuard]
     }
-}
-
-h.get('/api/cluster/hosts') { req, resp ->
-    def clusterId = req.param('clusterId')
-    assert clusterId
-
-    def namespaceList = new NamespaceDTO(clusterId: clusterId as int).
-            queryFields('id,name').loadList()
-    def appList = new AppDTO(clusterId: clusterId as int).
-            queryFields('id,name,namespace_id,conf').loadList()
-
-    def instance = InMemoryAllContainerManager.instance
-
-    Set<String> list = []
-    for (app in appList) {
-        def namespace = namespaceList.find { it.id == app.namespaceId }
-        def targetNodeIpList = app.conf.targetNodeIpList
-        if (targetNodeIpList) {
-            list << "${targetNodeIpList[0]} ${namespace ? namespace.name : ''}.${app.name}".toString()
-            targetNodeIpList.eachWithIndex { String nodeIp, int i ->
-                list << "${nodeIp} ${namespace ? namespace.name : ''}.${app.name}${i}".toString()
-            }
-        } else {
-            def containerList = instance.getContainerList(clusterId as int, app.id)
-            containerList.each { x ->
-                def instanceIndex = x.instanceIndex()
-                if (0 == instanceIndex) {
-                    list << "${x.nodeIp} ${namespace ? namespace.name : ''}.${app.name}".toString()
-                }
-                list << "${x.nodeIp} ${namespace ? namespace.name : ''}.${app.name}${instanceIndex}".toString()
-            }
-        }
-    }
-
-    resp.end list.join("\r\n")
 }

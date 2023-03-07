@@ -102,6 +102,12 @@
                                placeholder="ip1,ip2" ui-valid="ips"/>
                     </div>
                     <div class="form-group">
+                        <label class="form-label">DNS Ttl (s):</label>
+                        <input type="text" class="form-control"
+                               ng-model="editOne.globalEnvConf.dnsTtl"
+                               placeholder="3600" ui-valid="int"/>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Agent Proxy Node Ip:</label>
                         <input type="text" class="form-control"
                                ng-model="editOne.globalEnvConf.proxyNodeIp"
