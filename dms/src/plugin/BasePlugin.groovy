@@ -18,27 +18,27 @@ abstract class BasePlugin implements Plugin {
         this.d = d
     }
 
-    protected void addEnvIfNotExists(String name, String envName) {
+    protected void addEnvIfNotExists(String name, String envName, String des = null) {
         def imageName = imageName()
         def one = new ImageEnvDTO(imageName: imageName, env: envName).one()
         if (!one) {
-            new ImageEnvDTO(imageName: imageName, name: name, env: envName).add()
+            new ImageEnvDTO(imageName: imageName, name: name, env: envName, des: des).add()
         }
     }
 
-    protected void addPortIfNotExists(String name, int port) {
+    protected void addPortIfNotExists(String name, int port, String des = null) {
         def imageName = imageName()
         def one = new ImagePortDTO(imageName: imageName, port: port).one()
         if (!one) {
-            new ImagePortDTO(imageName: imageName, name: name, port: port).add()
+            new ImagePortDTO(imageName: imageName, name: name, port: port, des: des).add()
         }
     }
 
-    protected void addNodeVolumeForUpdate(String name, String dir) {
+    protected void addNodeVolumeForUpdate(String name, String dir, String des = null) {
         def imageName = imageName()
         def one = new NodeVolumeDTO(imageName: imageName, dir: dir).one()
         if (!one) {
-            new NodeVolumeDTO(imageName: imageName, name: name, dir: dir, clusterId: 1).add()
+            new NodeVolumeDTO(imageName: imageName, name: name, dir: dir, clusterId: 1, des: des).add()
         }
     }
 

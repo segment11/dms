@@ -1,4 +1,4 @@
-package script.tpl
+package prometheus
 
 import common.Const
 import common.Utils
@@ -6,6 +6,8 @@ import model.AppDTO
 import model.server.ContainerMountTplHelper
 import server.InMemoryAllContainerManager
 import transfer.ContainerInfo
+
+def intervalSecondsGlobal = super.binding.getProperty('intervalSecondsGlobal') as Integer
 
 ContainerMountTplHelper applications = super.binding.getProperty('applications') as ContainerMountTplHelper
 ContainerMountTplHelper.OneApp serverApp = applications.app('n9e_server')
@@ -42,24 +44,39 @@ if (webapiApp && webapiApp.running()) {
 List<AppDTO> appMonitorList = super.binding.getProperty('appMonitorList') as List<AppDTO>
 appMonitorList.each { app ->
     def monitorConf = app.monitorConf
+    if (!monitorConf.isHttpRequest) {
+        return
+    }
+
     List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id)
 
     Set<String> set = []
-    containerList.collect { x ->
-        set << "'${x.nodeIp}:${x.publicPort(monitorConf.port)}'".toString()
+    containerList.each { x ->
+        if (monitorConf.isFirstInstancePullOnly) {
+            if (x.instanceIndex() == 0) {
+                set << "'${x.nodeIp}:${x.publicPort(monitorConf.port)}'".toString()
+            }
+        } else {
+            set << "'${x.nodeIp}:${x.publicPort(monitorConf.port)}'".toString()
+        }
     }
-    String inner = set.join(',')
-    list << """
+
+    if (set) {
+        String inner = set.join(',')
+        list << """
   - job_name: app_${app.id}
+    metrics_path: ${monitorConf.httpRequestUri}
+    scrape_interval: ${monitorConf.intervalSeconds}s
     static_configs:
       - targets: [${inner}]
 """
+    }
 }
 
 
 """
 global:
-  scrape_interval:     15s
+  scrape_interval:     ${intervalSecondsGlobal}s
   evaluation_interval: 15s
 
 scrape_configs:
