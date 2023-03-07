@@ -109,7 +109,7 @@ h.post('/api/agent/script/pull') { req, resp ->
         content.list << new ScriptPullContent.ScriptPullOne(id: it.id, name: it.name, updatedDate: it.updatedDate)
     }
 
-    String host = req.host()
+    String host = req.header('X-REAL-IP') ?: req.host()
     def oneLog = new AgentScriptPullLogDTO(agentHost: host).queryFields('id').one()
     if (oneLog) {
         if (content.list) {

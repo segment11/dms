@@ -120,13 +120,12 @@ class Agent extends IntervalJob {
         def req = HttpRequest.post(serverHttpServerUrl + uri).
                 connectTimeout(connectTimeout).readTimeout(readTimeout).
                 header(Const.AUTH_TOKEN_HEADER, authToken ?: '').
-                header(Const.CLUSTER_ID_HEADER, clusterId)
+                header(Const.CLUSTER_ID_HEADER, clusterId).
+                header('X-REAL-IP', nodeIp)
         if (needProxy) {
             req.header(Const.PROXY_TARGET_SERVER_ADDR_HEADER,
                     'http://' + serverHost + ':' + serverPort)
             req.header(Const.PROXY_READ_TIMEOUT_HEADER, readTimeout.toString())
-
-            req.header('X-REAL-IP', nodeIp)
         }
         def sendBody = JsonWriter.instance.json(params)
         def body = req.send(sendBody).body()
