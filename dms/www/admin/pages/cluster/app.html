@@ -280,8 +280,7 @@
                         <tr>
                             <td colspan="2">
                                 <button class="btn" ng-click="confOne.logConf.logFileList.remove(logFile)"
-                                        style="min-width: 50px;">-
-                                </button>
+                                        style="min-width: 20px;">-</button>
                             </td>
                         </tr>
                         <tr>
@@ -650,7 +649,7 @@
 			</select></span>
                     <span>Env Value&nbsp;<input type="text" ng-model="param.value" style="width: 200px;"/></span>
                     <span>
-				<button class="btn" ng-click="editOne.conf.envList.remove(param)" style="min-width: 50px;">-</button>
+				<button class="btn" ng-click="editOne.conf.envList.remove(param)" style="min-width: 20px;">-</button>
 			</span>
                 </div>
                 <hr/>
@@ -664,7 +663,7 @@
                     <span>Hard&nbsp;<input type="text" ng-model="param.hard" class="input-short"
                                            ui-valid="r int"/></span>
                     <span>
-				<button class="btn" ng-click="editOne.conf.uLimitList.remove(param)" style="min-width: 50px;">-</button>
+				<button class="btn" ng-click="editOne.conf.uLimitList.remove(param)" style="min-width: 20px;">-</button>
 			</span>
                 </div>
             </div>
@@ -684,7 +683,7 @@
                         <option value="rw">rw</option>
                     </select></span>
                     <span><button class="btn" ng-click="editOne.conf.dirVolumeList.remove(param)"
-                                  style="min-width: 50px;">-</button></span>
+                                  style="min-width: 20px;">-</button></span>
                 </div>
             </div>
             <div class="tabs">
@@ -706,7 +705,7 @@
                     <br/>
                     <span style="margin-left: 20px;">
 				<button class="btn" ng-click="editOne.conf.fileVolumeList.remove(param)"
-                        style="min-width: 50px;">-</button>
+                        style="min-width: 20px;">-</button>
 			</span>
                     <div>Template Content&nbsp;<pre>{{param.content}}</pre>
                     </div>
@@ -734,10 +733,6 @@
                                                               ng-model="editOne.conf.isNetworkDnsUsingCluster"/>
                 </div>
                 <div style="margin: 5px;">
-                    <label>Is Hosts Using Cluster</label><input type="checkbox"
-                                                                ng-model="editOne.conf.isNetworkHostsUsingCluster"/>
-                </div>
-                <div style="margin: 5px;">
                     <button class="btn" ng-click="editOne.conf.portList.push({})">Add One Port Listen</button>
                 </div>
                 <div style="margin: 5px;" ng-repeat="param in editOne.conf.portList">
@@ -755,7 +750,7 @@
                                           ng-change="param.isGenerateByHost ? param.publicPort = '-1' : param.publicPort = param.privatePort"/>
 			</span>
                     <span>
-				<button class="btn" ng-click="editOne.conf.portList.remove(param)" style="min-width: 50px;">-</button>
+				<button class="btn" ng-click="editOne.conf.portList.remove(param)" style="min-width: 20px;">-</button>
 			</span>
                 </div>
             </div>
