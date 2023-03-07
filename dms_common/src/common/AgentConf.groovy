@@ -31,8 +31,6 @@ class AgentConf {
 
     String collectDockerDaemon = '1'
 
-    String needRefreshLocalHosts = '0'
-
     String generate() {
         List<String> lines = []
         this.properties.each { k, v ->

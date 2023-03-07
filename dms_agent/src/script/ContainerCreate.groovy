@@ -125,9 +125,6 @@ if (dnsServerList) {
 
 // volume *** ***
 List<Bind> binds = []
-if (conf.isNetworkHostsUsingCluster) {
-    binds << new Bind('/etc/hosts', new Volume('/etc/hosts'), AccessMode.ro)
-}
 
 String tplConfFileDir = Conf.instance.getString('agentTplConfFileDir', '/opt/dms/config')
 conf.fileVolumeList.eachWithIndex { FileVolumeMount one, int i ->

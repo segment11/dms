@@ -43,8 +43,6 @@ class Agent extends IntervalJob {
 
     String authToken
 
-    boolean needRefreshLocalHosts = false
-
     DockerClient docker
 
     Sigar sigar
@@ -73,8 +71,6 @@ class Agent extends IntervalJob {
 
         proxyNodeIp = c.get('proxyNodeIp')
         proxyNodePort = c.getInt('proxyNodePort', Const.AGENT_HTTP_LISTEN_PORT)
-
-        needRefreshLocalHosts = c.isOn('needRefreshLocalHosts')
 
         auth()
         sigar = new Sigar()
@@ -129,6 +125,8 @@ class Agent extends IntervalJob {
             req.header(Const.PROXY_TARGET_SERVER_ADDR_HEADER,
                     'http://' + serverHost + ':' + serverPort)
             req.header(Const.PROXY_READ_TIMEOUT_HEADER, readTimeout.toString())
+
+            req.header('X-REAL-IP', nodeIp)
         }
         def sendBody = JsonWriter.instance.json(params)
         def body = req.send(sendBody).body()
@@ -406,9 +404,6 @@ class Agent extends IntervalJob {
 
     @Override
     void doJob() {
-        if (needRefreshLocalHosts) {
-            AgentHelper.instance.refreshClusterHosts(clusterId)
-        }
         sendNode()
         sendContainer()
     }
