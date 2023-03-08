@@ -5,6 +5,8 @@ import server.InMemoryAllContainerManager
 
 def nodeIp = super.binding.getProperty('nodeIp') as String
 
+// /filebeat/conf.d/dyn-reloadable-apps.yml
+
 def list = []
 
 // dms server and dms agent

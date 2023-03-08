@@ -34,7 +34,12 @@ class PluginManager {
 
     void loadDemo() {
         loadPlugin('plugin.demo.ConsulPlugin', true)
+        loadPlugin('plugin.demo2.DnsmasqPlugin', false)
         loadPlugin('plugin.demo2.ZookeeperPlugin', false)
+        loadPlugin('plugin.demo2.PrometheusPlugin', false)
+        loadPlugin('plugin.demo2.ZincSearchPlugin', false)
+        loadPlugin('plugin.demo2.FilebeatPlugin', false)
+        loadPlugin('plugin.demo2.EtcdPlugin', false)
     }
 
     void loadPlugin(String className, boolean isInClasspath = false) {

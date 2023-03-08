@@ -1,21 +1,21 @@
-package script.tpl
+package filebeat
 
 def esHost = super.binding.getProperty('esHost') as String
 def esPort = super.binding.getProperty('esPort') as int
 def adminPassword = super.binding.getProperty('adminPassword') as String
 
-// /home/admin/filebeat/filebeat -c /home/admin/filebeat/filebeat.yml
+// /filebeat/filebeat -e -c /filebeat/filebeat.yml
 
 """
 ---
 filebeat.prospectors: []
 
 filebeat.modules:
-  path: /home/admin/filebeat/modules.d/*.yml
+  path: /filebeat/modules.d/*.yml
   reload.enabled: false
  
 filebeat.config.prospectors:
-  path: /home/admin/filebeat/conf.d/*.yml
+  path: /filebeat/conf.d/*.yml
   enabled: true
   reload.enabled: true
 
