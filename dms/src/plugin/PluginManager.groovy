@@ -40,6 +40,7 @@ class PluginManager {
         loadPlugin('plugin.demo2.ZincSearchPlugin', false)
         loadPlugin('plugin.demo2.FilebeatPlugin', false)
         loadPlugin('plugin.demo2.EtcdPlugin', false)
+        loadPlugin('plugin.demo2.MySQLPlugin', false)
     }
 
     void loadPlugin(String className, boolean isInClasspath = false) {
