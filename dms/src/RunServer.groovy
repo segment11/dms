@@ -31,9 +31,12 @@ def log = LoggerFactory.getLogger(this.getClass())
 def c = Conf.instance.resetWorkDir().load()
 log.info c.toString()
 
-if (new File(c.projectPath('/dms_server-1.0.jar')).exists()) {
-    c.on('server.runtime.jar')
-    log.info 'running in jar'
+def projectDir = new File(c.projectPath('/'))
+projectDir.eachFile {
+    if (it.name.endsWith('.jar') && it.name.startsWith('dms_server')) {
+        c.on('server.runtime.jar')
+        log.info 'running in jar'
+    }
 }
 
 def srcDirPath = c.projectPath('/src')

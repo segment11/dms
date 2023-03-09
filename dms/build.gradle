@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'org.segment'
-version '1.0'
+version '1.1'
 
 final String artifactId = 'dms_server'
 
@@ -93,24 +93,14 @@ jar {
     zip64 true
 }
 
-task copyWww(type: Copy) {
-    from 'www'
-    into "$buildDir/libs/www"
-}
-
-task copyConfDir(type: Copy) {
-    from 'conf'
-    into "$buildDir/libs/conf"
-}
-
-task copyScript(type: Copy) {
+task copyAgentScript(type: Copy) {
     from '../dms_agent/src/script'
     into "$buildDir/libs/dms_agent/src/script"
 }
 
-task copyTpl(type: Copy) {
-    from 'src/script/tpl'
-    into "$buildDir/libs/src/script/tpl"
+task copyWww(type: Copy) {
+    from 'www'
+    into "$buildDir/libs/www"
 }
 
 task copyPlugins(type: Copy) {
@@ -139,4 +129,4 @@ task clearLibDir(type: Delete) {
     file(libDir).deleteDir()
 }
 
-buildToRun.dependsOn copyConfDir, copyScript, copyTpl, copyWww, copyPlugins, copyPluginsResources, jar
+buildToRun.dependsOn copyAgentScript, copyWww, copyPlugins, copyPluginsResources, jar

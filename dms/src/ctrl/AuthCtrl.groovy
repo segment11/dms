@@ -25,7 +25,9 @@ h.post('/login') { req, resp ->
     def passwordMd5 = DigestUtils.md5Hex(password)
 
     if ('admin' == user) {
-        def adminPasswordMd5 = Conf.instance.get('adminPassword')
+        def envPass = System.getenv('ADMIN_PASSWORD')
+        def adminPasswordMd5 = envPass ? DigestUtils.md5Hex(envPass) :
+                Conf.instance.get('adminPassword')
         if (adminPasswordMd5) {
             if (passwordMd5 == adminPasswordMd5) {
                 def u = new User()
