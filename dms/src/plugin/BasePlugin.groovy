@@ -1,6 +1,5 @@
 package plugin
 
-import common.Conf
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.ImageEnvDTO
@@ -96,8 +95,8 @@ abstract class BasePlugin implements Plugin {
     Map<String, String> expressions() {
         HashMap<String, String> r = [:]
 
-        def c = Conf.instance
-        def dirPath = c.projectPath("/src/script/tpl/plugins/${name().replaceAll(' ', '_')}/expression".toString())
+        def dirPath = PluginManager.pluginsResourceDirPath() +
+                "/${name().replaceAll(' ', '_')}/expression".toString()
         def dir = new File(dirPath)
         if (dir.exists()) {
             for (file in dir.listFiles()) {
