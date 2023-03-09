@@ -1,4 +1,4 @@
-package script.format
+package script
 
 import com.github.dockerjava.api.DockerClient
 
