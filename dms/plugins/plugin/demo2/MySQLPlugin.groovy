@@ -55,7 +55,7 @@ class MySQLPlugin extends BasePlugin {
         tplParams.addParam('dataDir', '/data/mysql-data', 'string')
         tplParams.addParam('logDir', '/data/mysql-log', 'string')
         tplParams.addParam('isMasterSlave', 'false', 'string')
-        tplParams.addParam('customParameters', 'innodb_buffer_pool_instances=8', 'string')
+        tplParams.addParam('customParameters', 'character-set-server=utf8', 'string')
         tplParams.addParam('defaultParameters', 'auto generated', 'string')
 
         def imageName = imageName()
@@ -169,7 +169,7 @@ class MySQLPlugin extends BasePlugin {
         CheckerHolder.instance.add new Checker() {
             @Override
             boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
-                int publicPort = MySQLPlugin.getPublicPort(conf.conf)
+                int publicPort = getPublicPort(conf.conf)
 
                 def password = getEnvOneValue(conf.conf, 'MYSQL_ROOT_PASSWORD')
                 def databaseName = getEnvOneValue(conf.conf, 'INIT_DATABASE_NAME')
@@ -263,7 +263,7 @@ class MySQLPlugin extends BasePlugin {
         CheckerHolder.instance.add(new Checker() {
             @Override
             boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
-                int publicPort = MySQLPlugin.getPublicPort(conf.conf)
+                int publicPort = getPublicPort(conf.conf)
                 def password = getEnvOneValue(conf.conf, 'MYSQL_ROOT_PASSWORD')
 
                 Ds ds
@@ -432,6 +432,13 @@ start slave;
                 def existsOne = new AppDTO(name: app.name).one()
                 if (existsOne) {
                     log.warn('this exporter application name already exists {}', app.name)
+                    if (existsOne.conf.containerNumber != createContainerConf.conf.containerNumber) {
+                        existsOne.conf.containerNumber = createContainerConf.conf.containerNumber
+                        existsOne.conf.targetNodeIpList = createContainerConf.conf.targetNodeIpList
+
+                        new AppDTO(id: existsOne.id, conf: existsOne.conf).update()
+                        log.info 'update exporter application container number - {}', existsOne.id
+                    }
                     return true
                 }
 
