@@ -324,14 +324,9 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog, uiValid) {
 
     // todo
     $scope.imageList = [
-        {file: 'etcd3.tar.gz', tag: '3.4.22', des: 'segment/etcd:latest'},
-        {file: 'filebeat.tar.gz', tag: '6', des: 'segment/filebeat:6'},
         {file: 'ibex.tar.gz', tag: '0.3', des: 'n9e/ibex:0.3'},
-        {file: 'kafka.tar.gz', tag: '1.1.1', des: 'segment/kafka:1.1.1'},
-        {file: 'kvrocks.tar.gz', tag: '2.2.0', des: 'apache/kvrocks:2.2.0'},
-        {file: 'kvrocks_exporter.tar.gz', tag: 'latest', des: 'kvrocks/kvrocks_exporter:latest'},
         {file: 'mysql.tar.gz', tag: '5.7', des: 'library/mysql:5.7'},
-        {file: 'mysql_exporter.tar.gz', tag: 'latest', des: 'mysql/mysql_exporter:latest'},
+        {file: 'mysql_exporter.tar.gz', tag: 'latest', des: 'prom/mysqld-exporter:latest'},
         {file: 'nginx.tar.gz', tag: '1.22.1', des: 'library/nginx:1.22.1'},
         {file: 'nginx_exporter.tar.gz', tag: '0.11', des: 'nginx/nginx-prometheus-exporter:0.11'},
         {file: 'nightingale.tar.gz', tag: 'v5', des: 'n9e/nightingale:5'},
@@ -340,6 +335,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog, uiValid) {
         {file: 'pg_exporter.tar.gz', tag: 'latest', des: 'prom/postgres-exporter:latest'},
         {file: 'prometheus.tar.gz', tag: 'v2.25.0', des: 'prom/prometheus:v2.25.0'},
         {file: 'redis.tar.gz', tag: '6.2', des: 'library/redis:6.2'},
+        {file: 'etcd.tar.gz', tag: '3.4.24', des: 'key232323/etcd:3.4.24'},
         {file: 'zk.tar.gz', tag: '3.6.4', des: 'key232323/zookeeper:3.6.4'}
     ];
 
