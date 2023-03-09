@@ -79,5 +79,5 @@ h.get('/agent/image/init/view') { req, resp ->
     def kp = new NodeKeyPairDTO(id: id as int).one()
     assert kp
 
-    AgentCaller.instance.agentScriptExe(kp.clusterId, kp.ip, 'view image')
+    AgentCaller.instance.agentScriptExe(kp.clusterId, kp.ip, 'image view')
 }
