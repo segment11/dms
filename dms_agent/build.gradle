@@ -1,6 +1,5 @@
 plugins {
     id 'groovy'
-    id 'java'
 }
 
 group 'org.segment'
@@ -12,7 +11,10 @@ repositories {
     maven {
         url 'https://maven.aliyun.com/repository/public'
     }
-//    mavenCentral()
+    maven {
+        url 'https://s01.oss.sonatype.org/content/groups/public'
+    }
+    mavenCentral()
 }
 
 sourceSets {
@@ -30,6 +32,9 @@ sourceSets {
         }
     }
 }
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 compileGroovy {
     groovyOptions.configurationScript = file("config.groovy")
@@ -50,32 +55,40 @@ configurations {
 }
 
 dependencies {
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.17.1'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.17.1'
-    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.17.1'
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: '1.7.36'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.20.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.20.0'
+    implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.20.0'
 
-    compile group: 'org.codehaus.groovy', name: 'groovy', version: '2.4.19'
+    implementation group: 'org.codehaus.groovy', name: 'groovy', version: '2.4.21'
 
-    compile group: 'com.alibaba', name: 'fastjson', version: '1.2.83'
-    compile group: 'org.apache.commons', name: 'commons-compress', version: '1.18'
-    compile group: 'commons-net', name: 'commons-net', version: '3.6'
+    implementation group: 'com.alibaba', name: 'fastjson', version: '1.2.83'
+    implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.21'
+    implementation group: 'commons-net', name: 'commons-net', version: '3.6'
 
-    compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
-    compile group: 'com.google.auto.value', name: 'auto-value', version: '1.7.2'
+    implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
+    implementation group: 'com.google.auto.value', name: 'auto-value', version: '1.7.2'
 
-    compile group: 'com.github.docker-java', name: 'docker-java', version: '3.2.13'
-    compile group: 'com.github.kevinsawicki', name: 'http-request', version: '6.0'
+    implementation group: 'com.github.docker-java', name: 'docker-java', version: '3.2.13'
+    implementation group: 'com.github.kevinsawicki', name: 'http-request', version: '6.0'
 
-    compile group: 'io.prometheus', name: 'simpleclient', version: '0.9.0'
-    compile group: 'io.prometheus', name: 'simpleclient_httpserver', version: '0.9.0'
+    implementation group: 'io.prometheus', name: 'simpleclient', version: '0.15.0'
+    implementation group: 'io.prometheus', name: 'simpleclient_httpserver', version: '0.15.0'
+    implementation group: 'io.prometheus', name: 'simpleclient_hotspot', version: '0.15.0'
 
-    compile fileTree(dir: 'vendor', includes: ['*.jar', '*.so', '*.dll'])
+    implementation group: 'org.eclipse.jetty', name: 'jetty-servlet', version: '9.4.49.v20220914'
 
-    compile project(':dms_common')
-    compile project(':segmentweb')
-    compile project(':segmentd')
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    implementation group: 'redis.clients', name: 'jedis', version: '4.3.1'
+
+    implementation group: 'com.jcraft', name: 'jsch', version: '0.1.55'
+
+    implementation group: 'io.github.segment11', name: 'segmentd', version: '1.1-SNAPSHOT'
+    implementation group: 'io.github.segment11', name: 'segmentweb', version: '1.1-SNAPSHOT'
+
+    implementation fileTree(dir: 'vendor', includes: ['*.jar', '*.so', '*.dll'])
+
+    implementation project(':dms_common')
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
 }
 
 jar {
@@ -97,17 +110,19 @@ jar {
     zip64 true
 }
 
-task copySo(type: Copy) {
+task buildToRun(type: Tar) {
+    from jar
     from configurations.runtimeClasspath.findAll {
         it.name.endsWith('.so') ||
                 it.name.endsWith('.dll')
     }
-    into "$buildDir/libs"
+    destinationDirectory = file('.')
+    archiveFileName = 'agentV1.tar.gz'
+    compression = Compression.GZIP
 }
 
-task buildToRun(type: Copy) {
-    from 'src/conf.properties'
-    into "$buildDir/libs"
-}
+buildToRun.dependsOn jar
 
-buildToRun.dependsOn copySo, jar
+tasks.withType(Jar) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
