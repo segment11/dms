@@ -454,7 +454,7 @@ class CreateProcessor implements GuardianProcessor {
         }
 
         String imageWithTag
-        if (registryOne.local()) {
+        if (registryOne.local() || registryOne.dockerIo()) {
             imageWithTag = confCopy.group + '/' + confCopy.image + ':' + confCopy.tag
         } else {
             imageWithTag = registryOne.trimScheme() + '/' + confCopy.group + '/' + confCopy.image + ':' + confCopy.tag

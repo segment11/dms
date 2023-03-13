@@ -33,4 +33,8 @@ class ImageRegistryDTO extends BaseRecord<ImageRegistryDTO> {
     boolean local() {
         'local' == name
     }
+
+    boolean dockerIo() {
+        url == 'https://docker.io'
+    }
 }
