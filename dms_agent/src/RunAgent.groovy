@@ -72,7 +72,7 @@ DefaultExports.initialize()
 def metricsServer = new HTTPServer(localIp, Const.METRICS_AGENT_HTTP_LISTEN_PORT, true)
 
 Utils.stopWhenConsoleQuit {
-    metricsServer.stop()
+    metricsServer.close()
     scriptHolder.stop()
     agent.stop()
     server.stop()
