@@ -1,0 +1,84 @@
+package plugin.demo2
+
+import groovy.transform.CompileStatic
+import groovy.util.logging.Slf4j
+import model.AppDTO
+import model.json.MonitorConf
+import model.server.CreateContainerConf
+import plugin.BasePlugin
+import server.scheduler.checker.Checker
+import server.scheduler.checker.CheckerHolder
+import server.scheduler.processor.JobStepKeeper
+
+@CompileStatic
+@Slf4j
+class NodeExporterPlugin extends BasePlugin {
+    @Override
+    String name() {
+        'node exporter'
+    }
+
+    @Override
+    void init() {
+        super.init()
+
+        initImageConfig()
+        initChecker()
+    }
+
+    private void initImageConfig() {
+        // --path.rootfs=/host
+        addPortIfNotExists('9100', 9100)
+        addNodeVolumeForUpdate('host-dir', '/', 'dist: /host')
+    }
+
+    private void initChecker() {
+        CheckerHolder.instance.add new Checker() {
+            @Override
+            boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
+                def oldApp = new AppDTO(id: conf.app.id).queryFields('monitor_conf').one()
+                if (!oldApp.monitorConf) {
+                    // monitor
+                    def monitorConf = new MonitorConf()
+                    monitorConf.port = 9100
+                    monitorConf.isHttpRequest = true
+                    monitorConf.httpRequestUri = '/metrics'
+
+                    new AppDTO(id: conf.app.id, monitorConf: monitorConf).update()
+                    log.info 'update monitor conf'
+                }
+                true
+            }
+
+            @Override
+            Checker.Type type() {
+                Checker.Type.after
+            }
+
+            @Override
+            String name() {
+                'update monitor conf'
+            }
+
+            @Override
+            String imageName() {
+                NodeExporterPlugin.this.imageName()
+            }
+
+            @Override
+            String script(CreateContainerConf conf) {
+                null
+            }
+        }
+    }
+
+    @Override
+    String group() {
+        'prom'
+    }
+
+    @Override
+    String image() {
+        'node-exporter'
+    }
+}
