@@ -2,6 +2,7 @@ package server.scheduler.processor
 
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
+import common.Conf
 import common.ContainerHelper
 import common.Event
 import common.Utils
@@ -475,7 +476,7 @@ class CreateProcessor implements GuardianProcessor {
             // need pull
             p.image = imageWithTag
             p.registryId = confCopy.registryId
-            p.readTimeout = 1000 * 32
+            p.readTimeout = Conf.instance.getInt('pull.image.readTimeout.Millis', 1000 * 60)
             def pullImageR = AgentCaller.instance.agentScriptExe(app.clusterId, nodeIp, 'container image pull', p)
             Boolean isError = pullImageR.getBoolean('isError')
             if (isError != null && isError.booleanValue()) {
