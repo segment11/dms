@@ -85,7 +85,7 @@ h.group('/agent/script') {
         def clusterId = params.clusterId
         def nodeIp = params.nodeIp
         def scriptName = params.scriptName
-        assert nodeIp && scriptName
+        assert clusterId && nodeIp && scriptName
 
         def r = AgentCaller.instance.agentScriptExeBody(clusterId as int, nodeIp, scriptName, params)
         resp.end r
