@@ -251,7 +251,7 @@ class MySQLPlugin extends BasePlugin {
 
             @Override
             String imageName() {
-                'library/mysql'
+                MySQLPlugin.this.imageName()
             }
 
             @Override
@@ -375,7 +375,7 @@ start slave;
 
             @Override
             String imageName() {
-                'library/mysql'
+                MySQLPlugin.this.imageName()
             }
 
             @Override
@@ -410,7 +410,7 @@ start slave;
 
             @Override
             List<String> imageName() {
-                ['library/mysql']
+                [MySQLPlugin.this.imageName()]
             }
         }
     }
@@ -526,7 +526,7 @@ start slave;
 
             @Override
             String imageName() {
-                'library/mysql'
+                MySQLPlugin.this.imageName()
             }
 
             @Override
@@ -546,7 +546,7 @@ start slave;
 
             @Override
             String imageName() {
-                'library/mysql'
+                MySQLPlugin.this.imageName()
             }
 
             @Override
