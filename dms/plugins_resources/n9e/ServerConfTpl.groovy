@@ -94,7 +94,8 @@ Timeout=30000
 TemplatesDir = "./etc_ext/template"
 NotifyConcurrency = 10
 # use builtin go code notify
-NotifyBuiltinChannels = ["email", "dingtalk", "wecom", "feishu", "mm", "telegram"]
+# NotifyBuiltinChannels = ["email", "dingtalk", "wecom", "feishu", "mm", "telegram"]
+NotifyBuiltinChannels = ["feishu"]
 
 [Alerting.CallScript]
 # built in sending capability in go code
@@ -163,7 +164,7 @@ TablePrefix = ""
 
 [Reader]
 # prometheus base url
-Url = "http://prometheus:9090"
+Url = "${promAddressWrite}"
 # Basic auth username
 BasicAuthUser = ""
 # Basic auth password

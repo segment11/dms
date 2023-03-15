@@ -103,6 +103,11 @@ Label = "Feishu Robot Token"
 Key = "feishu_robot_token"
 
 [[ContactKeys]]
+Label = "Feishu User ID"
+# do not change Key
+Key = "feishu_user_id"
+
+[[ContactKeys]]
 Label = "MatterMost Webhook URL"
 # do not change Key
 Key = "mm_webhook_url"

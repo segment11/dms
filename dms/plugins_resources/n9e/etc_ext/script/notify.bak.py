@@ -147,6 +147,8 @@ class Sender(object):
             contacts = u.get("contacts")
             if contacts.get("feishu_robot_token", ""):
                 tokens[contacts.get("feishu_robot_token", "")] = 1
+            if contacts.get("feishu_user_id", ""):
+                tokens[contacts.get("feishu_user_id", "")] = 1
 
         opener = urllib2.build_opener(urllib2.HTTPHandler())
         method = "POST"
