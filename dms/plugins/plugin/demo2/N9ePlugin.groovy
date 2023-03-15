@@ -143,6 +143,8 @@ class N9ePlugin extends BasePlugin {
                     params: tplParams2
             ).add()
         }
+
+        addNodeVolumeForUpdate('n9e etc dir', '/data/n9e/etc', '/app/etc_ext')
     }
 
     private static String getParamOneValue(AppConf conf, String key) {

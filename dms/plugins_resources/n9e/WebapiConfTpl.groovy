@@ -40,16 +40,16 @@ String clusterInner = list.join("\r\n")
 RunMode = "release"
 
 # # custom i18n dict config
-# I18N = "./etc/i18n.json"
+# I18N = "./etc_ext/i18n.json"
 
 # # custom i18n request header key
 # I18NHeaderKey = "X-Language"
 
 # metrics descriptions
-MetricsYamlFile = "./etc/metrics.yaml"
+MetricsYamlFile = "./etc_ext/metrics.yaml"
 
-BuiltinAlertsDir = "./etc/alerts"
-BuiltinDashboardsDir = "./etc/dashboards"
+BuiltinAlertsDir = "./etc_ext/alerts"
+BuiltinDashboardsDir = "./etc_ext/dashboards"
 
 # config | api
 ClustersFrom = "config"

@@ -91,7 +91,7 @@ Batch = 5
 [Alerting]
 # timeout settings, unit: ms, default: 30000ms
 Timeout=30000
-TemplatesDir = "./etc/template"
+TemplatesDir = "./etc_ext/template"
 NotifyConcurrency = 10
 # use builtin go code notify
 NotifyBuiltinChannels = ["email", "dingtalk", "wecom", "feishu", "mm", "telegram"]
@@ -100,18 +100,18 @@ NotifyBuiltinChannels = ["email", "dingtalk", "wecom", "feishu", "mm", "telegram
 # built in sending capability in go code
 # so, no need enable script sender
 Enable = false
-ScriptPath = "./etc/script/notify.py"
+ScriptPath = "./etc_ext/script/notify.py"
 
 [Alerting.CallPlugin]
 Enable = false
 # use a plugin via `go build -buildmode=plugin -o notify.so`
-PluginPath = "./etc/script/notify.so"
+PluginPath = "./etc_ext/script/notify.so"
 # The first letter must be capitalized to be exported
 Caller = "N9eCaller"
 
 [Alerting.RedisPub]
 Enable = false
-# complete redis key: ${ChannelPrefix} + ${Cluster}
+# complete redis key: \${ChannelPrefix} + \${Cluster}
 ChannelPrefix = "/alerts/"
 
 [Alerting.Webhook]
