@@ -320,7 +320,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
         var one = {id: confOne.id};
 
         // scale
-        if (5 == tabIndex) {
+        if (6 == tabIndex) {
             if ($scope.tmp.scaleNumber == confOne.conf.containerNumber) {
                 uiTips.alert('instance number not change!');
                 return;
