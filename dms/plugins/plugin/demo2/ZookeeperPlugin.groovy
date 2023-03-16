@@ -36,9 +36,12 @@ class ZookeeperPlugin extends BasePlugin {
         }
 
         final String tplName = 'zoo.cfg.tpl'
+        final String tplName2 = 'zoo.cfg.single.node.tpl'
 
         String tplFilePath = PluginManager.pluginsResourceDirPath() + '/zookeeper/ZooCfgTpl.groovy'
+        String tplFilePath2 = PluginManager.pluginsResourceDirPath() + '/zookeeper/ZooCfgSingleNodeTpl.groovy'
         String content = new File(tplFilePath).text
+        String content2 = new File(tplFilePath2).text
 
         TplParamsConf tplParams = new TplParamsConf()
         tplParams.addParam('tickTime', '2000', 'int')
@@ -62,6 +65,19 @@ class ZookeeperPlugin extends BasePlugin {
             ).add()
         }
 
+        def one2 = new ImageTplDTO(imageName: imageName, name: tplName2).queryFields('id').one()
+        if (!one2) {
+            new ImageTplDTO(
+                    name: tplName2,
+                    imageName: imageName,
+                    tplType: ImageTplDTO.TplType.mount.name(),
+                    mountDist: '/zookeeper/conf/zoo.cfg',
+                    content: content2,
+                    isParentDirMount: false,
+                    params: tplParams
+            ).add()
+        }
+
         addNodeVolumeForUpdate('data-dir', '/data/zookeeper')
     }
 
@@ -75,7 +91,8 @@ class ZookeeperPlugin extends BasePlugin {
 
                 def mountDirOne = conf.conf.dirVolumeList.find { it.dist == param.value }
                 def hostDirPath = mountDirOne.dir
-                def myidFilePath = hostDirPath + '/myid'
+                def myidFilePath = conf.conf.isLimitNode ? (hostDirPath + '/instance_' + conf.instanceIndex + '/myid')
+                        : hostDirPath + '/myid'
 
                 AgentCaller.instance.agentScriptExe(conf.clusterId, conf.nodeIp, 'write file content',
                         [filePath: myidFilePath, fileContent: conf.instanceIndex.toString()])
