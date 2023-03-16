@@ -45,6 +45,7 @@ class PluginManager {
         loadPlugin('plugin.demo2.NodeExporterPlugin', false)
         loadPlugin('plugin.demo2.N9ePlugin', false)
         loadPlugin('plugin.demo2.RedisPlugin', false)
+        loadPlugin('plugin.demo2.TraefikPlugin', false)
     }
 
     void loadPlugin(String className, boolean isInClasspath = false) {
