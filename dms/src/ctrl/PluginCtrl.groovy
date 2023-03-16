@@ -36,7 +36,7 @@ h.group('/plugin') {
             [name       : it.name(), version: it.version(),
              registry   : it.registry(), group: it.group(), image: it.image(), tag: it.tag(),
              expressions: it.expressions().keySet(), loadTime: it.loadTime(), className: it.getClass().name]
-        }, pageNum: pageNum, pageSize: pageSize, total: totalCount]
+        }, pageNum: pageNum, pageSize: pageSize, totalCount: totalCount]
     }.post('/load') { req, resp ->
         def map = req.bodyAs(HashMap)
         def className = map.className as String
