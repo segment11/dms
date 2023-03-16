@@ -70,7 +70,7 @@
             <tr>
                 <td>Name</td>
                 <td>
-                    <input type="text" ng-model="editOne.name" ui-valid="r"/>
+                    <input type="text" ng-model="editOne.name" placeholder="test" ui-valid="r"/>
                 </td>
             </tr>
             <tr>
@@ -82,32 +82,32 @@
             <tr>
                 <td>Server Url</td>
                 <td>
-                    <input type="text" ng-model="editOne.serverUrl" ui-valid="r url"/>
+                    <input type="text" ng-model="editOne.serverUrl" placeholder="http://192.168.0.100" ui-valid="r url"/>
                 </td>
             </tr>
             <tr>
                 <td>Server Port</td>
                 <td>
-                    <input type="text" ng-model="editOne.serverPort" ui-valid="r int"/>
+                    <input type="text" ng-model="editOne.serverPort" placeholder="80" ui-valid="r int"/>
                 </td>
             </tr>
             <tr>
                 <td>Dashboard Port</td>
                 <td>
-                    <input type="text" ng-model="editOne.dashboardPort" ui-valid="r int"/>
+                    <input type="text" ng-model="editOne.dashboardPort" placeholder="81" ui-valid="r int"/>
                 </td>
             </tr>
             <tr>
-                <td>Zookeeper Node</td>
+                <td>Zookeeper Connect String</td>
                 <td>
-                    <input type="text" ng-model="editOne.zkNode" placeholder="ip1:port,ip2:port"
+                    <input type="text" ng-model="editOne.zkConnectString" placeholder="192.168.0.100:2181"
                            ui-valid="r endpoints"/>
                 </td>
             </tr>
             <tr>
                 <td>Prefix</td>
                 <td>
-                    <input type="text" ng-model="editOne.prefix" ui-valid="r"/>
+                    <input type="text" ng-model="editOne.prefix" placeholder="traefik" ui-valid="r"/>
                 </td>
             </tr>
         </table>
