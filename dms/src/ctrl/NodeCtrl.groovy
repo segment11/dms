@@ -1,10 +1,7 @@
 package ctrl
 
 import auth.User
-import common.AgentConf
-import common.Const
-import common.Event
-import common.Utils
+import common.*
 import deploy.DeploySupport
 import deploy.InitAgentEnvSupport
 import model.AppDTO
@@ -203,6 +200,7 @@ h.group('/node') {
         agentConf.serverHost = conf.serverHost ?: Utils.localIp()
         agentConf.serverPort = conf.serverPort ?: Const.SERVER_HTTP_LISTEN_PORT
         agentConf.localIpFilterPre = conf.localIpFilterPre
+        agentConf.agentIntervalSeconds = Conf.instance.getInt('agent.interval.seconds', 5)
 
         def support = new InitAgentEnvSupport(kp.clusterId, conf.proxyNodeIp)
         if (!support.proxyNodeIp || support.proxyNodeIp == kp.ip) {

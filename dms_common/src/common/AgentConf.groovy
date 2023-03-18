@@ -17,7 +17,7 @@ class AgentConf {
 
     String agentTplConfFileDir = '/opt/dms/config'
 
-    int agentIntervalSeconds = 10
+    int agentIntervalSeconds = 5
 
     int agentConnectTimeout = 500
 

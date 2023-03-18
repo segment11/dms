@@ -302,7 +302,7 @@ $(function () {
             console.log('begin call - ' + fnName);
             scope.$eval(fnName + '()');
         });
-    }, 1000 * 10);
+    }, 1000 * 5);
 })(this);
 
 (function () {

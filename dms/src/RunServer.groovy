@@ -91,7 +91,7 @@ manager.start()
 PluginManager.instance.loadDemo()
 
 def guardian = Guardian.instance
-guardian.interval = c.getInt('guardian.intervalSeconds', 10)
+guardian.interval = c.getInt('guardian.interval.seconds', 5)
 guardian.start()
 
 def cacheSupport = InMemoryCacheSupport.instance
