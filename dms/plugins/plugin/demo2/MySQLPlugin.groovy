@@ -77,7 +77,7 @@ class MySQLPlugin extends BasePlugin {
         addNodeVolumeForUpdate('log-dir', '/data/mysql-log')
     }
 
-    private static int getPublicPort(AppConf conf) {
+    static int getPublicPort(AppConf conf) {
         def port = getParamOneValue(conf, 'port') as int
 
         int publicPort = port
@@ -90,13 +90,13 @@ class MySQLPlugin extends BasePlugin {
         publicPort
     }
 
-    private static String getParamOneValue(AppConf conf, String key) {
+    static String getParamOneValue(AppConf conf, String key) {
         def mountFileOne = conf.fileVolumeList.find { it.dist == '/etc/my.cnf' }
         def paramOne = mountFileOne.paramList.find { it.key == key }
         paramOne.value
     }
 
-    private static String getEnvOneValue(AppConf conf, String key) {
+    static String getEnvOneValue(AppConf conf, String key) {
         def envOne = conf.envList.find { it.key == key }
         envOne?.value.toString()
     }
@@ -471,19 +471,21 @@ start slave;
                 if (!one) {
                     new ImageEnvDTO(imageName: imageName, name: 'mysql connect string', env: 'DATA_SOURCE_NAME').add()
                 }
-                def two = new ImagePortDTO(imageName: imageName, port: 9104).one()
+
+                def exporterPort = 9104 + (3306 - publicPort)
+                def two = new ImagePortDTO(imageName: imageName, port: exporterPort).one()
                 if (!two) {
-                    new ImagePortDTO(imageName: imageName, name: 'mysqld exporter listen port', port: 9104).add()
+                    new ImagePortDTO(imageName: imageName, name: 'mysqld exporter listen port', port: exporterPort).add()
                 }
 
                 // not bridge
                 conf.networkMode = 'host'
-                conf.portList << new PortMapping(privatePort: 9104, publicPort: 9104)
+                conf.portList << new PortMapping(privatePort: exporterPort, publicPort: exporterPort)
 
                 // monitor
                 def monitorConf = new MonitorConf()
                 app.monitorConf = monitorConf
-                monitorConf.port = 9104
+                monitorConf.port = exporterPort
                 monitorConf.isHttpRequest = true
                 monitorConf.httpRequestUri = '/metrics'
 
