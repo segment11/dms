@@ -42,6 +42,7 @@ class PluginManager {
         loadPlugin('plugin.demo2.EtcdPlugin', false)
         loadPlugin('plugin.demo2.MySQLPlugin', false)
         loadPlugin('plugin.demo2.PmaPlugin', false)
+        loadPlugin('plugin.demo2.PatroniPlugin', false)
         loadPlugin('plugin.demo2.NodeExporterPlugin', false)
         loadPlugin('plugin.demo2.N9ePlugin', false)
         loadPlugin('plugin.demo2.RedisPlugin', false)

@@ -7,18 +7,17 @@ def instanceIndex = super.binding.getProperty('instanceIndex') as int
 def nodeIp = super.binding.getProperty('nodeIp') as String
 
 // patroni port
-def port = super.binding.getProperty('port') as String
-def pgPort = super.binding.getProperty('pgPort') as String
+def port = super.binding.getProperty('port') as int
+def pgPort = super.binding.getProperty('pgPort') as int
 def pgEncoding = super.binding.getProperty('pgEncoding') as String
+def pgPassword = super.binding.getProperty('pgPassword') as String
 def customParameters = super.binding.getProperty('customParameters') as String
-def ENV_PGDATA = super.binding.getProperty('ENV_PGDATA') as String
-def ENV_PG_BIN_DIR = super.binding.getProperty('ENV_PG_BIN_DIR') as String
-def ENV_POSTGRES_PASSWORD = super.binding.getProperty('ENV_POSTGRES_PASSWORD') as String
+def dataDir = super.binding.getProperty('dataDir') as String
 
 def etcdAppName = super.binding.getProperty('etcdAppName') as String
 ContainerMountTplHelper applications = super.binding.getProperty('applications') as ContainerMountTplHelper
 ContainerMountTplHelper.OneApp etcdApp = applications.app(etcdAppName)
-def etcdEndpoint = etcdApp.allNodeIpList.collect { "${it}:2379" }[0]
+def etcdEndpoint = etcdApp.allNodeIpList[0] + ':2379'
 
 def parameters = customParameters.split(',')
 def pre = ''.padLeft(8, ' ')
@@ -54,13 +53,20 @@ bootstrap:
       use_slots: true
       parameters:
         listen_addresses: "0.0.0.0"
-        port: 5432
+        port: ${pgPort}
         wal_level: logical
         hot_standby: "on"
         wal_keep_segments: 100
         max_wal_senders: 10
         max_replication_slots: 10
         wal_log_hints: "on"
+        logging_collector: "on"
+        log_destination: "csvlog"
+        log_directory: "pg_log"
+        log_min_duration_statement: "800"
+        log_filename: "pg-%d_%H%M%S.log"
+        log_rotation_size: "1024MB"
+        log_truncate_on_rotation: "off"
 ${x}
 
 # custom settings: ${customParameters}
@@ -84,8 +90,8 @@ ${x}
 postgresql:
   listen: 0.0.0.0:${pgPort}
   connect_address: ${nodeIp}:${pgPort}
-  data_dir: ${ENV_PGDATA}
-  bin_dir: ${ENV_PG_BIN_DIR}
+  data_dir: ${dataDir}
+  bin_dir: /usr/libexec/postgresql
 
   authentication:
     replication:
@@ -93,7 +99,7 @@ postgresql:
       password: repl@pass
     superuser:
       username: postgres
-      password: '${ENV_POSTGRES_PASSWORD}'
+      password: '${pgPassword}'
     rewind:
       username: rewind_user
       password: rewind_user@pass

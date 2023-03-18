@@ -41,6 +41,15 @@ abstract class BasePlugin implements Plugin {
         }
     }
 
+    static int addRegistryIfNotExist(String name, String url) {
+        def registryOne = new ImageRegistryDTO(url: url).one()
+        if (!registryOne) {
+            return new ImageRegistryDTO(name: name, url: url).add()
+        } else {
+            return registryOne.id
+        }
+    }
+
     String imageName() {
         group() + '/' + image()
     }
