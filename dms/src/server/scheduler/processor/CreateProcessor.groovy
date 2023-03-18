@@ -49,7 +49,7 @@ class CreateProcessor implements GuardianProcessor {
             }
         }
 
-        def runNumber = instanceIndexList.size()
+        def runNumber = instanceIndexList.max { it } + 1
         List<String> nodeIpList = []
         def targetNodeIpList = conf.targetNodeIpList
         if (targetNodeIpList) {

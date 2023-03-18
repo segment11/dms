@@ -79,6 +79,9 @@ class PrometheusPlugin extends BasePlugin {
                 cmdArgs << '--web.console.templates=/usr/share/prometheus/consoles'
                 cmdArgs << '--web.enable-lifecycle'
 
+//                cmdArgs << '--enable-feature=remote-write-receiver'
+//                cmdArgs << '--query.lookback-delta=2m'
+
                 conf.conf.cmd = JSON.toJSONString(cmdArgs)
                 true
             }
