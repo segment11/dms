@@ -12,6 +12,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     }
 
     $scope.queryLl = function (pageNum) {
+        uiTips.loading();
         var p = {pageNum: pageNum || $scope.tmp.pageNum, keyword: $scope.tmp.keyword};
         if (p.keyword) {
             store.set('plugin_keyword', p);
@@ -35,7 +36,10 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
             }
             $http.post('/dms/plugin/load', {className: val}).success(function (data) {
                 if (data.flag) {
-                    $scope.queryLl();
+                    uiTips.tips('Done load plugin - ' + val, null, 'face-smile.png');
+                    setTimeout(function () {
+                        $scope.queryLl();
+                    }, 2000);
                 } else {
                     uiTips.tips(data.message);
                 }
@@ -62,7 +66,10 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
             $http.post('/dms/plugin/load', {className: one.className}).success(function (data) {
                 uiTips.unloading();
                 if (data.flag) {
-                    $scope.queryLl();
+                    uiTips.tips('Done reload plugin - ' + one.name, null, 'face-smile.png');
+                    setTimeout(function () {
+                        $scope.queryLl();
+                    }, 2000);
                 } else {
                     uiTips.tips(data.message);
                 }
