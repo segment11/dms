@@ -91,10 +91,11 @@ List<PortBinding> portBindings = []
 if (!isNetworkHost) {
     conf.portList.eachWithIndex { PortMapping pm, int i ->
         def publicPort = pm.publicPort == -1 ? Utils.getOnePortListenAvailable() : pm.publicPort
+        def privatePort = pm.privatePort
         // for application use
-        envList << new KVPair(key: 'X_port_' + pm.privatePort, value: '' + publicPort)
-        def binding = new PortBinding(Ports.Binding.bindPort(pm.privatePort),
-                pm.listenType == 'udp' ? ExposedPort.udp(publicPort) : ExposedPort.tcp(publicPort))
+        envList << new KVPair(key: 'X_port_' + privatePort, value: '' + publicPort)
+        def binding = new PortBinding(Ports.Binding.bindPort(publicPort),
+                pm.listenType == 'udp' ? ExposedPort.udp(privatePort) : ExposedPort.tcp(privatePort))
         portBindings << binding
     }
     hostConfig.withPortBindings(portBindings)
