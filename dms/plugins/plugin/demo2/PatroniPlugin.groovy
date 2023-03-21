@@ -41,6 +41,7 @@ class PatroniPlugin extends BasePlugin {
     private void initImageConfig() {
         addEnvIfNotExists('DEFAULT_PARAMS_TPL_FILE', 'DEFAULT_PARAMS_TPL_FILE',
                 'generate patroni.yml bootstrap postgresql default params, default conf_output_postgresql.json')
+        addEnvIfNotExists('PGBACKREST_LOG_PATH', 'PGBACKREST_LOG_PATH')
 
         addPortIfNotExists('5432', 5432)
         // patroni port
@@ -48,11 +49,14 @@ class PatroniPlugin extends BasePlugin {
 
         final String tplName = 'patroni.yml.tpl'
         final String tplName2 = 'patroni.yml.single.node.tpl'
+        final String tplName3 = 'pgbackrest.conf.tpl'
 
         String tplFilePath = PluginManager.pluginsResourceDirPath() + '/patroni/PatroniYmlTpl.groovy'
         String tplFilePath2 = PluginManager.pluginsResourceDirPath() + '/patroni/PatroniYmlSingleNodeTpl.groovy'
+        String tplFilePath3 = PluginManager.pluginsResourceDirPath() + '/patroni/PgbackrestConfTpl.groovy'
         String content = new File(tplFilePath).text
         String content2 = new File(tplFilePath2).text
+        String content3 = new File(tplFilePath3).text
 
         TplParamsConf tplParams = new TplParamsConf()
         tplParams.addParam('etcdAppName', 'etcd', 'string')
@@ -65,10 +69,14 @@ class PatroniPlugin extends BasePlugin {
         tplParams.addParam('customParameters', 'hot_standby=on', 'string')
         tplParams.addParam('defaultParameters', 'auto generated', 'string')
 
+        TplParamsConf tplParams3 = new TplParamsConf()
+        tplParams3.addParam('dataDir', '/data/pg', 'string')
+
         def imageName = imageName()
 
         def one = new ImageTplDTO(imageName: imageName, name: tplName).queryFields('id').one()
         def one2 = new ImageTplDTO(imageName: imageName, name: tplName2).queryFields('id').one()
+        def one3 = new ImageTplDTO(imageName: imageName, name: tplName3).queryFields('id').one()
         if (!one) {
             new ImageTplDTO(
                     name: tplName,
@@ -91,9 +99,22 @@ class PatroniPlugin extends BasePlugin {
                     params: tplParams
             ).add()
         }
+        if (!one3) {
+            new ImageTplDTO(
+                    name: tplName3,
+                    imageName: imageName,
+                    tplType: ImageTplDTO.TplType.mount.name(),
+                    mountDist: '/etc/pgbackrest/pgbackrest.conf',
+                    content: content3,
+                    isParentDirMount: false,
+                    params: tplParams3
+            ).add()
+        }
 
         addNodeVolumeForUpdate('data-dir', '/data/pg')
         addNodeVolumeForUpdate('run-dir', '/run/postgresql')
+        addNodeVolumeForUpdate('pgbackrest-log-dir', '/var/log/pgbackrest')
+        addNodeVolumeForUpdate('pgbackrest-lib-dir', '/var/lib/pgbackrest')
     }
 
     private void initImageConfigHaproxy() {
@@ -112,7 +133,7 @@ class PatroniPlugin extends BasePlugin {
         String content = new File(tplFilePath).text
 
         TplParamsConf tplParams = new TplParamsConf()
-        tplParams.addParam('patroniAppName', 'patroni', 'string')
+        tplParams.addParam('patroniAppNames', 'patroni', 'string')
         tplParams.addParam('patroniAppIsSingleNode', 'false', 'string')
         tplParams.addParam('port', '5000', 'int')
         tplParams.addParam('statsPort', '7000', 'int')
@@ -162,10 +183,20 @@ class PatroniPlugin extends BasePlugin {
             boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
                 // set right user
                 conf.conf.user = 'repl'
-                def runDirOne = conf.conf.dirVolumeList.find { it.dist == '/run/postgresql' }
-                if (!runDirOne) {
+                // set run dir or mkdir
+                def runDirDirMountOne = conf.conf.dirVolumeList.find { it.dist == '/run/postgresql' }
+                if (!runDirDirMountOne) {
                     conf.conf.dirVolumeList.add(new DirVolumeMount(dir: '/run/postgresql', dist: '/run/postgresql', mode: 'rw'))
                 }
+                // set pgbackrest log dir env
+                def logPathEnvOne = conf.conf.envList.find { it.key == 'PGBACKREST_LOG_PATH' }
+                if (!logPathEnvOne) {
+                    conf.conf.envList.add(new KVPair<String>(key: 'PGBACKREST_LOG_PATH', value: '/var/log/pgbackrest'))
+                }
+
+//                def dir = conf.conf.dirVolumeList.collect { it.dir }.join(',')
+//                log.warn 'ready mkdir dirs: {}', dir
+//                AgentCaller.instance.agentScriptExe(conf.app.clusterId, conf.nodeIp, 'mk dir', [dir: dir])
 
                 def fileName = getEnvOneValue(conf.conf, 'DEFAULT_PARAMS_TPL_FILE') ?: 'conf_output_postgresql.json'
                 def file = new File(PluginManager.pluginsResourceDirPath() + '/patroni/' + fileName)
@@ -229,6 +260,42 @@ class PatroniPlugin extends BasePlugin {
         }
 
         CheckerHolder.instance.add new Checker() {
+
+            @Override
+            boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
+                return true
+            }
+
+            @Override
+            Checker.Type type() {
+                Checker.Type.init
+            }
+
+            @Override
+            String name() {
+                'pgbackrest init'
+            }
+
+            @Override
+            String imageName() {
+                PatroniPlugin.this.imageName()
+            }
+
+            @Override
+            String script(CreateContainerConf conf) {
+                """
+'''
+chown repl /data
+mkdir -p /var/lib/pgbackrest
+mkdir -p /var/log/pgbackrest
+chmod 750 /var/lib/pgbackrest
+chown postgres:postgres /var/lib/pgbackrest
+'''
+"""
+            }
+        }
+
+        CheckerHolder.instance.add new Checker() {
             @Override
             boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
                 int publicPort = getPublicPort(conf.conf)
@@ -253,6 +320,9 @@ class PatroniPlugin extends BasePlugin {
                     List<String> ddlList = []
                     ddlList << "create user export_user password 'export_user_pass'"
                     ddlList << "GRANT pg_monitor TO export_user"
+                    // create extension
+                    ddlList << "create extension citus"
+                    ddlList << "create extension timescaledb"
 
                     ddlList.each {
                         def line = it.trim()
@@ -480,6 +550,9 @@ class PatroniPlugin extends BasePlugin {
                 final int defaultContainerNumber = 1
                 def patroniAppName = createContainerConf.app.name
                 def ymlOne = createContainerConf.conf.fileVolumeList.find { it.dist == '/etc/patroni.yml' }
+                def pgPort = ymlOne.paramList.find { it.key == 'pgPort' }.value as int
+                def portDiff = 5432 - pgPort
+
                 def tplOne = new ImageTplDTO(id: ymlOne.imageTplId).one()
                 def isSingleNode = tplOne.name.contains('single.node')
 
@@ -509,21 +582,21 @@ class PatroniPlugin extends BasePlugin {
                 conf.registryId = registryId
                 conf.group = 'library'
                 conf.image = 'haproxy'
-                conf.tag = 'latest'
+                conf.tag = 'lts-alpine'
                 conf.memMB = 1024
                 conf.cpuShare = 1024
 
                 conf.networkMode = 'host'
-                conf.portList << new PortMapping(privatePort: 5000, publicPort: 5000)
-                conf.portList << new PortMapping(privatePort: 7000, publicPort: 7000)
+                conf.portList << new PortMapping(privatePort: 5000, publicPort: 5000 + portDiff)
+                conf.portList << new PortMapping(privatePort: 7000, publicPort: 7000 + portDiff)
 
                 def tplHaproxyOne = new ImageTplDTO(imageName: 'library/haproxy', name: 'haproxy.cfg.tpl').one()
                 def mountOne = new FileVolumeMount(imageTplId: tplHaproxyOne.id, content: tplHaproxyOne.content, dist: tplHaproxyOne.mountDist)
-                mountOne.paramList << new KVPair<String>('patroniAppName', patroniAppName)
+                mountOne.paramList << new KVPair<String>('patroniAppNames', patroniAppName)
                 mountOne.paramList << new KVPair<String>('patroniAppIsSingleNode', isSingleNode.toString())
                 mountOne.paramList << new KVPair<String>('maxConn', '100')
-                mountOne.paramList << new KVPair<String>('port', '5000')
-                mountOne.paramList << new KVPair<String>('statsPort', '7000')
+                mountOne.paramList << new KVPair<String>('port', (5000 + portDiff).toString())
+                mountOne.paramList << new KVPair<String>('statsPort', (7000 + portDiff).toString())
                 conf.fileVolumeList << mountOne
 
                 // add application to dms

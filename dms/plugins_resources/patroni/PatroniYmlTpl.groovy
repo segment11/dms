@@ -67,6 +67,7 @@ bootstrap:
         log_filename: "pg-%d_%H%M%S.log"
         log_rotation_size: "1024MB"
         log_truncate_on_rotation: "off"
+        shared_preload_libraries: "citus,timescaledb"
 ${x}
 
 # custom settings: ${customParameters}

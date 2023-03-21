@@ -6,18 +6,28 @@ def maxConn = super.binding.getProperty('maxConn') as int
 def statsPort = super.binding.getProperty('statsPort') as int
 def port = super.binding.getProperty('port') as int
 
-def patroniAppName = super.binding.getProperty('patroniAppName') as String
-ContainerMountTplHelper applications = super.binding.getProperty('applications') as ContainerMountTplHelper
-ContainerMountTplHelper.OneApp patroniApp = applications.app(patroniAppName)
-
 def patroniAppIsSingleNode = super.binding.getProperty('patroniAppIsSingleNode') as String
 def isSingleNode = 'true' == patroniAppIsSingleNode
+
+def patroniAppNames = super.binding.getProperty('patroniAppNames') as String
+ContainerMountTplHelper applications = super.binding.getProperty('applications') as ContainerMountTplHelper
+
 def list = []
-patroniApp.containerList.each { x ->
-    def instanceIndex = x.instanceIndex()
-    def step = 100 * instanceIndex
-    list << "server pg${instanceIndex} ${x.nodeIp}:${isSingleNode ? 5432 + step : x.publicPort(5432)} maxconn ${maxConn} ".toString() +
-            "check port ${isSingleNode ? 4432 + step : x.publicPort(4432)}".toString()
+
+patroniAppNames.split(',').each { patroniAppName ->
+    ContainerMountTplHelper.OneApp patroniApp = applications.app(patroniAppName)
+    def ymlOne = patroniApp.app.conf.fileVolumeList.find { it.dist == '/etc/patroni.yml' }
+    def patroniPort = ymlOne.paramList.find { it.key == 'port' }.value as int
+    def pgPort = ymlOne.paramList.find { it.key == 'pgPort' }.value as int
+    def appId = patroniApp.app.id
+    patroniApp.containerList.each { x ->
+        def instanceIndex = x.instanceIndex()
+        def step = 100 * instanceIndex
+        def pgPublicPort = x.publicPort(pgPort)
+        def patroniPublicPort = x.publicPort(patroniPort)
+        list << "server pg${appId}_${instanceIndex} ${x.nodeIp}:${isSingleNode ? pgPublicPort + step : pgPublicPort} maxconn ${maxConn} ".toString() +
+                "check port ${isSingleNode ? patroniPublicPort + step : patroniPublicPort}".toString()
+    }
 }
 
 def pre = ''.padLeft(4, ' ')
