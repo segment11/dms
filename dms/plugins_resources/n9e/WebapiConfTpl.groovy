@@ -19,7 +19,8 @@ arr.eachWithIndex { str, i ->
     list << """
 [[Clusters]]
 # Prometheus cluster name
-Name = "Prom${i}"
+### only Default ? can trigger notify rule messages
+Name = "${i == 0 ? 'Default' : 'Default' + i}"
 # Prometheus APIs base url
 Prom = "${str}"
 # Basic auth username
