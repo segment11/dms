@@ -30,6 +30,7 @@ class PatroniPlugin extends BasePlugin {
         super.init()
 
         initImageConfig()
+        initImageConfigPgAdmin()
         initImageConfigHaproxy()
         initChecker()
         initCleaner()
@@ -115,6 +116,31 @@ class PatroniPlugin extends BasePlugin {
         addNodeVolumeForUpdate('run-dir', '/run/postgresql')
         addNodeVolumeForUpdate('pgbackrest-log-dir', '/var/log/pgbackrest')
         addNodeVolumeForUpdate('pgbackrest-lib-dir', '/var/lib/pgbackrest')
+    }
+
+    private void initImageConfigPgAdmin() {
+        // PGADMIN_DEFAULT_PASSWORD
+        def imageName = 'dpage/pgadmin4'
+
+        ['PGADMIN_DEFAULT_EMAIL', 'PGADMIN_DEFAULT_PASSWORD', 'PGADMIN_LISTEN_PORT', 'PGADMIN_ENABLE_TLS'].each {
+            def one = new ImageEnvDTO(imageName: imageName, name: it).one()
+            if (!one) {
+                new ImageEnvDTO(imageName: imageName, name: it, env: it).add()
+            }
+        }
+
+        [80, 443].each {
+            def one = new ImagePortDTO(imageName: imageName, port: it).one()
+            if (!one) {
+                new ImagePortDTO(imageName: imageName, name: it.toString(), port: it).add()
+            }
+        }
+
+        def dir = '/var/lib/pgadmin'
+        def one = new NodeVolumeDTO(imageName: imageName, dir: dir).one()
+        if (!one) {
+            new NodeVolumeDTO(imageName: imageName, name: dir, dir: dir, clusterId: 1).add()
+        }
     }
 
     private void initImageConfigHaproxy() {
@@ -321,8 +347,8 @@ chown postgres:postgres /var/lib/pgbackrest
                     ddlList << "create user export_user password 'export_user_pass'"
                     ddlList << "GRANT pg_monitor TO export_user"
                     // create extension
-                    ddlList << "create extension citus"
-                    ddlList << "create extension timescaledb"
+                    ddlList << "create extension if not exists citus"
+                    ddlList << "create extension if not exists timescaledb"
 
                     ddlList.each {
                         def line = it.trim()
