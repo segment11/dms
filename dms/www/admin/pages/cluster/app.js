@@ -9,6 +9,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
     var store = new LocalStore(true);
     var old = store.get('cluster_app_old');
     if (old) {
+        $scope.tmp.pageNum = old.pageNum;
         $scope.tmp.keyword = old.keyword;
         $scope.tmp.clusterId = old.clusterId;
         $scope.tmp.namespaceId = old.namespaceId;
