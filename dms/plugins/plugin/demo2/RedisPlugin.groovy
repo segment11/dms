@@ -235,8 +235,6 @@ class RedisPlugin extends BasePlugin {
                 conf.envList << new KVPair<String>('REDIS_ADDR', envValue)
                 conf.envList << new KVPair<String>('REDIS_PASSWORD', password)
 
-                def imageName = conf.group + '/' + conf.image
-
                 final int exporterPort = 9121
                 def exporterPublicPort = exporterPort + (6379 - publicPort)
                 conf.networkMode = 'bridge'

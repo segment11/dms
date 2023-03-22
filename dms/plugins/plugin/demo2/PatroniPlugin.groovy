@@ -44,6 +44,22 @@ class PatroniPlugin extends BasePlugin {
                 'generate patroni.yml bootstrap postgresql default params, default conf_output_postgresql.json')
         addEnvIfNotExists('PGBACKREST_LOG_PATH', 'PGBACKREST_LOG_PATH')
 
+        // exporter env
+        def exporterImageName = 'prometheuscommunity/postgres-exporter'
+        ['DATA_SOURCE_NAME'].each {
+            def one = new ImageEnvDTO(imageName: exporterImageName, env: it).one()
+            if (!one) {
+                new ImageEnvDTO(imageName: exporterImageName, name: it, env: it).add()
+            }
+        }
+        // exporter port
+        [9187].each {
+            def two = new ImagePortDTO(imageName: exporterImageName, port: it).one()
+            if (!two) {
+                new ImagePortDTO(imageName: exporterImageName, name: it.toString(), port: it).add()
+            }
+        }
+
         addPortIfNotExists('5432', 5432)
         // patroni port
         addPortIfNotExists('4432', 4432)
@@ -482,30 +498,22 @@ chown postgres:postgres /var/lib/pgbackrest
                 String envValue
                 if (isSingleNode) {
                     // ${nodeIp} is a placeholder, will be replaced by real ip
-                    envValue = "postgresql://export_user:export_user_pass@\${nodeIp}:${publicPort}/postgres?sslmode=disable".toString()
-                } else {
-                    // ${nodeIp} is a placeholder, will be replaced by real ip
                     envValue = "postgresql://export_user:export_user_pass@\${nodeIp}:\${${publicPort} + 100 * instanceIndex}/postgres?sslmode=disable".toString()
+                } else {
+                    envValue = "postgresql://export_user:export_user_pass@\${nodeIp}:${publicPort}/postgres?sslmode=disable".toString()
                 }
 
                 conf.envList << new KVPair<String>('DATA_SOURCE_NAME', envValue)
                 log.info envValue
 
-                def imageName = conf.group + '/' + conf.image
-                def one = new ImageEnvDTO(imageName: imageName, env: 'DATA_SOURCE_NAME').one()
-                if (!one) {
-                    new ImageEnvDTO(imageName: imageName, name: 'pg connect string', env: 'DATA_SOURCE_NAME').add()
-                }
-
-                def exporterPort = 9187
-                def two = new ImagePortDTO(imageName: imageName, port: exporterPort).one()
-                if (!two) {
-                    new ImagePortDTO(imageName: imageName, name: 'postgresql exporter listen port', port: exporterPort).add()
-                }
-
-                // not bridge
+                final int exporterPort = 9187
+                def exporterPublicPort = exporterPort + (5432 - publicPort)
                 conf.networkMode = 'bridge'
-                conf.portList << new PortMapping(privatePort: exporterPort, publicPort: isSingleNode ? -1 : exporterPort)
+                if (isSingleNode) {
+                    conf.portList << new PortMapping(privatePort: exporterPort, publicPort: -1)
+                } else {
+                    conf.portList << new PortMapping(privatePort: exporterPort, publicPort: exporterPublicPort)
+                }
 
                 // monitor
                 def monitorConf = new MonitorConf()

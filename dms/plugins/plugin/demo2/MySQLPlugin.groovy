@@ -43,6 +43,22 @@ class MySQLPlugin extends BasePlugin {
         addEnvIfNotExists('DEFAULT_PARAMS_TPL_FILE', 'DEFAULT_PARAMS_TPL_FILE',
                 'generate my.cnf default params, default conf_output_mysql.json')
 
+        // exporter env
+        def exporterImageName = 'prom/mysqld-exporter'
+        ['DATA_SOURCE_NAME'].each {
+            def one = new ImageEnvDTO(imageName: exporterImageName, env: it).one()
+            if (!one) {
+                new ImageEnvDTO(imageName: exporterImageName, name: it, env: it).add()
+            }
+        }
+        // exporter port
+        [9104].each {
+            def two = new ImagePortDTO(imageName: exporterImageName, port: it).one()
+            if (!two) {
+                new ImagePortDTO(imageName: exporterImageName, name: it.toString(), port: it).add()
+            }
+        }
+
         addPortIfNotExists('3306', 3306)
 
         final String tplName = 'my.cnf.tpl'
@@ -466,21 +482,10 @@ start slave;
                 conf.envList << new KVPair<String>('DATA_SOURCE_NAME', envValue)
                 log.info envValue
 
-                def imageName = conf.group + '/' + conf.image
-                def one = new ImageEnvDTO(imageName: imageName, env: 'DATA_SOURCE_NAME').one()
-                if (!one) {
-                    new ImageEnvDTO(imageName: imageName, name: 'mysql connect string', env: 'DATA_SOURCE_NAME').add()
-                }
-
-                def exporterPort = 9104 + (3306 - publicPort)
-                def two = new ImagePortDTO(imageName: imageName, port: exporterPort).one()
-                if (!two) {
-                    new ImagePortDTO(imageName: imageName, name: 'mysqld exporter listen port', port: exporterPort).add()
-                }
-
-                // not bridge
-                conf.networkMode = 'host'
-                conf.portList << new PortMapping(privatePort: exporterPort, publicPort: exporterPort)
+                final int exporterPort = 9104
+                def exporterPublicPort = exporterPort + (3306 - publicPort)
+                conf.networkMode = 'bridge'
+                conf.portList << new PortMapping(privatePort: exporterPort, publicPort: exporterPublicPort)
 
                 // monitor
                 def monitorConf = new MonitorConf()
