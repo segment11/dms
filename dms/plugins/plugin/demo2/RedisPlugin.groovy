@@ -7,12 +7,17 @@ import model.json.*
 import model.server.CreateContainerConf
 import plugin.BasePlugin
 import plugin.PluginManager
+import server.AgentCaller
 import server.scheduler.checker.Checker
 import server.scheduler.checker.CheckerHolder
 import server.scheduler.processor.JobStepKeeper
 
 @CompileStatic
 @Slf4j
+/**
+ * use segment_kvrocks_controller to manage redis cluster
+ * https://github.com/segment11/segment_kvrocks_controller
+ */
 class RedisPlugin extends BasePlugin {
     @Override
     String name() {
@@ -24,24 +29,36 @@ class RedisPlugin extends BasePlugin {
         super.init()
 
         initImageConfig()
+        initChecker()
         initExporter()
     }
 
     private void initImageConfig() {
         // exporter env
+        def exporterImageName = 'oliver006/redis_exporter'
         ['REDIS_ADDR', 'REDIS_PASSWORD'].each {
-            def one = new ImageEnvDTO(imageName: 'oliver006/redis_exporter', env: it).one()
+            def one = new ImageEnvDTO(imageName: exporterImageName, env: it).one()
             if (!one) {
-                new ImageEnvDTO(imageName: 'oliver006/redis_exporter', name: it, env: it).add()
+                new ImageEnvDTO(imageName: exporterImageName, name: it, env: it).add()
+            }
+        }
+        // exporter port
+        [9121].each {
+            def two = new ImagePortDTO(imageName: exporterImageName, port: it).one()
+            if (!two) {
+                new ImagePortDTO(imageName: exporterImageName, name: it.toString(), port: it).add()
             }
         }
 
         addPortIfNotExists('6379', 6379)
 
         final String tplName = 'redis.conf.tpl'
+        final String tplName2 = 'redis.conf.single.node.tpl'
 
         String tplFilePath = PluginManager.pluginsResourceDirPath() + '/redis/RedisConfTpl.groovy'
+        String tplFilePath2 = PluginManager.pluginsResourceDirPath() + '/redis/RedisConfSingleNodeTpl.groovy'
         String content = new File(tplFilePath).text
+        String content2 = new File(tplFilePath2).text
 
         TplParamsConf tplParams = new TplParamsConf()
         tplParams.addParam('port', '6379', 'int')
@@ -53,15 +70,24 @@ class RedisPlugin extends BasePlugin {
 
         def one = new ImageTplDTO(imageName: imageName, name: tplName).queryFields('id').one()
         if (!one) {
-            new ImageTplDTO(
-                    name: tplName,
+            new ImageTplDTO(name: tplName,
                     imageName: imageName,
                     tplType: ImageTplDTO.TplType.mount.name(),
                     mountDist: '/etc/redis/redis.conf',
                     content: content,
                     isParentDirMount: false,
-                    params: tplParams
-            ).add()
+                    params: tplParams).add()
+        }
+
+        def one2 = new ImageTplDTO(imageName: imageName, name: tplName2).queryFields('id').one()
+        if (!one2) {
+            new ImageTplDTO(name: tplName2,
+                    imageName: imageName,
+                    tplType: ImageTplDTO.TplType.mount.name(),
+                    mountDist: '/etc/redis/redis.conf',
+                    content: content2,
+                    isParentDirMount: false,
+                    params: tplParams).add()
         }
 
         addNodeVolumeForUpdate('data-dir', '/data/redis')
@@ -84,6 +110,60 @@ class RedisPlugin extends BasePlugin {
         def mountFileOne = conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
         def paramOne = mountFileOne.paramList.find { it.key == key }
         paramOne.value
+    }
+
+    private void initChecker() {
+        CheckerHolder.instance.add new Checker() {
+
+            @Override
+            boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
+                // check if single node
+                boolean isSingleNode
+                def ymlOne = conf.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
+                if (ymlOne) {
+                    def tplOne = new ImageTplDTO(id: ymlOne.imageTplId).one()
+                    isSingleNode = tplOne.name.contains('single.node')
+                } else {
+                    isSingleNode = false
+                }
+
+                if (!isSingleNode) {
+                    return
+                }
+
+                def containerNumber = conf.conf.containerNumber
+
+                List<String> list = []
+                conf.conf.dirVolumeList.collect { it.dir }.each { nodeDir ->
+                    containerNumber.times { instanceIndex ->
+                        list << (nodeDir + '/instance_' + instanceIndex)
+                    }
+                }
+                def dir = list.join(',')
+                log.warn 'ready mkdir dirs: {}', dir
+                AgentCaller.instance.agentScriptExe(conf.app.clusterId, conf.nodeIp, 'mk dir', [dir: dir])
+            }
+
+            @Override
+            Checker.Type type() {
+                Checker.Type.before
+            }
+
+            @Override
+            String name() {
+                'redis single node create sub data dir'
+            }
+
+            @Override
+            String imageName() {
+                RedisPlugin.this.imageName()
+            }
+
+            @Override
+            String script(CreateContainerConf conf) {
+                return null
+            }
+        }
     }
 
     private void initExporter() {
@@ -134,25 +214,42 @@ class RedisPlugin extends BasePlugin {
                 conf.cpuShare = 128
                 conf.user = '59000:59000'
 
-                conf.envList << new KVPair<String>('REDIS_ADDR', 'redis://${nodeIp}:' + publicPort)
-                conf.envList << new KVPair<String>('REDIS_PASSWORD', password)
-
-                final int exporterDefaultPort = 9121
-
-                def imageName = conf.group + '/' + conf.image
-                def two = new ImagePortDTO(imageName: imageName, port: exporterDefaultPort).one()
-                if (!two) {
-                    new ImagePortDTO(imageName: imageName, name: 'redis exporter listen port', port: exporterDefaultPort).add()
+                // check if single node
+                boolean isSingleNode
+                def ymlOne = createContainerConf.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
+                if (ymlOne) {
+                    def tplOne = new ImageTplDTO(id: ymlOne.imageTplId).one()
+                    isSingleNode = tplOne.name.contains('single.node')
+                } else {
+                    isSingleNode = false
                 }
 
-                // not bridge
-                conf.networkMode = 'host'
-                conf.portList << new PortMapping(privatePort: exporterDefaultPort, publicPort: exporterDefaultPort)
+                String envValue
+                if (isSingleNode) {
+                    // ${nodeIp} is a placeholder, will be replaced by real ip
+                    envValue = "redis://\${nodeIp}:\${${publicPort} + instanceIndex}".toString()
+                } else {
+                    envValue = "redis://\${nodeIp}:${publicPort}".toString()
+                }
+
+                conf.envList << new KVPair<String>('REDIS_ADDR', envValue)
+                conf.envList << new KVPair<String>('REDIS_PASSWORD', password)
+
+                def imageName = conf.group + '/' + conf.image
+
+                final int exporterPort = 9121
+                def exporterPublicPort = exporterPort + (6379 - publicPort)
+                conf.networkMode = 'bridge'
+                if (isSingleNode) {
+                    conf.portList << new PortMapping(privatePort: exporterPort, publicPort: -1)
+                } else {
+                    conf.portList << new PortMapping(privatePort: exporterPort, publicPort: exporterPublicPort)
+                }
 
                 // monitor
                 def monitorConf = new MonitorConf()
                 app.monitorConf = monitorConf
-                monitorConf.port = exporterDefaultPort
+                monitorConf.port = exporterPort
                 monitorConf.isHttpRequest = true
                 monitorConf.httpRequestUri = '/metrics'
 
@@ -166,8 +263,7 @@ class RedisPlugin extends BasePlugin {
                 (0..<conf.containerNumber).each {
                     needRunInstanceIndexList << it
                 }
-                def job = new AppJobDTO(
-                        appId: appId,
+                def job = new AppJobDTO(appId: appId,
                         failNum: 0,
                         status: AppJobDTO.Status.created.val,
                         jobType: AppJobDTO.JobType.create.val,

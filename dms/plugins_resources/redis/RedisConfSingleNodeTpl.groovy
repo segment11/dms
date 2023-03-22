@@ -1,6 +1,8 @@
 package redis
 
 def nodeIp = super.binding.getProperty('nodeIp') as String
+def instanceIndex = super.binding.getProperty('instanceIndex') as int
+
 def port = super.binding.getProperty('port') as int
 def dataDir = super.binding.getProperty('dataDir') as String
 def password = super.binding.getProperty('password') as String
@@ -14,9 +16,9 @@ if (customParameters) {
 
 """
 bind ${nodeIp} -::1
-port ${port}
-logfile ${dataDir}/redis.log
-dir ${dataDir}
+port ${port + instanceIndex}
+logfile ${dataDir}/instance_${instanceIndex}/redis.log
+dir ${dataDir}/instance_${instanceIndex}
 requirepass ${password}
 
 cluster-enabled yes
@@ -69,7 +71,7 @@ use-exit-on-panic no
 disable-thp yes
 cluster-allow-replica-migration yes
 replica-announced yes
-pidfile /var/run/redis_${port}.pid
+pidfile /var/run/redis_${port + instanceIndex}.pid
 syslog-ident redis
 dbfilename dump.rdb
 appendfilename appendonly.aof
