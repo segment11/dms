@@ -20,11 +20,11 @@
                         </select>
                         <label>Namespace: </label>
                         <select ng-model="tmp.namespaceId" ng-options="a.id as a.name for a in tmp.namespaceList"
-                                style="width: 200px;" ng-change="queryLl()">
+                                style="width: 200px;" ng-change="queryLl(1)">
                             <option value="" selected>--/--</option>
                         </select>
                         <input type="text" ng-model="tmp.keyword" placeholder="Input Keyword"/>
-                        <button class="btn" ng-click="queryLl()">Query</button>
+                        <button class="btn" ng-click="queryLl(1)">Query</button>
                     </div>
                     <table class="table table-bordered table-striped">
                         <tr>
