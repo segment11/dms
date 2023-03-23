@@ -62,7 +62,7 @@ class GatewayOperator {
         r.sort()
     }
 
-    Map<Integer, List<GwBackendServer>> getBackendListFromApi(int clusterId) {
+    static Map<Integer, List<GwBackendServer>> getBackendListFromApi(int clusterId) {
         def one = new GwClusterDTO(id: clusterId).one()
         def serverUrl = one.serverUrl + ':' + one.dashboardPort
 
@@ -170,7 +170,8 @@ class GatewayOperator {
             def lock = SpiSupport.createLock()
             lock.lockKey = 'opt frontend ' + conf.frontendId
             boolean isDone = lock.exe {
-                r = updateFrontend(frontend, waitUntilListenTrigger)
+                updateFrontend(frontend)
+                r = waitUntilBackendServerListMatch()
             }
             if (!isDone) {
                 log.info 'get opt frontend lock fail - {}', conf.frontendId
@@ -207,7 +208,7 @@ class GatewayOperator {
         return zk.delete(path)
     }
 
-    synchronized boolean updateFrontend(GwFrontendDTO frontend, boolean waitUntilListenTrigger = false) {
+    synchronized static void updateFrontend(GwFrontendDTO frontend) {
         def one = new GwClusterDTO(id: frontend.clusterId).one()
         def zk = ZkClientHolder.instance.create(one.zkConnectString)
 
@@ -287,11 +288,9 @@ class GatewayOperator {
         if (!r3) {
             throw new GatewayProcessException('failed to delete - ' + rootPrefix + '/leader')
         }
+    }
 
-        if (!waitUntilListenTrigger) {
-            return true
-        }
-
+    synchronized boolean waitUntilBackendServerListMatch() {
         final int times = Conf.instance.getInt('gw.waitUntilListenTriggerTimes', 3)
         final int intervalSeconds = Conf.instance.getInt('gw.waitUntilListenTriggerIntervalSeconds', 1)
 

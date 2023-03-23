@@ -20,6 +20,10 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         $scope.tmp.clusterList = data;
     });
 
+    $scope.back = function () {
+        Page.go('/page/gateway_cluster');
+    };
+
     $scope.addOne = function () {
         $scope.editOne = {conf: {ruleConfList: []}, auth: {basicList: []}, backend: {serverList: []}};
         $scope.ctrl.isShowAdd = true;

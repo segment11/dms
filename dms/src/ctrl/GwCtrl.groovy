@@ -3,8 +3,11 @@ package ctrl
 import auth.User
 import model.GwClusterDTO
 import model.GwFrontendDTO
+import model.json.GwFrontendRuleConf
 import org.segment.web.handler.ChainHandler
 import server.InMemoryAllContainerManager
+import server.InMemoryCacheSupport
+import server.dns.DnsOperator
 import server.gateway.GatewayOperator
 import transfer.ContainerInfo
 
@@ -12,49 +15,64 @@ def h = ChainHandler.instance
 
 h.group('/gw/cluster') {
     h.get('/list') { req, resp ->
-        new GwClusterDTO().noWhere().loadList()
+        def traefikAppList = InMemoryCacheSupport.instance.appList.findAll {
+            it.conf.group == 'library' && it.conf.image == 'traefik'
+        }
+        if (!traefikAppList) {
+            return []
+        }
+
+        def list = []
+        for (app in traefikAppList) {
+            def old = new GwClusterDTO(appId: app.id).one()
+            if (old) {
+                list << old
+                continue
+            }
+
+            def one = new GwClusterDTO()
+            one.appId = app.id
+            one.name = app.name
+            one.des = app.des
+            one.serverUrl = 'http://' + app.conf.targetNodeIpList[0]
+
+            def ymlOne = app.conf.fileVolumeList.find { it.dist == '/etc/traefik/traefik.toml' }
+            one.serverPort = ymlOne.paramList.find { it.key == 'serverPort' }.value as int
+            one.dashboardPort = ymlOne.paramList.find { it.key == 'dashboardPort' }.value as int
+            one.prefix = ymlOne.paramList.find { it.key == 'prefix' }.value
+
+            def zkAppName = ymlOne.paramList.find { it.key == 'zkAppName' }.value
+            def zkApp = InMemoryCacheSupport.instance.appList.find { it.name == zkAppName }
+            if (!zkApp) {
+                resp.halt(400, 'app zk not found')
+            }
+
+            def zkConnectString = zkApp.conf.targetNodeIpList.collect { it + ':2181' }.join(',')
+            one.zkConnectString = zkConnectString
+
+            one.updatedDate = new Date()
+            def id = one.add()
+            one.id = id
+
+            list << one
+        }
+
+        list
     }.get('/list/simple') { req, resp ->
         new GwClusterDTO().noWhere().queryFields('id,name,des').loadList()
-    }.delete('/delete') { req, resp ->
-        User u = req.session('user') as User
-        if (!u.isAdmin()) {
-            resp.halt(403, 'not admin')
-        }
-
-        def id = req.param('id')
-        assert id
-        new GwClusterDTO(id: id as int).delete()
-        [flag: true]
-    }.post('/update') { req, resp ->
-        User u = req.session('user') as User
-        if (!u.isAdmin()) {
-            resp.halt(403, 'not admin')
-        }
-
-        def one = req.bodyAs(GwClusterDTO)
-        assert one.name && one.zkConnectString && one.prefix
-        one.updatedDate = new Date()
-        if (one.id) {
-            one.update()
-            return [id: one.id]
-        } else {
-            def id = one.add()
-            return [id: id]
-        }
     }.get('/overview') { req, resp ->
         def clusterId = req.param('clusterId')
         assert clusterId
 
         GwClusterDTO clusterOne = new GwClusterDTO(id: clusterId as int).one()
-        List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(clusterId as int, clusterOne.appId ?: 0)
+        List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(0, clusterOne.appId)
         if (!containerList || containerList.every { x ->
             !x.running()
         }) {
             return []
         }
 
-        def cid = clusterId as int
-        def r = GatewayOperator.create(cid + 20000).getBackendListFromApi(cid)
+        def r = GatewayOperator.getBackendListFromApi(clusterId as int)
 
         def list = new GwFrontendDTO(clusterId: clusterId as int).loadList()
         list.collect {
@@ -119,16 +137,33 @@ h.group('/gw/frontend') {
 
         def one = req.bodyAs(GwFrontendDTO)
         assert one.name && one.clusterId
+
+        // default dns service name
+        def suffix = '.service.consul'
         one.updatedDate = new Date()
 
         if (one.id) {
+            def dnsServiceName = "gw_${one.clusterId}_${one.id}".toString() + suffix
+            if (one.conf.ruleConfList.find { it.rule == dnsServiceName } == null) {
+                one.conf.ruleConfList << new GwFrontendRuleConf(type: 'Host:', rule: dnsServiceName)
+            }
+
             one.update()
-            GatewayOperator.create(one.id + 10000).updateFrontend(one)
+            GatewayOperator.updateFrontend(one)
+            DnsOperator.refreshGwFrontendDns(one)
             return [id: one.id]
         } else {
             def id = one.add()
             one.id = id
-            GatewayOperator.create(one.id + 10000).updateFrontend(one)
+
+            def dnsServiceName = "gw_${one.clusterId}_${one.id}".toString() + suffix
+            if (one.conf.ruleConfList.find { it.rule == dnsServiceName } == null) {
+                one.conf.ruleConfList << new GwFrontendRuleConf(type: 'Host:', rule: dnsServiceName)
+            }
+            one.update()
+
+            GatewayOperator.updateFrontend(one)
+            DnsOperator.refreshGwFrontendDns(one)
             return [id: id]
         }
     }
