@@ -23,6 +23,9 @@ class ConsulPlugin extends BasePlugin {
 
         initImageConfig()
         initChecker()
+
+        // cmd
+        // ["sh","-c","consul agent -server=true -client=0.0.0.0 -ui -data-dir /consul/data -config-dir /consul/config $ServerModeCmdExt"]
     }
 
     private void initImageConfig() {
