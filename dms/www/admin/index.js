@@ -406,7 +406,7 @@ $(function () {
                     setTimeout(function () {
                         document.location.href = '/admin/login.html'
                     }, 500);
-                } else if (500 == response.status) {
+                } else if (500 == response.status || 400 == response.status) {
                     uiTips.alert(response.data);
                 }
                 return $q.reject(response);
