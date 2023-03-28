@@ -25,14 +25,14 @@ class ConsulPlugin extends BasePlugin {
         initChecker()
 
         // cmd
-        // ["sh","-c","consul agent -server=true -client=0.0.0.0 -ui -data-dir /consul/data -config-dir /consul/config $ServerModeCmdExt"]
+        // ["sh","-c","consul agent $ServerModeCmdExt"]
     }
 
     private void initImageConfig() {
-        addEnvIfNotExists('CONSUL_BIND_INTERFACE', 'CONSUL_BIND_INTERFACE')
-        addEnvIfNotExists('CONSUL_ALLOW_PRIVILEGED_PORTS=', 'CONSUL_ALLOW_PRIVILEGED_PORTS=')
+        addEnvIfNotExists('DATA_CENTER', 'DATA_CENTER')
+        addEnvIfNotExists('DOMAIN', 'DOMAIN', 'default: consul')
 
-        '8300,8301,8302,8500,8600'.split(',').each {
+        '8500,8600'.split(',').each {
             addPortIfNotExists(it.toString(), it as int)
         }
 
@@ -101,17 +101,21 @@ def nodeIp = super.binding.getProperty('nodeIp')
 def nodeIpList = super.binding.getProperty('nodeIpList') as List<String>
 
 List<String> cmdArgs = []
-cmdArgs << "-bind=\${nodeIp}".toString()
-cmdArgs << "-bootstrap-expect=\${nodeIpList.size()}".toString()
+cmdArgs << "-server=true"
+cmdArgs << "-advertise=\${nodeIp}".toString()
+cmdArgs << "-bind=0.0.0.0"
+cmdArgs << "-client=0.0.0.0"
+cmdArgs << "-ui"
+cmdArgs << "-datacenter=\${envs.DATA_CENTER}"
+cmdArgs << "-domain=\${envs.DOMAIN}"
 
+cmdArgs << "-data-dir /consul/data -config-dir /consul/config"
+cmdArgs << "-bootstrap-expect=\${nodeIpList.size()}".toString()
 if (instanceIndex > 0) {
     cmdArgs << "-join \${nodeIpList[0]}".toString()
 }
 
 cmdArgs.join(' ')
-"""
-        r['ClientModeCmdExt'] = """
-nodeIpList.collect { '--join ' + it }.join(' ')
 """
         r
     }

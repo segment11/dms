@@ -138,8 +138,16 @@ h.group('/gw/frontend') {
         def one = req.bodyAs(GwFrontendDTO)
         assert one.name && one.clusterId
 
+        def consulApp = InMemoryCacheSupport.instance.appList.find {
+            it.conf.group == 'library' && it.conf.image == 'consul'
+        }
+        def envDc = consulApp.conf.envList.find { it.key == 'DATA_CENTER' }
+        def envDomain = consulApp.conf.envList.find { it.key == 'DOMAIN' }
+
         // default dns service name
-        def suffix = '.service.consul'
+        def dc = envDc ? envDc.value.toString() : 'cn-north-1'
+        def domain = envDomain ? envDomain.value.toString() : 'dms'
+        String suffix = ".service.${dc}.${domain}".toString()
         one.updatedDate = new Date()
 
         if (one.id) {

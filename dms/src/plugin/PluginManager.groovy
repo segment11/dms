@@ -33,7 +33,7 @@ class PluginManager {
     }
 
     void loadDemo() {
-        loadPlugin('plugin.demo.ConsulPlugin', true)
+        loadPlugin('plugin.demo2.ConsulPlugin', false)
         loadPlugin('plugin.demo2.DnsmasqPlugin', false)
         loadPlugin('plugin.demo2.ZookeeperPlugin', false)
         loadPlugin('plugin.demo2.PrometheusPlugin', false)

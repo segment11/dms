@@ -36,8 +36,10 @@ class DnsmasqPlugin extends BasePlugin {
         String content = new File(tplFilePath).text
 
         TplParamsConf tplParams = new TplParamsConf()
-        tplParams.addParam('consulAppName', 'consul', 'string')
+        tplParams.addParam('port', '6363', 'int')
         tplParams.addParam('defaultServer', '119.29.29.29,182.254.116.116', 'string')
+        tplParams.addParam('consulAppName', 'consul', 'string')
+        tplParams.addParam('domain', 'dms', 'string')
 
         def imageName = imageName()
 
