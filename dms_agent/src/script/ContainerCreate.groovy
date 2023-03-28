@@ -95,7 +95,7 @@ if (!isNetworkHost) {
         // for application use
         envList << new KVPair(key: 'X_port_' + privatePort, value: '' + publicPort)
         def binding = new PortBinding(Ports.Binding.bindPort(publicPort),
-                pm.listenType == 'udp' ? ExposedPort.udp(privatePort) : ExposedPort.tcp(privatePort))
+                pm.listenType.name() == 'udp' ? ExposedPort.udp(privatePort) : ExposedPort.tcp(privatePort))
         portBindings << binding
     }
     hostConfig.withPortBindings(portBindings)

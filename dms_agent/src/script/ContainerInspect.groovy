@@ -79,8 +79,8 @@ if (isProcess(id)) {
         a.hostConfig.portBindings.bindings.each { expose, b ->
             def p = new ContainerInfo.PortMapping()
             def spec = b[0].hostPortSpec
-            p.privatePort = spec.contains('-') ? spec.split(/\-/)[0] as int : spec as int
-            p.publicPort = expose.port
+            p.publicPort = spec.contains('-') ? spec.split(/\-/)[0] as int : spec as int
+            p.privatePort = expose.port
             p.type = expose.protocol.toString()
             p.ip = b[0].hostIp
             r.ports << p
