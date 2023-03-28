@@ -169,7 +169,7 @@ class OneAppGuardian extends Thread {
             }
 
             // refresh dns
-            DnsOperator.refreshDns(cluster, app, runningContainerList)
+            DnsOperator.refreshContainerDns(cluster, app, runningContainerList)
 
             def containerNumber = app.conf.containerNumber
             if (containerNumber == runningContainerList.size()) {
@@ -190,6 +190,11 @@ class OneAppGuardian extends Thread {
                     GatewayOperator.scheme(x.nodeIp, publicPort)
                 }
                 List<String> backendServerUrlList = operator.getBackendServerUrlListFromApi()
+                // gateway container not running yet
+                if (backendServerUrlList == null) {
+                    return true
+                }
+
                 (backendServerUrlList - runningServerUrlList).each {
                     operator.removeBackend(it)
                 }

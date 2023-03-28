@@ -16,6 +16,8 @@ import model.json.GatewayConf
 import model.json.GwBackendServer
 import model.json.GwFrontendRuleConf
 import model.json.KVPair
+import server.InMemoryAllContainerManager
+import server.InMemoryCacheSupport
 import server.scheduler.processor.ContainerRunResult
 import spi.SpiSupport
 
@@ -98,6 +100,18 @@ class GatewayOperator {
 
     List<String> getBackendServerUrlListFromApi() {
         def one = new GwClusterDTO(id: conf.clusterId).one()
+        if (!one) {
+            return null
+        }
+        def appOne = InMemoryCacheSupport.instance.oneApp(one.appId)
+        if (!appOne) {
+            return null
+        }
+        def runningContainerList = InMemoryAllContainerManager.instance.getContainerList(appOne.clusterId, appOne.id)
+        if (!runningContainerList) {
+            return null
+        }
+
         def serverUrl = one.serverUrl + ':' + one.dashboardPort
 
         List<String> r = []

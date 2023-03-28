@@ -4,6 +4,7 @@ import com.google.common.net.HostAndPort
 import com.orbitz.consul.AgentClient
 import com.orbitz.consul.Consul
 import com.orbitz.consul.model.agent.ImmutableRegistration
+import com.orbitz.consul.option.QueryOptions
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AppDTO
@@ -19,34 +20,44 @@ import transfer.ContainerInfo
 class DnsOperator {
     static final List<String> tags = ['dms']
 
+    // default dns ttl 5 minutes
+    static final int defaultTtl = 300
+
+    static AgentClient agentClient
+
     static AgentClient getAgentClient() {
-        def consulApp = InMemoryCacheSupport.instance.appList.find {
-            it.conf.group == 'library' && it.conf.image == 'consul'
-        }
-        if (!consulApp) {
-            return null
+        if (agentClient) {
+            return agentClient
         }
 
-        def consulContainer = InMemoryAllContainerManager.instance.
-                getContainerList(consulApp.clusterId, consulApp.id).find { it.running() }
-        if (!consulContainer) {
-            return null
-        }
+        synchronized (DnsOperator.class) {
+            def consulApp = InMemoryCacheSupport.instance.appList.find {
+                it.conf.group == 'library' && it.conf.image == 'consul'
+            }
+            if (!consulApp) {
+                return null
+            }
 
-        def hostAndPort = HostAndPort.fromParts(consulContainer.nodeIp, 8500)
-        def client = Consul.builder().withHostAndPort(hostAndPort).build()
-        client.agentClient()
+            def consulContainer = InMemoryAllContainerManager.instance.
+                    getContainerList(consulApp.clusterId, consulApp.id).find { it.running() }
+            if (!consulContainer) {
+                return null
+            }
+
+            def hostAndPort = HostAndPort.fromParts(consulContainer.nodeIp, 8500)
+            def client = Consul.builder().withHostAndPort(hostAndPort).build()
+            agentClient = client.agentClient()
+        }
+        agentClient
     }
 
-    static void refreshDns(ClusterDTO cluster, AppDTO app, List<ContainerInfo> runningContainerList) {
+    static void refreshContainerDns(ClusterDTO cluster, AppDTO app, List<ContainerInfo> runningContainerList) {
         def agentClient = getAgentClient()
         if (!agentClient) {
             return
         }
 
-        // default 5min
-        def dnsTtl = cluster.globalEnvConf.dnsTtl ?: 300
-
+        def dnsTtl = cluster.globalEnvConf.dnsTtl ?: defaultTtl
 
         for (x in runningContainerList) {
             def instanceIndex = x.instanceIndex()
@@ -55,6 +66,12 @@ class DnsOperator {
             // app_appId
             def appService = app.name.replaceAll(' ', '_').toLowerCase()
             def full = appService + '_' + instanceIndex
+
+            QueryOptions options = QueryOptions.BLANK
+            def serviceOld = agentClient.getService(full + '_host', options).response
+            if (serviceOld && serviceOld.address == address) {
+                continue
+            }
 
             // name: app_appId_instanceIndex, id: app_appId_instanceIndex_host
             def service = ImmutableRegistration.builder()
@@ -76,19 +93,37 @@ class DnsOperator {
                     .build()
             agentClient.register(service2)
         }
+
+        if (app.conf.image == 'traefik') {
+            def gwClusterOne = new GwClusterDTO(appId: app.id).one()
+            if (gwClusterOne) {
+                def frontendList = new GwFrontendDTO(clusterId: gwClusterOne.id).loadList()
+                for (frontend in frontendList) {
+                    refreshGwFrontendDns(frontend, gwClusterOne)
+                }
+            }
+        }
     }
 
-    static void refreshGwFrontendDns(GwFrontendDTO frontend) {
+    static void refreshGwFrontendDns(GwFrontendDTO frontend, GwClusterDTO cluster = null) {
         def agentClient = getAgentClient()
         if (!agentClient) {
             return
         }
 
-        def cluster = new GwClusterDTO(id: frontend.clusterId).one()
-        def address = cluster.serverUrl
+        if (cluster == null) {
+            cluster = new GwClusterDTO(id: frontend.clusterId).one()
+        }
+        def address = cluster.serverUrl.replace('http://', '')
 
         def name = "gw_${cluster.id}_${frontend.id}".toString()
         def id = name + '_host'
+
+        QueryOptions options = QueryOptions.BLANK
+        def serviceOld = agentClient.getService(id, options).response
+        if (serviceOld && serviceOld.address == address) {
+            return
+        }
 
         def service = ImmutableRegistration.builder()
                 .id(id)

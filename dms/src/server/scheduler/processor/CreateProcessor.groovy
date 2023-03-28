@@ -603,6 +603,12 @@ class CreateProcessor implements GuardianProcessor {
         variables.nodeIpList = createContainerConf.nodeIpList
         variables.instanceIndex = createContainerConf.instanceIndex
 
+        Map<String, Object> envs = [:]
+        createContainerConf.conf.envList.each {
+            envs[it.key] = it.value
+        }
+        variables.envs = envs
+
         variables.each { k, v ->
             value = value.replace('$' + k, v.toString())
             value = value.replace('${' + k + '}', v.toString())

@@ -179,6 +179,7 @@ create table gw_cluster (
     created_date timestamp,
     updated_date timestamp default current_timestamp
 );
+create index idx_gw_cluster_app_id on gw_cluster(app_id);
 
 create table gw_frontend (
     id int auto_increment primary key,
