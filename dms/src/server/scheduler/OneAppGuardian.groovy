@@ -41,7 +41,7 @@ class OneAppGuardian extends Thread {
     @Override
     void run() {
         def lock = SpiSupport.createLock()
-        lock.lockKey = 'guard ' + app.id
+        lock.lockKey = '/app/guard/' + app.id
         boolean isDone = lock.exe {
             check()
         }

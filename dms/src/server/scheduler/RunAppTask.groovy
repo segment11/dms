@@ -37,7 +37,7 @@ class RunAppTask implements Runnable {
         }
 
         def lock = SpiSupport.createLock()
-        lock.lockKey = 'guard ' + appId
+        lock.lockKey = '/app/guard/' + app.id
         lock.exe {
             def cluster = new ClusterDTO(id: app.clusterId).one()
             List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, appId)

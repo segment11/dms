@@ -17,6 +17,7 @@ import server.AgentCaller
 import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
 import server.gateway.ZkClientHolder
+import server.lock.CuratorFrameworkClientHolder
 import server.scheduler.Guardian
 import support.DefaultLocalH2DataSourceCreator
 import support.FirstClusterCreate
@@ -88,6 +89,9 @@ def manager = InMemoryAllContainerManager.instance
 manager.init()
 manager.start()
 
+def curatorClientHolder = CuratorFrameworkClientHolder.instance
+curatorClientHolder.init()
+
 PluginManager.instance.loadDemo()
 
 def guardian = Guardian.instance
@@ -116,6 +120,7 @@ Utils.stopWhenConsoleQuit {
     server.stop()
     cacheSupport.stop()
     guardian.stop()
+    curatorClientHolder.close()
     manager.stop()
     ZkClientHolder.instance.close()
     JedisPoolHolder.instance.close()

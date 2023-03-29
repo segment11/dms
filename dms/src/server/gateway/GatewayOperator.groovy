@@ -182,7 +182,7 @@ class GatewayOperator {
             frontend.update()
 
             def lock = SpiSupport.createLock()
-            lock.lockKey = 'opt frontend ' + conf.frontendId
+            lock.lockKey = '/gw/frontend/update/' + conf.frontendId
             boolean isDone = lock.exe {
                 updateFrontend(frontend)
                 r = waitUntilBackendServerListMatch()

@@ -273,7 +273,7 @@ private void callAgentScript(Req req, Resp resp, String scriptName) {
     }
 
     def lock = SpiSupport.createLock()
-    lock.lockKey = 'operate app ' + appId
+    lock.lockKey = '/app/operate' + appId
     boolean isDone = lock.exe {
         JSONObject r = AgentCaller.instance.agentScriptExe(clusterId, nodeIp, scriptName, [id: id, readTimeout: readTimeout])
         resp.end r.toJSONString()
