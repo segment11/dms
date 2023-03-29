@@ -3,7 +3,7 @@ package spi
 import auth.DefaultLoginService
 import auth.LoginService
 import groovy.transform.CompileStatic
-import server.OneLock
+import server.lock.OneLock
 import server.hpa.DefaultScaleStrategy
 import server.hpa.ScaleStrategy
 import server.scheduler.Guardian

@@ -1,4 +1,4 @@
-package server
+package server.lock
 
 import common.Conf
 import groovy.transform.CompileStatic

@@ -63,6 +63,10 @@ dependencies {
     implementation group: 'com.alibaba', name: 'fastjson', version: '1.2.83'
     implementation group: 'com.github.adyliu', name: 'zkclient', version: '2.2.0'
 
+    implementation group: 'org.apache.curator', name: 'curator-framework', version: '5.2.0'
+    implementation group: 'org.apache.curator', name: 'curator-recipes', version: '5.2.0'
+    implementation group: 'org.apache.curator', name: 'curator-client', version: '5.2.0'
+
     implementation group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.4'
     implementation group: 'com.esotericsoftware', name: 'reflectasm', version: '1.11.9'
     implementation group: 'com.alibaba', name: 'druid', version: '1.1.24'
