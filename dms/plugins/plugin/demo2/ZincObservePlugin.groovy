@@ -6,10 +6,10 @@ import plugin.BasePlugin
 
 @CompileStatic
 @Slf4j
-class ZincSearchPlugin extends BasePlugin {
+class ZincObservePlugin extends BasePlugin {
     @Override
     String name() {
-        'zincsearch'
+        'zincobserve'
     }
 
     @Override
@@ -21,14 +21,14 @@ class ZincSearchPlugin extends BasePlugin {
 
     private void initImageConfig() {
         addEnvIfNotExists('TZ', 'TZ', 'eg. Asia/Shanghai')
-        addEnvIfNotExists('DATA_PATH', 'DATA_PATH')
-        addEnvIfNotExists('ZINC_FIRST_ADMIN_USER', 'ZINC_FIRST_ADMIN_USER')
-        addEnvIfNotExists('ZINC_FIRST_ADMIN_PASSWORD', 'ZINC_FIRST_ADMIN_PASSWORD')
-        addEnvIfNotExists('ZINC_PROMETHEUS_ENABLE', 'ZINC_PROMETHEUS_ENABLE')
+        addEnvIfNotExists('ZO_DATA_DIR', 'ZO_DATA_DIR', 'default, /data')
+        addEnvIfNotExists('ZO_ROOT_USER_EMAIL', 'ZO_ROOT_USER_EMAIL')
+        addEnvIfNotExists('ZO_ROOT_USER_PASSWORD', 'ZO_ROOT_USER_PASSWORD')
 
-        addPortIfNotExists('4080', 4080)
+        addPortIfNotExists('5080', 5080)
 
-        addNodeVolumeForUpdate('data-dir', '/data/zinc-search')
+        addNodeVolumeForUpdate('data-dir', '/data/zinc-observe',
+                'need mount to /data same value as env ZO_DATA_DIR')
     }
 
     @Override
@@ -43,6 +43,6 @@ class ZincSearchPlugin extends BasePlugin {
 
     @Override
     String image() {
-        'zinc'
+        'zincobserve'
     }
 }
