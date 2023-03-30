@@ -6,6 +6,7 @@ import common.Utils
 import deploy.DeploySupport
 import deploy.OneCmd
 import model.DeployFileDTO
+import model.NodeDTO
 import model.NodeKeyPairDTO
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
@@ -36,15 +37,23 @@ h.get('/deploy/node-file/list') { req, resp ->
     def instance = InMemoryAllContainerManager.instance
     def dat = Utils.getNodeAliveCheckLastDate(3)
 
+    List<NodeDTO> nodeList
+    if (pager.list) {
+        nodeList = new NodeDTO().whereIn('ip', pager.list.collect { it.ip }).loadList()
+    }
+
     def pager2 = pager.transfer {
         def one = it as NodeKeyPairDTO
         def d = instance.getHeartBeatDate(one.ip)
         boolean isOk = d && d > dat
+
+        def tags = nodeList?.find { node -> node.ip == one.ip }?.tags
         [id         : one.id,
          ip         : one.ip,
          user       : one.user,
          sshPort    : one.sshPort,
          updatedDate: one.updatedDate,
+         tagList    : tags ? tags.split(',') : [],
          isOk       : isOk]
     }
 

@@ -34,13 +34,17 @@
                         <table class="table table-bordered table-striped">
                             <tr>
                                 <th width="10%"></th>
-                                <th width="30%">ip</th>
+                                <th width="15%">ip</th>
+                                <th width="15%">tags</th>
                                 <th width="30%">agent status</th>
                                 <th>Update User/Password</th>
                             </tr>
                             <tr ng-repeat="one in nodeList">
                                 <td><input type="checkbox" ng-model="one.isChecked"></td>
                                 <td><span class="bg-success">{{one.ip}}</span></td>
+                                <td>
+                                    <span class="bg-info" ng-repeat="tag in one.tagList">{{tag}}</span>
+                                </td>
                                 <td><span class="bg-info" ng-show="one.isOk">Heart Beat Ok</span>
                                     <span class="bg-danger" ng-show="!one.isOk">Heart Beat Fail</span></td>
                                 <td>
