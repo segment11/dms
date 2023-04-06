@@ -37,6 +37,7 @@ class PluginManager {
         loadPlugin('plugin.demo2.DnsmasqPlugin', false)
         loadPlugin('plugin.demo2.ZookeeperPlugin', false)
         loadPlugin('plugin.demo2.PrometheusPlugin', false)
+        loadPlugin('plugin.demo2.GrafanaPlugin', false)
         loadPlugin('plugin.demo2.VectorPlugin', false)
         loadPlugin('plugin.demo2.ZincObservePlugin', false)
         loadPlugin('plugin.demo2.FilebeatPlugin', false)
