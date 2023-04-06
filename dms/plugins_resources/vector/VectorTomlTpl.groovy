@@ -78,10 +78,7 @@ if (zincApp && zincApp.containerList) {
     def pass = zincApp.app.conf.envList.find { it.key == 'ZO_ROOT_USER_PASSWORD' }.value as String
 
     def zincNodeIp = zincApp.containerList[0].nodeIp
-    int zincPort = 5080
-    if (zincApp.containerList) {
-        zincPort = zincApp.containerList[0].publicPort(5080)
-    }
+    int zincPort = zincApp.containerList[0].publicPort(5080)
 
     appSourceIds << 'local_docker_logs'
     appSourceIds << 'dms_server'
