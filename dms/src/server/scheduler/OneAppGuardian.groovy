@@ -21,9 +21,12 @@ import spi.SpiSupport
 import transfer.ContainerInfo
 import transfer.ContainerInspectInfo
 
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.ThreadPoolExecutor
+
 @CompileStatic
 @Slf4j
-class OneAppGuardian extends Thread {
+class OneAppGuardian {
     ClusterDTO cluster
 
     AppDTO app
@@ -38,15 +41,35 @@ class OneAppGuardian extends Thread {
         processors[AppJobDTO.JobType.scroll.val] = new ScrollProcessor()
     }
 
-    @Override
-    void run() {
-        def lock = SpiSupport.createLock()
-        lock.lockKey = '/app/guard/' + app.id
-        boolean isDone = lock.exe {
-            check()
+    ThreadPoolExecutor executor
+
+    void init() {
+        if (!executor) {
+            executor = new OneThreadExecutor(app.name.toLowerCase().replaceAll(' ', '_'))
         }
-        if (!isDone) {
-            log.info 'get app guard lock fail - {}', app.name
+    }
+
+    void shutdown() {
+        if (executor) {
+            log.info 'shutdown guardian - {}', app.name
+            executor.shutdown()
+        }
+    }
+
+    void start() {
+        try {
+            executor.submit {
+                def lock = SpiSupport.createLock()
+                lock.lockKey = '/app/guard/' + app.id
+                boolean isDone = lock.exe {
+                    check()
+                }
+                if (!isDone) {
+                    log.info 'get app guard lock fail - {}', app.name
+                }
+            }
+        } catch (RejectedExecutionException e) {
+            log.warn 'there is a guardian is running for this app. app name: {}, try next time', app.name
         }
     }
 

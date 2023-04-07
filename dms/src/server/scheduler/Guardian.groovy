@@ -121,23 +121,16 @@ class Guardian extends IntervalJob {
                 oneAppGuardian.cluster = cluster
                 oneAppGuardian.app = app
                 oneAppGuardian.containerList = InMemoryAllContainerManager.instance.getContainerList(cluster.id, appId)
-                oneAppGuardian.daemon = true
 
                 def old = appGuardianByAppId.putIfAbsent(appId, oneAppGuardian)
                 if (old == null) {
+                    oneAppGuardian.init()
                     oneAppGuardian.start()
-                    continue
+                } else {
+                    old.containerList = oneAppGuardian.containerList
+                    old.init()
+                    old.start()
                 }
-
-                if (old.isAlive()) {
-                    log.info 'there is a guardian is running for this app. app name: {}', app.name
-                    continue
-                }
-
-                // not alive, already end, remove it
-                appGuardianByAppId.remove(appId)
-                appGuardianByAppId.put(appId, oneAppGuardian)
-                oneAppGuardian.start()
             }
         }
     }
@@ -148,7 +141,6 @@ class Guardian extends IntervalJob {
         isRunning = false
         CronJobRunner.instance.stop()
 
-        // interrupt ?
         stopRunning()
     }
 
@@ -158,9 +150,8 @@ class Guardian extends IntervalJob {
         }
 
         for (entry in appGuardianByAppId) {
-            if (entry.value.isAlive()) {
-                log.warn 'try interrupt running app guardian, app id: {}', entry.key
-                entry.value.interrupt()
+            if (entry.value) {
+                entry.value.shutdown()
             }
         }
     }
