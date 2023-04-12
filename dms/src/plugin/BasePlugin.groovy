@@ -82,7 +82,7 @@ abstract class BasePlugin implements Plugin {
 
     @Override
     String registry() {
-        'https://registry.hub.docker.io'
+        'https://docker.io'
     }
 
     @Override
