@@ -2,7 +2,11 @@ package plugin.demo2
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import model.AppDTO
 import model.ImageTplDTO
+import model.json.DirVolumeMount
+import model.json.FileVolumeMount
+import model.json.PortMapping
 import model.json.TplParamsConf
 import plugin.BasePlugin
 import plugin.PluginManager
@@ -61,5 +65,28 @@ class GrafanaPlugin extends BasePlugin {
     @Override
     String image() {
         'grafana-oss'
+    }
+
+    @Override
+    AppDTO demoApp(AppDTO app) {
+        app.name = image()
+
+        def conf = app.conf
+        conf.group = group()
+        conf.image = image()
+        conf.tag = '8.2.6'
+
+        conf.memMB = 256
+        conf.cpuShare = 256
+
+        conf.dirVolumeList << new DirVolumeMount(
+                dir: '/var/lib/grafana', dist: '/var/lib/grafana', mode: 'rw',
+                nodeVolumeId: getNodeVolumeIdByDir('/var/lib/grafana'))
+        conf.fileVolumeList << new FileVolumeMount(
+                dist: '/etc/grafana/grafana.ini',
+                imageTplId: getImageTplIdByName('grafana.ini.tpl'))
+        conf.portList << new PortMapping(privatePort: 3000, publicPort: 3000)
+
+        app
     }
 }

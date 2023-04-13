@@ -2,10 +2,8 @@ package plugin
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import model.ImageEnvDTO
-import model.ImagePortDTO
-import model.ImageRegistryDTO
-import model.NodeVolumeDTO
+import model.*
+import model.json.AppConf
 import org.segment.d.D
 
 @CompileStatic
@@ -47,6 +45,59 @@ abstract class BasePlugin implements Plugin {
             return new ImageRegistryDTO(name: name, url: url).add()
         } else {
             return registryOne.id
+        }
+    }
+
+    static AppDTO tplApp(int clusterId, int namespaceId, List<String> targetNodeIpList) {
+        def app = new AppDTO()
+        app.clusterId = clusterId
+        app.namespaceId = namespaceId
+        app.status = AppDTO.Status.auto.val
+        app.updatedDate = new Date()
+
+        def conf = new AppConf()
+        // default
+        conf.memMB = 256
+        conf.cpuShare = 256
+
+        conf.registryId = getRegistryIdByUrl('https://docker.io')
+        conf.group = 'library'
+        conf.tag = 'latest'
+
+        conf.containerNumber = 1
+        conf.targetNodeIpList = targetNodeIpList
+        conf.isLimitNode = targetNodeIpList.size() < 3
+
+        conf.networkMode = 'host'
+
+        app.conf = conf
+        app
+    }
+
+    static int getRegistryIdByUrl(String url) {
+        def registryOne = new ImageRegistryDTO(url: url).one()
+        if (!registryOne) {
+            return 0
+        } else {
+            return registryOne.id
+        }
+    }
+
+    int getNodeVolumeIdByDir(String dir) {
+        def one = new NodeVolumeDTO(imageName: imageName(), dir: dir).one()
+        if (!one) {
+            return 0
+        } else {
+            return one.id
+        }
+    }
+
+    int getImageTplIdByName(String name) {
+        def one = new ImageTplDTO(imageName: imageName(), name: name).one()
+        if (!one) {
+            return 0
+        } else {
+            return one.id
         }
     }
 
@@ -120,5 +171,10 @@ abstract class BasePlugin implements Plugin {
     @Override
     Date loadTime() {
         loadTimeInner
+    }
+
+    @Override
+    AppDTO demoApp(AppDTO app) {
+        app
     }
 }

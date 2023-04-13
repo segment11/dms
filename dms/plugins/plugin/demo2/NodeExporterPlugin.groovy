@@ -3,7 +3,9 @@ package plugin.demo2
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AppDTO
+import model.json.DirVolumeMount
 import model.json.MonitorConf
+import model.json.PortMapping
 import model.server.CreateContainerConf
 import plugin.BasePlugin
 import server.scheduler.checker.Checker
@@ -80,5 +82,26 @@ class NodeExporterPlugin extends BasePlugin {
     @Override
     String image() {
         'node-exporter'
+    }
+
+
+    @Override
+    AppDTO demoApp(AppDTO app) {
+        app.name = image()
+
+        def conf = app.conf
+        conf.group = group()
+        conf.image = image()
+
+        conf.cmd = '--path.rootfs=/host'
+
+        conf.memMB = 64
+
+        conf.dirVolumeList << new DirVolumeMount(
+                dir: '/', dist: '/host', mode: 'ro',
+                nodeVolumeId: getNodeVolumeIdByDir('/'))
+        conf.portList << new PortMapping(privatePort: 9100, publicPort: 9100)
+
+        app
     }
 }

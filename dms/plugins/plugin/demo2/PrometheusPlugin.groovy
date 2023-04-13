@@ -6,7 +6,7 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AppDTO
 import model.ImageTplDTO
-import model.json.TplParamsConf
+import model.json.*
 import model.server.CreateContainerConf
 import plugin.BasePlugin
 import plugin.PluginManager
@@ -149,5 +149,27 @@ class PrometheusPlugin extends BasePlugin {
     @Override
     String image() {
         'prometheus'
+    }
+
+    @Override
+    AppDTO demoApp(AppDTO app) {
+        app.name = image()
+
+        def conf = app.conf
+        conf.group = group()
+        conf.image = image()
+        conf.tag = 'v2.25.0'
+
+        conf.dirVolumeList << new DirVolumeMount(
+                dir: '/prometheus', dist: '/prometheus', mode: 'rw',
+                nodeVolumeId: getNodeVolumeIdByDir('/prometheus'))
+        conf.fileVolumeList << new FileVolumeMount(
+                isReloadInterval: true,
+                paramList: [new KVPair<String>('intervalSecondsGlobal', '15')],
+                dist: '/etc/prometheus/prometheus.yml',
+                imageTplId: getImageTplIdByName('prometheus.yml.tpl'))
+        conf.portList << new PortMapping(privatePort: 9090, publicPort: 9090)
+
+        app
     }
 }

@@ -1,6 +1,7 @@
 package plugin
 
 import groovy.transform.CompileStatic
+import model.AppDTO
 
 @CompileStatic
 interface Plugin {
@@ -24,5 +25,7 @@ interface Plugin {
     Map<String, String> expressions()
 
     Date loadTime()
+
+    AppDTO demoApp(AppDTO app)
 
 }

@@ -2,6 +2,10 @@ package plugin.demo2
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import model.AppDTO
+import model.json.DirVolumeMount
+import model.json.KVPair
+import model.json.PortMapping
 import plugin.BasePlugin
 
 @CompileStatic
@@ -44,5 +48,27 @@ class ZincObservePlugin extends BasePlugin {
     @Override
     String image() {
         'zincobserve'
+    }
+
+    @Override
+    AppDTO demoApp(AppDTO app) {
+        app.name = image()
+
+        def conf = app.conf
+        conf.group = group()
+        conf.image = image()
+
+        conf.memMB = 512
+        conf.cpuShare = 512
+
+        conf.dirVolumeList << new DirVolumeMount(
+                dir: '/data/zinc-observe', dist: '/data', mode: 'ro',
+                nodeVolumeId: getNodeVolumeIdByDir('/data/zinc-observe'))
+        conf.portList << new PortMapping(privatePort: 5080, publicPort: 5080)
+
+        conf.envList << new KVPair('ZO_ROOT_USER_EMAIL', 'admin@163.com')
+        conf.envList << new KVPair('ZO_ROOT_USER_PASSWORD', 'admin@pass')
+
+        app
     }
 }

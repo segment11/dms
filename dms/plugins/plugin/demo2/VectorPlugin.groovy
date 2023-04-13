@@ -2,8 +2,9 @@ package plugin.demo2
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import model.AppDTO
 import model.ImageTplDTO
-import model.json.TplParamsConf
+import model.json.*
 import plugin.BasePlugin
 import plugin.PluginManager
 
@@ -62,5 +63,35 @@ class VectorPlugin extends BasePlugin {
     @Override
     String image() {
         'vector'
+    }
+
+    @Override
+    AppDTO demoApp(AppDTO app) {
+        app.name = image()
+
+        def conf = app.conf
+        conf.group = group()
+        conf.image = image()
+        conf.tag = 'latest-alpine'
+
+        conf.memMB = 64
+        conf.cpuShare = 128
+
+        conf.dirVolumeList << new DirVolumeMount(
+                dir: '/opt/log', dist: '/opt/log', mode: 'ro',
+                nodeVolumeId: getNodeVolumeIdByDir('/opt/log'))
+        conf.dirVolumeList << new DirVolumeMount(
+                dir: '/var/log', dist: '/var/log', mode: 'rw',
+                nodeVolumeId: getNodeVolumeIdByDir('/var/log'))
+        conf.dirVolumeList << new DirVolumeMount(
+                dir: '/var/run/docker.sock', dist: '/var/run/docker.sock', mode: 'ro',
+                nodeVolumeId: getNodeVolumeIdByDir('/var/run/docker.sock'))
+        conf.fileVolumeList << new FileVolumeMount(
+                paramList: [new KVPair<String>('zincobserveAppName', 'zincobserve')],
+                dist: '/etc/vector/vector.toml',
+                imageTplId: getImageTplIdByName('vector.toml.tpl'))
+        conf.portList << new PortMapping(privatePort: 8686, publicPort: 8686)
+
+        app
     }
 }
