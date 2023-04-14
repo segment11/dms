@@ -3,6 +3,8 @@ package server.dns
 import com.google.common.net.HostAndPort
 import com.orbitz.consul.AgentClient
 import com.orbitz.consul.Consul
+import com.orbitz.consul.NotRegisteredException
+import com.orbitz.consul.model.agent.FullService
 import com.orbitz.consul.model.agent.ImmutableRegistration
 import com.orbitz.consul.option.QueryOptions
 import groovy.transform.CompileStatic
@@ -51,6 +53,25 @@ class DnsOperator {
         agentClient
     }
 
+    static boolean isServiceIdMatchAddress(String id, String address) {
+        def agentClient = getAgentClient()
+        if (!agentClient) {
+            return false
+        }
+
+        QueryOptions options = QueryOptions.BLANK
+        FullService serviceOld
+        try {
+            serviceOld = agentClient.getService(id, options).response
+            if (serviceOld && serviceOld.address == address) {
+                return true
+            }
+        } catch (NotRegisteredException e) {
+            // ignore
+        }
+        false
+    }
+
     static void refreshContainerDns(ClusterDTO cluster, AppDTO app, List<ContainerInfo> runningContainerList) {
         def agentClient = getAgentClient()
         if (!agentClient) {
@@ -67,9 +88,7 @@ class DnsOperator {
             def appService = app.name.replaceAll(' ', '_').toLowerCase()
             def full = appService + '_' + instanceIndex
 
-            QueryOptions options = QueryOptions.BLANK
-            def serviceOld = agentClient.getService(full + '_host', options).response
-            if (serviceOld && serviceOld.address == address) {
+            if (isServiceIdMatchAddress(full, address)) {
                 continue
             }
 
@@ -119,9 +138,7 @@ class DnsOperator {
         def name = "gw_${cluster.id}_${frontend.id}".toString()
         def id = name + '_host'
 
-        QueryOptions options = QueryOptions.BLANK
-        def serviceOld = agentClient.getService(id, options).response
-        if (serviceOld && serviceOld.address == address) {
+        if (isServiceIdMatchAddress(id, address)) {
             return
         }
 
