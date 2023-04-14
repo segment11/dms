@@ -7,7 +7,7 @@ import org.segment.d.json.JSONFiled
 @CompileStatic
 @ToString(includeNames = true)
 class GwBackend implements JSONFiled {
-    List<GwBackendServer> serverList
+    List<GwBackendServer> serverList = []
 
     String circuitBreaker
 

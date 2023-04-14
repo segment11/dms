@@ -13,7 +13,7 @@ class GwFrontendConf implements JSONFiled {
 
     String extractorFuncHeaderName
 
-    List<GwFrontendRateLimitConf> rateLimitConfList
+    List<GwFrontendRateLimitConf> rateLimitConfList = []
 
-    List<GwFrontendRuleConf> ruleConfList
+    List<GwFrontendRuleConf> ruleConfList = []
 }

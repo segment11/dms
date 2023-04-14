@@ -2,9 +2,8 @@ package plugin.demo2
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import model.ClusterDTO
-import model.NamespaceDTO
-import model.NodeDTO
+import model.*
+import model.json.*
 import org.segment.web.handler.ChainHandler
 import plugin.BasePlugin
 
@@ -24,6 +23,44 @@ class InitToolPlugin extends BasePlugin {
     @Override
     void init() {
         initApi()
+    }
+
+    private int addAppIfNotExists(AppDTO app) {
+        def one = new AppDTO(name: app.name, clusterId: app.clusterId).queryFields('id').one()
+        if (one) {
+            log.warn 'app already exists, skip add, app name: {}', app.name
+            return one.id
+        } else {
+            def id = one.add()
+            log.info 'add app success, app name: {}', app.name
+            return id
+        }
+    }
+
+    private void addGwFrontendIfNotExists(int gwClusterId, int appId, String appName, int privatePort) {
+        def f = new GwFrontendDTO(clusterId: gwClusterId, name: appName)
+        def one = f.one()
+        if (one) {
+            log.warn 'gw frontend already exists, skip add, app name: {}', appName
+            return
+        }
+
+        f.priority = 10
+        f.backend = new GwBackend()
+        f.auth = new GwAuth()
+        def addedId = f.add()
+
+        def suffix = '.service.dc1.consul'
+        def rule = new GwFrontendRuleConf(type: 'Host:', rule: "gw_${gwClusterId}_${addedId}".toString() + suffix)
+
+        def conf = new GwFrontendConf()
+        conf.ruleConfList << rule
+
+        new GwFrontendDTO(id: addedId, conf: conf).update()
+
+        // update app gateway config
+        def gatewayConf = new GatewayConf(clusterId: gwClusterId, frontendId: addedId, containerPrivatePort: privatePort)
+        new AppDTO(id: appId, gatewayConf: gatewayConf).update()
     }
 
     private void initApi() {
@@ -64,59 +101,49 @@ class InitToolPlugin extends BasePlugin {
                 namespaceId = ns.id
             }
 
-            List<String> logs = []
-
             def appPrometheus = new PrometheusPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
-            appPrometheus.add()
-            logs << 'done add prometheus'
-            log.info logs[-1]
+            def prometheusAppId = addAppIfNotExists(appPrometheus)
 
             def appNodeExporter = new NodeExporterPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
-            appNodeExporter.add()
-            logs << 'done add node exporter'
-            log.info logs[-1]
+            addAppIfNotExists(appNodeExporter)
 
             def appGrafana = new GrafanaPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
-            appGrafana.add()
-            logs << 'done add grafana'
-            log.info logs[-1]
+            def grafanaAppId = addAppIfNotExists(appGrafana)
 
             def appZo = new ZincObservePlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
-            appZo.add()
-            logs << 'done add zinc observe'
-            log.info logs[-1]
+            def zoAppId = addAppIfNotExists(appZo)
 
             def appVector = new VectorPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
-            appVector.add()
-            logs << 'done add vector'
-            log.info logs[-1]
+            addAppIfNotExists(appVector)
 
             def appZk = new ZookeeperPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
-            appZk.add()
-            logs << 'done add zookeeper'
-            log.info logs[-1]
+            addAppIfNotExists(appZk)
 
             def appTraefik = new TraefikPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
-            appTraefik.add()
-            logs << 'done add traefik'
-            log.info logs[-1]
+            def traefikAppId = addAppIfNotExists(appTraefik)
 
             def appConsul = new ConsulPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
-            appConsul.add()
-            logs << 'done add consul'
-            log.info logs[-1]
+            def consulAppId = addAppIfNotExists(appConsul)
 
             def appDnsmasq = new DnsmasqPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
-            appDnsmasq.add()
-            logs << 'done add dnsmasq'
-            log.info logs[-1]
+            addAppIfNotExists(appDnsmasq)
 
             def appEtcd = new EtcdPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
-            appEtcd.add()
-            logs << 'done add etcd'
-            log.info logs[-1]
+            addAppIfNotExists(appEtcd)
 
-            [logs: logs]
+            cluster.globalEnvConf.dnsServer = nodeIpList.join(',')
+            new ClusterDTO(id: clusterId, globalEnvConf: cluster.globalEnvConf, isInGuard: true).update()
+
+            // add traefik frontend
+            def gwClusterOne = new GwClusterDTO(appId: traefikAppId).one()
+            def gwClusterId = gwClusterOne.id
+
+            addGwFrontendIfNotExists(gwClusterId, prometheusAppId, 'prometheus', 9090)
+            addGwFrontendIfNotExists(gwClusterId, grafanaAppId, 'grafana', 3000)
+            addGwFrontendIfNotExists(gwClusterId, zoAppId, 'zincobserve', 5080)
+            addGwFrontendIfNotExists(gwClusterId, consulAppId, 'consul', 8500)
+
+            'ok'
         }
     }
 }

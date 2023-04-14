@@ -7,5 +7,5 @@ import org.segment.d.json.JSONFiled
 @CompileStatic
 @ToString(includeNames = true)
 class GwAuth implements JSONFiled {
-    List<KVPair> basicList
+    List<KVPair> basicList = []
 }
