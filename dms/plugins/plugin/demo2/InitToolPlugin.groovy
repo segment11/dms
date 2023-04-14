@@ -91,6 +91,31 @@ class InitToolPlugin extends BasePlugin {
             logs << 'done add vector'
             log.info logs[-1]
 
+            def appZk = new ZookeeperPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
+            appZk.add()
+            logs << 'done add zookeeper'
+            log.info logs[-1]
+
+            def appTraefik = new TraefikPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
+            appTraefik.add()
+            logs << 'done add traefik'
+            log.info logs[-1]
+
+            def appConsul = new ConsulPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
+            appConsul.add()
+            logs << 'done add consul'
+            log.info logs[-1]
+
+            def appDnsmasq = new DnsmasqPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
+            appDnsmasq.add()
+            logs << 'done add dnsmasq'
+            log.info logs[-1]
+
+            def appEtcd = new EtcdPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
+            appEtcd.add()
+            logs << 'done add etcd'
+            log.info logs[-1]
+
             [logs: logs]
         }
     }

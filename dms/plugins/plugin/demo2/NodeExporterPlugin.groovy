@@ -84,7 +84,6 @@ class NodeExporterPlugin extends BasePlugin {
         'node-exporter'
     }
 
-
     @Override
     AppDTO demoApp(AppDTO app) {
         app.name = image()

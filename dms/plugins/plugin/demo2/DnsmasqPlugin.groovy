@@ -2,7 +2,11 @@ package plugin.demo2
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import model.AppDTO
 import model.ImageTplDTO
+import model.json.FileVolumeMount
+import model.json.KVPair
+import model.json.PortMapping
 import model.json.TplParamsConf
 import plugin.BasePlugin
 import plugin.PluginManager
@@ -36,10 +40,10 @@ class DnsmasqPlugin extends BasePlugin {
         String content = new File(tplFilePath).text
 
         TplParamsConf tplParams = new TplParamsConf()
-        tplParams.addParam('port', '6363', 'int')
+        tplParams.addParam('port', '53', 'int')
         tplParams.addParam('defaultServer', '119.29.29.29,182.254.116.116', 'string')
         tplParams.addParam('consulAppName', 'consul', 'string')
-        tplParams.addParam('domain', 'dms', 'string')
+        tplParams.addParam('domain', 'consul', 'string')
 
         def imageName = imageName()
 
@@ -65,5 +69,30 @@ class DnsmasqPlugin extends BasePlugin {
     @Override
     String image() {
         'dnsmasq'
+    }
+
+    @Override
+    AppDTO demoApp(AppDTO app) {
+        app.name = image()
+
+        def conf = app.conf
+        conf.group = group()
+        conf.image = image()
+
+        List<KVPair<String>> paramList = []
+        paramList << new KVPair<String>(key: 'port', value: '53')
+        paramList << new KVPair<String>(key: 'defaultServer', value: '119.29.29.29,182.254.116.116')
+        paramList << new KVPair<String>(key: 'consulAppName', value: 'consul')
+        paramList << new KVPair<String>(key: 'domain', value: 'consul')
+
+        conf.fileVolumeList << new FileVolumeMount(
+                paramList: paramList,
+                dist: '/etc/dnsmasq.conf',
+                imageTplId: getImageTplIdByName('dnsmasq.consul.conf.tpl'))
+
+        conf.portList << new PortMapping(privatePort: 53, publicPort: 53)
+        conf.portList << new PortMapping(privatePort: 8080, publicPort: 8080)
+
+        app
     }
 }

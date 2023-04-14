@@ -2,8 +2,9 @@ package plugin.demo2
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import model.AppDTO
 import model.ImageTplDTO
-import model.json.TplParamsConf
+import model.json.*
 import plugin.BasePlugin
 import plugin.PluginManager
 
@@ -66,5 +67,37 @@ class TraefikPlugin extends BasePlugin {
     @Override
     String image() {
         'traefik'
+    }
+
+    @Override
+    AppDTO demoApp(AppDTO app) {
+        app.name = image()
+
+        def conf = app.conf
+        conf.group = group()
+        conf.image = image()
+        conf.tag = 'v1.7.34-alpine'
+
+        conf.dirVolumeList << new DirVolumeMount(
+                dir: '/var/log/traefik', dist: '/var/log/traefik', mode: 'rw',
+                nodeVolumeId: getNodeVolumeIdByDir('/var/log/traefik'))
+
+        List<KVPair<String>> paramList = []
+        paramList << new KVPair<String>(key: 'logLevel', value: 'info')
+        paramList << new KVPair<String>(key: 'logDir', value: '/var/log/traefik')
+        paramList << new KVPair<String>(key: 'serverPort', value: '80')
+        paramList << new KVPair<String>(key: 'dashboardPort', value: '81')
+        paramList << new KVPair<String>(key: 'prefix', value: 'traefik')
+        paramList << new KVPair<String>(key: 'zkAppName', value: 'zookeeper')
+
+        conf.fileVolumeList << new FileVolumeMount(
+                paramList: paramList,
+                dist: '/etc/traefik/traefik.toml',
+                imageTplId: getImageTplIdByName('traefik.toml.tpl'))
+
+        conf.portList << new PortMapping(privatePort: 80, publicPort: 80)
+        conf.portList << new PortMapping(privatePort: 81, publicPort: 81)
+
+        app
     }
 }

@@ -2,8 +2,9 @@ package plugin.demo2
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import model.AppDTO
 import model.ImageTplDTO
-import model.json.TplParamsConf
+import model.json.*
 import model.server.CreateContainerConf
 import plugin.BasePlugin
 import plugin.PluginManager
@@ -131,5 +132,43 @@ class ZookeeperPlugin extends BasePlugin {
     @Override
     String image() {
         'zookeeper'
+    }
+
+    @Override
+    AppDTO demoApp(AppDTO app) {
+        app.name = image()
+
+        def conf = app.conf
+        conf.group = group()
+        conf.image = image()
+        conf.tag = '3.6.4'
+
+        conf.containerNumber = 3
+
+        conf.dirVolumeList << new DirVolumeMount(
+                dir: '/data/zookeeper', dist: '/data/zookeeper', mode: 'rw',
+                nodeVolumeId: getNodeVolumeIdByDir('/data/zookeeper'))
+
+        List<KVPair<String>> paramList = []
+        paramList << new KVPair<String>(key: 'tickTime', value: '2000')
+        paramList << new KVPair<String>(key: 'initLimit', value: '5')
+        paramList << new KVPair<String>(key: 'syncLimit', value: '2')
+        paramList << new KVPair<String>(key: 'dataDir', value: '/data/zookeeper')
+        paramList << new KVPair<String>(key: 'isMetricsExport', value: 'false')
+
+        if (conf.isLimitNode) {
+            conf.fileVolumeList << new FileVolumeMount(
+                    paramList: paramList,
+                    dist: '/zookeeper/conf/zoo.cfg',
+                    imageTplId: getImageTplIdByName('zoo.cfg.single.node.tpl'))
+        } else {
+            conf.fileVolumeList << new FileVolumeMount(
+                    paramList: paramList,
+                    dist: '/zookeeper/conf/zoo.cfg',
+                    imageTplId: getImageTplIdByName('zoo.cfg.tpl'))
+        }
+        conf.portList << new PortMapping(privatePort: 2181, publicPort: 2181)
+
+        app
     }
 }

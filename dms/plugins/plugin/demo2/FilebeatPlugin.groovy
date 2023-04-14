@@ -9,6 +9,7 @@ import plugin.PluginManager
 
 @CompileStatic
 @Slf4j
+@Deprecated
 class FilebeatPlugin extends BasePlugin {
     @Override
     String name() {

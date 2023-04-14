@@ -2,8 +2,9 @@ package plugin.demo2
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import model.AppDTO
 import model.ImageTplDTO
-import model.json.TplParamsConf
+import model.json.*
 import plugin.BasePlugin
 import plugin.PluginManager
 
@@ -78,5 +79,41 @@ class EtcdPlugin extends BasePlugin {
     @Override
     String image() {
         'etcd'
+    }
+
+    @Override
+    AppDTO demoApp(AppDTO app) {
+        app.name = image()
+
+        def conf = app.conf
+        conf.group = group()
+        conf.image = image()
+        conf.tag = '3.4.24'
+
+        conf.containerNumber = 3
+
+        conf.dirVolumeList << new DirVolumeMount(
+                dir: '/data/etcd', dist: '/data/etcd', mode: 'rw',
+                nodeVolumeId: getNodeVolumeIdByDir('/data/etcd'))
+
+        List<KVPair<String>> paramList = []
+        paramList << new KVPair<String>(key: 'enableV2', value: 'true')
+        paramList << new KVPair<String>(key: 'dataDir', value: '/data/etcd')
+
+        if (conf.isLimitNode) {
+            conf.fileVolumeList << new FileVolumeMount(
+                    paramList: paramList,
+                    dist: '/etcd/etcd.yml',
+                    imageTplId: getImageTplIdByName('etcd.yml.single.node.tpl'))
+        } else {
+            conf.fileVolumeList << new FileVolumeMount(
+                    paramList: paramList,
+                    dist: '/etcd/etcd.yml',
+                    imageTplId: getImageTplIdByName('etcd.yml.tpl'))
+        }
+        conf.portList << new PortMapping(privatePort: 2379, publicPort: 2379)
+        conf.portList << new PortMapping(privatePort: 2380, publicPort: 2380)
+
+        app
     }
 }

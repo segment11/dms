@@ -3,6 +3,9 @@ package plugin.demo2
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AppDTO
+import model.json.DirVolumeMount
+import model.json.KVPair
+import model.json.PortMapping
 import plugin.BasePlugin
 import server.AgentCaller
 import server.InMemoryAllContainerManager
@@ -118,5 +121,40 @@ if (instanceIndex > 0) {
 cmdArgs.join(' ')
 """
         r
+    }
+
+    @Override
+    AppDTO demoApp(AppDTO app) {
+        app.name = image()
+
+        def conf = app.conf
+        conf.group = group()
+        conf.image = image()
+
+        conf.cmd = '[ "sh", "-c", "consul agent $ServerModeCmdExt" ]'
+
+        conf.memMB = 256
+        conf.cpuShare = 256
+
+        // because -bootstrap-expect must be equal to nodeIpList.size()
+        def nodeIpList = conf.targetNodeIpList
+        if (conf.isLimitNode && nodeIpList.size() > 1) {
+            conf.targetNodeIpList = [nodeIpList[0]]
+        }
+
+        conf.dirVolumeList << new DirVolumeMount(
+                dir: '/consul/data', dist: '/consul/data', mode: 'rw',
+                nodeVolumeId: getNodeVolumeIdByDir('/consul/data'))
+        conf.dirVolumeList << new DirVolumeMount(
+                dir: '/consul/config', dist: '/consul/config', mode: 'rw',
+                nodeVolumeId: getNodeVolumeIdByDir('/consul/config'))
+
+        conf.portList << new PortMapping(privatePort: 8500, publicPort: 8500)
+        conf.portList << new PortMapping(privatePort: 8600, publicPort: 8600)
+
+        conf.envList << new KVPair('DATA_CENTER', 'dc1')
+        conf.envList << new KVPair('DOMAIN', 'consul')
+
+        app
     }
 }
