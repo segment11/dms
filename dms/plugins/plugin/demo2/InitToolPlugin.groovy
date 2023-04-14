@@ -31,7 +31,7 @@ class InitToolPlugin extends BasePlugin {
             log.warn 'app already exists, skip add, app name: {}', app.name
             return one.id
         } else {
-            def id = one.add()
+            def id = app.add()
             log.info 'add app success, app name: {}', app.name
             return id
         }
@@ -135,8 +135,16 @@ class InitToolPlugin extends BasePlugin {
             new ClusterDTO(id: clusterId, globalEnvConf: cluster.globalEnvConf, isInGuard: true).update()
 
             // add traefik frontend
-            def gwClusterOne = new GwClusterDTO(appId: traefikAppId).one()
-            def gwClusterId = gwClusterOne.id
+            def gw = new GwClusterDTO()
+            gw.appId = traefikAppId
+            gw.name = 'traefik'
+            gw.serverUrl = 'http://' + nodeIpList[0]
+            gw.serverPort = 80
+            gw.dashboardPort = 81
+            gw.zkConnectString = nodeIpList[0] + ':2181'
+            gw.prefix = 'traefik'
+            gw.updatedDate = new Date()
+            def gwClusterId = gw.add()
 
             addGwFrontendIfNotExists(gwClusterId, prometheusAppId, 'prometheus', 9090)
             addGwFrontendIfNotExists(gwClusterId, grafanaAppId, 'grafana', 3000)
