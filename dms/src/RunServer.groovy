@@ -63,7 +63,7 @@ boolean isPG = c.getString('db.driver', '').contains('postgre')
 // check if need create table first
 String queryTableNameSql = isPG ?
         "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'"
-        : "show tables"
+        : "SELECT table_name FROM information_schema.tables"
 def tableNameList = d.query(queryTableNameSql, String).collect { it.toUpperCase() }
 if (!tableNameList.contains('CLUSTER')) {
     new File(c.projectPath('/init_h2.sql')).text.split(';').each {
