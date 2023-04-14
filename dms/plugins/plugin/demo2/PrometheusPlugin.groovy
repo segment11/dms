@@ -163,11 +163,13 @@ class PrometheusPlugin extends BasePlugin {
         conf.dirVolumeList << new DirVolumeMount(
                 dir: '/prometheus', dist: '/prometheus', mode: 'rw',
                 nodeVolumeId: getNodeVolumeIdByDir('/prometheus'))
+
         conf.fileVolumeList << new FileVolumeMount(
                 isReloadInterval: true,
                 paramList: [new KVPair<String>('intervalSecondsGlobal', '15')],
                 dist: '/etc/prometheus/prometheus.yml',
                 imageTplId: getImageTplIdByName('prometheus.yml.tpl'))
+
         conf.portList << new PortMapping(privatePort: 9090, publicPort: 9090)
 
         app

@@ -35,20 +35,22 @@ class PluginManager {
     void loadDemo() {
         loadPlugin('plugin.demo2.ConsulPlugin', false)
         loadPlugin('plugin.demo2.DnsmasqPlugin', false)
-        loadPlugin('plugin.demo2.ZookeeperPlugin', false)
-        loadPlugin('plugin.demo2.PrometheusPlugin', false)
-        loadPlugin('plugin.demo2.GrafanaPlugin', false)
-        loadPlugin('plugin.demo2.VectorPlugin', false)
-        loadPlugin('plugin.demo2.ZincObservePlugin', false)
-        loadPlugin('plugin.demo2.FilebeatPlugin', false)
         loadPlugin('plugin.demo2.EtcdPlugin', false)
+        loadPlugin('plugin.demo2.FilebeatPlugin', false)
+        loadPlugin('plugin.demo2.GrafanaPlugin', false)
         loadPlugin('plugin.demo2.MySQLPlugin', false)
-        loadPlugin('plugin.demo2.PmaPlugin', false)
-        loadPlugin('plugin.demo2.PatroniPlugin', false)
-        loadPlugin('plugin.demo2.NodeExporterPlugin', false)
         loadPlugin('plugin.demo2.N9ePlugin', false)
+        loadPlugin('plugin.demo2.NodeExporterPlugin', false)
+        loadPlugin('plugin.demo2.PatroniPlugin', false)
+        loadPlugin('plugin.demo2.PmaPlugin', false)
+        loadPlugin('plugin.demo2.PrometheusPlugin', false)
         loadPlugin('plugin.demo2.RedisPlugin', false)
         loadPlugin('plugin.demo2.TraefikPlugin', false)
+        loadPlugin('plugin.demo2.VectorPlugin', false)
+        loadPlugin('plugin.demo2.ZincObservePlugin', false)
+        loadPlugin('plugin.demo2.ZookeeperPlugin', false)
+
+        loadPlugin('plugin.demo2.InitToolPlugin', false)
     }
 
     void loadPlugin(String className, boolean isInClasspath = false) {

@@ -82,6 +82,7 @@ class GrafanaPlugin extends BasePlugin {
         conf.dirVolumeList << new DirVolumeMount(
                 dir: '/var/lib/grafana', dist: '/var/lib/grafana', mode: 'rw',
                 nodeVolumeId: getNodeVolumeIdByDir('/var/lib/grafana'))
+
         conf.fileVolumeList << new FileVolumeMount(
                 dist: '/etc/grafana/grafana.ini',
                 imageTplId: getImageTplIdByName('grafana.ini.tpl'))

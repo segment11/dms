@@ -98,6 +98,8 @@ class TraefikPlugin extends BasePlugin {
         conf.portList << new PortMapping(privatePort: 80, publicPort: 80)
         conf.portList << new PortMapping(privatePort: 81, publicPort: 81)
 
+        conf.dependAppIdList <<new AppDTO(name: 'zookeeper').queryFields('id').one().id
+
         app
     }
 }

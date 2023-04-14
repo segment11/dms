@@ -55,6 +55,7 @@ class ZincObservePlugin extends BasePlugin {
         app.name = image()
 
         def conf = app.conf
+        conf.registryId = getRegistryIdByUrl(registry())
         conf.group = group()
         conf.image = image()
 
@@ -62,8 +63,9 @@ class ZincObservePlugin extends BasePlugin {
         conf.cpuShare = 512
 
         conf.dirVolumeList << new DirVolumeMount(
-                dir: '/data/zinc-observe', dist: '/data', mode: 'ro',
+                dir: '/data/zinc-observe', dist: '/data', mode: 'rw',
                 nodeVolumeId: getNodeVolumeIdByDir('/data/zinc-observe'))
+
         conf.portList << new PortMapping(privatePort: 5080, publicPort: 5080)
 
         conf.envList << new KVPair('ZO_ROOT_USER_EMAIL', 'admin@163.com')

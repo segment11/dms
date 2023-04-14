@@ -99,6 +99,7 @@ class NodeExporterPlugin extends BasePlugin {
         conf.dirVolumeList << new DirVolumeMount(
                 dir: '/', dist: '/host', mode: 'ro',
                 nodeVolumeId: getNodeVolumeIdByDir('/'))
+
         conf.portList << new PortMapping(privatePort: 9100, publicPort: 9100)
 
         app

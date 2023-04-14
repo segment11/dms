@@ -93,6 +93,8 @@ class DnsmasqPlugin extends BasePlugin {
         conf.portList << new PortMapping(privatePort: 53, publicPort: 53)
         conf.portList << new PortMapping(privatePort: 8080, publicPort: 8080)
 
+        conf.dependAppIdList << new AppDTO(name: 'consul').queryFields('id').one().id
+
         app
     }
 }

@@ -86,11 +86,15 @@ class VectorPlugin extends BasePlugin {
         conf.dirVolumeList << new DirVolumeMount(
                 dir: '/var/run/docker.sock', dist: '/var/run/docker.sock', mode: 'ro',
                 nodeVolumeId: getNodeVolumeIdByDir('/var/run/docker.sock'))
+
         conf.fileVolumeList << new FileVolumeMount(
                 paramList: [new KVPair<String>('zincobserveAppName', 'zincobserve')],
                 dist: '/etc/vector/vector.toml',
                 imageTplId: getImageTplIdByName('vector.toml.tpl'))
+
         conf.portList << new PortMapping(privatePort: 8686, publicPort: 8686)
+
+        conf.dependAppIdList << new AppDTO(name: 'zincobserve').queryFields('id').one().id
 
         app
     }
