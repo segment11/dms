@@ -79,6 +79,8 @@ class DnsmasqPlugin extends BasePlugin {
         conf.group = group()
         conf.image = image()
 
+        conf.containerNumber = conf.targetNodeIpList.size()
+
         List<KVPair<String>> paramList = []
         paramList << new KVPair<String>(key: 'port', value: '53')
         paramList << new KVPair<String>(key: 'defaultServer', value: '119.29.29.29,182.254.116.116')
