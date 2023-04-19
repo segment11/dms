@@ -110,7 +110,7 @@ jar {
     zip64 true
 }
 
-task buildToRun(type: Tar) {
+task tar(type: Tar) {
     from jar
     from configurations.runtimeClasspath.findAll {
         it.name.endsWith('.so') ||
@@ -121,7 +121,7 @@ task buildToRun(type: Tar) {
     compression = Compression.GZIP
 }
 
-buildToRun.dependsOn jar
+tar.dependsOn jar
 
 tasks.withType(Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
