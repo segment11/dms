@@ -110,6 +110,14 @@ jar {
     zip64 true
 }
 
+task copySo(type: Copy) {
+    from configurations.runtimeClasspath.findAll {
+        it.name.endsWith('.so') ||
+                it.name.endsWith('.dll')
+    }
+    into 'build/libs'
+}
+
 task tar(type: Tar) {
     from jar
     from configurations.runtimeClasspath.findAll {
@@ -121,7 +129,7 @@ task tar(type: Tar) {
     compression = Compression.GZIP
 }
 
-tar.dependsOn jar
+tar.dependsOn jar, copySo
 
 tasks.withType(Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
