@@ -202,7 +202,7 @@ class AgentCaller {
 
     JSONObject doSshCopyAgentConf(NodeKeyPairDTO kp, AgentConf agentConf, int readTimeout = 10000) {
         String localFileContent = agentConf.generate()
-        String destAgentDir = InitAgentEnvSupport.AGENT_FILE.replace('.tar.gz', '')
+        String destAgentDir = InitAgentEnvSupport.BASE_DIR + '/agentV1'
         String localFilePath = destAgentDir + '/conf.properties'
         doSshCopy(kp, localFilePath, localFilePath, localFileContent, readTimeout)
     }

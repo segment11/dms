@@ -122,6 +122,11 @@ task copyAgentScript(type: Copy) {
     into "$buildDir/libs/dms_agent/src/script"
 }
 
+task copyAgentTar(type: Copy) {
+    from '../dms_agent/agentV1.tar.gz'
+    into "$buildDir/libs/dms_agent/"
+}
+
 task copyWww(type: Copy) {
     from 'www'
     into "$buildDir/libs/www"
@@ -153,7 +158,7 @@ task clearLibDir(type: Delete) {
     file(libDir).deleteDir()
 }
 
-buildToRun.dependsOn copyAgentScript, copyWww, copyPlugins, copyPluginsResources, jar
+buildToRun.dependsOn copyAgentScript, copyAgentTar, copyWww, copyPlugins, copyPluginsResources, jar
 
 tasks.withType(Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE

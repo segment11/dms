@@ -19,8 +19,6 @@ class InitAgentEnvSupport {
 
     final static String JDK_FILE = BASE_DIR + '/jdk8.tar.gz'
 
-    final static String AGENT_FILE = BASE_DIR + '/agentV1.tar.gz'
-
     Integer clusterId
 
     String proxyNodeIp
@@ -93,8 +91,8 @@ class InitAgentEnvSupport {
     }
 
     boolean copyFileIfNotExists(NodeKeyPairDTO kp, String localFilePath,
-                                boolean isTarX = true, boolean isCreateDir = false) {
-        String destFilePath = localFilePath
+                                boolean isTarX = true, boolean isCreateDir = false, String destFilePathGiven = null) {
+        String destFilePath = destFilePathGiven ?: localFilePath
 
         def deploy = DeploySupport.instance
         def one = OneCmd.simple('ls ' + destFilePath)
@@ -277,7 +275,7 @@ Get:11 http://mirrors.ustc.edu.cn/debian bullseye/main amd64 patch amd64 2.7.6-7
     }
 
     void initAgentConf(NodeKeyPairDTO kp, AgentConf agentConf) {
-        String destAgentDir = AGENT_FILE.replace('.tar.gz', '')
+        String destAgentDir = BASE_DIR + '/agentV1'
 
         final String tmpLocalDir = '/tmp'
         final String fileName = 'conf.properties'
@@ -302,7 +300,7 @@ Get:11 http://mirrors.ustc.edu.cn/debian bullseye/main amd64 patch amd64 2.7.6-7
         String stopCommand = "pgrep -f dms_agent|xargs kill -s 15"
         List<OneCmd> cmdList = [
                 new OneCmd(cmd: 'pwd', checker: OneCmd.keyword(kp.user + '@')),
-                new OneCmd(cmd: 'su', checker: OneCmd.keyword('Password:')),
+                new OneCmd(cmd: 'su', checker: OneCmd.keyword('Password:', '密码')),
                 new OneCmd(cmd: kp.rootPass, showCmdLog: false,
                         checker: OneCmd.keyword('root@').failKeyword('failure')),
                 new OneCmd(cmd: stopCommand, checker: OneCmd.any())
@@ -317,7 +315,7 @@ Get:11 http://mirrors.ustc.edu.cn/debian bullseye/main amd64 patch amd64 2.7.6-7
             throw new DeployException('root password need init - ' + kp.ip)
         }
 
-        String destAgentDir = AGENT_FILE.replace('.tar.gz', '')
+        String destAgentDir = BASE_DIR + '/agentV1'
 
         String javaCmd = Conf.instance.getString('agent.javaCmd',
                 '../jdk8/zulu8.66.0.15-ca-jdk8.0.352-linux_x64/bin/java -Xms128m -Xmx256m')
@@ -325,7 +323,7 @@ Get:11 http://mirrors.ustc.edu.cn/debian bullseye/main amd64 patch amd64 2.7.6-7
                 "-Djava.library.path=. -cp . -jar dms_agent-1.0.jar > dmc.log 2>&1 &"
         List<OneCmd> cmdList = [
                 new OneCmd(cmd: 'pwd', checker: OneCmd.keyword(kp.user + '@')),
-                new OneCmd(cmd: 'su', checker: OneCmd.keyword('Password:')),
+                new OneCmd(cmd: 'su', checker: OneCmd.keyword('Password:', '密码')),
                 new OneCmd(cmd: kp.rootPass, showCmdLog: false,
                         checker: OneCmd.keyword('root@').failKeyword('failure')),
                 new OneCmd(cmd: 'cd ' + destAgentDir, checker: OneCmd.keyword('agentV1')),
@@ -351,7 +349,8 @@ Get:11 http://mirrors.ustc.edu.cn/debian bullseye/main amd64 patch amd64 2.7.6-7
             return false
         }
 
-        if (!copyFileIfNotExists(kp, AGENT_FILE)) {
+        def agentTarFilePath = Conf.instance.projectPath('/dms_agent/agentV1.tar.gz')
+        if (!copyFileIfNotExists(kp, agentTarFilePath, true, false, BASE_DIR + '/agentV1.tar.gz')) {
             return false
         }
 
