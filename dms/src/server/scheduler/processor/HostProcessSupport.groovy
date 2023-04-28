@@ -52,7 +52,7 @@ class HostProcessSupport {
                     def r = AgentCaller.instance.doSshCopy(kp, deployFile.localPath, deployFile.destPath)
                     log.info r ? r.toString() : '...'
                 } else {
-                    new InitAgentEnvSupport(c.clusterId, proxyNodeIp).copyFileIfNotExists(kp, deployFile.localPath)
+                    new InitAgentEnvSupport(kp).copyFileIfNotExists(deployFile.localPath)
                 }
 
                 def cmd = deployFile.initCmd

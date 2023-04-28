@@ -22,9 +22,6 @@ h.post('/agent/image/init/load') { req, resp ->
     String id = params.id
     assert id
 
-    String imageTarGzName = params.imageTarGzName
-    String localFilePath = InitAgentEnvSupport.BASE_DIR + '/images/' + imageTarGzName
-
     def kp = new NodeKeyPairDTO(id: id as int).one()
     assert kp
 
@@ -34,18 +31,22 @@ h.post('/agent/image/init/load') { req, resp ->
 
     def clusterOne = InMemoryCacheSupport.instance.oneCluster(kp.clusterId)
     def conf = clusterOne.globalEnvConf
+    def proxyNodeIp = conf.proxyNodeIp
 
-    def support = new InitAgentEnvSupport(kp.clusterId, conf.proxyNodeIp)
-    if (!support.proxyNodeIp || support.proxyNodeIp == kp.ip) {
-        boolean isCopyDone = support.copyFileIfNotExists(kp, localFilePath, false, true)
+    def support = new InitAgentEnvSupport(kp)
+    String imageTarGzName = params.imageTarGzName
+    String localFilePath = support.userHomeDir + '/images/' + imageTarGzName
+
+    if (!proxyNodeIp || proxyNodeIp == kp.ip) {
+        boolean isCopyDone = support.copyFileIfNotExists(localFilePath, false, true)
         if (!isCopyDone) {
             return [flag   : isCopyDone,
-                    steps  : support.getSteps(kp),
+                    steps  : support.getSteps(),
                     message: 'Please view log for detail']
         }
-        boolean isLoadOk = support.loadDockerImage(kp, localFilePath)
+        boolean isLoadOk = support.loadDockerImage(localFilePath)
         return [flag   : isLoadOk,
-                steps  : support.getSteps(kp),
+                steps  : support.getSteps(),
                 message: 'Please view log for detail']
     } else {
         List steps = []

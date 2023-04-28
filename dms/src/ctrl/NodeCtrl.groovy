@@ -49,11 +49,12 @@ h.group('/node') {
                 result(kp.ip).build().log('cluster id: ' + kp.clusterId).toDto().add()
 
         def clusterOne = InMemoryCacheSupport.instance.oneCluster(kp.clusterId)
-        def support = new InitAgentEnvSupport(kp.clusterId, clusterOne.globalEnvConf.proxyNodeIp)
-        if (!support.proxyNodeIp || support.proxyNodeIp == kp.ip) {
-            boolean isDone = support.resetRootPassword(kp)
+        def proxyNodeIp = clusterOne.globalEnvConf.proxyNodeIp
+        def support = new InitAgentEnvSupport(kp)
+        if (!proxyNodeIp || proxyNodeIp == kp.ip) {
+            boolean isDone = support.resetRootPassword()
             return [flag   : isDone,
-                    steps  : support.getSteps(kp),
+                    steps  : support.getSteps(),
                     message: 'Please view log for detail']
         } else {
             def r = AgentCaller.instance.doSshResetRootPassword(kp)
@@ -159,11 +160,12 @@ h.group('/node') {
                 result(kp.ip).build().log('cluster id: ' + kp.clusterId).toDto().add()
 
         def clusterOne = InMemoryCacheSupport.instance.oneCluster(kp.clusterId)
-        def support = new InitAgentEnvSupport(kp.clusterId, clusterOne.globalEnvConf.proxyNodeIp)
-        if (!support.proxyNodeIp || support.proxyNodeIp == kp.ip) {
-            boolean isDone = support.initOtherNode(kp)
+        def proxyNodeIp = clusterOne.globalEnvConf.proxyNodeIp
+        def support = new InitAgentEnvSupport(kp)
+        if (!proxyNodeIp || proxyNodeIp == kp.ip) {
+            boolean isDone = support.initOtherNode()
             return [flag   : isDone,
-                    steps  : support.getSteps(kp),
+                    steps  : support.getSteps(),
                     message: 'Please view log for detail']
         } else {
             def r = AgentCaller.instance.doSshInitAgent(kp)
@@ -202,12 +204,13 @@ h.group('/node') {
         agentConf.localIpFilterPre = conf.localIpFilterPre
         agentConf.agentIntervalSeconds = Conf.instance.getInt('agent.interval.seconds', 5)
 
-        def support = new InitAgentEnvSupport(kp.clusterId, conf.proxyNodeIp)
-        if (!support.proxyNodeIp || support.proxyNodeIp == kp.ip) {
-            support.initAgentConf(kp, agentConf)
-            boolean isDone = support.startAgentCmd(kp)
+        def proxyNodeIp = conf.proxyNodeIp
+        def support = new InitAgentEnvSupport(kp)
+        if (!proxyNodeIp || proxyNodeIp == kp.ip) {
+            support.initAgentConf(agentConf)
+            boolean isDone = support.startAgentCmd()
             return [flag   : isDone,
-                    steps  : support.getSteps(kp),
+                    steps  : support.getSteps(),
                     message: 'Please view log for detail']
         } else {
             List steps = []
@@ -249,17 +252,18 @@ h.group('/node') {
         def clusterOne = InMemoryCacheSupport.instance.oneCluster(kp.clusterId)
         def conf = clusterOne.globalEnvConf
 
-        def support = new InitAgentEnvSupport(kp.clusterId, conf.proxyNodeIp)
-        if (!support.proxyNodeIp || support.proxyNodeIp == kp.ip) {
-            boolean isDone = support.stopAgent(kp)
+        def proxyNodeIp = conf.proxyNodeIp
+        def support = new InitAgentEnvSupport(kp)
+        if (!proxyNodeIp || proxyNodeIp == kp.ip) {
+            boolean isDone = support.stopAgent()
             return [flag   : isDone,
-                    steps  : support.getSteps(kp),
+                    steps  : support.getSteps(),
                     message: 'Please view log for detail']
         } else {
             def stopR = AgentCaller.instance.doSshStopAgent(kp)
             def isDone = stopR.getBoolean('flag').booleanValue()
             return [flag   : isDone,
-                    steps  : support.getSteps(kp),
+                    steps  : support.getSteps(),
                     message: 'Please view log for detail']
         }
     }.delete('/agent/remove-node') { req, resp ->

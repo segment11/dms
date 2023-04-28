@@ -1,6 +1,5 @@
 package deploy
 
-import com.alibaba.fastjson.JSONObject
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 
@@ -40,7 +39,7 @@ class OneCmd {
         item.result = result
         item.status = status
         item.costT = costT
-        JSONObject.toJSONString(item)
+        item.toString()
     }
 
     static OneCmd simple(String cmd) {
@@ -65,14 +64,16 @@ class OneCmd {
     void execInShell(OutputStream os, InputStream is) {
         long beginT = System.currentTimeMillis()
         if (showCmdLog) {
-            log.info '<- ' + cmd
+            log.info '<- ' + cmd + ' timeout: ' + maxWaitTimes * waitMsOnce + 'ms'
         }
         os.write("${cmd.trim()}\r".getBytes())
         os.flush()
 
         int count = 0
         while (true) {
-            log.info 'wait a while'
+            if (count % 10 == 0) {
+                log.info 'wait a while'
+            }
             Thread.sleep(waitMsOnce)
             count++
             if (count > maxWaitTimes) {
@@ -80,7 +81,9 @@ class OneCmd {
                 throw new DeployException('wait max times for cmd: ' + (showCmdLog ? cmd : '***'))
             }
             def readResult = read(is)
-            log.info '-> ' + readResult
+            if (readResult) {
+                log.info '-> ' + readResult
+            }
             result = readResult
             boolean isEnd = checker.isEnd(readResult)
             if (isEnd) {
