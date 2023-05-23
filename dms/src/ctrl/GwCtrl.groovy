@@ -76,7 +76,7 @@ h.group('/gw/cluster') {
 
         def list = new GwFrontendDTO(clusterId: clusterId as int).loadList()
         list.collect {
-            def apiBackendList = r[it.id]
+            def apiBackendList = r[it.id] ?: []
             def serverList = it.backend.serverList
 
             boolean isNotMatch = false
@@ -153,7 +153,9 @@ h.group('/gw/frontend') {
         if (one.id) {
             def dnsServiceName = "gw_${one.clusterId}_${one.id}".toString() + suffix
             if (one.conf.ruleConfList.find { it.rule == dnsServiceName } == null) {
-                one.conf.ruleConfList << new GwFrontendRuleConf(type: 'Host:', rule: dnsServiceName)
+                if (one.conf.ruleConfList.find { it.type == 'Host:' } == null) {
+                    one.conf.ruleConfList << new GwFrontendRuleConf(type: 'Host:', rule: dnsServiceName)
+                }
             }
 
             one.update()
@@ -166,7 +168,9 @@ h.group('/gw/frontend') {
 
             def dnsServiceName = "gw_${one.clusterId}_${one.id}".toString() + suffix
             if (one.conf.ruleConfList.find { it.rule == dnsServiceName } == null) {
-                one.conf.ruleConfList << new GwFrontendRuleConf(type: 'Host:', rule: dnsServiceName)
+                if (one.conf.ruleConfList.find { it.type == 'Host:' } == null) {
+                    one.conf.ruleConfList << new GwFrontendRuleConf(type: 'Host:', rule: dnsServiceName)
+                }
             }
             one.update()
 
