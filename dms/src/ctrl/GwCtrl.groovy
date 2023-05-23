@@ -3,6 +3,7 @@ package ctrl
 import auth.User
 import model.GwClusterDTO
 import model.GwFrontendDTO
+import model.json.GwBackendServer
 import model.json.GwFrontendRuleConf
 import org.segment.web.handler.ChainHandler
 import server.InMemoryAllContainerManager
@@ -76,7 +77,7 @@ h.group('/gw/cluster') {
 
         def list = new GwFrontendDTO(clusterId: clusterId as int).loadList()
         list.collect {
-            def apiBackendList = r[it.id] ?: []
+            List<GwBackendServer> apiBackendList = r[it.id] ?: []
             def serverList = it.backend.serverList
 
             boolean isNotMatch = false
