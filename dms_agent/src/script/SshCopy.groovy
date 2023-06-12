@@ -1,6 +1,5 @@
 package script
 
-import agent.Agent
 import agent.DeployInit
 import deploy.DeploySupport
 import deploy.InitAgentEnvSupport
@@ -44,7 +43,7 @@ if (isOverwrite) {
     DeploySupport.instance.send(kp, localFilePath, remoteFilePath)
     [flag: true]
 } else {
-    def support = new InitAgentEnvSupport(Agent.instance.clusterId, ip)
-    def flag = support.copyFileIfNotExists(kp, localFilePath, isTarX.booleanValue(), isMkdir.booleanValue())
-    [flag: flag, steps: support.getSteps(kp)]
+    def support = new InitAgentEnvSupport(kp)
+    def flag = support.copyFileIfNotExists(localFilePath, isTarX.booleanValue(), isMkdir.booleanValue())
+    [flag: flag, steps: support.getSteps()]
 }

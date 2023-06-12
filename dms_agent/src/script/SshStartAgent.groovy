@@ -1,6 +1,5 @@
 package script
 
-import agent.Agent
 import agent.DeployInit
 import deploy.DeploySupport
 import deploy.InitAgentEnvSupport
@@ -24,6 +23,6 @@ kp.keyPrivate = keyPrivate
 DeploySupport.instance.isAgent = true
 DeployInit.initDeployEventCallback()
 
-def support = new InitAgentEnvSupport(Agent.instance.clusterId, ip)
-def flag = support.startAgentCmd(kp)
-[flag: flag, steps: support.getSteps(kp)]
+def support = new InitAgentEnvSupport(kp)
+def flag = support.startAgentCmd()
+[flag: flag, steps: support.getSteps()]
