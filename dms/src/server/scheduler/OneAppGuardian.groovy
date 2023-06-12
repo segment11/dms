@@ -2,7 +2,6 @@ package server.scheduler
 
 import common.Conf
 import common.Event
-import common.Utils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AppDTO
@@ -156,7 +155,7 @@ class OneAppGuardian {
             return true
         } catch (Exception e) {
             log.error('process app job error - ' + job.appId, e)
-            new AppJobDTO(id: job.id, status: AppJobDTO.Status.failed.val, message: Utils.getStackTraceString(e),
+            new AppJobDTO(id: job.id, status: AppJobDTO.Status.failed.val, message: e.message,
                     failNum: job.failNum + 1, updatedDate: new Date()).update()
             Event.builder().type(Event.Type.app).reason('process job').
                     result(job.appId).build().log('update job status to failed').toDto().add()

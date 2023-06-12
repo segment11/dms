@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONObject
 import common.Conf
 import common.ContainerHelper
 import common.Event
-import common.Utils
 import ex.JobProcessException
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -122,7 +121,7 @@ class CreateProcessor implements GuardianProcessor {
 
         if (exceptionByInstanceIndex) {
             throw new JobProcessException(exceptionByInstanceIndex.collect {
-                "${it.key} - " + Utils.getStackTraceString(it.value)
+                "${it.key} - " + it.value.message
             }.join("\r\n"))
         }
     }
