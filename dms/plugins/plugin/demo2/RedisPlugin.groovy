@@ -128,7 +128,7 @@ class RedisPlugin extends BasePlugin {
                 }
 
                 if (!isSingleNode) {
-                    return
+                    return true
                 }
 
                 def containerNumber = conf.conf.containerNumber
@@ -142,6 +142,7 @@ class RedisPlugin extends BasePlugin {
                 def dir = list.join(',')
                 log.warn 'ready mkdir dirs: {}', dir
                 AgentCaller.instance.agentScriptExe(conf.app.clusterId, conf.nodeIp, 'mk dir', [dir: dir])
+                true
             }
 
             @Override
