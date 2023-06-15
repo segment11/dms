@@ -126,7 +126,7 @@ task copyAgentScript(type: Copy) {
 }
 
 task copyAgentTar(type: Copy) {
-    from '../dms_agent/agentV1.tar.gz'
+    from '../dms_agent/agentV2.tar.gz'
     into "$buildDir/libs/dms_agent/"
 }
 

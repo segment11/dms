@@ -23,8 +23,8 @@ class InitAgentEnvSupport {
         this.info = info
         this.userHomeDir = info.user == 'root' ? '/root' : '/home/' + info.user
         this.dockerTarFile = userHomeDir + '/docker.tar'
-        this.jdkTarFile = userHomeDir + '/jdk8.tar.gz'
-        this.agentTarFile = userHomeDir + '/agentV1.tar.gz'
+        this.jdkTarFile = userHomeDir + '/jdk17.tar.gz'
+        this.agentTarFile = userHomeDir + '/agentV2.tar.gz'
     }
 
     String userHomeDir
@@ -320,10 +320,10 @@ class InitAgentEnvSupport {
         String destAgentDir = agentTarFile.replace('.tar.gz', '')
 
         String javaCmd = Conf.instance.getString('agent.java.cmd',
-                '../jdk8/zulu8.66.0.15-ca-jdk8.0.352-linux_x64/bin/java -Xms128m -Xmx256m')
+                '../jdk17/zulu17/bin/java -Xms128m -Xmx256m')
         String startCommand = "nohup ${javaCmd} ".toString() +
-                "-Djava.library.path=. -cp . -jar dms_agent-1.0.jar > dmc.log 2>&1 &"
-        List<OneCmd> commandList = cmdAsRoot new OneCmd(cmd: 'cd ' + destAgentDir, checker: OneCmd.keyword('agentV1')),
+                "-Djava.library.path=. -cp . -jar dms_agent-1.2.jar > dmc.log 2>&1 &"
+        List<OneCmd> commandList = cmdAsRoot new OneCmd(cmd: 'cd ' + destAgentDir, checker: OneCmd.keyword('agentV2')),
                 new OneCmd(cmd: startCommand, checker: OneCmd.any())
 
         DeploySupport.instance.exec(info, commandList, 30, true)
@@ -346,7 +346,7 @@ class InitAgentEnvSupport {
             return false
         }
 
-        def agentTarFilePath = Conf.instance.projectPath('/dms_agent/agentV1.tar.gz')
+        def agentTarFilePath = Conf.instance.projectPath('/dms_agent/agentV2.tar.gz')
         if (!copyFileIfNotExists(agentTarFilePath, true, false, agentTarFile)) {
             return false
         }
