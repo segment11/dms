@@ -38,12 +38,12 @@ h.get('/api/image/pull/hub/info') { req, resp ->
 h.group('/app') {
     h.group('/option') {
         h.get('/list') { req, resp ->
-            def clusterList = new ClusterDTO().noWhere().queryFields('id,name').loadList()
-            def namespaceList = new NamespaceDTO().noWhere().queryFields('id,cluster_id,name').loadList()
-            def registryList = new ImageRegistryDTO().noWhere().queryFields('id,url').loadList()
-            def nodeList = new NodeDTO().noWhere().queryFields('ip,tags,clusterId').loadList()
-            def appOtherList = new AppDTO().noWhere().queryFields('id,cluster_id,name').loadList()
-            def deployFileList = new DeployFileDTO().noWhere().queryFields('id,dest_path').loadList()
+            def clusterList = new ClusterDTO().noWhere().queryFields('id,name').list()
+            def namespaceList = new NamespaceDTO().noWhere().queryFields('id,cluster_id,name').list()
+            def registryList = new ImageRegistryDTO().noWhere().queryFields('id,url').list()
+            def nodeList = new NodeDTO().noWhere().queryFields('ip,tags,clusterId').list()
+            def appOtherList = new AppDTO().noWhere().queryFields('id,cluster_id,name').list()
+            def deployFileList = new DeployFileDTO().noWhere().queryFields('id,dest_path').list()
             // for skip
             deployFileList << new DeployFileDTO(id: 0, destPath: '/tmp/ignore')
 
@@ -72,22 +72,22 @@ h.group('/app') {
         }.get('/image/env/list') { req, resp ->
             def image = req.param('image')
             assert image
-            new ImageEnvDTO(imageName: image).queryFields('env,name').loadList()
+            new ImageEnvDTO(imageName: image).queryFields('env,name').list()
         }.get('/image/port/list') { req, resp ->
             def image = req.param('image')
             assert image
-            new ImagePortDTO(imageName: image).queryFields('port,name').loadList()
+            new ImagePortDTO(imageName: image).queryFields('port,name').list()
         }.get('/image/tpl/list') { req, resp ->
             def image = req.param('image')
             assert image
-            new ImageTplDTO(imageName: image, tplType: ImageTplDTO.TplType.mount.name()).loadList()
+            new ImageTplDTO(imageName: image, tplType: ImageTplDTO.TplType.mount.name()).list()
         }.get('/image/volume/list') { req, resp ->
             def clusterId = req.param('clusterId')
             assert clusterId
             def image = req.param('image')
             new NodeVolumeDTO(clusterId: clusterId as int).where(!!image,
                     'image_name = ? or image_name is null or image_name = ?', image, '').
-                    queryFields('id,dir,name').loadList()
+                    queryFields('id,dir,name').list()
         }
     }
 
@@ -104,7 +104,7 @@ h.group('/app') {
         def pager = new AppDTO().noWhere().where(!!clusterId && !namespaceId, 'cluster_id = ?', clusterId).
                 where(!!namespaceId, 'namespace_id = ?', namespaceId).
                 where(!!keyword, '(name like ?) or (des like ?)',
-                        '%' + keyword + '%', '%' + keyword + '%').loadPager(pageNum, pageSize)
+                        '%' + keyword + '%', '%' + keyword + '%').listPager(pageNum, pageSize)
 
         def instance = InMemoryAllContainerManager.instance
         pager.transfer {
@@ -133,7 +133,7 @@ h.group('/app') {
     }.get('/list/simple') { req, resp ->
         def namespaceId = req.param('namespaceId')
         assert namespaceId
-        new AppDTO(namespaceId: namespaceId as int).loadList()
+        new AppDTO(namespaceId: namespaceId as int).list()
     }.delete('/delete') { req, resp ->
         def id = req.param('id')
         assert id
@@ -150,7 +150,7 @@ h.group('/app') {
             resp.halt(500, 'this app has containers')
         }
 
-        def appJobList = new AppJobDTO(appId: one.id).queryFields('id').loadList()
+        def appJobList = new AppJobDTO(appId: one.id).queryFields('id').list()
         if (appJobList) {
             new AppJobLogDTO().whereIn('job_id', appJobList.collect { it.id }).deleteAll()
             new AppJobDTO(appId: one.id).deleteAll()

@@ -35,7 +35,7 @@ h.group('/event') {
             }
         }
         event.orderBy('id desc')
-        event.loadPager(pageNum, pageSize)
+        event.listPager(pageNum, pageSize)
     }.get('/reason/list') { req, resp ->
         def type = req.param('type')
         assert type

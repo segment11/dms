@@ -60,7 +60,7 @@ h.group('/gw/cluster') {
 
         list
     }.get('/list/simple') { req, resp ->
-        new GwClusterDTO().noWhere().queryFields('id,name,des').loadList()
+        new GwClusterDTO().noWhere().queryFields('id,name,des').list()
     }.get('/overview') { req, resp ->
         def clusterId = req.param('clusterId')
         assert clusterId
@@ -75,7 +75,7 @@ h.group('/gw/cluster') {
 
         def r = GatewayOperator.getBackendListFromApi(clusterId as int)
 
-        def list = new GwFrontendDTO(clusterId: clusterId as int).loadList()
+        def list = new GwFrontendDTO(clusterId: clusterId as int).list()
         list.collect {
             List<GwBackendServer> apiBackendList = r[it.id] ?: []
             def serverList = it.backend.serverList
@@ -115,11 +115,11 @@ h.group('/gw/frontend') {
     h.get('/list') { req, resp ->
         def clusterId = req.param('clusterId')
         assert clusterId
-        new GwFrontendDTO(clusterId: clusterId as int).loadList()
+        new GwFrontendDTO(clusterId: clusterId as int).list()
     }.get('/list/simple') { req, resp ->
         def clusterId = req.param('clusterId')
         assert clusterId
-        new GwFrontendDTO(clusterId: clusterId as int).queryFields('id,name,des').loadList()
+        new GwFrontendDTO(clusterId: clusterId as int).queryFields('id,name,des').list()
     }.delete('/delete') { req, resp ->
         User u = req.session('user') as User
         if (!u.isAdmin()) {

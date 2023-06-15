@@ -85,7 +85,7 @@ class InitToolPlugin extends BasePlugin {
             }
 
             // check node
-            def nodeList = new NodeDTO(clusterId: clusterId).loadList()
+            def nodeList = new NodeDTO(clusterId: clusterId).list()
             if (!nodeList) {
                 resp.halt(404, 'node not found')
                 return

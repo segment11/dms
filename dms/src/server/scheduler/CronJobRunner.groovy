@@ -6,7 +6,8 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import it.sauronsoftware.cron4j.Scheduler
 import model.AppDTO
-import org.segment.d.json.JsonWriter
+import org.segment.d.json.DefaultJsonTransformer
+import org.segment.d.json.JsonTransformer
 
 @CompileStatic
 @Singleton
@@ -15,6 +16,8 @@ class CronJobRunner {
     private Scheduler scheduler
 
     private Map<Integer, String> lastSaved = [:]
+
+    private JsonTransformer json = new DefaultJsonTransformer()
 
     synchronized void stop() {
         if (scheduler && scheduler.isStarted()) {
@@ -27,10 +30,10 @@ class CronJobRunner {
     synchronized boolean refresh() {
         def appList = new AppDTO().queryFields('id,status,job_conf').
                 where('status = ?', AppDTO.Status.auto.val).
-                where('job_conf is not null').loadList()
+                where('job_conf is not null').list()
         Map<Integer, String> item = [:]
         for (one in appList) {
-            item[one.id] = JsonWriter.instance.json(one.jobConf)
+            item[one.id] = json.json(one.jobConf)
         }
 
         if (lastSaved == item) {

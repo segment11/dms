@@ -4,7 +4,9 @@ import auth.User
 import model.AppJobDTO
 import model.AppJobLogDTO
 import org.segment.web.handler.ChainHandler
-import org.segment.web.handler.JsonWriter
+import org.segment.web.json.DefaultJsonTransformer
+
+import java.text.SimpleDateFormat
 
 def h = ChainHandler.instance
 
@@ -17,7 +19,7 @@ h.group('/app/job') {
             resp.halt(403, 'not this app manager')
         }
 
-        new AppJobDTO(appId: appId as int).orderBy('created_date desc').loadList(100)
+        new AppJobDTO(appId: appId as int).orderBy('created_date desc').list(100)
     }.get('/log/list') { req, resp ->
         def jobId = req.param('jobId')
         assert jobId
@@ -30,7 +32,7 @@ h.group('/app/job') {
         }
 
         def list = new AppJobLogDTO(jobId: jobId as int).orderBy('instance_index desc').
-                loadList(100)
+                list(100)
         def group = list.groupBy { it.instanceIndex }
 
         List<String> strList = []
@@ -60,7 +62,7 @@ h.group('/app/job') {
                             <td><p ng-class="${it.isOk ? 'bg-success' : 'bg-danger'}">${it.isOk}</p></td>
                             <td><p style="max-width: 700px; background-color: #d9edf7; text-align: left;">${it.message}
                                 <p></td>
-                            <td>${it.createdDate.format('yyyy-MM-dd HH:mm:ss')}</td>
+                            <td>${new SimpleDateFormat('yyyy-MM-dd HH:mm:ss').format(it.createdDate)}</td>
                         </tr>
 """
                 }.join('\r\n')
@@ -103,7 +105,7 @@ h.group('/api/job') {
         int instanceIndex = body.remove('instanceIndex') as int
         String title = body.remove('title') as String
 
-        String message = JsonWriter.instance.json(body)
+        String message = new DefaultJsonTransformer().json(body)
 
         new AppJobLogDTO(jobId: jobId, instanceIndex: instanceIndex, title: title,
                 message: message, isOk: true, createdDate: new Date()).add()

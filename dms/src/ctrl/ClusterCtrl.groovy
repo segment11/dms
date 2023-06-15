@@ -22,9 +22,9 @@ h.get('/guard/toggle') { req, resp ->
 
 h.group('/cluster') {
     h.get('/list') { req, resp ->
-        new ClusterDTO().noWhere().loadList()
+        new ClusterDTO().noWhere().list()
     }.get('/list/simple') { req, resp ->
-        def list = new ClusterDTO().noWhere().queryFields('id,name,des,is_in_guard').loadList()
+        def list = new ClusterDTO().noWhere().queryFields('id,name,des,is_in_guard').list()
         [list: list, isGuardianRunning: Guardian.instance.isRunning]
     }.delete('/delete') { req, resp ->
         User u = req.session('user') as User
@@ -37,14 +37,14 @@ h.group('/cluster') {
 
         // check if has namespace
         def namespaceList = new NamespaceDTO(clusterId: id as int).
-                queryFields('id,name').loadList()
+                queryFields('id,name').list()
         if (namespaceList) {
             resp.halt(500, 'has namespace - ' + namespaceList.collect { it.name })
         }
 
         // key pair
         def kpList = new NodeKeyPairDTO(clusterId: id as int).
-                queryFields('id,ip').loadList()
+                queryFields('id,ip').list()
         if (kpList) {
             resp.halt(500, 'has node key pair list - ' + kpList.collect { it.ip })
         }
@@ -77,7 +77,7 @@ h.group('/cluster') {
         def id = req.param('id')
         assert id
         def one = new ClusterDTO(id: id as int).one()
-        def nodeList = new NodeDTO(clusterId: id as int).loadList()
+        def nodeList = new NodeDTO(clusterId: id as int).list()
         [one: one, nodeList: nodeList]
     }.get('/guard/toggle') { req, resp ->
         def id = req.param('id')

@@ -116,7 +116,7 @@ class DnsOperator {
         if (app.conf.image == 'traefik') {
             def gwClusterOne = new GwClusterDTO(appId: app.id).one()
             if (gwClusterOne) {
-                def frontendList = new GwFrontendDTO(clusterId: gwClusterOne.id).loadList()
+                def frontendList = new GwFrontendDTO(clusterId: gwClusterOne.id).list()
                 for (frontend in frontendList) {
                     refreshGwFrontendDns(frontend, gwClusterOne)
                 }

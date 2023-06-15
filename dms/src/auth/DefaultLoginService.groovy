@@ -7,7 +7,7 @@ import model.UserPermitDTO
 class DefaultLoginService implements LoginService {
     @Override
     User login(String user, String password) {
-        def list = new UserPermitDTO(user: user).loadList(100)
+        def list = new UserPermitDTO(user: user).list(100)
         if (!list) {
             return null
         }

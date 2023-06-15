@@ -12,7 +12,8 @@ import groovy.util.logging.Slf4j
 import model.DeployFileDTO
 import model.NodeKeyPairDTO
 import model.server.CreateContainerConf
-import org.segment.d.json.JsonWriter
+import org.segment.d.json.DefaultJsonTransformer
+import org.segment.d.json.JsonTransformer
 import server.AgentCaller
 import server.InMemoryCacheSupport
 import transfer.ContainerInfo
@@ -23,6 +24,8 @@ import transfer.ContainerInfo
 class HostProcessSupport {
     static final int skipDeployFileId = 0
 
+    private static JsonTransformer json = new DefaultJsonTransformer()
+
     int startOneProcess(CreateContainerConf c, JobStepKeeper keeper) {
         def deployFileIdList = c.conf.deployFileIdList
 
@@ -30,17 +33,17 @@ class HostProcessSupport {
             log.info 'skip deploy'
         } else {
             if (!deployFileIdList) {
-                throw new JobProcessException('Run as a process need copy executable file!')
+                throw new JobProcessException('run as a process need copy executable file!')
             }
 
-            def deployFileList = new DeployFileDTO().whereIn('id', deployFileIdList).loadList()
+            def deployFileList = new DeployFileDTO().whereIn('id', deployFileIdList).list()
             if (!deployFileList) {
-                throw new JobProcessException('Deploy file not exists!')
+                throw new JobProcessException('deploy file not exists!')
             }
 
             def kp = new NodeKeyPairDTO(clusterId: c.clusterId, ip: c.nodeIp).one()
             if (!kp) {
-                throw new JobProcessException('Deploy node not init!')
+                throw new JobProcessException('deploy node not init!')
             }
 
             def clusterOne = InMemoryCacheSupport.instance.oneCluster(c.clusterId)
@@ -71,7 +74,7 @@ class HostProcessSupport {
                     } else {
                         DeploySupport.instance.exec(kp, oneCmd)
                         if (!oneCmd.ok()) {
-                            throw new JobProcessException('Deploy file exec fail - ' + oneCmd.toString())
+                            throw new JobProcessException('deploy file exec fail - ' + oneCmd.toString())
                         }
                     }
                 }
@@ -82,7 +85,7 @@ class HostProcessSupport {
         def fileVolumeList = c.conf.fileVolumeList
         if (fileVolumeList) {
             JSONObject updateTplR = AgentCaller.instance.agentScriptExe(c.clusterId, c.nodeIp, 'update tpl',
-                    [jsonStr: JsonWriter.instance.json(c)])
+                    [jsonStr: json.json(c)])
             Boolean isErrorUpdateTpl = updateTplR.getBoolean('isError')
             if (isErrorUpdateTpl && isErrorUpdateTpl.booleanValue()) {
                 throw new JobProcessException('update tpl fail - ' + fileVolumeList + ' - ' + updateTplR.getString('message'))

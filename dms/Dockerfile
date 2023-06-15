@@ -1,4 +1,5 @@
-from adoptopenjdk/openjdk8:alpine-slim
+from eclipse-temurin:17-jre-alpine
+# docker build -t key232323/dms .
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 RUN apk update && apk upgrade
@@ -17,5 +18,6 @@ volume /data/dms
 
 env ADMIN_PASSWORD=123456
 env DB_DATA_FILE=/data/dms/db;FILE_LOCK=SOCKET
+env LOCAL_IP_FILTER_PRE=192.
 
-cmd java -cp . -jar dms_server-1.1.jar
+cmd java -cp . -jar dms_server-1.2.jar

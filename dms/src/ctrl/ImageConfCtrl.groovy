@@ -28,7 +28,7 @@ h.group('/image/config') {
 
             def keyword = req.param('keyword')
             new ImageEnvDTO().noWhere().where(!!keyword, '(image_name like ?) or (name like ?)',
-                    '%' + keyword + '%', '%' + keyword + '%').loadPager(pageNum, pageSize)
+                    '%' + keyword + '%', '%' + keyword + '%').listPager(pageNum, pageSize)
         }.delete('/delete') { req, resp ->
             def id = req.param('id')
             assert id
@@ -55,7 +55,7 @@ h.group('/image/config') {
 
             def keyword = req.param('keyword')
             new ImagePortDTO().noWhere().where(!!keyword, '(image_name like ?) or (name like ?)',
-                    '%' + keyword + '%', '%' + keyword + '%').loadPager(pageNum, pageSize)
+                    '%' + keyword + '%', '%' + keyword + '%').listPager(pageNum, pageSize)
         }.delete('/delete') { req, resp ->
             def id = req.param('id')
             assert id
@@ -82,7 +82,7 @@ h.group('/image/config') {
 
             def keyword = req.param('keyword')
             new ImageTplDTO().noWhere().where(!!keyword, '(image_name like ?) or (name like ?)',
-                    '%' + keyword + '%', '%' + keyword + '%').loadPager(pageNum, pageSize)
+                    '%' + keyword + '%', '%' + keyword + '%').listPager(pageNum, pageSize)
         }.delete('/delete') { req, resp ->
             def id = req.param('id')
             assert id
@@ -114,7 +114,7 @@ h.group('/image/config') {
             def keyword = req.param('keyword')
             new NodeVolumeDTO().where('cluster_id = ?', clusterId).
                     where(!!keyword, '(image_name like ?) or (name like ?)',
-                            '%' + keyword + '%', '%' + keyword + '%').loadPager(pageNum, pageSize)
+                            '%' + keyword + '%', '%' + keyword + '%').listPager(pageNum, pageSize)
         }.delete('/delete') { req, resp ->
             def id = req.param('id')
             assert id
@@ -136,7 +136,7 @@ h.group('/image/config') {
 
     h.group('/registry') {
         h.get('/list') { req, resp ->
-            new ImageRegistryDTO().noWhere().loadList()
+            new ImageRegistryDTO().noWhere().list()
         }.delete('/delete') { req, resp ->
             def id = req.param('id')
             assert id

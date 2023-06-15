@@ -13,7 +13,7 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.NodeKeyPairDTO
 import org.segment.d.json.DefaultJsonTransformer
-import org.segment.d.json.JsonWriter
+import org.segment.d.json.JsonTransformer
 
 @CompileStatic
 @Singleton
@@ -23,6 +23,8 @@ class AgentCaller {
     int connectTimeout = 500
 
     int readTimeout = 2000
+
+    private JsonTransformer json = new DefaultJsonTransformer()
 
     private <T> T httpRequest(int clusterId, String nodeIp, String uri, Map params, Class<T> clz = String,
                               Closure failCallback, boolean isPost = false) {
@@ -74,7 +76,7 @@ class AgentCaller {
             }
 
             if (isPost) {
-                def sendBody = JsonWriter.instance.json(params ?: [:])
+                def sendBody = json.json(params ?: [:])
                 req.send(sendBody)
             }
             def body = req.body()

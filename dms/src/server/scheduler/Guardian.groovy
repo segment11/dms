@@ -76,7 +76,7 @@ class Guardian extends IntervalJob {
 
         log.info 'i am alive'
 
-        def clusterList = new ClusterDTO().noWhere().loadList()
+        def clusterList = new ClusterDTO().noWhere().list()
 
         // node check health
         for (cluster in clusterList) {
@@ -95,7 +95,7 @@ class Guardian extends IntervalJob {
             }
 
             def appList = new AppDTO().where('cluster_id = ?', cluster.id).
-                    where('status = ?', AppDTO.Status.auto.val).loadList()
+                    where('status = ?', AppDTO.Status.auto.val).list()
             if (intervalCount % 10 == 0) {
                 log.info 'begin check cluster app - {} for cluster - {} - interval count - {}',
                         appList.collect { it.name }, cluster.name, intervalCount

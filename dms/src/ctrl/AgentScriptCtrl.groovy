@@ -15,7 +15,7 @@ def log = LoggerFactory.getLogger(this.getClass())
 
 h.group('/agent/script') {
     h.get('/pull/log') { req, resp ->
-        new AgentScriptPullLogDTO().noWhere().loadList()
+        new AgentScriptPullLogDTO().noWhere().list()
     }.get('/pull/test') { req, resp ->
         def content = new ScriptPullContent()
         content.list << new ScriptPullContent.ScriptPullOne(id: 1, name: 'test', updatedDate: new Date())
@@ -29,7 +29,7 @@ h.group('/agent/script') {
 
         def keyword = req.param('keyword')
         new AgentScriptDTO().noWhere().where(!!keyword, '(name like ?) or (des like ?)',
-                '%' + keyword + '%', '%' + keyword + '%').loadPager(pageNum, pageSize)
+                '%' + keyword + '%', '%' + keyword + '%').listPager(pageNum, pageSize)
     }.delete('/delete') { req, resp ->
         User u = req.session('user') as User
         if (!u.isAdmin()) {
@@ -95,7 +95,7 @@ h.group('/agent/script') {
 // for script holder
 h.post('/api/agent/script/pull') { req, resp ->
     HashMap map = req.bodyAs()
-    def list = new AgentScriptDTO().noWhere().loadList()
+    def list = new AgentScriptDTO().noWhere().list()
     // compare updated date
     def r = []
     def content = new ScriptPullContent()

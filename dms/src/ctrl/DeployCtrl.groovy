@@ -32,14 +32,14 @@ h.get('/deploy/node-file/list') { req, resp ->
     final int pageSize = 10
     def pager = new NodeKeyPairDTO(clusterId: clusterId as int).
             orderBy('ip asc').
-            loadPager(pageNum, pageSize)
+            listPager(pageNum, pageSize)
 
     def instance = InMemoryAllContainerManager.instance
     def dat = Utils.getNodeAliveCheckLastDate(3)
 
     List<NodeDTO> nodeList
     if (pager.list) {
-        nodeList = new NodeDTO().whereIn('ip', pager.list.collect { it.ip }).loadList()
+        nodeList = new NodeDTO().whereIn('ip', pager.list.collect { it.ip }).list()
     }
 
     def pager2 = pager.transfer {
@@ -60,7 +60,7 @@ h.get('/deploy/node-file/list') { req, resp ->
     def keyword = req.param('keyword')
     def deployFileList = new DeployFileDTO().noWhere().
             where(!!keyword, '(dest_path like ?) or (local_path like ?)',
-                    '%' + keyword + '%', '%' + keyword + '%').loadList()
+                    '%' + keyword + '%', '%' + keyword + '%').list()
 
     [pager: pager2, deployFileList: deployFileList]
 }.post('/deploy/begin') { req, resp ->
@@ -129,7 +129,7 @@ h.group('/deploy-file') {
         def keyword = req.param('keyword')
         def deployFileList = new DeployFileDTO().noWhere().
                 where(!!keyword, '(dest_path like ?) or (local_path like ?)',
-                        '%' + keyword + '%', '%' + keyword + '%').loadList()
+                        '%' + keyword + '%', '%' + keyword + '%').list()
         [deployFileList: deployFileList]
     }.delete('/delete') { req, resp ->
         User u = req.session('user') as User

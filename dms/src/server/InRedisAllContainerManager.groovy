@@ -3,6 +3,7 @@ package server
 import auth.PermitType
 import auth.User
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import common.Conf
 import common.IntervalJob
 import common.Utils
@@ -123,7 +124,7 @@ class InRedisAllContainerManager extends IntervalJob implements AllContainerMana
     List<NodeDTO> getHeartBeatOkNodeList(int clusterId) {
         def dat = Utils.getNodeAliveCheckLastDate(3)
         def r = new NodeDTO().where('cluster_id = ?', clusterId).
-                where('updated_date > ?', dat).loadList()
+                where('updated_date > ?', dat).list()
         r.sort { a, b -> Utils.compareIp(a.ip, b.ip) }
         r
     }
@@ -152,7 +153,8 @@ class InRedisAllContainerManager extends IntervalJob implements AllContainerMana
         if (!str) {
             return null
         }
-        json.read(str, new ContainerListType())
+
+        new ObjectMapper().readValue(str, new ContainerListType())
     }
 
     @Override
@@ -184,10 +186,10 @@ class InRedisAllContainerManager extends IntervalJob implements AllContainerMana
 
             user.permitList.each {
                 if (it.type == PermitType.cluster) {
-                    def appList = new AppDTO(clusterId: it.id).queryFields('id').loadList()
+                    def appList = new AppDTO(clusterId: it.id).queryFields('id').list()
                     userAccessAppIdSet.addAll(appList.collect { it.id })
                 } else if (it.type == PermitType.namespace) {
-                    def appList = new AppDTO(namespaceId: it.id).queryFields('id').loadList()
+                    def appList = new AppDTO(namespaceId: it.id).queryFields('id').list()
                     userAccessAppIdSet.addAll(appList.collect { it.id })
                 } else if (it.type == PermitType.app) {
                     userAccessAppIdSet.add(it.id)
@@ -216,9 +218,10 @@ class InRedisAllContainerManager extends IntervalJob implements AllContainerMana
                     List<String> strList = r(jedisPool) { jedis ->
                         jedis.hmget(key('containers'), nodeIpArray)
                     } as List<String>
+                    def mapper = new ObjectMapper()
                     for (str in strList) {
                         if (str) {
-                            list.addAll json.read(str, new ContainerListType())
+                            list.addAll mapper.readValue(str, new ContainerListType())
                         }
                     }
                 }
@@ -226,8 +229,9 @@ class InRedisAllContainerManager extends IntervalJob implements AllContainerMana
                 Map<String, String> strMap = r(jedisPool) { jedis ->
                     jedis.hgetAll(key('containers'))
                 } as Map<String, String>
+                def mapper = new ObjectMapper()
                 for (str in strMap.values()) {
-                    list.addAll json.read(str, new ContainerListType())
+                    list.addAll mapper.readValue(str, new ContainerListType())
                 }
             }
         }

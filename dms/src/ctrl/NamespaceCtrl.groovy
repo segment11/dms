@@ -16,11 +16,11 @@ h.group('/namespace') {
         int pageNum = p ? p as int : 1
         final int pageSize = 10
 
-        new NamespaceDTO(clusterId: clusterId as int).loadPager(pageNum, pageSize)
+        new NamespaceDTO(clusterId: clusterId as int).listPager(pageNum, pageSize)
     }.get('/list/simple') { req, resp ->
         def clusterId = req.param('clusterId')
         assert clusterId
-        new NamespaceDTO(clusterId: clusterId as int).loadList()
+        new NamespaceDTO(clusterId: clusterId as int).list()
     }.delete('/delete') { req, resp ->
         def id = req.param('id')
         assert id
@@ -31,7 +31,7 @@ h.group('/namespace') {
             resp.halt(403, 'not this cluster manager')
         }
         // check if has app
-        def appList = new AppDTO(namespaceId: id as int).queryFields('id,name').loadList()
+        def appList = new AppDTO(namespaceId: id as int).queryFields('id,name').list()
         if (appList) {
             resp.halt(500, 'has app - ' + appList.collect { it.name })
         }

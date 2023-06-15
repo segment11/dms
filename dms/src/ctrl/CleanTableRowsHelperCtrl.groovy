@@ -16,7 +16,7 @@ h.get('/help/table/volume/clean') { req, resp ->
     def clusterId = req.param('clusterId')
     assert clusterId
 
-    def appList = new AppDTO(clusterId: clusterId as int).loadList()
+    def appList = new AppDTO(clusterId: clusterId as int).list()
 
     def hostDirList = appList.findAll { it.conf?.dirVolumeList }.collect { AppDTO it ->
         it.conf.dirVolumeList.collect { dirVolume ->
@@ -25,7 +25,7 @@ h.get('/help/table/volume/clean') { req, resp ->
     }.flatten()
 
     def list = new NodeVolumeDTO().whereNotIn('dir', hostDirList, true).
-            queryFields('id').loadList()
+            queryFields('id').list()
     int number = new NodeVolumeDTO().whereIn('id', list.collect { it.id }).deleteAll()
     [flag: true, number: number]
 }

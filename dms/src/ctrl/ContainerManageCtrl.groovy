@@ -53,7 +53,7 @@ h.group('/container/manage') {
         }
 
         def appList = new AppDTO().where('cluster_id=?', clusterId as int).
-                queryFields('id,name,des,namespace_id,conf').loadList()
+                queryFields('id,name,des,namespace_id,conf').list()
         for (x in simpleContainerList) {
             def appOne = appList.find { it.id == x.appId() }
             if (appOne) {

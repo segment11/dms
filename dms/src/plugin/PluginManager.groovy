@@ -39,6 +39,7 @@ class PluginManager {
         loadPlugin('plugin.demo2.FilebeatPlugin', false)
         loadPlugin('plugin.demo2.GrafanaPlugin', false)
         loadPlugin('plugin.demo2.MySQLPlugin', false)
+//        loadPlugin('plugin.demo2.PerconaXtradbClusterPlugin', false)
         loadPlugin('plugin.demo2.N9ePlugin', false)
         loadPlugin('plugin.demo2.NodeExporterPlugin', false)
         loadPlugin('plugin.demo2.PatroniPlugin', false)

@@ -293,14 +293,14 @@ h.group('/node') {
         def clusterId = req.param('clusterId') ?: req.param(':clusterId')
         assert clusterId
         def nodeList = new NodeDTO(clusterId: clusterId as int).
-                queryFields('id,ip,tags,updated_date,agent_version').loadList()
+                queryFields('id,ip,tags,updated_date,agent_version').list()
         nodeList.sort { a, b ->
             Utils.compareIp(a.ip, b.ip)
         }
 
         def keyPairList = new NodeKeyPairDTO(clusterId: clusterId as int).
                 queryFields('ip').
-                loadList()
+                list()
 
         def instance = InMemoryAllContainerManager.instance
         Map<String, NodeInfo> r = instance.getAllNodeInfo(clusterId as int)

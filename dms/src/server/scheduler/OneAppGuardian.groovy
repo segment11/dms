@@ -7,7 +7,8 @@ import groovy.util.logging.Slf4j
 import model.AppDTO
 import model.AppJobDTO
 import model.ClusterDTO
-import org.segment.d.json.JsonWriter
+import org.segment.d.json.DefaultJsonTransformer
+import org.segment.d.json.JsonTransformer
 import server.AgentCaller
 import server.dns.DnsOperator
 import server.gateway.GatewayOperator
@@ -31,6 +32,8 @@ class OneAppGuardian {
     AppDTO app
 
     List<ContainerInfo> containerList
+
+    private JsonTransformer json = new DefaultJsonTransformer()
 
     private static Map<Integer, GuardianProcessor> processors = [:]
 
@@ -78,7 +81,7 @@ class OneAppGuardian {
 
         AppJobDTO job
         def jobList = new AppJobDTO(appId: app.id).orderBy('created_date desc').
-                loadList(appJobBatchSize)
+                list(appJobBatchSize)
         if (jobList) {
             def uniqueJobList = jobList.unique { it.status }
             def todoJob = uniqueJobList.find {
@@ -182,7 +185,7 @@ class OneAppGuardian {
                     def createContainerConf = CreateProcessor.prepareCreateContainerConf(app.conf, app, instanceIndex,
                             nodeIp, nodeIpList)
 
-                    def createP = [jsonStr: JsonWriter.instance.json(createContainerConf), containerId: containerId]
+                    def createP = [jsonStr: json.json(createContainerConf), containerId: containerId]
                     def r = AgentCaller.instance.agentScriptExe(cluster.id, nodeIp, 'container file volume reload', createP)
                     Event.builder().type(Event.Type.app).reason('container file volume reload').
                             result(app.id).build().log(fileVolumeNeedReloadList.collect { it.dist }.join(',') + ' - ' + r.toString()).

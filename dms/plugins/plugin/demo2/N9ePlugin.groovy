@@ -10,7 +10,7 @@ import model.json.TplParamsConf
 import model.server.CreateContainerConf
 import org.segment.d.D
 import org.segment.d.Ds
-import org.segment.d.MySQLDialect
+import org.segment.d.dialect.MySQLDialect
 import plugin.BasePlugin
 import plugin.PluginManager
 import server.scheduler.checker.Checker

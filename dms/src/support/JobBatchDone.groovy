@@ -9,7 +9,7 @@ import model.AppJobDTO
 class JobBatchDone {
     static void doneJobWhenFirstStart() {
         def undoneAppJobList = new AppJobDTO().queryFields('id,status').
-                where('status != ?', AppJobDTO.Status.done.val).loadList()
+                where('status != ?', AppJobDTO.Status.done.val).list()
         if (undoneAppJobList) {
             for (job in undoneAppJobList) {
                 def oldStatus = job.status

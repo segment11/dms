@@ -97,10 +97,10 @@ h.group('/permit') {
         def resourceId = req.param('resourceId')
         Pager<UserPermitDTO> pager = new UserPermitDTO().noWhere().where(!!keyword, 'user like ?',
                 '%' + keyword + '%').where(!!permitType, 'permit_type=?', permitType).
-                where(!!resourceId, 'resource_id=?', resourceId as Integer).loadPager(pageNum, pageSize)
+                where(!!resourceId, 'resource_id=?', resourceId as Integer).listPager(pageNum, pageSize)
         if (pager.list) {
-            def clusterList = new ClusterDTO().noWhere().queryFields('id,name').loadList()
-            def namespaceList = new NamespaceDTO().noWhere().queryFields('id,name').loadList()
+            def clusterList = new ClusterDTO().noWhere().queryFields('id,name').list()
+            def namespaceList = new NamespaceDTO().noWhere().queryFields('id,name').list()
             for (one in pager.list) {
                 UserPermitDTO permit = one
                 if (permit.permitType == 'cluster') {
@@ -126,7 +126,7 @@ h.group('/permit') {
                 def appList = new AppDTO().whereIn('id', appPermitList.collect { one ->
                     UserPermitDTO permit = one
                     permit.resourceId
-                }).loadList()
+                }).list()
                 for (one in appPermitList) {
                     UserPermitDTO permit = one
                     def app = appList.find { it.id == permit.resourceId }
@@ -162,11 +162,11 @@ h.group('/permit') {
     }.get('/resource/list') { req, resp ->
         def permitType = req.param('permitType')
         if (PermitType.cluster.name() == permitType) {
-            return new ClusterDTO().noWhere().queryFields('id,name').loadList()
+            return new ClusterDTO().noWhere().queryFields('id,name').list()
         } else if (PermitType.namespace.name() == permitType) {
-            return new NamespaceDTO().noWhere().queryFields('id,name').loadList()
+            return new NamespaceDTO().noWhere().queryFields('id,name').list()
         } else if (PermitType.app.name() == permitType) {
-            return new AppDTO().noWhere().queryFields('id,name').loadList()
+            return new AppDTO().noWhere().queryFields('id,name').list()
         }
     }
 }

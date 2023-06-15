@@ -6,7 +6,7 @@ import io.prometheus.client.exporter.HTTPServer
 import io.prometheus.client.hotspot.DefaultExports
 import org.segment.d.D
 import org.segment.d.Ds
-import org.segment.d.MySQLDialect
+import org.segment.d.dialect.MySQLDialect
 import org.segment.web.RouteRefreshLoader
 import org.segment.web.RouteServer
 import org.segment.web.common.CachedGroovyClassLoader

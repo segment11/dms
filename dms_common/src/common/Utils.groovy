@@ -60,7 +60,8 @@ class Utils {
 
         String preFinal
         if (pre == null) {
-            preFinal = Conf.instance.getString('localIpFilterPre', '192.')
+            def evnLocalIpFilterPre = System.getenv('LOCAL_IP_FILTER_PRE')
+            preFinal = evnLocalIpFilterPre ?: Conf.instance.getString('localIpFilterPre', '192.')
         } else {
             preFinal = pre
         }

@@ -1,6 +1,8 @@
 package server.hpa
 
-@Singleton
+import groovy.transform.CompileStatic
+
+@CompileStatic
 class ScaleRequest {
     String nodeIp
     int scaleCmd

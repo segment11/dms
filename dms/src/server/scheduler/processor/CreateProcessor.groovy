@@ -12,7 +12,8 @@ import model.*
 import model.json.AppConf
 import model.json.ContainerResourceAsk
 import model.server.CreateContainerConf
-import org.segment.d.json.JsonWriter
+import org.segment.d.json.DefaultJsonTransformer
+import org.segment.d.json.JsonTransformer
 import org.segment.web.common.CachedGroovyClassLoader
 import plugin.Plugin
 import plugin.PluginManager
@@ -34,6 +35,8 @@ import java.util.concurrent.CountDownLatch
 @CompileStatic
 @Slf4j
 class CreateProcessor implements GuardianProcessor {
+    protected JsonTransformer json = new DefaultJsonTransformer()
+
     @Override
     void process(AppJobDTO job, AppDTO app, List<ContainerInfo> containerList) {
         def conf = app.conf
@@ -494,7 +497,7 @@ class CreateProcessor implements GuardianProcessor {
 
         // node volume conflict check
         def cluster = new ClusterDTO(id: app.clusterId).one()
-        def appList = new AppDTO(clusterId: app.clusterId).queryFields('id,conf').loadList()
+        def appList = new AppDTO(clusterId: app.clusterId).queryFields('id,conf').list()
         List<String> skipVolumeDirSet = cluster.globalEnvConf?.skipConflictCheckVolumeDirList.collect { it.value.toString() } ?: []
         def otherAppMountVolumeDirList = appList.findAll { it.id != app.id }.collect { one ->
             one.conf.dirVolumeList.collect { it.dir }.findAll { !(it in skipVolumeDirSet) }
@@ -526,7 +529,7 @@ class CreateProcessor implements GuardianProcessor {
             }
         }
 
-        def createP = [jsonStr: JsonWriter.instance.json(createContainerConf)]
+        def createP = [jsonStr: json.json(createContainerConf)]
         ContainerConfigInfo containerConfigInfo = AgentCaller.instance.agentScriptExeAs(app.clusterId, nodeIp, 'container create',
                 ContainerConfigInfo, createP)
         keeper.next(JobStepKeeper.Step.createContainer, 'created container', containerConfigInfo.toString())
