@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'org.segment'
-version '1.0'
+version '1.1'
 
 final String artifactId = 'dms_agent'
 
@@ -33,8 +33,8 @@ sourceSets {
     }
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 17
+targetCompatibility = 17
 
 compileGroovy {
     groovyOptions.configurationScript = file("config.groovy")
@@ -60,7 +60,7 @@ dependencies {
     implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.20.0'
     implementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.20.0'
 
-    implementation group: 'org.codehaus.groovy', name: 'groovy', version: '2.4.21'
+    implementation group: 'org.apache.groovy', name: 'groovy', version: '4.0.12'
 
     implementation group: 'com.alibaba', name: 'fastjson', version: '1.2.83'
     implementation group: 'org.apache.commons', name: 'commons-compress', version: '1.21'
@@ -82,8 +82,8 @@ dependencies {
 
     implementation group: 'com.jcraft', name: 'jsch', version: '0.1.55'
 
-    implementation group: 'io.github.segment11', name: 'segmentd', version: '1.1-SNAPSHOT'
-    implementation group: 'io.github.segment11', name: 'segmentweb', version: '1.1-SNAPSHOT'
+    implementation group: 'io.github.segment11', name: 'segmentd', version: '1.2-SNAPSHOT'
+    implementation group: 'io.github.segment11', name: 'segmentweb', version: '1.2-SNAPSHOT'
 
     implementation fileTree(dir: 'vendor', includes: ['*.jar', '*.so', '*.dll'])
 

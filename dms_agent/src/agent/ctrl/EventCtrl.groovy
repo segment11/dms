@@ -3,6 +3,7 @@ package agent.ctrl
 import agent.Agent
 import agent.AgentTempInfoHolder
 import agent.AgentTempInfoHolder.Type
+import common.Event
 import common.Pager
 import org.segment.web.handler.ChainHandler
 
@@ -34,7 +35,7 @@ h.group('/event') {
             }
             true
         }
-        def pager = new Pager(pageNum, pageSize)
+        def pager = new Pager<Event>(pageNum, pageSize)
         pager.totalCount = list.size()
         pager.list = list[pager.start..<pager.end]
         pager

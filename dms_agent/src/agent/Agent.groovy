@@ -10,7 +10,8 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.json.LiveCheckConf
 import org.hyperic.sigar.Sigar
-import org.segment.web.handler.JsonWriter
+import org.segment.web.json.DefaultJsonTransformer
+import org.segment.web.json.JsonTransformer
 import support.ToJson
 import transfer.ContainerInfo
 import transfer.NodeInfo
@@ -48,6 +49,8 @@ class Agent extends IntervalJob {
     Sigar sigar
 
     LimitQueue<Event> eventQueue = new LimitQueue<>(100)
+
+    private JsonTransformer json = new DefaultJsonTransformer()
 
     void addEvent(Event event) {
         event.createdDate = new Date()
@@ -127,7 +130,7 @@ class Agent extends IntervalJob {
                     'http://' + serverHost + ':' + serverPort)
             req.header(Const.PROXY_READ_TIMEOUT_HEADER, readTimeout.toString())
         }
-        def sendBody = JsonWriter.instance.json(params)
+        def sendBody = json.json(params)
         def body = req.send(sendBody).body()
         if (req.code() != 200) {
             if (failCallback) {
