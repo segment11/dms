@@ -1,10 +1,9 @@
 package ex
 
 import groovy.transform.CompileStatic
+import groovy.transform.InheritConstructors
 
 @CompileStatic
+@InheritConstructors
 class HttpInvokeException extends RuntimeException {
-    HttpInvokeException(String var1) {
-        super(var1)
-    }
 }

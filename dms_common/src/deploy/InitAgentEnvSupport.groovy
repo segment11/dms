@@ -8,6 +8,8 @@ import groovy.util.logging.Slf4j
 import model.NodeKeyPairDTO
 import org.apache.commons.io.FileUtils
 
+import java.text.SimpleDateFormat
+
 @CompileStatic
 @Slf4j
 class InitAgentEnvSupport {
@@ -38,7 +40,7 @@ class InitAgentEnvSupport {
     private LimitQueue<String> steps = new LimitQueue<>(1000)
 
     private addStep(String step, String content, OneCmd cmd = null) {
-        def now = new Date().format('yyyy-MM-dd HH:mm:ss')
+        def now = new SimpleDateFormat('yyyy-MM-dd HH:mm:ss').format(new Date())
         steps << "${info.host} - ${step} - ${now} - ${content} - ${cmd ? cmd.toString() : ''}".toString()
     }
 

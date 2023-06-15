@@ -80,8 +80,12 @@ class DeploySupport {
 
     private com.jcraft.jsch.Session connect(RemoteInfo remoteInfo) {
         def connectTimeoutMillis = Conf.instance.getInt('ssh.sessionConnectTimeoutMillis', 2000)
-        final Properties config = [StrictHostKeyChecking   : 'no',
-                                   PreferredAuthentications: 'publickey,gssapi-with-mic,keyboard-interactive,password']
+        final Properties config = new Properties()
+        [StrictHostKeyChecking   : 'no',
+         PreferredAuthentications: 'publickey,gssapi-with-mic,keyboard-interactive,password'].each { k, v ->
+            config[k] = v
+        }
+
         def jsch = new JSch()
         com.jcraft.jsch.Session session = jsch.getSession(remoteInfo.user, remoteInfo.host, remoteInfo.port)
         session.timeout = connectTimeoutMillis
@@ -157,12 +161,12 @@ class DeploySupport {
     }
 
     boolean exec(NodeKeyPairDTO kp, List<OneCmd> cmdList,
-              long timeoutSeconds = 10, boolean isShell = false) {
+                 long timeoutSeconds = 10, boolean isShell = false) {
         exec(RemoteInfo.fromKeyPair(kp), cmdList, timeoutSeconds, isShell)
     }
 
     boolean exec(RemoteInfo remoteInfo, List<OneCmd> cmdList,
-              long timeoutSeconds = 10, boolean isShell = false) {
+                 long timeoutSeconds = 10, boolean isShell = false) {
         for (one in cmdList) {
             // if user not set maxWaitTimes, use avg
             if (one.maxWaitTimes == 5) {
