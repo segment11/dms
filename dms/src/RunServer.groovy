@@ -1,3 +1,4 @@
+import auth.User
 import common.Conf
 import common.Const
 import common.Utils
@@ -114,8 +115,9 @@ server.start(Const.SERVER_HTTP_LISTEN_PORT, localIp)
 // prometheus metrics
 DefaultExports.initialize()
 def metricsServer = new HTTPServer(localIp, Const.METRICS_HTTP_LISTEN_PORT, true)
+log.info 'metrics server started - {}', Const.METRICS_HTTP_LISTEN_PORT
 
-Utils.stopWhenConsoleQuit {
+def stopCl = {
     metricsServer.close()
     server.stop()
     cacheSupport.stop()
@@ -125,4 +127,18 @@ Utils.stopWhenConsoleQuit {
     ZkClientHolder.instance.close()
     JedisPoolHolder.instance.close()
     Ds.disconnectAll()
+}
+Utils.stopWhenConsoleQuit stopCl
+
+ChainHandler.instance.get('/manage/stop/all') { req, resp ->
+    User u = req.session('user') as User
+    if (!u.isAdmin()) {
+        resp.halt(403, 'not admin')
+    }
+
+    Thread.start {
+        Thread.sleep(1000)
+        stopCl.call()
+    }
+    resp.end 'stopped'
 }
