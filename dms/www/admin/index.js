@@ -477,6 +477,11 @@ $(function () {
             link: function (scope, el, attrs, ctrl) {
                 var myChart = echarts.init(el[0]);
 
+                scope.$on("$destroy", function () {
+                    console.log('dispose chart...');
+                    myChart.dispose();
+                });
+
                 var opts = scope.$eval(attrs.uiChartPie) || {};
                 scope.$watch(opts.scopeDataName, function (val) {
                     if (!val) {
@@ -499,8 +504,13 @@ $(function () {
             link: function (scope, el, attrs, ctrl) {
                 var opts = scope.$eval(attrs.uiChartLine) || {};
 
-                var myChart = echarts.init(el[0], 'dark', {
+                var myChart = echarts.init(el[0], 'light', {
                     width: opts.width
+                });
+
+                scope.$on("$destroy", function () {
+                    console.log('dispose chart...');
+                    myChart.dispose();
                 });
 
                 scope.$watch(opts.scopeDataName, function (val) {
@@ -513,89 +523,81 @@ $(function () {
                         type: 'line',
                         smooth: true,
                         symbol: 'circle',
-                        symbolSize: 6,
+                        symbolSize: 10,
                         lineStyle: {
                             color: {
                                 type: 'linear',
                                 x: 0,
                                 y: 0,
-                                x2: 0,
-                                y2: 1,
+                                x2: 1,
+                                y2: 0,
                                 colorStops: [{
                                     offset: 0,
-                                    color: '#6ae6dd'
+                                    color: '#4C84FF'
                                 }, {
                                     offset: 1,
-                                    color: 'red'
+                                    color: '#28d016'
                                 }],
                                 globalCoord: false
                             },
                             width: 2,
-                            type: 'solid',
-                        },
-                        itemStyle: {
-                            color: '#00E5DE'
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(50,227,42,0.5)',
+                            shadowOffsetX: 10,
+                            shadowOffsetY: 20
                         },
                         areaStyle: {
-                            color: '#004c5E'
+                            normal: {
+                                color: 'rgba(255,255,255,0)'
+                            }
                         },
                         data: val.data
                     }];
 
                     var chartOption = {
                         title: {
-                            text: opts.title, textStyle: {
-                                color: 'blue',
-                            },
+                            text: opts.title,
                             left: 'center'
+                        }, toolbox: {
+                            feature: {
+                                saveAsImage: {}
+                            }
+                        }, grid: {
+                            left: '3%',
+                            right: '4%',
+                            bottom: '3%',
+                            containLabel: true
                         }, series: series, xAxis: [{
                             type: 'category',
-                            boundaryGap: true,
+                            boundaryGap: false,
                             axisLine: {
-                                show: true,
+                                onZero: false,
                                 lineStyle: {
-                                    color: '#17273B',
-                                    width: 1,
-                                    type: 'solid'
+                                    color: '#4b87a9'
                                 }
                             },
                             axisLabel: {
                                 show: false,
                                 fontSize: 12,
-                                color: 'blue'
+                                color: '#4b87a9'
                             },
                             data: val.xData
                         }], yAxis: [{
                             type: 'value',
                             axisLine: {
-                                show: true,
                                 lineStyle: {
-                                    color: '#17273B',
-                                    width: 1,
-                                    type: 'solid'
+                                    color: '#4b87a9'
                                 }
                             },
                             axisLabel: {
                                 show: true,
-                                color: 'blue',
+                                color: '#4b87a9',
                                 fontSize: 12
                             },
-                            splitNumber: 10,
                             splitLine: {
-                                show: true,
-                                lineStyle: {
-                                    color: '#17273B',
-                                    width: 1,
-                                    type: 'solid'
-                                }
+                                show: false
                             }
-                        }], grid: {
-                            left: '4%',
-                            right: '6%',
-                            bottom: '4%',
-                            top: 80,
-                            containLabel: true
-                        }, tooltip: {
+                        }], tooltip: {
                             trigger: 'axis',
                             position: 'top',
                             axisPointer: {
@@ -606,7 +608,7 @@ $(function () {
                             }
                         }, legend: {
                             show: false
-                        }, color: ['#6a7985']
+                        }
                     };
                     // log.i(chartOption);
                     myChart.setOption(chartOption);
