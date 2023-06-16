@@ -190,7 +190,7 @@ class Agent extends IntervalJob {
         }
 
         def containers = collectContainers()
-        liveCheckAndCollectMetric(containers)
+        liveCheck(containers)
         sendContainers(containers)
 
         lastSendTimeMillis = System.currentTimeMillis()
@@ -274,7 +274,7 @@ class Agent extends IntervalJob {
 
     private Map<String, Boolean> containerLiveCheckResultCache = new HashMap<>()
 
-    private void liveCheckAndCollectMetric(List<ContainerInfo> containers) {
+    private void liveCheck(List<ContainerInfo> containers) {
         def runningList = containers.findAll { it.running() }
         List<OneContainerId> containerIdList = runningList.collect {
             new OneContainerId(appId: it.appId(), instanceIndex: it.instanceIndex())
@@ -313,7 +313,7 @@ class Agent extends IntervalJob {
                     isCheckOk = true
                 }
             } else {
-                isCheckOk = liveCheck(appId, container, liveCheckConf)
+                isCheckOk = liveCheckOneContainer(appId, container, liveCheckConf)
                 containerLiveCheckResultCache.put(container.id, Boolean.valueOf(isCheckOk))
             }
             liveCheckResult[appId] = isCheckOk
@@ -324,7 +324,7 @@ class Agent extends IntervalJob {
     }
 
     // shell execute in docker only can be done in agent, server can only check port listen and http request result
-    private boolean liveCheck(int appId, ContainerInfo container, LiveCheckConf conf) {
+    private boolean liveCheckOneContainer(int appId, ContainerInfo container, LiveCheckConf conf) {
         try {
             if (conf.isShellScript && docker != null) {
                 def shellScript = conf.shellScript
