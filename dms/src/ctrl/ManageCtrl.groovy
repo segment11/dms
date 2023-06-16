@@ -19,6 +19,13 @@ h.get('/manage/conf/reload') { req, resp ->
 
     def c = Conf.instance.load()
     c.params
+}.get('/manage/conf/view') { req, resp ->
+    User u = req.session('user') as User
+    if (!u.isAdmin()) {
+        resp.halt(403, 'not admin')
+    }
+
+    Conf.instance.params
 }.get('/manage/conf/set') { req, resp ->
     User u = req.session('user') as User
     if (!u.isAdmin()) {
