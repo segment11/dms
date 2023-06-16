@@ -30,8 +30,10 @@
                             </tr>
                             <tr ng-repeat="x in ll">
                                 <td>
-                                    <span class="bg-success">{{x.nodeIp}}</span>
+                                    <span class="bg-info">{{x.nodeIp}}</span>
                                     <span class="bg-info">Instance Index: {{x.instanceIndex}}</span>
+                                    <span class="bg-success"
+                                          ng-show="x.isLiveCheckOk != null && x.isLiveCheckOk === true">Live Check Ok</span>
                                     <span class="bg-danger"
                                           ng-show="x.isLiveCheckOk != null && x.isLiveCheckOk === false">Live Check Fail</span>
                                 </td>
