@@ -36,7 +36,7 @@ class RedisPlugin extends BasePlugin {
     private void initImageConfig() {
         // exporter env
         def exporterImageName = 'oliver006/redis_exporter'
-        ['REDIS_ADDR', 'REDIS_PASSWORD'].each {
+        ['REDIS_ADDR', 'REDIS_PASSWORD', 'REDIS_EXPORTER_WEB_LISTEN_ADDRESS'].each {
             def one = new ImageEnvDTO(imageName: exporterImageName, env: it).one()
             if (!one) {
                 new ImageEnvDTO(imageName: exporterImageName, name: it, env: it).add()
@@ -117,6 +117,8 @@ class RedisPlugin extends BasePlugin {
 
             @Override
             boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
+                conf.conf.cmd = '[ "sh", "-c", "redis-server /etc/redis/redis.conf" ]'
+
                 // check if single node
                 boolean isSingleNode
                 def ymlOne = conf.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
@@ -179,7 +181,7 @@ class RedisPlugin extends BasePlugin {
                 def password = getParamOneValue(createContainerConf.conf, 'password')
 
                 def app = new AppDTO()
-                app.name = createContainerConf.appId + '_exporter'
+                app.name = createContainerConf.appId + '_' + createContainerConf.app.name + '_exporter'
 
                 // check if database name duplicated
                 def existsOne = new AppDTO(name: app.name).one()
@@ -238,9 +240,11 @@ class RedisPlugin extends BasePlugin {
 
                 final int exporterPort = 9121
                 def exporterPublicPort = exporterPort + (6379 - publicPort)
-                conf.networkMode = 'bridge'
+                conf.envList << new KVPair<String>('REDIS_EXPORTER_WEB_LISTEN_ADDRESS', '0.0.0.0:' + exporterPublicPort)
+
+                conf.networkMode = 'host'
                 if (isSingleNode) {
-                    conf.portList << new PortMapping(privatePort: exporterPort, publicPort: -1)
+                    conf.portList << new PortMapping(privatePort: exporterPort, publicPort: exporterPublicPort)
                 } else {
                     conf.portList << new PortMapping(privatePort: exporterPort, publicPort: exporterPublicPort)
                 }

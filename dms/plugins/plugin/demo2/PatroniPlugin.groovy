@@ -455,7 +455,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 def publicPort = getPublicPort(createContainerConf.conf)
 
                 def app = new AppDTO()
-                app.name = createContainerConf.appId + '_exporter'
+                app.name = createContainerConf.appId + '_' + createContainerConf.app.name + '_exporter'
 
                 // check if database name duplicated
                 def existsOne = new AppDTO(name: app.name).one()
