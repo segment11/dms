@@ -20,8 +20,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
             var list = groupByObj[k];
             var first = list[0];
             r.push({
-                key: k, appName: first.appName, appDes: first.appDes,
-                clusterId: first.Cluster_Id, namespaceId: first.namespaceId, list: list
+                key: k, appName: first.appName, appDes: first.appDes, namespaceId: first.namespaceId, list: list
             });
         }
         return r;

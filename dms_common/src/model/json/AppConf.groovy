@@ -68,9 +68,7 @@ class AppConf implements JSONFiled {
 
     String networkMode
 
-    boolean isNetworkHostsUsingCluster = true
-
-    boolean isNetworkDnsUsingCluster = true
+    boolean isNetworkDnsUsingCluster = false
 
     List<PortMapping> portList = []
 
