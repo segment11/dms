@@ -132,7 +132,7 @@ h.group('/container/manage') {
             }
         }
 
-        list
+        list.sort { it.containerDir.toString() }
     }.get('/bind/content') { req, resp ->
         def id = req.param('id')
         assert id
