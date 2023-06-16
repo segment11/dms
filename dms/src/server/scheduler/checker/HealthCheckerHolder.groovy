@@ -10,10 +10,7 @@ class HealthCheckerHolder {
     List<HealthChecker> checkerList = []
 
     synchronized void add(HealthChecker checker) {
-        def old = checkerList.find { it.name() == checker.name() }
-        if (old) {
-            checkerList.remove(old)
-        }
+        checkerList.removeIf { it.name() == checker.name() }
         checkerList.add(checker)
         log.info 'done add health checker - {}', checker.name()
     }

@@ -10,11 +10,7 @@ class CheckerHolder {
     List<Checker> checkerList = []
 
     synchronized void add(Checker checker) {
-        def old = checkerList.find { it.name() == checker.name() }
-        if (old) {
-            checkerList.remove(old)
-        }
-
+        checkerList.removeIf { it.name() == checker.name() }
         checkerList.add(checker)
         log.info 'done add checker: {}, type: {}', checker.name(), checker.type().name()
     }

@@ -10,10 +10,7 @@ class CleanerHolder {
     List<Cleaner> cleanerList = []
 
     synchronized void add(Cleaner cleaner) {
-        def old = cleanerList.find { it.name() == cleaner.name() }
-        if (old) {
-            cleanerList.remove(old)
-        }
+        cleanerList.removeIf { it.name() == cleaner.name() }
         cleanerList.add(cleaner)
         log.info 'done add cleaner - {}', cleaner.name()
     }
