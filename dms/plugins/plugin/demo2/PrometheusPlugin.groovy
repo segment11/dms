@@ -132,11 +132,13 @@ class PrometheusPlugin extends BasePlugin {
                 if (!containerList) {
                     return true
                 }
-                containerList.each { x ->
+                containerList.every { x ->
                     String url = "http://${x.nodeIp}:${x.publicPort(9090)}/-/reload"
-                    log.info 'refresh prometheus reload - {}', HttpRequest.post(url).code()
+                    def code = HttpRequest.post(url).code()
+                    log.info 'refresh prometheus reload - {}', code
+
+                    code == 200
                 }
-                true
             }
         }
     }

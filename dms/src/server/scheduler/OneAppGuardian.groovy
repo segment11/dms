@@ -2,6 +2,7 @@ package server.scheduler
 
 import common.Conf
 import common.Event
+import common.LimitQueue
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AppDTO
@@ -33,6 +34,8 @@ class OneAppGuardian {
 
     List<ContainerInfo> containerList
 
+    LimitQueue<Tuple3<String, Boolean, Date>> healthCheckResults
+
     private JsonTransformer json = new DefaultJsonTransformer()
 
     private static Map<Integer, GuardianProcessor> processors = [:]
@@ -45,13 +48,17 @@ class OneAppGuardian {
 
     ThreadPoolExecutor executor
 
-    void init() {
+    synchronized void init() {
         if (!executor) {
             executor = new OneThreadExecutor(app.name.toLowerCase().replaceAll(' ', '_'))
         }
+        if (!healthCheckResults) {
+            def c = Conf.instance
+            healthCheckResults = new LimitQueue<>(c.getInt('app.healthCheckResults.size', 10))
+        }
     }
 
-    void shutdown() {
+    synchronized void shutdown() {
         if (executor) {
             log.info 'shutdown guardian - {}', app.name
             executor.shutdown()
@@ -284,14 +291,21 @@ class OneAppGuardian {
         if (!checkerList) {
             return true
         }
-        for (checker in checkerList) {
-            if (checker.check(app)) {
-                continue
+        try {
+            for (checker in checkerList) {
+                def checkResult = checker.check(app)
+                healthCheckResults << new Tuple3<String, Boolean, Date>(checker.name(), checkResult, new Date())
+                if (checkResult) {
+                    continue
+                }
+                Event.builder().type(Event.Type.app).reason('health check not ok').
+                        result(app.id).build().log('by checker - ' + checker.name()).toDto().add()
+                return false
             }
-            Event.builder().type(Event.Type.app).reason('health check not ok').
-                    result(app.id).build().log('by checker - ' + checker.name()).toDto().add()
+            return true
+        } catch (Exception e) {
+            log.error 'health check error', e
             return false
         }
-        return true
     }
 }

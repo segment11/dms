@@ -11,6 +11,7 @@ import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
 import server.hpa.ScaleRequest
 import server.hpa.ScaleRequestHandler
+import server.scheduler.Guardian
 import server.scheduler.checker.CleanerHolder
 import transfer.ContainerInfo
 
@@ -106,6 +107,7 @@ h.group('/app') {
                 where(!!keyword, '(name like ?) or (des like ?)',
                         '%' + keyword + '%', '%' + keyword + '%').listPager(pageNum, pageSize)
 
+        def guardian = Guardian.instance
         def instance = InMemoryAllContainerManager.instance
         pager.transfer {
             def dto = it as AppDTO
@@ -128,6 +130,8 @@ h.group('/app') {
             } else {
                 map.isLiveCheckOk = true
             }
+
+            map.healthCheckResults = guardian.oneAppGuardian(dto.id)?.healthCheckResults
             map
         }
     }.get('/list/simple') { req, resp ->
@@ -319,19 +323,7 @@ h.group('/app') {
 }
 
 h.group('/api/app') {
-    h.post('/monitor-conf/query') { req, resp ->
-        HashMap map = req.bodyAs()
-        List<Integer> appIdList = map.appIdList as List<Integer>
-        def appList = InMemoryCacheSupport.instance.appList
-        if (!appList) {
-            return []
-        }
-        appList.findAll {
-            it.id in appIdList && it.monitorConf
-        }.collect {
-            [id: it.id, monitorConf: it.monitorConf]
-        }
-    }.post('/live-check-conf/query') { req, resp ->
+    h.post('/live-check-conf/query') { req, resp ->
         HashMap map = req.bodyAs()
         List<Integer> appIdList = map.appIdList as List<Integer>
         def appList = InMemoryCacheSupport.instance.appList

@@ -24,6 +24,10 @@ class Guardian extends IntervalJob {
     // one application one thread
     private ConcurrentHashMap<Integer, OneAppGuardian> appGuardianByAppId = new ConcurrentHashMap<>()
 
+    OneAppGuardian oneAppGuardian(Integer appId) {
+        appGuardianByAppId[appId]
+    }
+
     Set<Integer> failGuardAppIdSet = []
 
     boolean isHealth(Integer appId) {
@@ -127,6 +131,8 @@ class Guardian extends IntervalJob {
                     oneAppGuardian.init()
                     oneAppGuardian.start()
                 } else {
+                    old.cluster = cluster
+                    old.app = app
                     old.containerList = oneAppGuardian.containerList
                     old.init()
                     old.start()
@@ -145,10 +151,6 @@ class Guardian extends IntervalJob {
     }
 
     void stopRunning() {
-        if (!Conf.instance.isOn('guardian.stopRunning')) {
-            return
-        }
-
         for (entry in appGuardianByAppId) {
             if (entry.value) {
                 entry.value.shutdown()

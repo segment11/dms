@@ -240,6 +240,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
         delete one.isConfJob;
         delete one.isConfGateway;
         delete one.isLiveCheckOk;
+        delete one.healthCheckResults;
         $http.post('/dms/app/update', one).success(function (data) {
             if (data.jobId) {
                 $scope.ctrl.isShowAdd = false;
@@ -267,6 +268,20 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
                 }
             });
         }, null);
+    };
+
+    $scope.showHealthCheckResult = function (one) {
+        // one.healthCheckResults -> [['checker name', true, timeMs]]
+        var isOk = _.every(one.healthCheckResults, function (it) {
+            return it[1];
+        });
+        $.dialog({
+            title: one.name + ' / Is Ok: ' + isOk,
+            content: _.map(one.healthCheckResults.reverse(), function (it) {
+                return '<span class="' + (it[1] ? 'bg-success' : 'bg-danger') + '">' + it[0] + ': ' + it[1] + ' / ' +
+                    new Date(it[2]).format('yyyy-MM-dd HH:mm:ss') + '</span>';
+            }).join('<br />')
+        });
     };
 
     $scope.confShow = function (one, tabIndex) {

@@ -79,6 +79,11 @@
                                 </div>
                                 <div class="btn-line">
                                     <button class="btn" ng-click="confShow(one, 6)">Scale</button>
+                                    <button class="btn" ng-click="showHealthCheckResult(one)"
+                                            ng-class="{'btn-red': one.healthCheckResults && one.healthCheckResults.length > 0}"
+                                            ng-if="one.healthCheckResults && one.healthCheckResults.length > 0">Health
+                                        Check
+                                    </button>
                                 </div>
                             </td>
                             <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
@@ -280,7 +285,8 @@
                         <tr>
                             <td colspan="2">
                                 <button class="btn" ng-click="confOne.logConf.logFileList.remove(logFile)"
-                                        style="min-width: 20px;">-</button>
+                                        style="min-width: 20px;">-
+                                </button>
                             </td>
                         </tr>
                         <tr>
@@ -300,7 +306,8 @@
                             <td>multiline pattern</td>
                             <td>
                                 <input type="text" ng-model="logFile.httpRequestUri" style="width: 300px;"
-                                       ui-valid="{{logFile.isMultilineSupport ? 'r' : ''}}" placeholder="^[[:space:]]+(at|\\\\.{3})[[:space:]]+\\\\b|^Caused by:"/>
+                                       ui-valid="{{logFile.isMultilineSupport ? 'r' : ''}}"
+                                       placeholder="^[[:space:]]+(at|\\\\.{3})[[:space:]]+\\\\b|^Caused by:"/>
                             </td>
                         </tr>
                     </table>
