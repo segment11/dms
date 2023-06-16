@@ -50,8 +50,14 @@ h.group('/app') {
 
             def instance = InMemoryAllContainerManager.instance
             def dat = Utils.getNodeAliveCheckLastDate(3)
-            def nodeIpList = nodeList.collect { [ip: it.ip, clusterId: it.clusterId] }.findAll { one ->
-                instance.getHeartBeatDate(one.ip.toString()) > dat
+            def nodeIpList = nodeList.findAll { one ->
+                instance.getHeartBeatDate(one.ip) > dat
+            }.collect {
+                def nodeInfoHb = instance.getNodeInfo(it.ip)
+                [ip            : it.ip,
+                 clusterId     : it.clusterId,
+                 memUsedPercent: nodeInfoHb.mem.usedPercent,
+                 cpuUsedPercent: nodeInfoHb.cpuUsedPercent()]
             }
 
             Set<String> nodeTagSet = []

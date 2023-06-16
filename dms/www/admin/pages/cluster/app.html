@@ -28,15 +28,13 @@
                     </div>
                     <table class="table table-bordered table-striped">
                         <tr>
-                            <th width="10%">id</th>
-                            <th width="10%">name/des</th>
-                            <th width="20%">image/number</th>
+                            <th width="20%">name/des</th>
+                            <th width="20%">image/instance number</th>
+                            <th width="10%">last update date</th>
                             <th width="30%">operation</th>
-                            <th width="10%">updated date</th>
                             <th></th>
                         </tr>
                         <tr ng-repeat="one in ll">
-                            <td>{{one.id}}</td>
                             <td>
                                 {{one.name}}
                                 <br/>
@@ -50,8 +48,9 @@
                             <td>
                                 {{one.conf.group}}/{{one.conf.image}}
                                 <br/>
-                                Instance Number: <span class="bg-info">{{one.conf.containerNumber}}</span>
+                                <span class="bg-success">{{one.conf.containerNumber}}</span>
                             </td>
+                            <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
                             <td>
                                 <div class="btn-line">
                                     <button class="btn" ng-click="confShow(one, 0)"
@@ -86,7 +85,6 @@
                                     </button>
                                 </div>
                             </td>
-                            <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
                             <td class="opts">
                                 <div class="btn-line">
                                     <button class="btn btn-red" ng-click="delete(one)">Delete</button>
@@ -622,22 +620,22 @@
                     <tr>
                         <td>Target Node Tag (Optional)</td>
                         <td>
-                            <input type="text" ng-model="editOne.conf.targetNodeTagList" width="300px"
-                                   ui-dropdown="{valueField: 'tag', labelField: 'tag', list: 'tmp.nodeTagList', multiple: true, blankLabel: '--/--', widthMultipleInput: 300}"/>
+                            <input type="text" ng-model="editOne.conf.targetNodeTagList" width="400px"
+                                   ui-dropdown="{valueField: 'tag', labelField: 'tag', list: 'tmp.nodeTagList', multiple: true, blankLabel: '--/--', widthMultipleInput: 400}"/>
                         </td>
                     </tr>
                     <tr>
                         <td>Target Node Ip (Optional)</td>
                         <td>
-                            <input type="text" ng-model="editOne.conf.targetNodeIpList" width="300px"
-                                   ui-dropdown="{valueField: 'ip', labelField: 'ip', list: 'tmp.nodeIpList', multiple: true, blankLabel: '--/--', widthMultipleInput: 300}"/>
+                            <input type="text" ng-model="editOne.conf.targetNodeIpList" width="400px"
+                                   ui-dropdown="{valueField: 'ip', labelField: 'ipWithCpuMemUsed', list: 'tmp.nodeIpList', multiple: true, blankLabel: '--/--', widthMultipleInput: 400}"/>
                         </td>
                     </tr>
                     <tr>
                         <td>Exclude Node Tag (Optional)</td>
                         <td>
-                            <input type="text" ng-model="editOne.conf.excludeNodeTagList" width="300px"
-                                   ui-dropdown="{valueField: 'tag', labelField: 'tag', list: 'tmp.nodeTagList', multiple: true, blankLabel: '--/--', widthMultipleInput: 300}"/>
+                            <input type="text" ng-model="editOne.conf.excludeNodeTagList" width="400px"
+                                   ui-dropdown="{valueField: 'tag', labelField: 'tag', list: 'tmp.nodeTagList', multiple: true, blankLabel: '--/--', widthMultipleInput: 400}"/>
                         </td>
                     </tr>
                 </table>

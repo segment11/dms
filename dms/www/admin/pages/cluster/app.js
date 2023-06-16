@@ -57,8 +57,11 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
         $scope.tmp.namespaceList = _.filter($scope.tmp.namespaceAllList, function (one) {
             return one.clusterId == clusterId;
         });
-        $scope.tmp.nodeIpList = _.filter($scope.tmp.nodeIpAllList, function (one) {
+        $scope.tmp.nodeIpList = _.map(_.filter($scope.tmp.nodeIpAllList, function (one) {
             return one.clusterId == clusterId;
+        }), function (one) {
+            one.ipWithCpuMemUsed = one.ip + ' / cpu used: ' + one.cpuUsedPercent + '%, mem used: ' + one.memUsedPercent + '%';
+            return one;
         });
         $scope.tmp.nodeTagList = _.filter($scope.tmp.nodeTagAllList, function (one) {
             return one.clusterId == clusterId;
@@ -177,6 +180,9 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
         $scope.editOne = _.clone(one);
         $scope.tmp.isLatest = one.conf.tag == 'latest';
         $scope.tmp.isLibrary = one.conf.group == 'library';
+        $scope.tmp.appOtherList = _.filter($scope.tmp.appOtherList, function (it) {
+            return it.id != one.id;
+        });
         $scope.ctrl.isShowAdd = true;
     };
 
