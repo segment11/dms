@@ -30,7 +30,7 @@
                         <tr>
                             <th width="20%">name/des</th>
                             <th width="20%">image/instance number</th>
-                            <th width="10%">last update date</th>
+                            <th width="15%">last update date</th>
                             <th width="30%">operation</th>
                             <th></th>
                         </tr>
@@ -47,6 +47,7 @@
                             </td>
                             <td>
                                 {{one.conf.group}}/{{one.conf.image}}
+                                <br/>
                                 <br/>
                                 <span class="bg-success">{{one.conf.containerNumber}}</span>
                             </td>
@@ -649,10 +650,10 @@
                     <button class="btn" ng-click="editOne.conf.envList.push({})">Add One Env</button>
                 </div>
                 <div style="margin: 5px;" ng-repeat="param in editOne.conf.envList">
-			<span>Env Key&nbsp;<select ng-model="param.key" style="width: 150px;"
+			<span>Env Key&nbsp;<select ng-model="param.key" style="width: 300px;"
                                        ng-options="a.env as a.env for a in tmp.imageEnvList">
 			</select></span>
-                    <span>Env Value&nbsp;<input type="text" ng-model="param.value" style="width: 200px;"/></span>
+                    <span>Env Value&nbsp;<input type="text" ng-model="param.value" style="width: 300px;"/></span>
                     <span>
 				<button class="btn" ng-click="editOne.conf.envList.remove(param)" style="min-width: 20px;">-</button>
 			</span>
@@ -677,11 +678,11 @@
                     <button class="btn" ng-click="editOne.conf.dirVolumeList.push({})">Add One Dir Volume Mount</button>
                 </div>
                 <div style="margin: 5px;" ng-repeat="param in editOne.conf.dirVolumeList">
-			<span>Node Dir&nbsp;<select ng-model="param.nodeVolumeId" style="width: 120px;"
+			<span>Node Dir&nbsp;<select ng-model="param.nodeVolumeId" style="width: 200px;"
                                         ng-change="onChooseVolume(param)"
                                         ng-options="a.id as a.dir for a in tmp.imageVolumeList">
 			</select></span>
-                    <span>Dist Dir Path&nbsp;<input type="text" ng-model="param.dist" style="width: 120px;"
+                    <span>Dist Dir Path&nbsp;<input type="text" ng-model="param.dist" style="width: 200px;"
                                                     ui-valid="r dir"/></span>
                     <span>Mode <select ng-model="param.mode" style="width: 80px;">
                         <option value="ro">ro</option>
