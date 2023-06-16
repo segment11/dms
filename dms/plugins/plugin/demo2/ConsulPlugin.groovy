@@ -134,7 +134,7 @@ cmdArgs.join(' ')
         conf.cmd = '[ "sh", "-c", "consul agent $ServerModeCmdExt" ]'
 
         conf.memMB = 256
-        conf.cpuShare = 256
+        conf.cpuFixed = 0.2
 
         // because -bootstrap-expect must be equal to nodeIpList.size()
         def nodeIpList = conf.targetNodeIpList

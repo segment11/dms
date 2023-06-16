@@ -475,7 +475,7 @@ start slave;
                 conf.image = 'mysqld-exporter'
                 conf.tag = 'latest'
                 conf.memMB = 64
-                conf.cpuShare = 128
+                conf.cpuFixed = 0.1
 
                 // ${nodeIp} is a placeholder, will be replaced by real ip
                 def envValue = "export_user:export_user_pass@tcp(\${nodeIp}:${publicPort})/mysql".toString()

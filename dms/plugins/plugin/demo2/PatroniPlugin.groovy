@@ -488,7 +488,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 conf.image = 'postgres-exporter'
                 conf.tag = 'latest'
                 conf.memMB = 64
-                conf.cpuShare = 128
+                conf.cpuFixed = 0.1
 
                 // check if single node
                 def ymlOne = createContainerConf.conf.fileVolumeList.find { it.dist == '/etc/patroni.yml' }
@@ -618,7 +618,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 conf.image = 'haproxy'
                 conf.tag = 'lts-alpine'
                 conf.memMB = 1024
-                conf.cpuShare = 1024
+                conf.cpuShares = 1024
 
                 conf.networkMode = 'host'
                 conf.portList << new PortMapping(privatePort: 5000, publicPort: 5000 + portDiff)

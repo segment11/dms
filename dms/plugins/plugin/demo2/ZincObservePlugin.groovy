@@ -60,7 +60,7 @@ class ZincObservePlugin extends BasePlugin {
         conf.image = image()
 
         conf.memMB = 512
-        conf.cpuShare = 512
+        conf.cpuShares = 512
 
         conf.dirVolumeList << new DirVolumeMount(
                 dir: '/data/zinc-observe', dist: '/data', mode: 'rw',

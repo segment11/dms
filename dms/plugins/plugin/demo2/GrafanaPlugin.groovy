@@ -77,7 +77,7 @@ class GrafanaPlugin extends BasePlugin {
         conf.tag = '8.2.6'
 
         conf.memMB = 256
-        conf.cpuShare = 256
+        conf.cpuFixed = 0.2
 
         conf.dirVolumeList << new DirVolumeMount(
                 dir: '/var/lib/grafana', dist: '/var/lib/grafana', mode: 'rw',

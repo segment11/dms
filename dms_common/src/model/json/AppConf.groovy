@@ -23,7 +23,7 @@ class AppConf implements JSONFiled {
 
     int memMB = 1024
 
-    int cpuShare = 1024
+    int cpuShares = 1024
 
     double cpuFixed = 1.0
 

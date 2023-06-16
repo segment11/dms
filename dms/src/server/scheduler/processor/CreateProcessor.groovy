@@ -238,17 +238,17 @@ class CreateProcessor implements GuardianProcessor {
             } : [] as List<ContainerResourceAsk>
 
             int memMBUsed = 0
-            int cpuShareUsed = 0
+            int cpuSharesUsed = 0
             double cpuFixedUsed = 0
             for (one in otherAppResourceAskList) {
                 memMBUsed += one.memMB
-                cpuShareUsed += one.cpuShare
+                cpuSharesUsed += one.cpuShares
                 cpuFixedUsed += one.cpuFixed
             }
 
             def leftResource = new ContainerResourceAsk(nodeIp: node.ip,
                     memMB: memMBTotal - memMBUsed,
-                    cpuShare: cpuNumber * 1024 - cpuShareUsed,
+                    cpuShares: cpuNumber * 1024 - cpuSharesUsed,
                     cpuFixed: cpuNumber - cpuFixedUsed)
             if (leftResource.memMB < conf.memMB) {
                 log.warn 'mem left no enough for ' + conf.memMB + ' but left ' + leftResource.memMB + ' on ' + node.ip

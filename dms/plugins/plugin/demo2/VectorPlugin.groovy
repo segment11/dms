@@ -75,7 +75,7 @@ class VectorPlugin extends BasePlugin {
         conf.tag = 'latest-alpine'
 
         conf.memMB = 64
-        conf.cpuShare = 128
+        conf.cpuFixed = 0.1
 
         conf.dirVolumeList << new DirVolumeMount(
                 dir: '/opt/log', dist: '/opt/log', mode: 'ro',

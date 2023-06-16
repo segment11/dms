@@ -64,15 +64,15 @@ envList << new KVPair(key: KEY_NODE_IP, value: createConf.nodeIp)
 envList << new KVPair(key: KEY_NODE_IP_LIST, value: createConf.nodeIpList.join(','))
 envList << new KVPair(key: KEY_INSTANCE_INDEX, value: createConf.instanceIndex)
 
-int vCpuNumber
-if (conf.cpuShare) {
-    hostConfig.withCpuShares(conf.cpuShare)
-    vCpuNumber = (conf.cpuShare / 1024) as int
+double vCpuNumber
+if (conf.cpuShares) {
+    hostConfig.withCpuShares(conf.cpuShares)
+    vCpuNumber = (conf.cpuShares / 1024).round(2).doubleValue()
 } else if (conf.cpuFixed) {
     long cpuPeriod = 100 * 1000
     long cpuQuota = (conf.cpuFixed * cpuPeriod) as long
     hostConfig.withCpuPeriod(cpuPeriod).withCpuQuota(cpuQuota)
-    vCpuNumber = Math.ceil(conf.cpuFixed).intValue()
+    vCpuNumber = conf.cpuFixed
 }
 
 long mb = (1024 * 1024) as long

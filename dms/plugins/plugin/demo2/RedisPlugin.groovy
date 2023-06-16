@@ -214,7 +214,7 @@ class RedisPlugin extends BasePlugin {
                 conf.image = 'redis_exporter'
                 conf.tag = 'latest'
                 conf.memMB = 64
-                conf.cpuShare = 128
+                conf.cpuFixed = 0.1
                 conf.user = '59000:59000'
 
                 // check if single node

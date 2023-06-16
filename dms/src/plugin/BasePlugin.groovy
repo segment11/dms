@@ -58,7 +58,7 @@ abstract class BasePlugin implements Plugin {
         def conf = new AppConf()
         // default
         conf.memMB = 256
-        conf.cpuShare = 256
+        conf.cpuFixed = 0.2
 
         conf.registryId = getRegistryIdByUrl('https://docker.io')
         conf.group = 'library'
