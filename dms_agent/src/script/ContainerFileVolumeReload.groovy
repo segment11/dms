@@ -53,7 +53,7 @@ conf.fileVolumeList.findAll { it.isReloadInterval }.each { FileVolumeMount one -
         def localFile = new File(hostFileFinal)
         if (localFile.exists() && localFile.text == content) {
             // skip
-            log.info 'skip file volume reload  - ' + hostFileFinal
+            log.debug 'skip file volume reload  - ' + hostFileFinal
         } else {
             FileUtils.forceMkdirParent(localFile)
             localFile.text = content
@@ -70,7 +70,7 @@ conf.fileVolumeList.findAll { it.isReloadInterval }.each { FileVolumeMount one -
             def localFile = new File(fileLocal)
             if (localFile.exists() && localFile.text == content) {
                 // skip
-                log.info 'skip file volume reload  - ' + fileLocal
+                log.debug 'skip file volume reload  - ' + fileLocal
             } else {
                 FileUtils.forceMkdirParent(localFile)
                 localFile.text = content
