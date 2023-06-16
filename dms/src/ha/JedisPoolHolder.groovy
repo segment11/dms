@@ -1,10 +1,13 @@
 package ha
 
+import common.Conf
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.JedisPool
 import redis.clients.jedis.JedisPoolConfig
+
+import java.time.Duration
 
 @CompileStatic
 @Singleton
@@ -20,10 +23,16 @@ class JedisPoolHolder {
             return client
         }
 
+        def c = Conf.instance
         def conf = new JedisPoolConfig()
-        conf.maxTotal = 5
-        conf.maxIdle = 2
-        conf.maxWaitMillis = 2000L
+        conf.maxTotal = c.getInt('jedis.pool.maxTotal', 10)
+        conf.maxIdle = c.getInt('jedis.pool.maxIdle', 5)
+        conf.maxWait = Duration.ofMillis(c.getInt('jedis.pool.maxWait.ms', 5000))
+
+        conf.testOnCreate = true
+        conf.testOnBorrow = true
+        conf.testOnReturn = true
+        conf.testWhileIdle = true
 
         def one = new JedisPool(conf, host, port, timeoutMills, password)
         log.info 'connected - {}', key
