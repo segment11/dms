@@ -8,7 +8,8 @@ import groovy.transform.ToString
 class ContainerResourceAsk implements Comparable<ContainerResourceAsk> {
     ContainerResourceAsk() {}
 
-    ContainerResourceAsk(AppConf conf) {
+    ContainerResourceAsk(String ip, AppConf conf) {
+        nodeIp = ip
         memMB = conf.memMB
         cpuShares = conf.cpuShares
         cpuFixed = conf.cpuFixed
