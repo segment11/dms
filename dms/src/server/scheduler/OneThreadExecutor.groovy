@@ -11,13 +11,14 @@ import java.util.concurrent.TimeUnit
 class OneThreadExecutor extends ThreadPoolExecutor {
     OneThreadExecutor(String threadName) {
         super(1, 1, 0, TimeUnit.MILLISECONDS,
-                new OneSizeExecutorQueue(), new NamedThreadFactory(threadName), new AbortPolicy())
+                new ZeroSizeExecutorQueue(), new NamedThreadFactory(threadName), new AbortPolicy())
     }
 }
 
 @CompileStatic
-class OneSizeExecutorQueue extends LinkedTransferQueue<Runnable> {
+class ZeroSizeExecutorQueue extends LinkedTransferQueue<Runnable> {
+    // no queue
     boolean offer(Runnable o) {
-        this.size() == 0 ? super.offer(o) : false
+        false
     }
 }
