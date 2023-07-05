@@ -1,3 +1,5 @@
+# docker run -d --name=dms --net=host -v /opt/log:/opt/log -v /data/dms:/data/dms -v /opt/dms/conf.properties:/opt/dms/conf.properties -e LOCAL_IP_FILTER_PRE=172. key232323/dms
+
 from eclipse-temurin:17-jre-alpine
 # docker build -t key232323/dms .
 
