@@ -1,6 +1,6 @@
 package server.scheduler
 
-import common.Conf
+import com.segment.common.Conf
 import common.Event
 import common.LimitQueue
 import groovy.transform.CompileStatic

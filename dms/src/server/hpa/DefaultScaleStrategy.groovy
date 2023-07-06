@@ -1,5 +1,6 @@
 package server.hpa
 
+import com.segment.common.Conf
 import common.*
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j

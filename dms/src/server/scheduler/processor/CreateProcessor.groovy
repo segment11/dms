@@ -2,7 +2,7 @@ package server.scheduler.processor
 
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
-import common.Conf
+import com.segment.common.Conf
 import common.ContainerHelper
 import common.Event
 import ex.JobProcessException
@@ -10,7 +10,6 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.*
 import model.json.AppConf
-import model.json.ContainerResourceAsk
 import model.server.CreateContainerConf
 import org.segment.d.json.DefaultJsonTransformer
 import org.segment.d.json.JsonTransformer
@@ -24,10 +23,10 @@ import server.gateway.GatewayOperator
 import server.scheduler.Guardian
 import server.scheduler.checker.Checker
 import server.scheduler.checker.CheckerHolder
+import server.scheduler.node.NodeResourceCal
 import transfer.ContainerConfigInfo
 import transfer.ContainerInfo
 import transfer.ContainerInspectInfo
-import transfer.NodeInfo
 
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
@@ -57,7 +56,8 @@ class CreateProcessor implements GuardianProcessor {
         if (targetNodeIpList) {
             if (targetNodeIpList.size() < runNumber) {
                 if (!app.conf.isLimitNode) {
-                    throw new JobProcessException('node not ok - ' + runNumber + ' but available node number - ' + targetNodeIpList.size())
+                    throw new JobProcessException('node not ok - ' + runNumber +
+                            ' but available node number - ' + targetNodeIpList.size())
                 } else {
                     (runNumber - targetNodeIpList.size()).times { i ->
                         targetNodeIpList << targetNodeIpList[i]
@@ -202,63 +202,35 @@ class CreateProcessor implements GuardianProcessor {
             }
             !isThisNodeIncludeThisAppContainer
         }
+        if (!list) {
+            throw new JobProcessException('node not enough - ' + runNumber +
+                    ' but only have node available - ' + list.size())
+        }
+
         if (list.size() < runNumber) {
             if (conf.isLimitNode) {
                 (runNumber - list.size()).times {
                     list << list[-1]
                 }
             } else {
-                throw new JobProcessException('node not enough - ' + runNumber + ' but only have node available - ' + list.size())
+                throw new JobProcessException('node not enough - ' + runNumber +
+                        ' but only have node available - ' + list.size())
             }
         }
 
-        Map<Integer, AppDTO> otherAppCached = [:]
-        List<ContainerResourceAsk> leftResourceList = []
-
-        Map<String, NodeInfo> allNodeInfo = InMemoryAllContainerManager.instance.getAllNodeInfo(clusterId)
-        for (node in list) {
-            def nodeInfo = allNodeInfo[node.ip]
-            int cpuNumber = nodeInfo.cpuNumber()
-            int memMBTotal = nodeInfo.mem.total.intValue()
-
-            def subList = groupByNodeIp[node.ip]
-            List<ContainerResourceAsk> otherAppResourceAskList = subList ? subList.collect { x ->
-                def otherAppId = x.appId()
-                def otherApp = otherAppCached[otherAppId]
-                if (!otherApp) {
-                    def appOne = new AppDTO(id: otherAppId).queryFields('conf').one()
-                    if (!appOne) {
-                        throw new JobProcessException('app not define for id - ' + otherAppId)
-                    }
-                    otherAppCached[otherAppId] = appOne
-                    return new ContainerResourceAsk(appOne.conf)
-                } else {
-                    return new ContainerResourceAsk(otherApp.conf)
-                }
-            } : [] as List<ContainerResourceAsk>
-
-            int memMBUsed = 0
-            int cpuSharesUsed = 0
-            double cpuFixedUsed = 0
-            for (one in otherAppResourceAskList) {
-                memMBUsed += one.memMB
-                cpuSharesUsed += one.cpuShares
-                cpuFixedUsed += one.cpuFixed
-            }
-
-            def leftResource = new ContainerResourceAsk(nodeIp: node.ip,
-                    memMB: memMBTotal - memMBUsed,
-                    cpuShares: cpuNumber * 1024 - cpuSharesUsed,
-                    cpuFixed: cpuNumber - cpuFixedUsed)
+        def leftResourceList = NodeResourceCal.cal(clusterId, list, groupByNodeIp)
+        for (leftResource in leftResourceList) {
             if (leftResource.memMB < conf.memMB) {
-                log.warn 'mem left no enough for ' + conf.memMB + ' but left ' + leftResource.memMB + ' on ' + node.ip
-            } else {
-                leftResourceList << leftResource
+                log.warn 'mem left no enough for {} but left {} on {} ', conf.memMB, leftResource.memMB, leftResource.nodeIp
             }
         }
         if (leftResourceList.size() < runNumber) {
-            throw new JobProcessException('node memory not enough - ' + conf.memMB + 'MB but only have node available - ' + leftResourceList.size())
+            throw new JobProcessException('node memory not enough - ' + conf.memMB +
+                    'MB but only have node available - ' + leftResourceList.size())
         }
+
+        // todo
+        // user define node list filter
 
         List<String> nodeIpList = []
         // sort by agent script
@@ -356,18 +328,23 @@ class CreateProcessor implements GuardianProcessor {
         def beforeCheckList = checkerList.findAll { it.type() == Checker.Type.before }
 
         if (beforeCheckList && !c.conf.isParallel) {
-            for (checker in beforeCheckList) {
-                def isCheckOk = checker.check(c, keeper)
-                if (!isCheckOk) {
-                    Event.builder().type(Event.Type.app).reason('before create check fail').
-                            result(c.appId).build().
-                            log('container run before check fail - ' +
-                                    c.instanceIndex + ' - when check ' + checker.name()).toDto().add()
-                    return false
+            try {
+                for (checker in beforeCheckList) {
+                    def isCheckOk = checker.check(c, keeper)
+                    if (!isCheckOk) {
+                        Event.builder().type(Event.Type.app).reason('before create check fail').
+                                result(c.appId).build().
+                                log('container run before check fail - ' +
+                                        c.instanceIndex + ' - when check ' + checker.name()).toDto().add()
+                        return false
+                    }
+                    keeper.next(JobStepKeeper.Step.preCheck, 'before create container check', checker.name())
                 }
-                keeper.next(JobStepKeeper.Step.preCheck, 'before create container check', checker.name())
+                return true
+            } catch (Exception e) {
+                log.error 'before check error - ' + c.appId + ' - ' + c.instanceIndex, e
+                return false
             }
-            return true
         } else {
             keeper.next(JobStepKeeper.Step.preCheck, 'before create container check skip')
             return true
@@ -382,18 +359,23 @@ class CreateProcessor implements GuardianProcessor {
 
         // need wait if container start but service will start last long time
         if (afterCheckList && !c.conf.isParallel) {
-            for (checker in afterCheckList) {
-                def isCheckOk = checker.check(c, keeper)
-                if (!isCheckOk) {
-                    Event.builder().type(Event.Type.app).reason('after start check fail').
-                            result(c.appId).build().
-                            log('container run after check fail - ' +
-                                    c.instanceIndex + ' - when check ' + checker.name()).toDto().add()
-                    return false
+            try {
+                for (checker in afterCheckList) {
+                    def isCheckOk = checker.check(c, keeper)
+                    if (!isCheckOk) {
+                        Event.builder().type(Event.Type.app).reason('after start check fail').
+                                result(c.appId).build().
+                                log('container run after check fail - ' +
+                                        c.instanceIndex + ' - when check ' + checker.name()).toDto().add()
+                        return false
+                    }
+                    keeper.next(JobStepKeeper.Step.afterCheck, 'after container start check', checker.name(), isCheckOk)
                 }
-                keeper.next(JobStepKeeper.Step.afterCheck, 'after container start check', checker.name(), isCheckOk)
+                return true
+            } catch (Exception e) {
+                log.error 'after check error - ' + c.appId + ' - ' + c.instanceIndex, e
+                return false
             }
-            return true
         } else {
             keeper.next(JobStepKeeper.Step.afterCheck, 'after container start check skip')
             return true
@@ -407,26 +389,31 @@ class CreateProcessor implements GuardianProcessor {
         def initCheckList = checkerList.findAll { it.type() == Checker.Type.init }
 
         if (initCheckList) {
-            for (checker in initCheckList) {
-                String initCmd = CachedGroovyClassLoader.instance.eval(checker.script(c)).toString()
-                if (initCmd) {
-                    def initR = AgentCaller.instance.agentScriptExe(c.clusterId, c.nodeIp, 'container init',
-                            [id: containerId, initCmd: initCmd])
-                    Boolean isErrorInit = initR.getBoolean('isError')
-                    if (isErrorInit != null && isErrorInit.booleanValue()) {
-                        Event.builder().type(Event.Type.app).reason('after start init fail').
-                                result(c.appId).build().
-                                log('init container fail - ' + c.conf.group + '/' + c.conf.image + ' - ' +
-                                        initR.getString('message')).toDto().add()
-                        return false
+            try {
+                for (checker in initCheckList) {
+                    String initCmd = CachedGroovyClassLoader.instance.eval(checker.script(c)).toString()
+                    if (initCmd) {
+                        def initR = AgentCaller.instance.agentScriptExe(c.clusterId, c.nodeIp, 'container init',
+                                [id: containerId, initCmd: initCmd])
+                        Boolean isErrorInit = initR.getBoolean('isError')
+                        if (isErrorInit != null && isErrorInit.booleanValue()) {
+                            Event.builder().type(Event.Type.app).reason('after start init fail').
+                                    result(c.appId).build().
+                                    log('init container fail - ' + c.conf.group + '/' + c.conf.image + ' - ' +
+                                            initR.getString('message')).toDto().add()
+                            return false
+                        }
+                        keeper.next(JobStepKeeper.Step.initContainer, 'init container',
+                                'done ' + checker.name() + ' - ' + initCmd + ' - ' + initR.getString('message'), isErrorInit)
+                    } else {
+                        keeper.next(JobStepKeeper.Step.initContainer, 'init container skip', checker.name())
                     }
-                    keeper.next(JobStepKeeper.Step.initContainer, 'init container',
-                            'done ' + checker.name() + ' - ' + initCmd + ' - ' + initR.getString('message'), isErrorInit)
-                } else {
-                    keeper.next(JobStepKeeper.Step.initContainer, 'init container skip', checker.name())
                 }
+                return true
+            } catch (Exception e) {
+                log.error 'init check error - ' + c.appId + ' - ' + c.instanceIndex, e
+                return false
             }
-            return true
         } else {
             keeper.next(JobStepKeeper.Step.initContainer, 'init container skip')
             return true

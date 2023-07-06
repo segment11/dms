@@ -1,7 +1,7 @@
-import common.Utils
+import com.segment.common.Utils
+import com.segment.common.job.leader.LeaderFlagHolder
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
-import server.InMemoryCacheSupport
 import server.scheduler.Guardian
 
 def h = ChainHandler.instance
@@ -11,7 +11,6 @@ def log = LoggerFactory.getLogger(this.getClass())
 h.exceptionHandler { req, resp, t ->
     log.error('', t)
     resp.status = 500
-//    resp.outputStream << Utils.getStackTraceString(t)
     resp.outputStream << t.message ?: Utils.getStackTraceString(t)
 }.get('/route/list') { req, resp ->
     [list: h.list.collect { it.name() }]
@@ -29,7 +28,7 @@ h.exceptionHandler { req, resp, t ->
 }.get('/leader/hz') { req, resp ->
     // for haproxy proxy dms server, only proxy leader, others stand by
     // because jobs, dms server is a stateful application
-    def isLeader = InMemoryCacheSupport.instance.isLeader
+    def isLeader = LeaderFlagHolder.instance.isLeader
     resp.status = isLeader ? 200 : 400
     resp.end('leader: ' + isLeader)
 }

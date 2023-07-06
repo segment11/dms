@@ -1,7 +1,7 @@
 package ctrl
 
 import auth.User
-import common.Conf
+import com.segment.common.Conf
 import common.Utils
 import deploy.DeploySupport
 import deploy.OneCmd

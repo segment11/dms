@@ -1,7 +1,7 @@
 package ctrl
 
 import auth.User
-import common.Conf
+import com.segment.common.Conf
 import model.EventDTO
 import org.segment.d.Ds
 import org.segment.web.handler.ChainHandler

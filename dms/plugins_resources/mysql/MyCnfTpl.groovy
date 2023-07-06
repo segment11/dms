@@ -1,6 +1,6 @@
 package mysql
 
-import common.Conf
+import com.segment.common.Conf
 
 def nodeIp = super.binding.getProperty('nodeIp') as String
 def instanceIndex = super.binding.getProperty('instanceIndex') as int

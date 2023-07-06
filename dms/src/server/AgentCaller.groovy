@@ -3,9 +3,9 @@ package server
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import com.github.kevinsawicki.http.HttpRequest
+import com.segment.common.Utils
 import common.AgentConf
 import common.Const
-import common.Utils
 import deploy.InitAgentEnvSupport
 import deploy.OneCmd
 import ex.HttpInvokeException

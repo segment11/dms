@@ -3,7 +3,7 @@ package ctrl
 import auth.LoginService
 import auth.PermitType
 import auth.User
-import common.Conf
+import com.segment.common.Conf
 import common.Const
 import common.Event
 import model.AppDTO

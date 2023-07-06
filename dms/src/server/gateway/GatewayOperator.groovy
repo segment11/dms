@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONObject
 import com.github.kevinsawicki.http.HttpRequest
 import com.github.zkclient.ZkClient
 import com.github.zkclient.exception.ZkNoNodeException
-import common.Conf
+import com.segment.common.Conf
 import common.Event
 import ex.GatewayProcessException
 import groovy.transform.CompileStatic

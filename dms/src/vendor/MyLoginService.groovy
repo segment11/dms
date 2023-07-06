@@ -5,7 +5,7 @@ import auth.Permit
 import auth.PermitType
 import auth.User
 import com.github.kevinsawicki.http.HttpRequest
-import common.*
+import com.segment.common.Conf
 import ex.HttpInvokeException
 import groovy.transform.CompileStatic
 import model.UserPermitDTO

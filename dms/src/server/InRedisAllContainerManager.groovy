@@ -4,8 +4,8 @@ import auth.PermitType
 import auth.User
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import common.Conf
-import common.IntervalJob
+import com.segment.common.Conf
+import com.segment.common.job.IntervalJob
 import common.Utils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j

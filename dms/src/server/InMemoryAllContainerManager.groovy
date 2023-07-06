@@ -2,8 +2,8 @@ package server
 
 import auth.PermitType
 import auth.User
-import common.Conf
-import common.IntervalJob
+import com.segment.common.Conf
+import com.segment.common.job.IntervalJob
 import common.Utils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j

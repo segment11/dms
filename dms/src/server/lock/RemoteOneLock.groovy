@@ -1,6 +1,6 @@
 package server.lock
 
-import common.Conf
+import com.segment.common.Conf
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.apache.curator.framework.CuratorFramework

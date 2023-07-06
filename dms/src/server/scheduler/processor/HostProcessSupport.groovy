@@ -1,7 +1,7 @@
 package server.scheduler.processor
 
 import com.alibaba.fastjson.JSONObject
-import common.Conf
+import com.segment.common.Conf
 import common.ContainerHelper
 import deploy.DeploySupport
 import deploy.InitAgentEnvSupport
@@ -141,11 +141,13 @@ class HostProcessSupport {
         String proxyNodeIp = clusterOne.globalEnvConf.proxyNodeIp
         def needProxy = proxyNodeIp && proxyNodeIp != kp.ip
 
+        def passwordTips = Conf.instance.getString('sudo.shell.password.input.tips', 'Password:')
+
         String pwd = fixPwd ?: '/opt/dms/app_' + appId
         String startCommand = "nohup ${cmd} > main.log 2>&1 &"
         List<OneCmd> cmdList = [
                 new OneCmd(cmd: 'pwd', checker: OneCmd.keyword(kp.user + '@')),
-                new OneCmd(cmd: 'su', checker: OneCmd.keyword('Password:')),
+                new OneCmd(cmd: 'su', checker: OneCmd.keyword(passwordTips)),
                 new OneCmd(cmd: kp.rootPass, showCmdLog: false,
                         checker: OneCmd.keyword('root@').failKeyword('failure')),
                 new OneCmd(cmd: 'mkdir -p ' + pwd, checker: OneCmd.any()),

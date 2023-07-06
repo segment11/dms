@@ -1,7 +1,7 @@
 package server.scheduler
 
+import com.segment.common.Utils
 import common.Event
-import common.Utils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import it.sauronsoftware.cron4j.Scheduler

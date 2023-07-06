@@ -1,7 +1,11 @@
 package ctrl
 
 import auth.User
-import common.*
+import com.segment.common.Conf
+import com.segment.common.Utils
+import common.AgentConf
+import common.Event
+import common.Const
 import deploy.DeploySupport
 import deploy.InitAgentEnvSupport
 import model.AppDTO
@@ -295,7 +299,7 @@ h.group('/node') {
         def nodeList = new NodeDTO(clusterId: clusterId as int).
                 queryFields('id,ip,tags,updated_date,agent_version').list()
         nodeList.sort { a, b ->
-            Utils.compareIp(a.ip, b.ip)
+            common.Utils.compareIp(a.ip, b.ip)
         }
 
         def keyPairList = new NodeKeyPairDTO(clusterId: clusterId as int).

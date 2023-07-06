@@ -1,13 +1,8 @@
 package server
 
-import common.Conf
-import common.Event
-import common.IntervalJob
-import common.Utils
+import com.segment.common.job.IntervalJob
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import ha.EtcdLeaderChecker
-import ha.LeaderChecker
 import model.AppDTO
 import model.ClusterDTO
 
@@ -17,19 +12,6 @@ import model.ClusterDTO
 class InMemoryCacheSupport extends IntervalJob {
     List<AppDTO> appList = []
     List<ClusterDTO> clusterList = []
-
-    private LeaderChecker leaderChecker
-
-    boolean isLeader = false
-
-    void init() {
-        def c = Conf.instance
-        def checkEtcdAddr = c.get('leader.checkEtcdAddr')
-        if (checkEtcdAddr) {
-            int times = c.getInt('leader.checkTtlLostTimes', 3)
-            leaderChecker = new EtcdLeaderChecker(checkEtcdAddr, interval * times)
-        }
-    }
 
     @Override
     String name() {
@@ -56,27 +38,11 @@ class InMemoryCacheSupport extends IntervalJob {
 
     @Override
     void doJob() {
-        if (leaderChecker) {
-            if (isLeader) {
-                leaderChecker.continueLeader()
-                Event.builder().type(Event.Type.cluster).reason('continue leader').
-                        result(Utils.localIp()).build().log().toDto().add()
-            } else {
-                boolean isLeaderNew = leaderChecker.isLeader()
-                if (isLeaderNew != isLeader) {
-                    Event.builder().type(Event.Type.cluster).reason('change leader').
-                            result(Utils.localIp()).build().log('i am the leader? ' + isLeaderNew).toDto().add()
-                }
-                isLeader = isLeaderNew
-            }
-        } else {
-            if (!isLeader) {
-                log.info 'i am the leader now'
-            }
-            isLeader = true
-        }
-
+        // cost too much time, todo: use cache
+        def beginT = System.currentTimeMillis()
         appList = new AppDTO().noWhere().list()
+        def costT = System.currentTimeMillis() - beginT
+        log.info 'load app, app size: {}, cost {} ms', appList.size(), costT
         clusterList = new ClusterDTO().noWhere().list()
 
         if (intervalCount % 10 == 0) {

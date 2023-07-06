@@ -1,5 +1,6 @@
 package server.scheduler
 
+import com.segment.common.job.leader.LeaderFlagHolder
 import common.Event
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -7,7 +8,6 @@ import model.AppDTO
 import model.AppJobDTO
 import model.ClusterDTO
 import server.InMemoryAllContainerManager
-import server.InMemoryCacheSupport
 import spi.SpiSupport
 import transfer.ContainerInfo
 
@@ -22,7 +22,7 @@ class RunAppTask implements Runnable {
 
     @Override
     void run() {
-        if (!InMemoryCacheSupport.instance.isLeader) {
+        if (!LeaderFlagHolder.instance.isLeader) {
             log.warn 'i am not the leader'
             return
         }
