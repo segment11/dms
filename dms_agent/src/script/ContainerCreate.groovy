@@ -4,8 +4,8 @@ import agent.Agent
 import com.alibaba.fastjson.JSON
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.model.*
-import common.Conf
-import common.Utils
+import com.segment.common.Conf
+import com.segment.common.Utils
 import model.json.FileVolumeMount
 import model.json.KVPair
 import model.json.PortMapping
@@ -90,7 +90,7 @@ boolean isNetworkHost = networkMode == 'host'
 List<PortBinding> portBindings = []
 if (!isNetworkHost) {
     conf.portList.eachWithIndex { PortMapping pm, int i ->
-        def publicPort = pm.publicPort == -1 ? Utils.getOnePortListenAvailable() : pm.publicPort
+        def publicPort = pm.publicPort == -1 ? common.Utils.getOnePortListenAvailable() : pm.publicPort
         def privatePort = pm.privatePort
         // for application use
         envList << new KVPair(key: 'X_port_' + privatePort, value: '' + publicPort)
@@ -158,7 +158,7 @@ conf.fileVolumeList.eachWithIndex { FileVolumeMount one, int i ->
         def localFile = new File(hostFilePath)
         FileUtils.forceMkdirParent(localFile)
         localFile.text = content
-        Utils.setFileRead(localFile)
+        common.Utils.setFileRead(localFile)
 
         binds << new Bind(hostFilePath, new Volume(one.dist), AccessMode.ro)
     }
@@ -189,7 +189,7 @@ conf.dirVolumeList.each {
     }
 
     if (needChangeMode) {
-        Utils.setFilePermission(dir, OWNER_READ, OWNER_EXECUTE, OWNER_WRITE,
+        common.Utils.setFilePermission(dir, OWNER_READ, OWNER_EXECUTE, OWNER_WRITE,
                 GROUP_READ, GROUP_EXECUTE, GROUP_WRITE, OTHERS_READ, OTHERS_EXECUTE, OTHERS_WRITE)
     }
 

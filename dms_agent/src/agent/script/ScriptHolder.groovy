@@ -2,7 +2,7 @@ package agent.script
 
 import agent.Agent
 import com.alibaba.fastjson.JSON
-import common.IntervalJob
+import com.segment.common.job.IntervalJob
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 

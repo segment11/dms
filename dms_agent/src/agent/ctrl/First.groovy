@@ -1,7 +1,7 @@
 package agent.ctrl
 
 import agent.Agent
-import common.Utils
+import com.segment.common.Utils
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
 

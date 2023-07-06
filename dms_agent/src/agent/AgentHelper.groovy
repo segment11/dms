@@ -2,7 +2,7 @@ package agent
 
 import com.github.dockerjava.api.model.Container
 import com.github.dockerjava.api.model.ContainerPort
-import common.Conf
+import com.segment.common.Conf
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import org.hyperic.sigar.CpuPerc

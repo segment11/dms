@@ -4,7 +4,7 @@ import agent.Agent
 import agent.support.PullImageCallback
 import com.github.dockerjava.api.DockerClient
 import com.github.dockerjava.api.model.AuthConfig
-import common.Conf
+import com.segment.common.Conf
 import model.ImageRegistryDTO
 
 import java.util.concurrent.TimeUnit

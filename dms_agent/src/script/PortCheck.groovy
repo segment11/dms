@@ -1,8 +1,8 @@
 package script
 
-import common.Utils
+import com.segment.common.Utils
 
 Map params = super.binding.getProperty('params') as Map
-def r = Utils.isPortListenAvailable(params.port as int, Utils.localIp())
+def r = common.Utils.isPortListenAvailable(params.port as int, Utils.localIp())
 
 [flag: r]

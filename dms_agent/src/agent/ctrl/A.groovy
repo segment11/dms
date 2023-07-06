@@ -1,9 +1,9 @@
 package agent.ctrl
 
 import com.github.kevinsawicki.http.HttpRequest
-import common.Conf
+import com.segment.common.Conf
+import com.segment.common.Utils
 import common.Const
-import common.Utils
 import org.segment.web.handler.AbstractHandler
 import org.segment.web.handler.ChainHandler
 import org.segment.web.handler.Req

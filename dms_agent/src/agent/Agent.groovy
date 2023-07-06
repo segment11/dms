@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import com.github.dockerjava.api.DockerClient
 import com.github.kevinsawicki.http.HttpRequest
+import com.segment.common.Conf
+import com.segment.common.job.IntervalJob
 import common.*
 import ex.HttpInvokeException
 import groovy.transform.CompileStatic
@@ -77,7 +79,7 @@ class Agent extends IntervalJob {
 
         auth()
         sigar = new Sigar()
-        nodeIp = Utils.localIp()
+        nodeIp = com.segment.common.Utils.localIp()
         interval = c.getInt('agentIntervalSeconds', 10)
     }
 

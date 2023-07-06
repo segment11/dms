@@ -5,9 +5,10 @@ import com.github.dockerjava.core.DockerClientConfig
 import com.github.dockerjava.core.DockerClientImpl
 import com.github.dockerjava.jaxrs.JerseyDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
-import common.Conf
+import com.segment.common.Conf
+import com.segment.common.ConsoleReader
+import com.segment.common.Utils
 import common.Const
-import common.Utils
 import io.prometheus.client.exporter.HTTPServer
 import io.prometheus.client.hotspot.DefaultExports
 import org.segment.web.RouteRefreshLoader
@@ -71,9 +72,13 @@ server.start(Const.AGENT_HTTP_LISTEN_PORT, localIp)
 DefaultExports.initialize()
 def metricsServer = new HTTPServer(localIp, Const.METRICS_AGENT_HTTP_LISTEN_PORT, true)
 
-Utils.stopWhenConsoleQuit {
+def cr = ConsoleReader.instance
+cr.quitHandler = {
     metricsServer.close()
     scriptHolder.stop()
     agent.stop()
     server.stop()
+}
+if (c.isDev()) {
+    cr.read()
 }

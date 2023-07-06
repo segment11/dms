@@ -2,7 +2,7 @@ package agent.ctrl
 
 import common.Const
 import common.TimerSupport
-import common.Utils
+import com.segment.common.Utils
 import org.segment.web.handler.ChainHandler
 
 def h = ChainHandler.instance
