@@ -188,7 +188,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
 
     $scope.add = function () {
         var one = {clusterId: $scope.tmp.clusterId, namespaceId: $scope.tmp.namespaceId};
-        one.conf = {memMB: '1024', cpuShare: '1024', cpuFixed: '0', containerNumber: '1'};
+        one.conf = {memMB: '1024', cpuShares: '1024', cpuFixed: '0', containerNumber: '1'};
         one.conf.envList = [];
         one.conf.uLimitList = [];
         one.conf.portList = [];
