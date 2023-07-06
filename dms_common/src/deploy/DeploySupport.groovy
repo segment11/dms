@@ -2,7 +2,7 @@ package deploy
 
 import com.jcraft.jsch.ChannelSftp
 import com.jcraft.jsch.JSch
-import common.Conf
+import com.segment.common.Conf
 import common.Event
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j

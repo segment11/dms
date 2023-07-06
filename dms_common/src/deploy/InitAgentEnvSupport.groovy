@@ -1,7 +1,7 @@
 package deploy
 
+import com.segment.common.Conf
 import common.AgentConf
-import common.Conf
 import common.LimitQueue
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -65,7 +65,8 @@ class InitAgentEnvSupport {
         def list = [new OneCmd(cmd: 'pwd', checker: OneCmd.keyword(info.user + '@'))]
 
         if ('root' != info.user) {
-            list << new OneCmd(cmd: 'su', checker: OneCmd.keyword('Password:'))
+            def passwordTips = Conf.instance.getString('sudo.shell.password.input.tips', 'Password:')
+            list << new OneCmd(cmd: 'su', checker: OneCmd.keyword(passwordTips))
             list << new OneCmd(cmd: info.rootPass, showCmdLog: false,
                     checker: OneCmd.keyword('root@').failKeyword('failure'))
         }

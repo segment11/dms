@@ -1,6 +1,6 @@
 package model
 
-import common.Conf
+import com.segment.common.Conf
 import groovy.transform.CompileStatic
 import org.segment.d.D
 import org.segment.d.Ds
