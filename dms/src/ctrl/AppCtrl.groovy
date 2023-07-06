@@ -167,6 +167,8 @@ h.group('/app') {
         }
         new AppDTO(id: one.id).delete()
 
+        Guardian.instance.stopOneRunning(one.id)
+
         String imageName = one.conf.group + '/' + one.conf.image
         def cleanerList = CleanerHolder.instance.cleanerList.findAll { it.imageName().contains(imageName) }
         if (cleanerList) {

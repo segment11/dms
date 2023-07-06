@@ -156,4 +156,8 @@ class Guardian extends IntervalJob {
             }
         }
     }
+
+    void stopOneRunning(int appId) {
+        appGuardianByAppId[appId]?.shutdown()
+    }
 }
