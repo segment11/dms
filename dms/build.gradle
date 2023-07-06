@@ -92,6 +92,7 @@ dependencies {
 
     implementation group: 'io.github.segment11', name: 'segmentd', version: '1.2-SNAPSHOT'
     implementation group: 'io.github.segment11', name: 'segmentweb', version: '1.2-SNAPSHOT'
+    implementation group: 'io.github.segment11', name: 'segment_common', version: '1.2-SNAPSHOT'
 
     implementation project(':dms_common')
 

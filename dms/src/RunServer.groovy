@@ -1,7 +1,9 @@
 import auth.User
-import common.Conf
+import com.segment.common.Conf
+import com.segment.common.ConsoleReader
+import com.segment.common.Utils
+import com.segment.common.job.leader.LeaderFlagHolder
 import common.Const
-import common.Utils
 import ha.JedisPoolHolder
 import io.prometheus.client.exporter.HTTPServer
 import io.prometheus.client.hotspot.DefaultExports
@@ -85,10 +87,20 @@ FirstClusterCreate.create()
 D.classTypeBySqlType[Types.TINYINT] = Integer
 D.classTypeBySqlType[Types.SMALLINT] = Integer
 
+def leaderFlagHolder = LeaderFlagHolder.instance
+if (c.get('leader.etcdAddr')) {
+    leaderFlagHolder.init()
+    leaderFlagHolder.doJob()
+    leaderFlagHolder.start()
+} else {
+    // if not etcd addr given, default is leader
+    leaderFlagHolder.isLeader = true
+}
+
 // agent send container or node info to this manager
-def manager = InMemoryAllContainerManager.instance
-manager.init()
-manager.start()
+def containerManager = InMemoryAllContainerManager.instance
+containerManager.init()
+containerManager.start()
 
 def curatorClientHolder = CuratorFrameworkClientHolder.instance
 curatorClientHolder.init()
@@ -100,7 +112,6 @@ guardian.interval = c.getInt('guardian.interval.seconds', 5)
 guardian.start()
 
 def cacheSupport = InMemoryCacheSupport.instance
-cacheSupport.init()
 cacheSupport.start()
 
 def localIp = Utils.localIp()
@@ -123,12 +134,12 @@ def stopCl = {
     cacheSupport.stop()
     guardian.stop()
     curatorClientHolder.close()
-    manager.stop()
+    containerManager.stop()
+    leaderFlagHolder.stop()
     ZkClientHolder.instance.close()
     JedisPoolHolder.instance.close()
     Ds.disconnectAll()
 }
-Utils.stopWhenConsoleQuit stopCl
 
 ChainHandler.instance.get('/manage/stop/all') { req, resp ->
     User u = req.session('user') as User
@@ -141,4 +152,10 @@ ChainHandler.instance.get('/manage/stop/all') { req, resp ->
         stopCl.call()
     }
     resp.end 'stopped'
+}
+
+def cr = ConsoleReader.instance
+cr.quitHandler = stopCl
+if (c.isDev()) {
+    cr.read()
 }
