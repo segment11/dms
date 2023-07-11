@@ -11,7 +11,7 @@ class JobStepKeeper {
     @CompileStatic
     static enum Step {
         chooseNode, pullImage, preCheck, createContainer, initContainer, startContainer,
-        copyDirs, updateTpl, startCmd, wrapContainerInfo,
+        copyDirs, updateTpl, startCmd, afterCmd, wrapContainerInfo,
         updateDns, afterCheck, addToGateway, stopAndRemoveContainer, removeFromGateway, done, yourStep
     }
 

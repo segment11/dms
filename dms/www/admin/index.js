@@ -396,6 +396,18 @@ $(function () {
             }
             return true;
         }, 'eg. library/nginx');
+        uiValid.regPat('cpusetCpus', function (val) {
+            var arr2 = val.split(',');
+            if (_.any(arr2, function (it) {
+                var arr3 = it.split('-');
+                return _.any(arr3, function (it) {
+                    return !/^\d+$/.test(it);
+                });
+            })) {
+                return false;
+            }
+            return true;
+        }, 'eg. 1-2,3');
     }]);
     md.factory('responseLoginFilter', ['$q', 'uiTips', function ($q, uiTips) {
         var responseLoginFilter = {

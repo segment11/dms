@@ -58,13 +58,13 @@ class HostProcessSupport {
                     new InitAgentEnvSupport(kp).copyFileIfNotExists(deployFile.localPath)
                 }
 
-                def cmd = deployFile.initCmd
-                if (cmd) {
+                def initCmd = deployFile.initCmd
+                if (initCmd) {
                     String changedCmd
-                    if (cmd.contains('$destPath')) {
-                        changedCmd = cmd.replace('$destPath', deployFile.destPath)
+                    if (initCmd.contains('$destPath')) {
+                        changedCmd = initCmd.replace('$destPath', deployFile.destPath)
                     } else {
-                        changedCmd = cmd
+                        changedCmd = initCmd
                     }
                     def oneCmd = OneCmd.simple(changedCmd)
 
@@ -96,6 +96,9 @@ class HostProcessSupport {
         // ***
         String fixPwd = c.conf.envList.find { it.key == 'PWD' }?.value
         int pid = startCmdWithSsh(fixPwd, c.conf.cmd, c.clusterId, c.appId, c.nodeIp, keeper)
+        if (c.conf.cpusetCpus) {
+            setProcessCpuset(pid, c.conf.cpusetCpus, c.clusterId, c.nodeIp, keeper)
+        }
 
         // ***
         ContainerInfo containerInfo = new ContainerInfo()
@@ -145,6 +148,8 @@ class HostProcessSupport {
 
         String pwd = fixPwd ?: '/opt/dms/app_' + appId
         String startCommand = "nohup ${cmd} > main.log 2>&1 &"
+        log.info 'start command: {}, node id: {}', startCommand, nodeIp
+
         List<OneCmd> cmdList = [
                 new OneCmd(cmd: 'pwd', checker: OneCmd.keyword(kp.user + '@')),
                 new OneCmd(cmd: 'su', checker: OneCmd.keyword(passwordTips)),
@@ -189,6 +194,41 @@ class HostProcessSupport {
         }
 
         throw new JobProcessException('start cmd get pid fail - ' + cmd + ' - ' + errorMessage)
+    }
+
+    void setProcessCpuset(int pid, String cpusetCpus, int clusterId, String nodeIp, JobStepKeeper keeper = null) {
+        def kp = new NodeKeyPairDTO(clusterId: clusterId, ip: nodeIp).one()
+
+        def clusterOne = InMemoryCacheSupport.instance.oneCluster(clusterId)
+        String proxyNodeIp = clusterOne.globalEnvConf.proxyNodeIp
+        def needProxy = proxyNodeIp && proxyNodeIp != kp.ip
+
+        def passwordTips = Conf.instance.getString('sudo.shell.password.input.tips', 'Password:')
+
+        String setCommand = "taskset -cp ${cpusetCpus} ${pid}"
+        log.info 'set command: {}, node id: {}', setCommand, nodeIp
+
+        List<OneCmd> cmdList = [
+                new OneCmd(cmd: 'pwd', checker: OneCmd.keyword(kp.user + '@')),
+                new OneCmd(cmd: 'su', checker: OneCmd.keyword(passwordTips)),
+                new OneCmd(cmd: kp.rootPass, showCmdLog: false,
+                        checker: OneCmd.keyword('root@').failKeyword('failure')),
+                new OneCmd(cmd: setCommand, checker: OneCmd.any())
+        ]
+
+        if (needProxy) {
+            AgentCaller.instance.doSshShell(kp, cmdList, 10000)
+        } else {
+            DeploySupport.instance.exec(kp, cmdList, 10, true)
+            if (!cmdList.every { it.ok() }) {
+                throw new JobProcessException('ssh cmd exec error, ip: ' + nodeIp + ' last cmd: ' +
+                        cmdList.find { !it.ok() }.toString())
+            }
+        }
+
+        if (keeper) {
+            keeper.next(JobStepKeeper.Step.afterCmd, 'after cmd', setCommand)
+        }
     }
 
 }

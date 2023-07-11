@@ -25,6 +25,8 @@ class AppConf implements JSONFiled {
 
     int cpuShares = 1024
 
+    String cpusetCpus
+
     double cpuFixed = 1.0
 
     int containerNumber = 1

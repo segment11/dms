@@ -268,6 +268,10 @@ private void callAgentScript(Req req, Resp resp, String scriptName) {
             int pid = HostProcessSupport.instance.startCmdWithSsh(fixPwd, app.conf.cmd, app.clusterId, app.id, nodeIp)
             JSONObject r = AgentCaller.instance.agentScriptExe(clusterId, nodeIp, 'replace pid', [appId: app.id, id: id, pid: pid])
             resp.end r.toJSONString()
+
+            if (app.conf.cpusetCpus) {
+                HostProcessSupport.instance.setProcessCpuset(pid, app.conf.cpusetCpus, app.clusterId, nodeIp)
+            }
             return
         }
     }

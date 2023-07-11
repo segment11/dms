@@ -75,8 +75,13 @@ if (conf.cpuShares) {
     vCpuNumber = conf.cpuFixed
 }
 
-long mb = (1024 * 1024) as long
-long mem = conf.memMB * mb
+if (conf.cpusetCpus) {
+    hostConfig.withCpusetCpus(conf.cpusetCpus)
+    envList << new KVPair(key: 'X_cpusetCpus', value: conf.cpusetCpus)
+}
+
+long MBSize = (1024 * 1024) as long
+long mem = conf.memMB * MBSize
 hostConfig.withMemory(mem)
 
 envList << new KVPair(key: 'X_memory', value: mem)
