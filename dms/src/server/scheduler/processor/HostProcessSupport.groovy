@@ -97,6 +97,7 @@ class HostProcessSupport {
         String fixPwd = c.conf.envList.find { it.key == 'PWD' }?.value
         int pid = startCmdWithSsh(fixPwd, c.conf.cmd, c.clusterId, c.appId, c.nodeIp, keeper)
         if (c.conf.cpusetCpus) {
+            // may set already
             setProcessCpuset(pid, c.conf.cpusetCpus, c.clusterId, c.nodeIp, keeper)
         }
 
@@ -137,6 +138,7 @@ class HostProcessSupport {
                 [cmd: cmd])
         def pidAlreadyRun = getPidOldR.getInteger('pid')
         if (pidAlreadyRun != null) {
+            keeper.next(JobStepKeeper.Step.startCmd, 'skip start cmd', cmd)
             return pidAlreadyRun
         }
 

@@ -4,6 +4,7 @@ import auth.User
 import com.alibaba.fastjson.JSONObject
 import common.ContainerHelper
 import common.Event
+import common.Utils
 import model.AppDTO
 import model.AppJobDTO
 import model.ImageTplDTO
@@ -80,7 +81,47 @@ h.group('/container/manage') {
             }
         }
 
-        [groupByApp: groupByApp, groupByNodeIp: groupByNodeIp, appCheckOkList: appCheckOkList]
+        Map<String, Map<Integer, List<Double>>> cpusetCpusMapByNodeIp = [:]
+        groupByNodeIp.each { k, v ->
+            Map<Integer, List<Double>> map = [:]
+            cpusetCpusMapByNodeIp[k] = map
+            def nodeInfo = InMemoryAllContainerManager.instance.getNodeInfo(k)
+            for (i in 0..<nodeInfo.cpuNumber()) {
+                List<Double> subList = []
+                map[i] = subList
+            }
+
+            for (x in v) {
+                def appOne = appList.find { it.id == x.appId() }
+                if (!appOne) {
+                    // should never happen
+                    continue
+                }
+
+                def conf = appOne.conf
+                if (conf.cpusetCpus) {
+                    if (!x.labels) {
+                        x.labels = [:]
+                    }
+                    def cpusetCpuList = Utils.cpusetCpusToList(conf.cpusetCpus)
+                    x.labels.cpusetCpus = cpusetCpuList.join(',')
+                    double vCpuNumber = 0
+                    if (conf.cpuShares) {
+                        vCpuNumber = (conf.cpuShares / 1024).round(2).doubleValue()
+                    } else if (conf.cpuFixed) {
+                        vCpuNumber = conf.cpuFixed
+                    }
+                    x.labels.vCpuNumber = vCpuNumber.toString()
+
+                    double avgInPer = (vCpuNumber / cpusetCpuList.size()).round(2).doubleValue()
+                    for (i in cpusetCpuList) {
+                        map[i] << avgInPer
+                    }
+                }
+            }
+        }
+
+        [groupByApp: groupByApp, groupByNodeIp: groupByNodeIp, appCheckOkList: appCheckOkList, cpusetCpusMapByNodeIp: cpusetCpusMapByNodeIp]
     }.get('/bind/list') { req, resp ->
         def id = req.param('id')
         assert id

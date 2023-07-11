@@ -184,15 +184,35 @@ h.group('/app') {
         def one = req.bodyAs(AppDTO)
         assert one.name && one.namespaceId
 
+        def conf = one.conf
         def nodeList = InMemoryAllContainerManager.instance.getHeartBeatOkNodeList(one.clusterId)
-        if (one.conf.containerNumber > nodeList.size() && !one.conf.isLimitNode) {
+        if (conf.containerNumber > nodeList.size() && !conf.isLimitNode) {
             resp.halt(500, 'container number <= available node size - ' + nodeList.size())
         }
-        if (one.conf.targetNodeIpList && one.conf.containerNumber > one.conf.targetNodeIpList.size() && !one.conf.isLimitNode) {
-            resp.halt(500, 'container number <= target node ip list size - ' + one.conf.targetNodeIpList.size())
+        if (conf.targetNodeIpList && conf.containerNumber > conf.targetNodeIpList.size() && !conf.isLimitNode) {
+            resp.halt(500, 'container number <= target node ip list size - ' + conf.targetNodeIpList.size())
         }
-        if (one.conf.isRunningUnbox && !one.conf.deployFileIdList) {
+        if (conf.isRunningUnbox && !conf.deployFileIdList) {
             resp.halt(500, 'run as a process must choose deploy files')
+        }
+
+        if (conf.cpusetCpus) {
+            def targetNodeIpList = conf.targetNodeIpList
+            if (!targetNodeIpList) {
+                resp.halt(500, 'must choose target node ip list if set cpuset cpus')
+            }
+
+            def cpusetCpuList = Utils.cpusetCpusToList(conf.cpusetCpus)
+            for (nodeIp in targetNodeIpList) {
+                def nodeInfo = InMemoryAllContainerManager.instance.getNodeInfo(nodeIp)
+                if (!nodeInfo) {
+                    resp.halt(500, 'node ip not found - ' + nodeIp)
+                }
+                def allNodeCpuList = 0..<nodeInfo.cpuNumber()
+                if (cpusetCpuList.any { !allNodeCpuList.contains(it) }) {
+                    resp.halt(500, 'cpuset cpus must be in node cpu list - ' + nodeIp)
+                }
+            }
         }
 
         one.updatedDate = new Date()
@@ -204,7 +224,6 @@ h.group('/app') {
 
             def oldOne = new AppDTO(id: one.id).one()
             def oldConf = oldOne.conf
-            def conf = one.conf
 
             def isNeedScroll = conf != oldConf
             if (isNeedScroll) {

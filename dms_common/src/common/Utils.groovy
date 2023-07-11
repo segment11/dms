@@ -91,4 +91,19 @@ class Utils {
         IOUtils.copy(is, sw, Charset.defaultCharset())
         sw.toString()
     }
+
+    static List<Integer> cpusetCpusToList(String cpusetCpus) {
+        List<Integer> list = []
+        for (s in cpusetCpus.split(/,/)) {
+            if (s.contains('-')) {
+                def arr = s.split(/-/)
+                for (str in arr) {
+                    list << (str as int)
+                }
+            } else {
+                list << (s as int)
+            }
+        }
+        list
+    }
 }

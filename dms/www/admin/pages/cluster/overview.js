@@ -72,6 +72,23 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         $http.get('/dms/container/manage/list', {params: {clusterId: $scope.tmp.clusterId}}).success(function (data) {
             $scope.groupByApp = groupByToList(data.groupByApp);
             $scope.groupByNodeIp = groupByToList(data.groupByNodeIp);
+            var cpusetCpusMapByNodeIp = data.cpusetCpusMapByNodeIp;
+            _.each($scope.groupByNodeIp, function (it) {
+                var nodeIp = it.key;
+                var cpusetCpus = cpusetCpusMapByNodeIp[nodeIp];
+                var clist = [];
+                for (_vcore in cpusetCpus) {
+                    var usedList = cpusetCpus[_vcore];
+                    var sum = _.reduce(usedList, function (memo, it) {
+                        return memo + it;
+                    }, 0);
+                    if (sum > 0) {
+                        clist.push({vcore: _vcore, used: sum});
+                    }
+                }
+                it.clist = clist;
+            });
+
             var appCheckOkList = data.appCheckOkList;
 
             $scope.appChartData = [{

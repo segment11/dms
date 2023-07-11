@@ -178,6 +178,9 @@
                             <tr ng-repeat="one in groupByNodeIp">
                                 <td>
                                     <span class="bg-tips">{{one.key}}</span>
+                                    <ul style="text-align: center;" ng-if="one.clist">
+                                        <li ng-repeat="x in one.clist">Cpu Index: {{x.vcore}}, Cost: {{x.used}}</li>
+                                    </ul>
                                 </td>
                                 <td>
                                     <table class="table table-bordered table-striped">
@@ -191,6 +194,9 @@
                                             <td>
                                                 <span class="bg-info">{{x.appName}}</span>
                                                 <p style="text-align: center;">{{x.appDes}}</p>
+                                                <p style="text-align: center;" ng-if="x.labels.cpusetCpus">
+                                                    Cpu Affinity: {{x.labels.cpusetCpus}} Cost:
+                                                    {{x.labels.vCpuNumber}}</p>
                                             </td>
                                             <td>
                                                 <p class="shell">{{x.command}}</p>
