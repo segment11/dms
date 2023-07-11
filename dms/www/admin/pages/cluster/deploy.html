@@ -91,7 +91,7 @@
                                 <td><span class="bg-info">{{one.destPath}}</span></td>
                                 <td><span class="bg-success">{{one.fileLen | kb}}</span></td>
                                 <td><span
-                                        ng-class="{'bg-danger': one.isOverwrite, 'bg-tips': !one.isOverwrite}">{{one.isOverwrite}}</span>
+                                        ng-class="{'bg-danger': one.isOverwrite, 'bg-tips': !one.isOverwrite}">{{one.isOverwrite ? 'true' : 'false'}}</span>
                                 </td>
                                 <td><p class="shell">{{one.initCmd}}</p></td>
                                 <td>
@@ -184,13 +184,13 @@
             <tr>
                 <td>Local Path</td>
                 <td>
-                    <input type="text" ng-model="editOneDeployFile.localPath" ui-valid="r dir"/>
+                    <input type="text" ng-model="editOneDeployFile.localPath" ui-valid="r dir" style="width: 300px;"/>
                 </td>
             </tr>
             <tr>
                 <td>Destination Path</td>
                 <td>
-                    <input type="text" ng-model="editOneDeployFile.destPath" ui-valid="r dir"/>
+                    <input type="text" ng-model="editOneDeployFile.destPath" ui-valid="r dir" style="width: 300px;"/>
                 </td>
             </tr>
             <tr>
