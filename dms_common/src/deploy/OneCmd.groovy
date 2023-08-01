@@ -8,11 +8,17 @@ import groovy.util.logging.Slf4j
 class OneCmd {
     String cmd
 
+    OneCmd lastOneCmd
+
+    Closure<String> dependOnEndMatchKeyword
+
     long waitMsOnce = 200
 
     int maxWaitTimes = 5
 
     String result
+
+    String endMatchKeyword
 
     Integer status = -1
 
@@ -62,6 +68,13 @@ class OneCmd {
     }
 
     void execInShell(OutputStream os, InputStream is) {
+        if (dependOnEndMatchKeyword && lastOneCmd) {
+            cmd = dependOnEndMatchKeyword.call(lastOneCmd.endMatchKeyword)
+        }
+        if (cmd == null) {
+            return
+        }
+
         long beginT = System.currentTimeMillis()
         if (showCmdLog) {
             log.info '<- ' + cmd + ' timeout: ' + maxWaitTimes * waitMsOnce + 'ms'
@@ -87,6 +100,7 @@ class OneCmd {
             result = readResult
             boolean isEnd = checker.isEnd(readResult)
             if (isEnd) {
+                endMatchKeyword = checker.endMatchKeyword
                 status = checker.ok() ? 0 : -1
                 costT = System.currentTimeMillis() - beginT
                 break
@@ -108,6 +122,8 @@ class OneCmd {
         String[] keyword
         String[] failKeyword
 
+        String endMatchKeyword
+
         // for json
         ContainsChecker() {
 
@@ -125,17 +141,19 @@ class OneCmd {
         private boolean flag = false
 
         boolean isEnd(String result) {
-            if (keyword.contains('*')) {
-                flag = true
-                return true
-            }
-
             if (!result) {
                 return false
             }
             for (k in keyword) {
+                if (k == '*') {
+                    flag = true
+                    endMatchKeyword = k
+                    return true
+                }
+
                 if (result.contains(k)) {
                     flag = true
+                    endMatchKeyword = k
                     return true
                 }
             }

@@ -22,20 +22,14 @@ class InitAgentEnvSupport {
     InitAgentEnvSupport(RemoteInfo info) {
         this.info = info
         this.userHomeDir = info.user == 'root' ? '/root' : '/home/' + info.user
-        this.dockerTarFile = userHomeDir + '/docker.tar'
-        this.jdkTarFile = userHomeDir + '/jdk17.tar.gz'
         this.agentTarFile = userHomeDir + '/agentV2.tar.gz'
     }
 
     String userHomeDir
 
-    String dockerTarFile
-
-    String jdkTarFile
-
     String agentTarFile
 
-    String initRootPass = 'Test1234'
+    String initRootPass = 'PaicDMS'
 
     private LimitQueue<String> steps = new LimitQueue<>(1000)
 
@@ -49,11 +43,19 @@ class InitAgentEnvSupport {
     }
 
     boolean resetRootPassword() {
+        def passwordTips = Conf.instance.getString('sudo.shell.new.password.input.tips', 'New Password:')
+        def passwordRetryTips = Conf.instance.getString('sudo.shell.retry.password.input.tips', 'Retype')
+
         List<OneCmd> commandList = [
                 new OneCmd(cmd: 'pwd', checker: OneCmd.keyword(info.user + '@')),
-                new OneCmd(cmd: 'sudo passwd root', checker: OneCmd.keyword('New password:')),
-                new OneCmd(cmd: initRootPass, checker: OneCmd.keyword('Retype'), showCmdLog: false),
-                new OneCmd(cmd: initRootPass, checker: OneCmd.any(), showCmdLog: false)
+                new OneCmd(cmd: 'sudo passwd root', checker: OneCmd.keyword('[sudo]', passwordTips)),
+                new OneCmd(cmd: initRootPass, checker: OneCmd.keyword(passwordRetryTips), showCmdLog: false, dependOnEndMatchKeyword: { String endMatchKeyword ->
+                    endMatchKeyword == '[sudo]' ? info.password : initRootPass
+                }),
+                new OneCmd(cmd: initRootPass, checker: OneCmd.keyword(info.user + '@', '*'), showCmdLog: false),
+                new OneCmd(cmd: initRootPass, checker: OneCmd.any(), showCmdLog: false, dependOnEndMatchKeyword: { String endMatchKeyword ->
+                    endMatchKeyword == (info.user + '@') ? null : initRootPass
+                })
         ]
 
         def deploy = DeploySupport.instance
@@ -160,72 +162,6 @@ class InitAgentEnvSupport {
         }
     }
 
-    boolean initDockerDaemon() {
-        if (!info.rootPass) {
-            throw new DeployException('root password need init - ' + info.host)
-        }
-
-        def deploy = DeploySupport.instance
-
-        List<OneCmd> commandList = cmdAsRoot new OneCmd(cmd: 'docker ps',
-                checker: OneCmd.keyword('CONTAINER ID').failKeyword('Cannot connect', 'command not'))
-
-        deploy.exec(info, commandList, 20, true)
-        if (commandList.every { it.ok() }) {
-            log.info 'skip init docker engine'
-            addStep('skip init docker engine', 'already done')
-            return true
-        }
-
-        String destDockerDir = dockerTarFile.replace('.tar', '')
-        def engineInstallCmd = "apt install -y ${destDockerDir}/docker-ce_20.10.21_3-0_debian-bullseye_amd64.deb".toString()
-
-        List<OneCmd> finalCommandList = cmdAsRoot new OneCmd(cmd: engineInstallCmd, maxWaitTimes: 300,
-                checker: OneCmd.keyword(' 0 newly installed', 'Processing triggers', ':' + userHomeDir)
-                        .failKeyword('Permission', 'broken packages')),
-                new OneCmd(cmd: 'systemctl enable docker.service', checker: OneCmd.any())
-
-        deploy.exec(info, finalCommandList, 300, true)
-        addStep('init docker engine', '', finalCommandList[-1])
-        finalCommandList.every { it.ok() }
-    }
-
-    boolean initDockerClient() {
-        if (!info.rootPass) {
-            throw new DeployException('root password need init - ' + info.host)
-        }
-
-        def deploy = DeploySupport.instance
-        def one = OneCmd.simple('docker -v')
-        deploy.exec(info, one)
-        if (one.result?.contains('Docker version')) {
-            log.info 'skip init docker client'
-            addStep('skip init docker client', 'already done')
-            return true
-        }
-
-        String destDockerDir = dockerTarFile.replace('.tar', '')
-        def containerdInstallCmd = "apt install -y ${destDockerDir}/containerd.io_1.6.10-1_amd64.deb".toString()
-        def clientInstallCmd = "apt install -y ${destDockerDir}/docker-ce-cli_20.10.21_3-0_debian-bullseye_amd64.deb".toString()
-
-        // 200ms once 600 times -> 120s -> 2m
-        List<OneCmd> commandList = cmdAsRoot new OneCmd(cmd: 'chmod -R 777 ' + destDockerDir, checker: OneCmd.any()),
-                new OneCmd(cmd: 'apt update', checker: OneCmd.keyword('apt list --upgradable', ':' + userHomeDir)),
-                new OneCmd(cmd: containerdInstallCmd, maxWaitTimes: 300,
-                        checker: OneCmd.keyword(' 0 newly installed', 'Processing triggers', ':' + userHomeDir)
-                                .failKeyword('Permission', 'broken packages')),
-                new OneCmd(cmd: clientInstallCmd, maxWaitTimes: 600,
-                        checker: OneCmd.keyword(' 0 newly installed', 'Processing triggers', ':' + userHomeDir)
-                                .failKeyword('Permission', 'broken packages'))
-
-        def isExecOk = deploy.exec(info, commandList, 1200, true)
-        if (!isExecOk) {
-            return false
-        }
-        addStep('init docker client', '', commandList[-1])
-        commandList.every { it.ok() }
-    }
-
     boolean pullDockerImageList(List<String> imageList) {
         if (!info.rootPass) {
             throw new DeployException('root password need init - ' + info.host)
@@ -321,7 +257,7 @@ class InitAgentEnvSupport {
         String destAgentDir = agentTarFile.replace('.tar.gz', '')
 
         String javaCmd = Conf.instance.getString('agent.java.cmd',
-                '../jdk17/zulu17/bin/java -Xms128m -Xmx256m')
+                'java -Xms128m -Xmx256m')
         String startCommand = "nohup ${javaCmd} ".toString() +
                 "-Djava.library.path=. -cp . -jar dms_agent-1.2.jar > dmc.log 2>&1 &"
         List<OneCmd> commandList = cmdAsRoot new OneCmd(cmd: 'cd ' + destAgentDir, checker: OneCmd.keyword('agentV2')),
@@ -332,21 +268,7 @@ class InitAgentEnvSupport {
         commandList.every { it.ok() }
     }
 
-    boolean initOtherNode() {
-        if (!copyFileIfNotExists(dockerTarFile)) {
-            return false
-        }
-        if (!initDockerClient()) {
-            return false
-        }
-        if (!initDockerDaemon()) {
-            return false
-        }
-
-        if (!copyFileIfNotExists(jdkTarFile)) {
-            return false
-        }
-
+    boolean initNodeAgent() {
         def agentTarFilePath = Conf.instance.projectPath('/dms_agent/agentV2.tar.gz')
         if (!copyFileIfNotExists(agentTarFilePath, true, false, agentTarFile)) {
             return false
