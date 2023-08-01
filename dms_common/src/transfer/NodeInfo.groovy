@@ -57,6 +57,14 @@ class NodeInfo {
         double user
         double sys
         double idle
+
+        double usedPercent() {
+            def sum = user + sys + idle
+            if (sum == 0) {
+                return 0
+            }
+            ((user + sys) / sum).round(4)
+        }
     }
 
     @CompileStatic
