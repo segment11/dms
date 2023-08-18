@@ -9,7 +9,7 @@ def h = ChainHandler.instance
 
 h.before('/plugin/**') { req, resp ->
     User u = req.session('user') as User
-    if (!u.isAdmin()) {
+    if (!u?.isAdmin()) {
         resp.halt(403, 'not a admin')
     }
 }
@@ -54,5 +54,25 @@ h.group('/plugin') {
             pluginList.remove(one)
         }
         [flag: true]
+    }.get('/menu/list') { req, resp ->
+        List<HashMap> menus = []
+        PluginManager.instance.pluginList.each { plugin ->
+            def menusThisPlugin = plugin.menus()
+            if (!menusThisPlugin) {
+                return
+            }
+
+            for (menu in menusThisPlugin) {
+                def map = [:]
+                map.title = menu.title
+                map.icon = menu.icon
+                map.page = menu.module + '_' + menu.page
+                map.list = menu.children?.collect {
+                    [title: it.title, icon: it.icon, page: it.module + '_' + it.page]
+                }
+                menus << map
+            }
+        }
+        [menus: menus]
     }
 }

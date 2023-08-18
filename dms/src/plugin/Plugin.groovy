@@ -2,6 +2,7 @@ package plugin
 
 import groovy.transform.CompileStatic
 import model.AppDTO
+import plugin.model.Menu
 
 @CompileStatic
 interface Plugin {
@@ -27,5 +28,7 @@ interface Plugin {
     Date loadTime()
 
     AppDTO demoApp(AppDTO app)
+
+    List<Menu> menus()
 
 }

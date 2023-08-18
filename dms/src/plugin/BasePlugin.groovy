@@ -1,10 +1,14 @@
 package plugin
 
+import com.segment.common.Conf
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.*
 import model.json.AppConf
+import org.apache.commons.io.FileUtils
 import org.segment.d.D
+import org.segment.web.common.CachedGroovyClassLoader
+import plugin.model.Menu
 
 @CompileStatic
 @Slf4j
@@ -114,6 +118,75 @@ abstract class BasePlugin implements Plugin {
         if (!one) {
             new ImageRegistryDTO(name: registryUrl, url: registryUrl).add()
         }
+
+        initWww()
+        initCtrl()
+    }
+
+    protected void initWww() {
+        def pluginResourceDirPath = PluginManager.pluginsResourceDirPath() + '/' + name()
+        def wwwPagesDir = new File(pluginResourceDirPath + '/www/pages')
+        if (wwwPagesDir.exists()) {
+            def wwwDir = new File(Conf.instance.projectPath('/www/admin/pages'))
+            wwwPagesDir.listFiles().each { f ->
+                FileUtils.copyDirectory(f, new File(wwwDir, f.name))
+                log.info 'copy www page dir - {}', f.name
+            }
+        }
+    }
+
+    protected void initCtrl() {
+        def ctrlPluginDir = new File(PluginManager.pluginsDirPath() + '/ctrl/' + name())
+        if (!ctrlPluginDir.exists() || !ctrlPluginDir.isDirectory()) {
+            return
+        }
+
+        def isServerRuntimeJar = Conf.instance.isOn('server.runtime.jar')
+        if (!isServerRuntimeJar) {
+            def ctrlDestDir = new File(Conf.instance.projectPath('/src/ctrl/' + name()))
+            if (!ctrlDestDir.exists()) {
+                ctrlDestDir.mkdir()
+            }
+
+            // need rename to avoid compile conflict in dev mode
+            ctrlPluginDir.listFiles().each { f ->
+                // only one level dir
+                if (f.isDirectory()) {
+                    return
+                }
+
+                FileUtils.copyFile(f, new File(ctrlDestDir, 'Copy' + f.name))
+            }
+            return
+        }
+
+        ctrlPluginDir.listFiles().each { f ->
+            if (f.isDirectory()) {
+                f.eachFileRecurse { ff ->
+                    if (ff.name.endsWith(CachedGroovyClassLoader.GROOVY_FILE_EXT)) {
+                        evalCtrl(ff)
+                    }
+                }
+            } else {
+                if (f.name.endsWith(CachedGroovyClassLoader.GROOVY_FILE_EXT)) {
+                    evalCtrl(f)
+                }
+            }
+        }
+    }
+
+    protected void evalCtrl(File f) {
+        try {
+            def clz = CachedGroovyClassLoader.instance.gcl.parseClass(f)
+            def script = clz.getDeclaredConstructor().newInstance()
+            if (script instanceof Script) {
+                script.run()
+            } else {
+                log.warn 'ctrl plugin file must be a groovy script - {}', f.name
+            }
+        } catch (Exception e) {
+            log.error 'eval ctrl plugin file error - {}', f.name, e
+        }
     }
 
     @Override
@@ -176,5 +249,10 @@ abstract class BasePlugin implements Plugin {
     @Override
     AppDTO demoApp(AppDTO app) {
         app
+    }
+
+    @Override
+    List<Menu> menus() {
+        return null
     }
 }

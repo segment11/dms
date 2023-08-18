@@ -1,4 +1,4 @@
-package ctrl
+package ctrl.traefik
 
 import auth.User
 import model.GwClusterDTO
@@ -13,6 +13,10 @@ import server.gateway.GatewayOperator
 import transfer.ContainerInfo
 
 def h = ChainHandler.instance
+
+// use model.traefik directly
+
+model.traefik.JustTest.hi('test')
 
 h.group('/gw/cluster') {
     h.get('/list') { req, resp ->

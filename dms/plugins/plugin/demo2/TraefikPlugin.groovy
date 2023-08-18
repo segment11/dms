@@ -7,6 +7,7 @@ import model.ImageTplDTO
 import model.json.*
 import plugin.BasePlugin
 import plugin.PluginManager
+import plugin.model.Menu
 
 @CompileStatic
 @Slf4j
@@ -101,5 +102,17 @@ class TraefikPlugin extends BasePlugin {
         conf.dependAppIdList << new AppDTO(name: 'zookeeper').queryFields('id').one().id
 
         app
+    }
+
+    @Override
+    List<Menu> menus() {
+        List<Menu> menus = []
+
+        menus << new Menu(title: 'Traefik', icon: 'icon-cloud', children: [
+                new Menu(title: 'Overview', module: 'gateway', page: 'overview', icon: 'icon-dashboard'),
+                new Menu(title: 'List', module: 'gateway', page: 'cluster', icon: 'icon-list')
+        ])
+
+        menus
     }
 }

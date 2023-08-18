@@ -87,12 +87,6 @@ $(function () {
             ]
         },
         {
-            title: 'Gateway', icon: 'icon-cloud', list: [
-                {title: 'Overview', page: 'gateway_overview', icon: 'icon-dashboard'},
-                {title: 'Traefik Cluster List', page: 'gateway_cluster', icon: 'icon-list'}
-            ]
-        },
-        {
             title: 'Agent Script', icon: 'icon-code', list: [
                 {title: 'Script List', page: 'script_list', icon: 'icon-code'},
                 {title: 'Agent Visit History', page: 'script_pull-log', icon: 'icon-time'}
@@ -104,6 +98,18 @@ $(function () {
             ]
         }
     ];
+
+    $.ajax({
+        url: '/dms/plugin/menu/list',
+        async: false,
+        success: function (data) {
+            if(data.menus) {
+                _.each(data.menus, function (menu) {
+                    menus.push(menu);
+                });
+            }
+        }
+    });
 
     var sidebarMenu = Consts.format($('#menu-tpl').html(), {list: menus});
     $('#sidebar').html(sidebarMenu);
