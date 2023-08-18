@@ -97,8 +97,14 @@ class Utils {
         for (s in cpusetCpus.split(/,/)) {
             if (s.contains('-')) {
                 def arr = s.split(/-/)
-                for (str in arr) {
-                    list << (str as int)
+                if (arr.length == 2) {
+                    for (i in (arr[0] as int)..(arr[1] as int)) {
+                        list << i
+                    }
+                } else {
+                    for (str in arr) {
+                        list << (str as int)
+                    }
                 }
             } else {
                 list << (s as int)

@@ -135,7 +135,7 @@
                     <div class="tabs active">
                         <table class="table table-bordered table-striped">
                             <tr ng-repeat="one in groupByApp">
-                                <td width="15%">
+                                <td width="20%">
                                     <span class="bg-tips">{{one.appName}}</span>
                                     <span class="bg-info">Instances: {{one.list.length}}</span>
                                     <span class="bg-info">Image: {{one.list[0].image | shortViewSuffix}}</span>
@@ -176,10 +176,35 @@
                     <div class="tabs">
                         <table class="table table-bordered table-striped">
                             <tr ng-repeat="one in groupByNodeIp">
-                                <td>
+                                <td width="20%">
                                     <span class="bg-tips">{{one.key}}</span>
                                     <ul style="text-align: center;" ng-if="one.clist">
-                                        <li ng-repeat="x in one.clist">Cpu Index: {{x.vcore}}, Cost: {{x.used}}</li>
+                                        <li>
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    Cpu Index
+                                                </div>
+                                                <div class="col-md-4">
+                                                    Required
+                                                </div>
+                                                <div class="col-md-4">
+                                                    Used
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li ng-repeat="x in one.clist">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    {{x.vcore}}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    {{x.required}}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    {{x.usedPercent}}
+                                                </div>
+                                            </div>
+                                        </li>
                                     </ul>
                                 </td>
                                 <td>

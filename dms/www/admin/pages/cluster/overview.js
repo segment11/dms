@@ -73,18 +73,18 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
             $scope.groupByApp = groupByToList(data.groupByApp);
             $scope.groupByNodeIp = groupByToList(data.groupByNodeIp);
             var cpusetCpusMapByNodeIp = data.cpusetCpusMapByNodeIp;
+            var cpuUsedPercentMapByNodeIp = data.cpuUsedPercentMapByNodeIp;
             _.each($scope.groupByNodeIp, function (it) {
                 var nodeIp = it.key;
                 var cpusetCpus = cpusetCpusMapByNodeIp[nodeIp];
+                var cpuUsedPercentCpus = cpuUsedPercentMapByNodeIp[nodeIp];
                 var clist = [];
                 for (_vcore in cpusetCpus) {
-                    var usedList = cpusetCpus[_vcore];
-                    var sum = _.reduce(usedList, function (memo, it) {
+                    var requiredList = cpusetCpus[_vcore];
+                    var sum = _.reduce(requiredList, function (memo, it) {
                         return memo + it;
                     }, 0);
-                    if (sum > 0) {
-                        clist.push({vcore: _vcore, used: sum});
-                    }
+                    clist.push({vcore: _vcore, required: sum, usedPercent: cpuUsedPercentCpus[_vcore]});
                 }
                 it.clist = clist;
             });

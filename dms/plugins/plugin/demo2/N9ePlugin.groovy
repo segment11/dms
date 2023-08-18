@@ -144,7 +144,7 @@ class N9ePlugin extends BasePlugin {
             ).add()
         }
 
-        addNodeVolumeForUpdate('n9e etc dir', '/data/n9e/etc', '/app/etc_ext')
+//        addNodeVolumeForUpdate('n9e etc dir', '/data/n9e/etc', '/app/etc_ext')
     }
 
     private static String getParamOneValue(AppConf conf, String key) {
@@ -234,16 +234,16 @@ class N9ePlugin extends BasePlugin {
 
     @Override
     String group() {
-        'flashcatcloud'
+        'key232323'
     }
 
     @Override
     String image() {
-        'nightingale'
+        'n9e'
     }
 
     @Override
     String version() {
-        '5.15.0'
+        'v5'
     }
 }

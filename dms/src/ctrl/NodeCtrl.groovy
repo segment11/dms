@@ -167,7 +167,7 @@ h.group('/node') {
         def proxyNodeIp = clusterOne.globalEnvConf.proxyNodeIp
         def support = new InitAgentEnvSupport(kp)
         if (!proxyNodeIp || proxyNodeIp == kp.ip) {
-            boolean isDone = support.initOtherNode()
+            boolean isDone = support.initNodeAgent()
             return [flag   : isDone,
                     steps  : support.getSteps(),
                     message: 'Please view log for detail']

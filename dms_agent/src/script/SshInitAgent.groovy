@@ -24,5 +24,5 @@ DeploySupport.instance.isAgent = true
 DeployInit.initDeployEventCallback()
 
 def support = new InitAgentEnvSupport(kp)
-def flag = support.initOtherNode()
+def flag = support.initNodeAgent()
 [flag: flag, steps: support.getSteps()]

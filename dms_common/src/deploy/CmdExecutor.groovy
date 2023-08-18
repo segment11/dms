@@ -31,9 +31,12 @@ class CmdExecutor {
 
         try {
             shell.connect()
-            for (one in cmdList) {
-                one.execInShell(pipeOut, pipeIn2)
-                if (!one.ok()) {
+            for (int i = 0; i < cmdList.size(); i++) {
+                def oneCmd = cmdList[i]
+                def lastOneCmd = i == 0 ? null : cmdList[i - 1]
+                oneCmd.lastOneCmd = lastOneCmd
+                oneCmd.execInShell(pipeOut, pipeIn2)
+                if (!oneCmd.ok()) {
                     return false
                 }
             }
