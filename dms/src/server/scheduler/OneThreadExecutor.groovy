@@ -3,7 +3,7 @@ package server.scheduler
 import com.segment.common.job.NamedThreadFactory
 import groovy.transform.CompileStatic
 
-import java.util.concurrent.LinkedTransferQueue
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 
@@ -11,13 +11,6 @@ import java.util.concurrent.TimeUnit
 class OneThreadExecutor extends ThreadPoolExecutor {
     OneThreadExecutor(String threadName) {
         super(1, 1, 0, TimeUnit.MILLISECONDS,
-                new OneSizeExecutorQueue(), new NamedThreadFactory(threadName), new AbortPolicy())
-    }
-}
-
-@CompileStatic
-class OneSizeExecutorQueue extends LinkedTransferQueue<Runnable> {
-    boolean offer(Runnable o) {
-        this.size() == 0 ? super.offer(o) : false
+                new LinkedBlockingQueue(1), new NamedThreadFactory(threadName), new AbortPolicy())
     }
 }
