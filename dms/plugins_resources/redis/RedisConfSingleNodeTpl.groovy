@@ -19,10 +19,8 @@ bind ${nodeIp} -::1
 port ${port + instanceIndex}
 logfile ${dataDir}/instance_${instanceIndex}/redis.log
 dir ${dataDir}/instance_${instanceIndex}
-requirepass ${password}
-
-cluster-enabled yes
-masterauth ${password}
+${password ? 'requirepass ' + password : ''}
+${password ? 'masterauth ' + password : ''}
 
 rdbchecksum yes
 daemonize no

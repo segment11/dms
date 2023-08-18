@@ -28,7 +28,7 @@ redisAppNames.split(',').each { redisAppName ->
 
     list << """
 sentinel monitor ${redisAppName} ${redisFirstNodeIp} ${redisPort} ${nodeIpList.size() >= 3 ? 2 : 1}
-sentinel auth-pass ${redisAppName} ${redisPassword}
+${redisPassword ? 'sentinel auth-pass ' + redisAppName + ' ' + redisPassword : ''}
 sentinel down-after-milliseconds ${redisAppName} ${downAfterMs}
 sentinel failover-timeout ${redisAppName} ${failoverTimeout}
 sentinel parallel-syncs ${redisAppName} 1
@@ -39,8 +39,8 @@ sentinel parallel-syncs ${redisAppName} 1
 bind ${nodeIp} -::1
 protected-mode no
 port ${port + (isSingleNode ? instanceIndex : 0)}
-requirepass ${password}
-sentinel sentinel-pass ${password}
+${password ? 'requirepass ' + password : ''}
+${password ? 'sentinel sentinel-pass ' + password : ''}
 daemonize no
 pidfile /var/run/redis-sentinel.pid
 logfile ""

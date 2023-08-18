@@ -34,7 +34,7 @@ class JedisPoolHolder {
         conf.testOnReturn = true
         conf.testWhileIdle = true
 
-        def one = new JedisPool(conf, host, port, timeoutMills, password)
+        def one = new JedisPool(conf, host, port, timeoutMills, password ?: null)
         log.info 'connected - {}', key
         cached[key] = one
         one
