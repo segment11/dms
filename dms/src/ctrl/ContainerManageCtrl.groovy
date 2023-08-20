@@ -243,7 +243,7 @@ h.group('/container/manage') {
     }
 }
 
-private void checkIfAppJobNotDone(Req req, Resp resp) {
+private static void checkIfAppJobNotDone(Req req, Resp resp) {
     def containerId = req.param('id')
     def appId = InMemoryAllContainerManager.instance.getAppIpByContainerId(containerId)
     if (!appId) {
@@ -256,7 +256,7 @@ private void checkIfAppJobNotDone(Req req, Resp resp) {
     }
 }
 
-private void callAgentScript(Req req, Resp resp, String scriptName) {
+private static void callAgentScript(Req req, Resp resp, String scriptName) {
     def id = req.param('id')
     assert id
     def nodeIp = InMemoryAllContainerManager.instance.getNodeIpByContainerId(id)
@@ -293,7 +293,7 @@ private void callAgentScript(Req req, Resp resp, String scriptName) {
                     ContainerInspectInfo, [id: id])
 
             int privatePort = app.gatewayConf.containerPrivatePort
-            int publicPort
+            int publicPort = privatePort
             if ('host' != r.networkMode && r.ports) {
                 for (port in r.ports) {
                     if (port.privatePort == privatePort) {
@@ -301,8 +301,6 @@ private void callAgentScript(Req req, Resp resp, String scriptName) {
                         break
                     }
                 }
-            } else {
-                publicPort = privatePort
             }
 
             GatewayOperator.create(appId, app.gatewayConf).removeBackend(nodeIp, publicPort)
