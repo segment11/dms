@@ -92,7 +92,7 @@ h.group('/app') {
             def clusterId = req.param('clusterId')
             assert clusterId
             def image = req.param('image')
-            new NodeVolumeDTO(clusterId: clusterId as int).where(!!image,
+            new NodeVolumeDTO(clusterId: clusterId as int).where(image as boolean,
                     'image_name = ? or image_name is null or image_name = ?', image, '').
                     queryFields('id,dir,name').list()
         }
@@ -108,9 +108,9 @@ h.group('/app') {
         final int pageSize = 10
 
         def keyword = req.param('keyword')
-        def pager = new AppDTO().noWhere().where(!!clusterId && !namespaceId, 'cluster_id = ?', clusterId).
-                where(!!namespaceId, 'namespace_id = ?', namespaceId).
-                where(!!keyword, '(name like ?) or (des like ?)',
+        def pager = new AppDTO().noWhere().where((clusterId as boolean) && !namespaceId, 'cluster_id = ?', clusterId).
+                where(namespaceId as boolean, 'namespace_id = ?', namespaceId).
+                where(keyword as boolean, '(name like ?) or (des like ?)',
                         '%' + keyword + '%', '%' + keyword + '%').listPager(pageNum, pageSize)
 
         def guardian = Guardian.instance
@@ -128,11 +128,7 @@ h.group('/app') {
 
             if (isConfLiveCheck) {
                 def containerList = instance.getContainerList(clusterId ? clusterId as int : 0, dto.id)
-                if (containerList && containerList.any { x -> !x.checkOk() }) {
-                    map.isLiveCheckOk = false
-                } else {
-                    map.isLiveCheckOk = true
-                }
+                map.isLiveCheckOk = !(containerList && containerList.any { x -> !x.checkOk() })
             } else {
                 map.isLiveCheckOk = true
             }

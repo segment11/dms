@@ -95,9 +95,10 @@ h.group('/permit') {
         def keyword = req.param('keyword')
         def permitType = req.param('permitType')
         def resourceId = req.param('resourceId')
-        Pager<UserPermitDTO> pager = new UserPermitDTO().noWhere().where(!!keyword, 'user like ?',
-                '%' + keyword + '%').where(!!permitType, 'permit_type=?', permitType).
-                where(!!resourceId, 'resource_id=?', resourceId as Integer).listPager(pageNum, pageSize)
+        Pager<UserPermitDTO> pager = new UserPermitDTO().noWhere().
+                where(keyword as boolean, 'user like ?', '%' + keyword + '%').
+                where(permitType as boolean, 'permit_type=?', permitType).
+                where(resourceId as boolean, 'resource_id=?', resourceId as Integer).listPager(pageNum, pageSize)
         if (pager.list) {
             def clusterList = new ClusterDTO().noWhere().queryFields('id,name').list()
             def namespaceList = new NamespaceDTO().noWhere().queryFields('id,name').list()

@@ -32,7 +32,7 @@ class GatewayOperator {
         this.conf = conf
     }
 
-    private static ConcurrentHashMap<Integer, GatewayOperator> cached = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<Integer, GatewayOperator> cached = new ConcurrentHashMap<>()
 
     static GatewayOperator create(Integer appId, GatewayConf conf) {
         def x = cached[appId]
@@ -153,7 +153,7 @@ class GatewayOperator {
         def frontend = new GwFrontendDTO(id: conf.frontendId).one()
         def backend = frontend.backend
 
-        boolean needUpdate
+        boolean needUpdate = false
         if (isAdd) {
             def one = backend.serverList.find { it.url == serverUrl }
             if (one) {
@@ -162,7 +162,7 @@ class GatewayOperator {
                     needUpdate = true
                 }
             } else {
-                backend.serverList.add(new GwBackendServer(url: serverUrl, weight: weight))
+                backend.serverList << new GwBackendServer(url: serverUrl, weight: weight)
                 needUpdate = true
             }
         } else {

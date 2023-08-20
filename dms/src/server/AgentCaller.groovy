@@ -101,17 +101,17 @@ class AgentCaller {
         }
     }
 
-    public <T> T get(int clusterId, String nodeIp, String uri, Map params = null, Class<T> clz = String,
+    <T> T get(int clusterId, String nodeIp, String uri, Map params = null, Class<T> clz = String,
                      Closure<Void> failCallback = null) {
         httpRequest(clusterId, nodeIp, uri, params, clz, failCallback)
     }
 
-    public <T> T post(int clusterId, String nodeIp, String uri, Map params = null, Class<T> clz = String,
+    <T> T post(int clusterId, String nodeIp, String uri, Map params = null, Class<T> clz = String,
                       Closure failCallback = null) {
         httpRequest(clusterId, nodeIp, uri, params, clz, failCallback, true)
     }
 
-    public <T> T agentScriptExeAs(int clusterId, String nodeIp, String scriptName, Class<T> clz, Map params = null,
+    <T> T agentScriptExeAs(int clusterId, String nodeIp, String scriptName, Class<T> clz, Map params = null,
                                   Closure failCallback = null) {
         Map p = params ?: [:]
         p.scriptName = scriptName

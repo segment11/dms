@@ -58,7 +58,7 @@ loader.init(Guardian.instance.class.classLoader, srcDirPath + ':' + resourceDirP
 ChainHandler.instance.context('/dms')
 
 // DB
-def ds = new DefaultLocalH2DataSourceCreator().create()
+def ds = DefaultLocalH2DataSourceCreator.create()
 def d = new D(ds, new MySQLDialect())
 
 boolean isPG = c.getString('db.driver', '').contains('postgre')

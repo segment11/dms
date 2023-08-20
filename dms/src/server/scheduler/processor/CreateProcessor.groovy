@@ -243,7 +243,7 @@ class CreateProcessor implements GuardianProcessor {
             def r = AgentCaller.instance.agentScriptExeAs(app.clusterId, nodeIp,
                     'container inspect', ContainerInspectInfo, p)
             def state = r.state.status
-            JSONObject stopR
+            JSONObject stopR = null
             if ('created' == state || 'running' == state) {
                 p.isRemoveAfterStop = '1'
                 p.readTimeout = 30 * 1000
@@ -307,7 +307,7 @@ class CreateProcessor implements GuardianProcessor {
         createContainerConf
     }
 
-    boolean beforeCheck(CreateContainerConf c, JobStepKeeper keeper) {
+    private static boolean beforeCheck(CreateContainerConf c, JobStepKeeper keeper) {
         String imageName = c.conf.group + '/' + c.conf.image
 
         def checkerList = CheckerHolder.instance.checkerList.findAll { it.imageName() == imageName }
@@ -337,7 +337,7 @@ class CreateProcessor implements GuardianProcessor {
         }
     }
 
-    boolean afterCheck(CreateContainerConf c, JobStepKeeper keeper) {
+    private static boolean afterCheck(CreateContainerConf c, JobStepKeeper keeper) {
         String imageName = c.conf.group + '/' + c.conf.image
 
         def checkerList = CheckerHolder.instance.checkerList.findAll { it.imageName() == imageName }
@@ -368,7 +368,7 @@ class CreateProcessor implements GuardianProcessor {
         }
     }
 
-    boolean initCheck(CreateContainerConf c, JobStepKeeper keeper, String containerId) {
+    private static boolean initCheck(CreateContainerConf c, JobStepKeeper keeper, String containerId) {
         String imageName = c.conf.group + '/' + c.conf.image
 
         def checkerList = CheckerHolder.instance.checkerList.findAll { it.imageName() == imageName }
@@ -471,10 +471,20 @@ class CreateProcessor implements GuardianProcessor {
         // node volume conflict check
         def cluster = new ClusterDTO(id: app.clusterId).one()
         def appList = new AppDTO(clusterId: app.clusterId).queryFields('id,conf').list()
-        List<String> skipVolumeDirSet = cluster.globalEnvConf?.skipConflictCheckVolumeDirList.collect { it.value.toString() } ?: []
-        def otherAppMountVolumeDirList = appList.findAll { it.id != app.id }.collect { one ->
-            one.conf.dirVolumeList.collect { it.dir }.findAll { !(it in skipVolumeDirSet) }
-        }.flatten()
+        List<String> skipVolumeDirSet = cluster.globalEnvConf ?
+                cluster.globalEnvConf.skipConflictCheckVolumeDirList.collect { it.value.toString() } : []
+        Set<String> otherAppMountVolumeDirList = []
+        appList.findAll {
+            it.id != app.id
+        }.each { one ->
+            one.conf.dirVolumeList.collect {
+                it.dir
+            }.findAll {
+                !(it in skipVolumeDirSet)
+            }.each {
+                otherAppMountVolumeDirList << it
+            }
+        }
         def thisAppMountVolumeDirList = confCopy.dirVolumeList.collect { it.dir }.findAll { !(it in skipVolumeDirSet) }
         if (thisAppMountVolumeDirList.any { it in otherAppMountVolumeDirList }) {
             throw new JobProcessException('node volume conflict check fail - ' + nodeIp + ' - ' + thisAppMountVolumeDirList)
@@ -528,9 +538,9 @@ class CreateProcessor implements GuardianProcessor {
         result
     }
 
-    private ContainerRunResult startOneProcess(AppDTO app, int jobId, int instanceIndex,
-                                               List<String> nodeIpList, String nodeIp,
-                                               AppConf confCopy, JobStepKeeper passedKeeper) {
+    private static ContainerRunResult startOneProcess(AppDTO app, int jobId, int instanceIndex,
+                                                      List<String> nodeIpList, String nodeIp,
+                                                      AppConf confCopy, JobStepKeeper passedKeeper) {
         def imageWithTag = confCopy.group + '/' + confCopy.image + ':' + confCopy.tag
         def createContainerConf = prepareCreateContainerConf(confCopy, app, instanceIndex, nodeIp, nodeIpList, imageWithTag)
         log.info createContainerConf.toString()

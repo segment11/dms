@@ -7,6 +7,7 @@ import com.orbitz.consul.NotRegisteredException
 import com.orbitz.consul.model.agent.FullService
 import com.orbitz.consul.model.agent.ImmutableRegistration
 import com.orbitz.consul.option.QueryOptions
+import com.segment.common.Conf
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AppDTO
@@ -21,9 +22,6 @@ import transfer.ContainerInfo
 @Slf4j
 class DnsOperator {
     static final List<String> tags = ['dms']
-
-    // default dns ttl 5 minutes
-    static final int defaultTtl = 300
 
     private AgentClient agentClient
 
@@ -66,7 +64,7 @@ class DnsOperator {
             if (serviceOld && serviceOld.address == address) {
                 return true
             }
-        } catch (NotRegisteredException e) {
+        } catch (NotRegisteredException ignored) {
             // ignore
         }
         false
@@ -88,8 +86,10 @@ class DnsOperator {
             return
         }
 
-//        def cluster = InMemoryCacheSupport.instance.oneCluster(app.clusterId)
-//        def dnsTtl = cluster.globalEnvConf.dnsTtl ?: defaultTtl
+        // default 10min
+        def defaultTtl = Conf.instance.getInt('default.ttl', 600)
+        def cluster = InMemoryCacheSupport.instance.oneCluster(app.clusterId)
+        def dnsTtl = cluster.globalEnvConf.dnsTtl ?: defaultTtl
 
         def service = ImmutableRegistration.builder()
                 .id(full + '_host')

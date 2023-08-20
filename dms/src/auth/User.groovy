@@ -7,12 +7,9 @@ import model.NamespaceDTO
 @CompileStatic
 class User {
     public static final Permit PermitAdmin = new Permit(PermitType.admin)
-    public static final Permit PermitImageManager = new Permit(PermitType.imageManager)
     public static final User Admin = new User(permitList: [PermitAdmin])
 
     String name
-
-    String introduction
 
     Date lastLoginTime = new Date()
 

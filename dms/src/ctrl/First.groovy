@@ -1,3 +1,5 @@
+package ctrl
+
 import com.segment.common.Utils
 import com.segment.common.job.leader.LeaderFlagHolder
 import org.segment.web.handler.ChainHandler
@@ -29,6 +31,5 @@ h.exceptionHandler { req, resp, t ->
     // for haproxy proxy dms server, only proxy leader, others stand by
     // because jobs, dms server is a stateful application
     def isLeader = LeaderFlagHolder.instance.isLeader
-    resp.status = isLeader ? 200 : 400
-    resp.end('leader: ' + isLeader)
+    resp.status(isLeader ? 200 : 400).end('leader: ' + isLeader)
 }

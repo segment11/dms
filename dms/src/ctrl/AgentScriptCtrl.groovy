@@ -5,13 +5,10 @@ import model.AgentScriptDTO
 import model.AgentScriptPullLogDTO
 import model.json.ScriptPullContent
 import org.segment.web.handler.ChainHandler
-import org.slf4j.LoggerFactory
 import server.AgentCaller
 import support.LocalGroovyScriptLoader
 
 def h = ChainHandler.instance
-
-def log = LoggerFactory.getLogger(this.getClass())
 
 h.group('/agent/script') {
     h.get('/pull/log') { req, resp ->
@@ -28,7 +25,7 @@ h.group('/agent/script') {
         final int pageSize = 10
 
         def keyword = req.param('keyword')
-        new AgentScriptDTO().noWhere().where(!!keyword, '(name like ?) or (des like ?)',
+        new AgentScriptDTO().noWhere().where(keyword as boolean, '(name like ?) or (des like ?)',
                 '%' + keyword + '%', '%' + keyword + '%').listPager(pageNum, pageSize)
     }.delete('/delete') { req, resp ->
         User u = req.session('user') as User

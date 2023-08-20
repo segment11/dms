@@ -27,7 +27,7 @@ h.group('/image/config') {
             final int pageSize = 10
 
             def keyword = req.param('keyword')
-            new ImageEnvDTO().noWhere().where(!!keyword, '(image_name like ?) or (name like ?)',
+            new ImageEnvDTO().noWhere().where(keyword as boolean, '(image_name like ?) or (name like ?)',
                     '%' + keyword + '%', '%' + keyword + '%').listPager(pageNum, pageSize)
         }.delete('/delete') { req, resp ->
             def id = req.param('id')
@@ -54,7 +54,7 @@ h.group('/image/config') {
             final int pageSize = 10
 
             def keyword = req.param('keyword')
-            new ImagePortDTO().noWhere().where(!!keyword, '(image_name like ?) or (name like ?)',
+            new ImagePortDTO().noWhere().where(keyword as boolean, '(image_name like ?) or (name like ?)',
                     '%' + keyword + '%', '%' + keyword + '%').listPager(pageNum, pageSize)
         }.delete('/delete') { req, resp ->
             def id = req.param('id')
@@ -81,7 +81,7 @@ h.group('/image/config') {
             final int pageSize = 10
 
             def keyword = req.param('keyword')
-            new ImageTplDTO().noWhere().where(!!keyword, '(image_name like ?) or (name like ?)',
+            new ImageTplDTO().noWhere().where(keyword as boolean, '(image_name like ?) or (name like ?)',
                     '%' + keyword + '%', '%' + keyword + '%').listPager(pageNum, pageSize)
         }.delete('/delete') { req, resp ->
             def id = req.param('id')
@@ -113,7 +113,7 @@ h.group('/image/config') {
 
             def keyword = req.param('keyword')
             new NodeVolumeDTO().where('cluster_id = ?', clusterId).
-                    where(!!keyword, '(image_name like ?) or (name like ?)',
+                    where(keyword as boolean, '(image_name like ?) or (name like ?)',
                             '%' + keyword + '%', '%' + keyword + '%').listPager(pageNum, pageSize)
         }.delete('/delete') { req, resp ->
             def id = req.param('id')

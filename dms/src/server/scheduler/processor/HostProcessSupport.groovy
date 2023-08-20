@@ -122,7 +122,7 @@ class HostProcessSupport {
         pid
     }
 
-    int startCmdWithSsh(String fixPwd, String cmd, int clusterId, int appId, String nodeIp, JobStepKeeper keeper = null) {
+    static int startCmdWithSsh(String fixPwd, String cmd, int clusterId, int appId, String nodeIp, JobStepKeeper keeper = null) {
         // ***
         def kp = new NodeKeyPairDTO(clusterId: clusterId, ip: nodeIp).one()
         if (!kp) {
@@ -175,7 +175,7 @@ class HostProcessSupport {
         // wait process start
         int maxWaitSeconds = Conf.instance.getInt('process.getPid.maxWaitSeconds', 5)
         int count = 0
-        String errorMessage
+        String errorMessage = null
         while (count <= maxWaitSeconds) {
             count++
 
@@ -198,7 +198,7 @@ class HostProcessSupport {
         throw new JobProcessException('start cmd get pid fail - ' + cmd + ' - ' + errorMessage)
     }
 
-    void setProcessCpuset(int pid, String cpusetCpus, int clusterId, String nodeIp, JobStepKeeper keeper = null) {
+    static void setProcessCpuset(int pid, String cpusetCpus, int clusterId, String nodeIp, JobStepKeeper keeper = null) {
         def kp = new NodeKeyPairDTO(clusterId: clusterId, ip: nodeIp).one()
 
         def clusterOne = InMemoryCacheSupport.instance.oneCluster(clusterId)

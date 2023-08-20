@@ -6,7 +6,7 @@ import org.segment.d.Ds
 
 @CompileStatic
 class DefaultLocalH2DataSourceCreator {
-    Ds create() {
+    static Ds create() {
         def c = Conf.instance
 
         Map<String, String> dbParams = [:]

@@ -4,6 +4,7 @@ import com.segment.common.Conf
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AgentScriptDTO
+import org.segment.d.D
 
 @CompileStatic
 @Slf4j
@@ -25,7 +26,7 @@ class LocalGroovyScriptLoader {
             if (f.isDirectory()) {
                 return
             }
-            String scriptName = org.segment.d.D.toUnderline(f.name.split(/\./)[0]).replaceAll('_', ' ')
+            String scriptName = D.toUnderline(f.name.split(/\./)[0]).replaceAll('_', ' ')
             if (scriptNameGiven && scriptNameGiven != scriptName) {
                 return
             }

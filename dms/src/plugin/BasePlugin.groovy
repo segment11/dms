@@ -175,7 +175,7 @@ abstract class BasePlugin implements Plugin {
         }
     }
 
-    protected void evalCtrl(File f) {
+    protected static void evalCtrl(File f) {
         try {
             def clz = CachedGroovyClassLoader.instance.gcl.parseClass(f)
             def script = clz.getDeclaredConstructor().newInstance()

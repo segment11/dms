@@ -4,13 +4,10 @@ import auth.User
 import deploy.InitAgentEnvSupport
 import model.NodeKeyPairDTO
 import org.segment.web.handler.ChainHandler
-import org.slf4j.LoggerFactory
 import server.AgentCaller
 import server.InMemoryCacheSupport
 
 def h = ChainHandler.instance
-
-def log = LoggerFactory.getLogger(this.getClass())
 
 h.post('/agent/image/init/load') { req, resp ->
     User u = req.session('user') as User

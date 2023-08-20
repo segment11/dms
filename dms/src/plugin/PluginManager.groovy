@@ -56,7 +56,7 @@ class PluginManager {
 
     void loadPlugin(String className, boolean isInClasspath = false) {
         if (isInClasspath) {
-            def plugin = Class.forName(className).newInstance() as Plugin
+            def plugin = Class.forName(className).getDeclaredConstructor().newInstance() as Plugin
             add(plugin)
         } else {
             final String dir = pluginsDirPath()
@@ -67,7 +67,7 @@ class PluginManager {
             }
 
             def gcl = CachedGroovyClassLoader.instance.gcl
-            def plugin = gcl.parseClass(file).newInstance() as Plugin
+            def plugin = gcl.parseClass(file).getDeclaredConstructor().newInstance() as Plugin
             add(plugin)
         }
     }

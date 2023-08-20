@@ -76,7 +76,7 @@ class OneAppGuardian {
                     log.info 'get app guard lock fail - {}', app.name
                 }
             }
-        } catch (RejectedExecutionException e) {
+        } catch (RejectedExecutionException ignored) {
             log.warn 'there is a guardian is running for this app. app name: {}, try next time', app.name
         }
     }
@@ -85,7 +85,7 @@ class OneAppGuardian {
         final int appJobBatchSize = Conf.instance.getInt('guardian.appJobBatchSize', 10)
         final int appJobMaxFailTimes = Conf.instance.getInt('guardian.appJobMaxFailTimes', 3)
 
-        AppJobDTO job
+        AppJobDTO job = null
         def jobList = new AppJobDTO(appId: app.id).orderBy('created_date desc').
                 list(appJobBatchSize)
         if (jobList) {

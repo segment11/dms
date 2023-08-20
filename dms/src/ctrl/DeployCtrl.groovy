@@ -59,7 +59,7 @@ h.get('/deploy/node-file/list') { req, resp ->
 
     def keyword = req.param('keyword')
     def deployFileList = new DeployFileDTO().noWhere().
-            where(!!keyword, '(dest_path like ?) or (local_path like ?)',
+            where(keyword as boolean, '(dest_path like ?) or (local_path like ?)',
                     '%' + keyword + '%', '%' + keyword + '%').list()
 
     [pager: pager2, deployFileList: deployFileList]
@@ -109,15 +109,17 @@ h.get('/deploy/node-file/list') { req, resp ->
             DeploySupport.instance.send(kp, localFilePath, targetOne.destPath)
         }
 
-        if (proxyNodeIp && proxyNodeIp != kp.ip) {
-            def r = AgentCaller.instance.doSshExec(kp, oneCmd.cmd)
-            log.info r ? r.toString() : '...'
-        } else {
-            DeploySupport.instance.exec(kp, oneCmd)
-            if (!oneCmd.ok()) {
-                return [flag: false, message: oneCmd.toString()]
+        if (oneCmd) {
+            if (proxyNodeIp && proxyNodeIp != kp.ip) {
+                def r = AgentCaller.instance.doSshExec(kp, oneCmd.cmd)
+                log.info r ? r.toString() : '...'
+            } else {
+                DeploySupport.instance.exec(kp, oneCmd)
+                if (!oneCmd.ok()) {
+                    return [flag: false, message: oneCmd.toString()]
+                }
+                oneCmd.clear()
             }
-            oneCmd.clear()
         }
     }
 
@@ -128,7 +130,7 @@ h.group('/deploy-file') {
     h.get('/list') { req, resp ->
         def keyword = req.param('keyword')
         def deployFileList = new DeployFileDTO().noWhere().
-                where(!!keyword, '(dest_path like ?) or (local_path like ?)',
+                where(keyword as boolean, '(dest_path like ?) or (local_path like ?)',
                         '%' + keyword + '%', '%' + keyword + '%').list()
         [deployFileList: deployFileList]
     }.delete('/delete') { req, resp ->
