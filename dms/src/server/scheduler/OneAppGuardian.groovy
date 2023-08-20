@@ -10,9 +10,9 @@ import model.AppJobDTO
 import model.ClusterDTO
 import org.segment.d.json.DefaultJsonTransformer
 import org.segment.d.json.JsonTransformer
+import plugin.PluginManager
+import plugin.callback.Observer
 import server.AgentCaller
-import server.dns.DnsOperator
-import server.gateway.GatewayOperator
 import server.scheduler.checker.HealthCheckerHolder
 import server.scheduler.processor.CreateProcessor
 import server.scheduler.processor.GuardianProcessor
@@ -20,7 +20,6 @@ import server.scheduler.processor.RemoveProcessor
 import server.scheduler.processor.ScrollProcessor
 import spi.SpiSupport
 import transfer.ContainerInfo
-import transfer.ContainerInspectInfo
 
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
@@ -200,39 +199,14 @@ class OneAppGuardian {
                 }
             }
 
-            // refresh dns
-            DnsOperator.refreshContainerDns(cluster, app, runningContainerList)
+            for (plugin in PluginManager.instance.pluginList) {
+                if (plugin instanceof Observer) {
+                    plugin.refresh(app, runningContainerList)
+                }
+            }
 
             def containerNumber = app.conf.containerNumber
             if (containerNumber == runningContainerList.size()) {
-                def gatewayConf = app.gatewayConf
-                if (!gatewayConf) {
-                    return true
-                }
-
-                // check gateway
-                def operator = GatewayOperator.create(app.id, gatewayConf)
-                List<String> runningServerUrlList = runningContainerList.findAll { x ->
-                    def p = [id: x.id]
-                    def r = AgentCaller.instance.agentScriptExeAs(cluster.id, x.nodeIp,
-                            'container inspect', ContainerInspectInfo, p)
-                    r.state.running
-                }.collect { x ->
-                    def publicPort = x.publicPort(gatewayConf.containerPrivatePort)
-                    GatewayOperator.scheme(x.nodeIp, publicPort)
-                }
-                List<String> backendServerUrlList = operator.getBackendServerUrlListFromApi()
-                // gateway container not running yet
-                if (backendServerUrlList == null) {
-                    return true
-                }
-
-                (backendServerUrlList - runningServerUrlList).each {
-                    operator.removeBackend(it)
-                }
-                (runningServerUrlList - backendServerUrlList).each {
-                    operator.addBackend(it, false)
-                }
                 return true
             } else {
                 log.warn 'app running not match {} but - {} for app - {}', containerNumber,

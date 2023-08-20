@@ -1,6 +1,5 @@
 import auth.User
 import com.segment.common.Conf
-import com.segment.common.ConsoleReader
 import com.segment.common.Utils
 import com.segment.common.job.leader.LeaderFlagHolder
 import common.Const
@@ -22,6 +21,7 @@ import server.InMemoryCacheSupport
 import server.gateway.ZkClientHolder
 import server.lock.CuratorFrameworkClientHolder
 import server.scheduler.Guardian
+import server.scheduler.processor.CreateProcessor
 import support.DefaultLocalH2DataSourceCreator
 import support.FirstClusterCreate
 import support.JobBatchDone
@@ -133,6 +133,7 @@ def stopCl = {
     server.stop()
     cacheSupport.stop()
     guardian.stop()
+    CreateProcessor.executorService.shutdown()
     curatorClientHolder.close()
     containerManager.stop()
     leaderFlagHolder.stop()
@@ -140,6 +141,8 @@ def stopCl = {
     JedisPoolHolder.instance.close()
     Ds.disconnectAll()
 }
+
+Runtime.addShutdownHook stopCl
 
 ChainHandler.instance.get('/manage/stop/all') { req, resp ->
     User u = req.session('user') as User
@@ -152,10 +155,4 @@ ChainHandler.instance.get('/manage/stop/all') { req, resp ->
         stopCl.call()
     }
     resp.end 'stopped'
-}
-
-def cr = ConsoleReader.instance
-cr.quitHandler = stopCl
-if (c.isDev()) {
-    cr.read()
 }

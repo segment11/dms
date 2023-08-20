@@ -1,5 +1,7 @@
 package plugin.demo2
 
+
+import ex.JobProcessException
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AppDTO
@@ -7,11 +9,22 @@ import model.ImageTplDTO
 import model.json.*
 import plugin.BasePlugin
 import plugin.PluginManager
+import plugin.callback.Observer
 import plugin.model.Menu
+import server.AgentCaller
+import server.InMemoryAllContainerManager
+import server.InMemoryCacheSupport
+import server.gateway.GatewayOperator
+import server.scheduler.checker.HealthChecker
+import server.scheduler.checker.HealthCheckerHolder
+import server.scheduler.processor.ContainerRunResult
+import server.scheduler.processor.JobStepKeeper
+import transfer.ContainerInfo
+import transfer.ContainerInspectInfo
 
 @CompileStatic
 @Slf4j
-class TraefikPlugin extends BasePlugin {
+class TraefikPlugin extends BasePlugin implements Observer {
     @Override
     String name() {
         'traefik'
@@ -22,6 +35,7 @@ class TraefikPlugin extends BasePlugin {
         super.init()
 
         initImageConfig()
+        initHealthChecker()
     }
 
     private void initImageConfig() {
@@ -58,6 +72,64 @@ class TraefikPlugin extends BasePlugin {
         }
 
         addNodeVolumeForUpdate('log-dir', '/var/log/traefik')
+    }
+
+    private void initHealthChecker() {
+        HealthCheckerHolder.instance.add new HealthChecker() {
+            @Override
+            String name() {
+                'traefik backend server list check'
+            }
+
+            @Override
+            String imageName() {
+                TraefikPlugin.this.imageName()
+            }
+
+            @Override
+            boolean check(AppDTO xx) {
+                for (oneApp in InMemoryCacheSupport.instance.appList) {
+                    def gatewayConf = oneApp.gatewayConf
+                    if (!gatewayConf) {
+                        continue
+                    }
+
+                    def containerList = InMemoryAllContainerManager.instance.getContainerList(oneApp.clusterId, oneApp.id)
+                    def runningContainerList = containerList.findAll { x -> x.running() }
+
+                    // may be there is another job not finished
+                    if (oneApp.conf.containerNumber != runningContainerList.size()) {
+                        continue
+                    }
+
+                    // check gateway
+                    def operator = GatewayOperator.create(oneApp.id, gatewayConf)
+                    List<String> runningServerUrlList = runningContainerList.findAll { x ->
+                        def p = [id: x.id]
+                        def r = AgentCaller.instance.agentScriptExeAs(oneApp.clusterId, x.nodeIp,
+                                'container inspect', ContainerInspectInfo, p)
+                        r.state.running
+                    }.collect { x ->
+                        def publicPort = x.publicPort(gatewayConf.containerPrivatePort)
+                        GatewayOperator.scheme(x.nodeIp, publicPort)
+                    }
+                    List<String> backendServerUrlList = operator.getBackendServerUrlListFromApi()
+                    // gateway container not running yet
+                    if (backendServerUrlList == null) {
+                        continue
+                    }
+
+                    (backendServerUrlList - runningServerUrlList).each {
+                        operator.removeBackend(it)
+                    }
+                    (runningServerUrlList - backendServerUrlList).each {
+                        operator.addBackend(it, false)
+                    }
+                }
+
+                true
+            }
+        }
     }
 
     @Override
@@ -114,5 +186,51 @@ class TraefikPlugin extends BasePlugin {
         ])
 
         menus
+    }
+
+    @Override
+    void afterContainerRun(AppDTO app, int instanceIndex, ContainerRunResult result) {
+        def c = app.gatewayConf
+        if (!c) {
+            return
+        }
+
+        def abConf = app.abConf
+        int w = abConf && instanceIndex < abConf.containerNumber ? abConf.weight :
+                GatewayOperator.DEFAULT_WEIGHT
+
+        result.port = result.containerConfig.publicPort(c.containerPrivatePort)
+
+        def isAddOk = GatewayOperator.create(app.id, c).addBackend(result, w)
+        String message = "add to cluster ${c.clusterId} frontend ${c.frontendId} ${result.nodeIp}:${result.port}".toString()
+        result.keeper.next(JobStepKeeper.Step.addToGateway, 'add real server to gateway', message, isAddOk)
+    }
+
+    @Override
+    void beforeContainerStop(AppDTO app, ContainerInfo x, JobStepKeeper keeper) {
+        def c = app.gatewayConf
+        if (!c) {
+            return
+        }
+
+        def publicPort = x.publicPort(c.containerPrivatePort)
+        if (!publicPort) {
+            throw new JobProcessException('no public port get for ' + app.name)
+        }
+
+        def isRemoveOk = GatewayOperator.create(app.id, c).removeBackend(x.nodeIp, publicPort)
+        String message = "remove from cluster ${c.clusterId} frontend ${c.frontendId} ${x.nodeIp}:${publicPort}".toString()
+        keeper.next(JobStepKeeper.Step.removeFromGateway, 'remove real server from gateway',
+                message, isRemoveOk)
+    }
+
+    @Override
+    void afterContainerStopped(AppDTO app, ContainerInfo x, boolean flag) {
+
+    }
+
+    @Override
+    void refresh(AppDTO app, List<ContainerInfo> runningContainerList) {
+
     }
 }

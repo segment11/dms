@@ -3,6 +3,7 @@ package server.scheduler.processor
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import com.segment.common.Conf
+import com.segment.common.job.NamedThreadFactory
 import common.ContainerHelper
 import common.Event
 import ex.JobProcessException
@@ -16,10 +17,10 @@ import org.segment.d.json.JsonTransformer
 import org.segment.web.common.CachedGroovyClassLoader
 import plugin.Plugin
 import plugin.PluginManager
+import plugin.callback.Observer
 import server.AgentCaller
 import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
-import server.gateway.GatewayOperator
 import server.scheduler.Guardian
 import server.scheduler.checker.Checker
 import server.scheduler.checker.CheckerHolder
@@ -28,13 +29,17 @@ import transfer.ContainerConfigInfo
 import transfer.ContainerInfo
 import transfer.ContainerInspectInfo
 
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CountDownLatch
+import java.util.concurrent.*
 
 @CompileStatic
 @Slf4j
 class CreateProcessor implements GuardianProcessor {
     protected JsonTransformer json = new DefaultJsonTransformer()
+
+    static ExecutorService executorService = new ThreadPoolExecutor(
+            Runtime.runtime.availableProcessors(), Runtime.runtime.availableProcessors(),
+            0, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
+            new NamedThreadFactory('create-processor-thread-pool'))
 
     @Override
     void process(AppJobDTO job, AppDTO app, List<ContainerInfo> containerList) {
@@ -85,10 +90,7 @@ class CreateProcessor implements GuardianProcessor {
                     }
                 }
 
-                def result = startOneContainer(app, job.id, instanceIndex, nodeIpListCopy, nodeIp, confCopy)
-                if (result) {
-                    addToGateway(result, instanceIndex, app)
-                }
+                startOneContainer(app, job.id, instanceIndex, nodeIpListCopy, nodeIp, confCopy)
             }
             return
         }
@@ -106,12 +108,9 @@ class CreateProcessor implements GuardianProcessor {
                 }
             }
 
-            Thread.start {
+            executorService.execute {
                 try {
-                    def result = startOneContainer(app, job.id, instanceIndex, nodeIpListCopy, nodeIp, confCopy)
-                    if (result) {
-                        addToGateway(result, instanceIndex, app)
-                    }
+                    startOneContainer(app, job.id, instanceIndex, nodeIpListCopy, nodeIp, confCopy)
                 } catch (Exception e) {
                     log.error('start one container error - ' + confCopy.image + ' - ' + instanceIndex + ' - ' + nodeIp, e)
                     exceptionByInstanceIndex[instanceIndex] = e
@@ -129,25 +128,8 @@ class CreateProcessor implements GuardianProcessor {
         }
     }
 
-    protected void addToGateway(ContainerRunResult result, int instanceIndex, AppDTO app) {
-        def gatewayConf = app.gatewayConf
-        if (gatewayConf) {
-            def abConf = app.abConf
-            int w = abConf && instanceIndex < abConf.containerNumber ? abConf.weight :
-                    GatewayOperator.DEFAULT_WEIGHT
-            result.extract(gatewayConf)
-
-            def isAddOk = GatewayOperator.create(app.id, gatewayConf).addBackend(result, w)
-            String message = "add to cluster ${gatewayConf.clusterId} frontend ${gatewayConf.frontendId}".toString()
-            result.keeper.next(JobStepKeeper.Step.addToGateway, 'add real server to gateway', message, isAddOk)
-            result.keeper.next(JobStepKeeper.Step.done, 'job finished', '', isAddOk)
-        } else {
-            result.keeper.next(JobStepKeeper.Step.done, 'job finished')
-        }
-    }
-
-    protected List<NodeDTO> chooseNodeList(int clusterId, List<String> excludeNodeTagList,
-                                           List<String> excludeNodeIpList, List<String> targetNodeTagList) {
+    protected static List<NodeDTO> chooseNodeList(int clusterId, List<String> excludeNodeTagList,
+                                                  List<String> excludeNodeIpList, List<String> targetNodeTagList) {
         def nodeList = InMemoryAllContainerManager.instance.getHeartBeatOkNodeList(clusterId)
         if (!nodeList) {
             throw new JobProcessException('node not ready')
@@ -178,8 +160,8 @@ class CreateProcessor implements GuardianProcessor {
         list
     }
 
-    protected List<String> chooseNodeList(int clusterId, int appId, int runNumber, AppConf conf,
-                                          List<String> excludeNodeIpList = null) {
+    protected static List<String> chooseNodeList(int clusterId, int appId, int runNumber, AppConf conf,
+                                                 List<String> excludeNodeIpList = null) {
         def nodeList = chooseNodeList(clusterId, conf.excludeNodeTagList, excludeNodeIpList, conf.targetNodeTagList)
 
         List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(clusterId)
@@ -243,19 +225,15 @@ class CreateProcessor implements GuardianProcessor {
         nodeIpList
     }
 
-    JobStepKeeper stopOneContainer(int jobId, AppDTO app, ContainerInfo x) {
+    static JobStepKeeper stopOneContainer(int jobId, AppDTO app, ContainerInfo x) {
         def nodeIp = x.nodeIp
         def instanceIndex = x.instanceIndex()
         def keeper = new JobStepKeeper(jobId: jobId, instanceIndex: instanceIndex, nodeIp: nodeIp)
-        def gatewayConf = app.gatewayConf
-        if (gatewayConf) {
-            def publicPort = x.publicPort(gatewayConf.containerPrivatePort)
-            if (!publicPort) {
-                throw new JobProcessException('no public port get for ' + app.name)
-            }
 
-            def isRemoveBackendOk = GatewayOperator.create(app.id, gatewayConf).removeBackend(nodeIp, publicPort)
-            keeper.next(JobStepKeeper.Step.removeFromGateway, 'remove backend result - ' + isRemoveBackendOk)
+        for (plugin in PluginManager.instance.pluginList) {
+            if (plugin instanceof Observer) {
+                plugin.beforeContainerStop(app, x, keeper)
+            }
         }
 
         def id = x.id
@@ -275,9 +253,17 @@ class CreateProcessor implements GuardianProcessor {
                 stopR = AgentCaller.instance.agentScriptExe(app.clusterId, nodeIp, 'container remove', p)
                 log.info 'done remove container - {} - {}', id, app.id
             }
-            Boolean isOk = stopR.getBoolean('flag')
-            keeper.next(JobStepKeeper.Step.stopAndRemoveContainer, 'stop container', 'state: ' + state, isOk)
-            keeper.next(JobStepKeeper.Step.done, 'job finished')
+            if (stopR) {
+                Boolean flag = stopR.getBoolean('flag')
+                keeper.next(JobStepKeeper.Step.stopAndRemoveContainer, 'stop container', 'state: ' + state, flag)
+                keeper.next(JobStepKeeper.Step.done, 'job finished')
+
+                for (plugin in PluginManager.instance.pluginList) {
+                    if (plugin instanceof Observer) {
+                        plugin.afterContainerStopped(app, x, flag)
+                    }
+                }
+            }
         } catch (Exception e) {
             log.error('get container info error - ' + id + ' for app - ' + app.name, e)
             keeper.next(JobStepKeeper.Step.stopAndRemoveContainer, 'stop container', 'error: ' + e.message, false)
@@ -531,7 +517,15 @@ class CreateProcessor implements GuardianProcessor {
 
         initCheck(createContainerConf, keeper, containerId)
         afterCheck(createContainerConf, keeper)
-        new ContainerRunResult(nodeIp: nodeIp, containerConfig: containerConfigInfo, keeper: keeper)
+
+        def result = new ContainerRunResult(nodeIp: nodeIp, containerConfig: containerConfigInfo, keeper: keeper)
+        for (pluginInner in PluginManager.instance.pluginList) {
+            if (pluginInner instanceof Observer) {
+                pluginInner.afterContainerRun(app, instanceIndex, result)
+            }
+        }
+        keeper.next(JobStepKeeper.Step.done, 'job finished')
+        result
     }
 
     private ContainerRunResult startOneProcess(AppDTO app, int jobId, int instanceIndex,
@@ -553,10 +547,16 @@ class CreateProcessor implements GuardianProcessor {
         afterCheck(createContainerConf, keeper)
 
         def containerConfigInfo = new ContainerConfigInfo(pid: pid, networkMode: 'host')
-        return new ContainerRunResult(nodeIp: nodeIp, containerConfig: containerConfigInfo, keeper: keeper)
+        def result = new ContainerRunResult(nodeIp: nodeIp, containerConfig: containerConfigInfo, keeper: keeper)
+        for (pluginInner in PluginManager.instance.pluginList) {
+            if (pluginInner instanceof Observer) {
+                pluginInner.afterContainerRun(app, instanceIndex, result)
+            }
+        }
+        result
     }
 
-    private void checkDependApp(AppConf confCopy, int clusterId) {
+    private static void checkDependApp(AppConf confCopy, int clusterId) {
         if (!confCopy.dependAppIdList) {
             return
         }
@@ -574,7 +574,7 @@ class CreateProcessor implements GuardianProcessor {
         }
     }
 
-    private String evalUsingPluginExpression(Plugin plugin, CreateContainerConf createContainerConf, String value) {
+    private static String evalUsingPluginExpression(Plugin plugin, CreateContainerConf createContainerConf, String value) {
         if (!plugin) {
             return value
         }

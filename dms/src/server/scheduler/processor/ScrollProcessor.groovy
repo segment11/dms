@@ -61,10 +61,7 @@ class ScrollProcessor extends CreateProcessor {
             }
 
             def newNodeIp = targetNodeIpList[i]
-            def result = startOneContainer(app, job.id, instanceIndex, targetNodeIpList, newNodeIp, confCopy, keeper)
-            if (result) {
-                addToGateway(result, instanceIndex, app)
-            }
+            startOneContainer(app, job.id, instanceIndex, targetNodeIpList, newNodeIp, confCopy, keeper)
         }
     }
 }

@@ -142,6 +142,7 @@ h.group('/gw/frontend') {
 
         def one = req.bodyAs(GwFrontendDTO)
         assert one.name && one.clusterId
+        one.updatedDate = new Date()
 
         def consulApp = InMemoryCacheSupport.instance.appList.find {
             it.conf.group == 'library' && it.conf.image == 'consul'
@@ -150,38 +151,26 @@ h.group('/gw/frontend') {
         def envDomain = consulApp.conf.envList.find { it.key == 'DOMAIN' }
 
         // default dns service name
-        def dc = envDc ? envDc.value.toString() : 'cn-north-1'
-        def domain = envDomain ? envDomain.value.toString() : 'dms'
-        String suffix = ".service.${dc}.${domain}".toString()
-        one.updatedDate = new Date()
+        def dc = envDc ? envDc.value.toString() : 'consul'
+        def domain = envDomain ? envDomain.value.toString() : 'local'
+        String suffix = ".svc.${dc}.${domain}".toString()
+        def dnsServiceName = "gw_${one.clusterId}_${one.id}".toString() + suffix
+
+        if (one.conf.ruleConfList.find { it.rule == dnsServiceName } == null) {
+            if (one.conf.ruleConfList.find { it.type == 'Host:' } == null) {
+                one.conf.ruleConfList << new GwFrontendRuleConf(type: 'Host:', rule: dnsServiceName)
+            }
+        }
 
         if (one.id) {
-            def dnsServiceName = "gw_${one.clusterId}_${one.id}".toString() + suffix
-            if (one.conf.ruleConfList.find { it.rule == dnsServiceName } == null) {
-                if (one.conf.ruleConfList.find { it.type == 'Host:' } == null) {
-                    one.conf.ruleConfList << new GwFrontendRuleConf(type: 'Host:', rule: dnsServiceName)
-                }
-            }
-
             one.update()
-            GatewayOperator.updateFrontend(one)
-            DnsOperator.refreshGwFrontendDns(one)
-            return [id: one.id]
         } else {
             def id = one.add()
             one.id = id
-
-            def dnsServiceName = "gw_${one.clusterId}_${one.id}".toString() + suffix
-            if (one.conf.ruleConfList.find { it.rule == dnsServiceName } == null) {
-                if (one.conf.ruleConfList.find { it.type == 'Host:' } == null) {
-                    one.conf.ruleConfList << new GwFrontendRuleConf(type: 'Host:', rule: dnsServiceName)
-                }
-            }
-            one.update()
-
-            GatewayOperator.updateFrontend(one)
-            DnsOperator.refreshGwFrontendDns(one)
-            return [id: id]
         }
+
+        GatewayOperator.updateFrontend(one)
+        DnsOperator.instance.refreshGwFrontendDns(one)
+        return [id: one.id]
     }
 }

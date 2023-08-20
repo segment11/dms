@@ -10,7 +10,6 @@ import com.orbitz.consul.option.QueryOptions
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AppDTO
-import model.ClusterDTO
 import model.GwClusterDTO
 import model.GwFrontendDTO
 import server.InMemoryAllContainerManager
@@ -18,6 +17,7 @@ import server.InMemoryCacheSupport
 import transfer.ContainerInfo
 
 @CompileStatic
+@Singleton
 @Slf4j
 class DnsOperator {
     static final List<String> tags = ['dms']
@@ -25,14 +25,14 @@ class DnsOperator {
     // default dns ttl 5 minutes
     static final int defaultTtl = 300
 
-    static AgentClient agentClient
+    private AgentClient agentClient
 
-    static AgentClient getAgentClient() {
+    AgentClient getAgentClient() {
         if (agentClient) {
             return agentClient
         }
 
-        synchronized (DnsOperator.class) {
+        synchronized (this) {
             def consulApp = InMemoryCacheSupport.instance.appList.find {
                 it.conf.group == 'library' && it.conf.image == 'consul'
             }
@@ -53,7 +53,7 @@ class DnsOperator {
         agentClient
     }
 
-    static boolean isServiceIdMatchAddress(String id, String address) {
+    boolean isServiceIdMatchAddress(String id, String address) {
         def agentClient = getAgentClient()
         if (!agentClient) {
             return false
@@ -72,45 +72,63 @@ class DnsOperator {
         false
     }
 
-    static void refreshContainerDns(ClusterDTO cluster, AppDTO app, List<ContainerInfo> runningContainerList) {
+    void register(AppDTO app, String nodeIp, int instanceIndex) {
         def agentClient = getAgentClient()
         if (!agentClient) {
             return
         }
 
-        def dnsTtl = cluster.globalEnvConf.dnsTtl ?: defaultTtl
+        def address = nodeIp
+
+        // app_appId
+        def appService = app.name.replaceAll(' ', '_').toLowerCase()
+        def full = appService + '_' + instanceIndex
+
+        if (isServiceIdMatchAddress(full, address)) {
+            return
+        }
+
+//        def cluster = InMemoryCacheSupport.instance.oneCluster(app.clusterId)
+//        def dnsTtl = cluster.globalEnvConf.dnsTtl ?: defaultTtl
+
+        def service = ImmutableRegistration.builder()
+                .id(full + '_host')
+                .name(full)
+                .address(address)
+//                    .check(Registration.RegCheck.ttl(dnsTtl))
+                .tags(tags)
+                .build()
+        agentClient.register(service)
+
+        def service2 = ImmutableRegistration.builder()
+                .id(full)
+                .name(appService)
+                .address(address)
+//                    .check(Registration.RegCheck.ttl(dnsTtl))
+                .tags(tags)
+                .build()
+        agentClient.register(service2)
+    }
+
+    void deregister(AppDTO app, ContainerInfo x) {
+        def agentClient = getAgentClient()
+        if (!agentClient) {
+            return
+        }
+
+        def appService = app.name.replaceAll(' ', '_').toLowerCase()
+        def full = appService + '_' + x.instanceIndex()
+        agentClient.deregister(full + '_host')
+    }
+
+    void refreshContainerDns(AppDTO app, List<ContainerInfo> runningContainerList) {
+        def agentClient = getAgentClient()
+        if (!agentClient) {
+            return
+        }
 
         for (x in runningContainerList) {
-            def instanceIndex = x.instanceIndex()
-            def address = x.nodeIp
-
-            // app_appId
-            def appService = app.name.replaceAll(' ', '_').toLowerCase()
-            def full = appService + '_' + instanceIndex
-
-            if (isServiceIdMatchAddress(full, address)) {
-                continue
-            }
-
-            // name: app_appId_instanceIndex, id: app_appId_instanceIndex_host
-            def service = ImmutableRegistration.builder()
-                    .id(full + '_host')
-                    .name(full)
-                    .address(address)
-//                    .check(Registration.RegCheck.ttl(dnsTtl))
-                    .tags(tags)
-                    .build()
-            agentClient.register(service)
-
-            // name: app_appId, id: app_appId_instanceIndex
-            def service2 = ImmutableRegistration.builder()
-                    .id(full)
-                    .name(appService)
-                    .address(address)
-//                    .check(Registration.RegCheck.ttl(dnsTtl))
-                    .tags(tags)
-                    .build()
-            agentClient.register(service2)
+            register(app, x.nodeIp, x.instanceIndex())
         }
 
         if (app.conf.image == 'traefik') {
@@ -124,7 +142,7 @@ class DnsOperator {
         }
     }
 
-    static void refreshGwFrontendDns(GwFrontendDTO frontend, GwClusterDTO cluster = null) {
+    void refreshGwFrontendDns(GwFrontendDTO frontend, GwClusterDTO cluster = null) {
         def agentClient = getAgentClient()
         if (!agentClient) {
             return

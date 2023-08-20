@@ -34,7 +34,7 @@ class GatewayOperator {
 
     private static ConcurrentHashMap<Integer, GatewayOperator> cached = new ConcurrentHashMap<>();
 
-    static GatewayOperator create(Integer appId, GatewayConf conf = null) {
+    static GatewayOperator create(Integer appId, GatewayConf conf) {
         def x = cached[appId]
         if (x) {
             x.conf = conf
@@ -64,65 +64,64 @@ class GatewayOperator {
         r.sort()
     }
 
-    static Map<Integer, List<GwBackendServer>> getBackendListFromApi(int clusterId) {
-        def one = new GwClusterDTO(id: clusterId).one()
-        def serverUrl = one.serverUrl + ':' + one.dashboardPort
+    private static JSONObject getBackendJsonObjectFromApi(int clusterId) {
+        def gwCluster = new GwClusterDTO(id: clusterId).one()
+        if (!gwCluster) {
+            return null
+        }
+        def appOne = InMemoryCacheSupport.instance.oneApp(gwCluster.appId)
+        if (!appOne) {
+            return null
+        }
 
-        Map<Integer, List<GwBackendServer>> r = [:]
+        def runningContainerList = InMemoryAllContainerManager.instance.getContainerList(appOne.clusterId, appOne.id)
+        if (!runningContainerList) {
+            return null
+        }
+
+        def serverUrl = gwCluster.serverUrl + ':' + gwCluster.dashboardPort
+
         def body = HttpRequest.get(serverUrl + '/api').connectTimeout(500).readTimeout(1000).body()
         def obj = JSON.parseObject(body)
         def zk = obj.getJSONObject('zk')
         if (!zk) {
-            return r
+            return null
         }
 
         def backends = zk.getJSONObject('backends')
+        backends
+    }
+
+    static Map<Integer, List<GwBackendServer>> getBackendListFromApi(int clusterId) {
+        Map<Integer, List<GwBackendServer>> r = [:]
+        def backends = getBackendJsonObjectFromApi(clusterId)
         if (!backends) {
             return r
         }
 
         backends.each { k, v ->
-            if (k.contains('backend')) {
-                def backend = v as JSONObject
-                def servers = backend.getJSONObject('servers')
-                if (servers) {
-                    List<GwBackendServer> serverUrlList = servers.values().collect {
-                        def x = it as JSONObject
-                        new GwBackendServer(url: x.getString('url'), weight: x.getInteger('weight'))
-                    }
-                    r[k.replace('backend', '') as Integer] = serverUrlList.sort { it.url }
-                }
+            if (!k.contains('backend')) {
+                return
             }
+
+            def backend = v as JSONObject
+            def servers = backend.getJSONObject('servers')
+            if (servers) {
+                List<GwBackendServer> serverUrlList = servers.values().collect {
+                    def x = it as JSONObject
+                    new GwBackendServer(url: x.getString('url'), weight: x.getInteger('weight'))
+                }
+                r[k.replace('backend', '') as Integer] = serverUrlList.sort { it.url }
+            }
+            return
         }
 
         r
     }
 
     List<String> getBackendServerUrlListFromApi() {
-        def one = new GwClusterDTO(id: conf.clusterId).one()
-        if (!one) {
-            return null
-        }
-        def appOne = InMemoryCacheSupport.instance.oneApp(one.appId)
-        if (!appOne) {
-            return null
-        }
-        def runningContainerList = InMemoryAllContainerManager.instance.getContainerList(appOne.clusterId, appOne.id)
-        if (!runningContainerList) {
-            return null
-        }
-
-        def serverUrl = one.serverUrl + ':' + one.dashboardPort
-
         List<String> r = []
-        def body = HttpRequest.get(serverUrl + '/api').connectTimeout(500).readTimeout(1000).body()
-        def obj = JSON.parseObject(body)
-        def zk = obj.getJSONObject('zk')
-        if (!zk) {
-            return r
-        }
-
-        def backends = zk.getJSONObject('backends')
+        def backends = getBackendJsonObjectFromApi(conf.clusterId)
         if (!backends) {
             return r
         }
@@ -150,7 +149,7 @@ class GatewayOperator {
         list == apiList
     }
 
-    synchronized boolean changeBackend(String serverUrl, boolean isAdd = true, int weight = DEFAULT_WEIGHT, boolean waitUntilListenTrigger = false) {
+    synchronized boolean changeBackend(String serverUrl, boolean isAdd = true, int weight = DEFAULT_WEIGHT) {
         def frontend = new GwFrontendDTO(id: conf.frontendId).one()
         def backend = frontend.backend
 
@@ -187,9 +186,9 @@ class GatewayOperator {
                 updateFrontend(frontend)
                 r = waitUntilBackendServerListMatch()
             }
-            if (!isDone) {
+            r = isDone
+            if (!r) {
                 log.info 'get opt frontend lock fail - {}', conf.frontendId
-                r = false
             }
         } else {
             r = true
@@ -209,7 +208,7 @@ class GatewayOperator {
         List<String> children
         try {
             children = zk.getChildren(path)
-        } catch (ZkNoNodeException e) {
+        } catch (ZkNoNodeException ignored) {
             return true
         }
         if (children != null) {
@@ -333,7 +332,7 @@ class GatewayOperator {
         if (!waitUntilHealthCheckOk(serverUrl, waitDelayFirst)) {
             return false
         }
-        changeBackend(serverUrl, true, weight, true)
+        changeBackend(serverUrl, true, weight)
     }
 
     boolean removeBackend(String nodeIp, Integer port) {
@@ -341,11 +340,7 @@ class GatewayOperator {
     }
 
     boolean removeBackend(String serverUrl) {
-        changeBackend(serverUrl, false, DEFAULT_WEIGHT, true)
-    }
-
-    boolean isBackendReady(String nodeIp, int port) {
-        waitUntilHealthCheckOk(scheme(nodeIp, port), false)
+        changeBackend(serverUrl, false, DEFAULT_WEIGHT)
     }
 
     private boolean waitUntilHealthCheckOk(String serverUrl, boolean waitDelayFirst) {

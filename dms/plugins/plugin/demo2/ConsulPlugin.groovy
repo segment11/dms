@@ -7,14 +7,19 @@ import model.json.DirVolumeMount
 import model.json.KVPair
 import model.json.PortMapping
 import plugin.BasePlugin
+import plugin.callback.Observer
 import server.AgentCaller
 import server.InMemoryAllContainerManager
+import server.dns.DnsOperator
 import server.scheduler.checker.HealthChecker
 import server.scheduler.checker.HealthCheckerHolder
+import server.scheduler.processor.ContainerRunResult
+import server.scheduler.processor.JobStepKeeper
+import transfer.ContainerInfo
 
 @CompileStatic
 @Slf4j
-class ConsulPlugin extends BasePlugin {
+class ConsulPlugin extends BasePlugin implements Observer {
     @Override
     String name() {
         'consul'
@@ -156,5 +161,24 @@ cmdArgs.join(' ')
         conf.envList << new KVPair('DOMAIN', 'consul')
 
         app
+    }
+
+    @Override
+    void afterContainerRun(AppDTO app, int instanceIndex, ContainerRunResult result) {
+        DnsOperator.instance.register(app, result.nodeIp, instanceIndex)
+    }
+
+    @Override
+    void beforeContainerStop(AppDTO app, ContainerInfo x, JobStepKeeper keeper) {
+    }
+
+    @Override
+    void afterContainerStopped(AppDTO app, ContainerInfo x, boolean flag) {
+        DnsOperator.instance.deregister(app, x)
+    }
+
+    @Override
+    void refresh(AppDTO app, List<ContainerInfo> runningContainerList) {
+        DnsOperator.instance.refreshContainerDns(app, runningContainerList)
     }
 }
