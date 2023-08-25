@@ -25,7 +25,7 @@ class InitToolPlugin extends BasePlugin {
         initApi()
     }
 
-    private int addAppIfNotExists(AppDTO app) {
+    static int addAppIfNotExists(AppDTO app) {
         def one = new AppDTO(name: app.name, clusterId: app.clusterId).queryFields('id').one()
         if (one) {
             log.warn 'app already exists, skip add, app name: {}', app.name
@@ -37,7 +37,7 @@ class InitToolPlugin extends BasePlugin {
         }
     }
 
-    private void addGwFrontendIfNotExists(int gwClusterId, int appId, String appName, int privatePort) {
+    private static void addGwFrontendIfNotExists(int gwClusterId, int appId, String appName, int privatePort) {
         def f = new GwFrontendDTO(clusterId: gwClusterId, name: appName)
         def one = f.one()
         if (one) {
@@ -63,7 +63,7 @@ class InitToolPlugin extends BasePlugin {
         new AppDTO(id: appId, gatewayConf: gatewayConf).update()
     }
 
-    private void initApi() {
+    private static void initApi() {
         def h = ChainHandler.instance
 
         h.get('/init-all') { req, resp ->

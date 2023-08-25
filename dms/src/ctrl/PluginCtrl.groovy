@@ -1,9 +1,14 @@
 package ctrl
 
 import auth.User
+import model.NamespaceDTO
 import org.segment.d.Pager
 import org.segment.web.handler.ChainHandler
+import plugin.BasePlugin
 import plugin.PluginManager
+import plugin.demo2.InitToolPlugin
+import server.InMemoryAllContainerManager
+import server.InMemoryCacheSupport
 
 def h = ChainHandler.instance
 
@@ -74,5 +79,30 @@ h.group('/plugin') {
             }
         }
         [menus: menus]
+    }.get('/demo/create') { req, resp ->
+        def name = req.param('name')
+        assert name
+
+        def plugin = PluginManager.instance.pluginList.find { it.name() == name }
+        if (!plugin) {
+            return [flag: false, message: 'plugin not found']
+        }
+
+        def clusterId = InMemoryCacheSupport.instance.clusterList[0].id
+        int namespaceId
+        def namespace = new NamespaceDTO(clusterId: clusterId, name: 'demo').one()
+        if (!namespace) {
+            namespaceId = new NamespaceDTO(clusterId: clusterId, name: 'demo').add()
+        } else {
+            namespaceId = namespace.id
+        }
+
+        def nodeIpList = InMemoryAllContainerManager.instance.getAllNodeInfo(clusterId).collect {
+            it.value.nodeIp
+        }
+        def app = plugin.demoApp(BasePlugin.tplApp(clusterId, namespaceId, nodeIpList))
+        InitToolPlugin.addAppIfNotExists(app)
+
+        [flag: true]
     }
 }

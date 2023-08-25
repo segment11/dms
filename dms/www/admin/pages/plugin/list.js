@@ -76,4 +76,15 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
             });
         }, null);
     };
+
+    $scope.createDemoApp = function (one) {
+        uiTips.loading();
+        $http.get('/dms/plugin/demo/create', {params: {name: one.name}}).success(function (data) {
+            if (data.flag) {
+                uiTips.tips('Done create demo - ' + one.name, null, 'face-smile.png');
+            } else {
+                uiTips.tips(data.message);
+            }
+        });
+    };
 });
