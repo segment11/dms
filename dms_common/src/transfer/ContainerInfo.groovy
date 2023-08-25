@@ -7,6 +7,8 @@ import groovy.transform.ToString
 @CompileStatic
 @ToString(includeNames = true)
 class ContainerInfo implements Comparable<ContainerInfo> {
+    final static String STATE_RUNNING = 'running'
+    final static String STATE_EXITED = 'exited'
 
     @Override
     int compareTo(ContainerInfo y) {
@@ -49,6 +51,8 @@ class ContainerInfo implements Comparable<ContainerInfo> {
     String imageId
     String command
     Long created
+    Long pid
+    Long memResident
     String state
     String status
     Boolean isLiveCheckOk
@@ -88,7 +92,7 @@ class ContainerInfo implements Comparable<ContainerInfo> {
     String instanceIndex
 
     boolean running() {
-        'running' == state
+        STATE_RUNNING == state
     }
 
     Integer publicPort(Integer privatePort) {

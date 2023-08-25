@@ -171,7 +171,7 @@ class Agent extends IntervalJob {
         info.version = version
         info.isLiveCheckOk = isLiveCheckOk
 
-        AgentHelper.instance.collectNodeSigarInfo(info, sigar)
+        AgentHelper.collectNodeSigarInfo(info, sigar)
 
         info.time = new Date()
         AgentTempInfoHolder.instance.addNode(info)
@@ -200,22 +200,40 @@ class Agent extends IntervalJob {
 
     private List<ContainerInfo> collectContainers() {
         List<ContainerInfo> list = []
-        if (Conf.instance.isOn('collectDockerDaemon')) {
-            def containers = docker.listContainersCmd().withShowAll(true).exec()
-            List<ContainerInfo> listDaemon = containers.collect {
-                def one = AgentHelper.instance.transfer(it)
-                one.nodeIp = nodeIp
-                one.clusterId = clusterId
-                one
-            }.findAll {
-                // only send those dms created
-                it.names.any { n ->
-                    n.contains(ContainerHelper.CONTAINER_NAME_PRE)
+        list.addAll(collectContainersFromProcess())
+
+        if (!Conf.instance.isOn('collectDockerDaemon')) {
+            return list
+        }
+
+        def containers = docker.listContainersCmd().withShowAll(true).exec()
+        List<ContainerInfo> listDaemon = containers.collect {
+            def containerInfo = AgentHelper.transfer(it)
+            containerInfo.nodeIp = nodeIp
+            containerInfo.clusterId = clusterId
+
+            if (containerInfo.running()) {
+                // get pid
+                def inspect = docker.inspectContainerCmd(containerInfo.id).exec()
+                def pid = inspect.state.pidLong
+                containerInfo.pid = pid
+
+                // get mem
+                def procMem = sigar.getProcMem(pid)
+                if (procMem) {
+                    containerInfo.memResident = procMem.resident
                 }
             }
-            list.addAll listDaemon
+
+            containerInfo
+        }.findAll {
+            // only send those dms created
+            it.names.any { n ->
+                n.contains(ContainerHelper.CONTAINER_NAME_PRE)
+            }
         }
-        list.addAll(collectContainersFromProcess())
+
+        list.addAll listDaemon
         list
     }
 
@@ -225,38 +243,48 @@ class Agent extends IntervalJob {
         // from process wrap
         final String subDirPre = 'app_'
         final File dir = new File('/opt/dms')
-        if (dir.exists() && dir.isDirectory() && dir.canRead()) {
-            for (File f in dir.listFiles()) {
-                if (f.isDirectory() && f.name.startsWith(subDirPre)) {
-                    def wrapJsonFile = new File(f, '/container-info.json')
-                    if (wrapJsonFile.exists()) {
-                        ContainerInfo containerInfo = ToJson.read(wrapJsonFile.text, ContainerInfo)
+        if (!dir.exists() || !dir.isDirectory() || !dir.canRead()) {
+            return list
+        }
 
-                        // id -> "process_app_${c.appId}_${c.instanceIndex}_pid_${pid}".toString()
-                        int pid = containerInfo.id.split('_')[-1] as int
-                        try {
-                            def procState = sigar.getProcState(pid as long)
-                            if (procState) {
-                                containerInfo.state = 'running'
-                            } else {
-                                containerInfo.state = 'exited'
-                            }
-
-                            def procTime = sigar.getProcTime(pid as long)
-                            if (procTime) {
-                                containerInfo.status = 'start at: ' + new Date(procTime.startTime)
-                            } else {
-                                containerInfo.status = 'unknown'
-                            }
-                        } catch (Exception e) {
-                            // ignore
-                            containerInfo.state = 'exited'
-                            containerInfo.status = 'unknown'
-                        }
-                        list << containerInfo
-                    }
-                }
+        for (File f in dir.listFiles()) {
+            if (!f.isDirectory() || !f.name.startsWith(subDirPre)) {
+                continue
             }
+
+            def wrapJsonFile = new File(f, '/container-info.json')
+            if (!wrapJsonFile.exists()) {
+                continue
+            }
+
+            ContainerInfo containerInfo = ToJson.read(wrapJsonFile.text, ContainerInfo)
+            // id -> "process_app_${c.appId}_${c.instanceIndex}_pid_${pid}".toString()
+            long pid = containerInfo.id.split('_')[-1] as long
+            containerInfo.pid = pid
+            try {
+                def procState = sigar.getProcState(pid)
+                if (procState) {
+                    containerInfo.state = ContainerInfo.STATE_RUNNING
+                } else {
+                    containerInfo.state = ContainerInfo.STATE_EXITED
+                }
+
+                def procMem = sigar.getProcMem(pid)
+                if (procMem) {
+                    containerInfo.memResident = procMem.resident
+                }
+
+                def procTime = sigar.getProcTime(pid)
+                if (procTime) {
+                    containerInfo.status = 'start at: ' + new Date(procTime.startTime)
+                } else {
+                    containerInfo.status = 'unknown'
+                }
+            } catch (Exception ignored) {
+                containerInfo.state = 'exited'
+                containerInfo.status = 'unknown'
+            }
+            list << containerInfo
         }
 
         list
@@ -279,7 +307,7 @@ class Agent extends IntervalJob {
     private void liveCheck(List<ContainerInfo> containers) {
         def runningList = containers.findAll { it.running() }
         List<OneContainerId> containerIdList = runningList.collect {
-            new OneContainerId(appId: it.appId(), instanceIndex: it.instanceIndex())
+            new OneContainerId(it.appId(), it.instanceIndex())
         }
         if (!containerIdList) {
             isLiveCheckOk = true
@@ -320,7 +348,7 @@ class Agent extends IntervalJob {
             }
             liveCheckResult[appId] = isCheckOk
             container.isLiveCheckOk = isCheckOk
-
+            return
         }
         isLiveCheckOk = liveCheckResult.every { it.value }
     }

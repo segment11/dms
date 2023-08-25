@@ -34,13 +34,13 @@ if (isProcess(id)) {
         r.procMem = procMem
 
         def state = new ContainerInspectInfo.ContainerStateInfo()
-        state.status = 'running'
+        state.pid = pid as long
+        state.status = ContainerInfo.STATE_RUNNING
         state.running = true
         r.state = state
-    } catch (Exception e) {
-        // ignore
+    } catch (Exception ignored) {
         def state = new ContainerInspectInfo.ContainerStateInfo()
-        state.status = 'exited'
+        state.status = ContainerInfo.STATE_EXITED
         state.running = false
         r.state = state
     }
@@ -70,6 +70,7 @@ if (isProcess(id)) {
     r.workingDir = a.config.workingDir
 
     def state = new ContainerInspectInfo.ContainerStateInfo()
+    state.pid = a.state.pidLong
     state.status = a.state.status
     state.running = a.state.running
     r.state = state
@@ -79,7 +80,7 @@ if (isProcess(id)) {
         a.hostConfig.portBindings.bindings.each { expose, b ->
             def p = new ContainerInfo.PortMapping()
             def spec = b[0].hostPortSpec
-            p.publicPort = spec.contains('-') ? spec.split(/\-/)[0] as int : spec as int
+            p.publicPort = spec.contains('-') ? spec.split(/-/)[0] as int : spec as int
             p.privatePort = expose.port
             p.type = expose.protocol.toString()
             p.ip = b[0].hostIp

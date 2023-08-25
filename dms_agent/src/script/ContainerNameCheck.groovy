@@ -12,5 +12,5 @@ if (!name) {
 def alreadyExistsList = docker.listContainersCmd().
         withShowAll(true).
         withNameFilter([name]).exec()
-def flag = !!alreadyExistsList
+boolean flag = alreadyExistsList != null && alreadyExistsList.size() > 0
 [flag: flag]

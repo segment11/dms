@@ -13,10 +13,9 @@ import transfer.ContainerInfo
 import transfer.NodeInfo
 
 @CompileStatic
-@Singleton
 @Slf4j
 class AgentHelper {
-    NodeInfo collectNodeSigarInfo(NodeInfo info, Sigar sigar) {
+    static NodeInfo collectNodeSigarInfo(NodeInfo info, Sigar sigar) {
         sigar.cpuPercList.each { CpuPerc it ->
             info.cpuPercList << new NodeInfo.CpuPerc(user: it.user, sys: it.sys, idle: it.idle)
         }
@@ -40,7 +39,7 @@ class AgentHelper {
         info
     }
 
-    ContainerInfo transfer(Container it) {
+    static ContainerInfo transfer(Container it) {
         def one = new ContainerInfo()
         one.id = it.id
         one.names = it.names.toList()

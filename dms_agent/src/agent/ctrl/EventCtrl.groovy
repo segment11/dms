@@ -66,6 +66,7 @@ h.get('/metric/queue') { req, resp ->
             } else if ('mem' == type) {
                 it.mem.usedPercent
             }
+            0
         }] : [:]
     }
 
@@ -109,6 +110,7 @@ h.get('/metric/queue') { req, resp ->
         } else if ('mem' == type) {
             return it.memUsage
         }
+        0
     }]
 }.get('/metric/gauge/name/list') { req, resp ->
     def appId = req.param('appId')

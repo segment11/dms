@@ -42,14 +42,7 @@ h.options('/proxy_handle', new AbstractHandler() {
         HttpRequest request
         if (isPost) {
             request = HttpRequest.post(realUrl)
-            // controller -> agent
-            // agent -> controller
-            request.header(Const.AUTH_TOKEN_HEADER, req.header(Const.AUTH_TOKEN_HEADER) ?: '')
-            request.header(Const.SCRIPT_NAME_HEADER, req.header(Const.SCRIPT_NAME_HEADER) ?: '')
-            // agent -> controller
-            request.header(Const.CLUSTER_ID_HEADER, req.header(Const.CLUSTER_ID_HEADER) ?: '')
-
-            request.connectTimeout(connectTimeout).readTimeout(readTimeoutFinal)
+            setRequestHeaders(request, req, connectTimeout, readTimeoutFinal)
             request.send(req.body())
         } else {
             Map params = [:]
@@ -57,17 +50,21 @@ h.options('/proxy_handle', new AbstractHandler() {
                 params[key] = req.param(key)
             }
             request = HttpRequest.get(realUrl, params, true)
-            // controller -> agent
-            // agent -> controller
-            request.header(Const.AUTH_TOKEN_HEADER, req.header(Const.AUTH_TOKEN_HEADER) ?: '')
-            request.header(Const.SCRIPT_NAME_HEADER, req.header(Const.SCRIPT_NAME_HEADER) ?: '')
-            // agent -> controller
-            request.header(Const.CLUSTER_ID_HEADER, req.header(Const.CLUSTER_ID_HEADER) ?: '')
-
-            request.connectTimeout(connectTimeout).readTimeout(readTimeoutFinal)
+            setRequestHeaders(request, req, connectTimeout, readTimeoutFinal)
         }
 
         resp.status(request.code())
         resp.end request.body()
+        null
+    }
+
+    void setRequestHeaders(HttpRequest request, Req req, int connectTimeout, int readTimeoutFinal) {
+        // controller -> agent
+        // agent -> controller
+        request.header(Const.AUTH_TOKEN_HEADER, req.header(Const.AUTH_TOKEN_HEADER) ?: '')
+        request.header(Const.SCRIPT_NAME_HEADER, req.header(Const.SCRIPT_NAME_HEADER) ?: '')
+        request.header(Const.CLUSTER_ID_HEADER, req.header(Const.CLUSTER_ID_HEADER) ?: '')
+
+        request.connectTimeout(connectTimeout).readTimeout(readTimeoutFinal)
     }
 })

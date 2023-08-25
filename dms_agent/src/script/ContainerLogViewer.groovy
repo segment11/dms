@@ -31,8 +31,7 @@ if (isProcess(id)) {
             try {
                 sb.append reader.readLine()
                 sb.append "\r\n"
-            } catch (Exception ee) {
-                // ignore
+            } catch (Exception ignored) {
                 return sb.toString()
             }
         }

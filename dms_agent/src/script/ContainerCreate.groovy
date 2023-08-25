@@ -64,7 +64,7 @@ envList << new KVPair(key: KEY_NODE_IP, value: createConf.nodeIp)
 envList << new KVPair(key: KEY_NODE_IP_LIST, value: createConf.nodeIpList.join(','))
 envList << new KVPair(key: KEY_INSTANCE_INDEX, value: createConf.instanceIndex)
 
-double vCpuNumber
+double vCpuNumber = 0
 if (conf.cpuShares) {
     hostConfig.withCpuShares(conf.cpuShares)
     vCpuNumber = (conf.cpuShares / 1024).round(2).doubleValue()
