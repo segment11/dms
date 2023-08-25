@@ -70,10 +70,14 @@ String queryTableNameSql = isPG ?
 def tableNameList = d.query(queryTableNameSql, String).collect { it.toUpperCase() }
 if (!tableNameList.contains('CLUSTER')) {
     new File(c.projectPath('/init_h2.sql')).text.split(';').each {
+        def ddl = it.trim()
+        if (!ddl) {
+            return
+        }
         try {
-            d.exe(it.toString())
+            d.exe(ddl)
         } catch (Exception e) {
-            log.error('create table fail', e)
+            log.error('execute ddl error, ddl: ' + ddl, e)
         }
     }
 }
