@@ -51,7 +51,8 @@ h.group('/app/job') {
                         <tr>
                             <th width="30%">title</th>
                             <th width="10%">is ok</th>
-                            <th width="40%">message</th>
+                            <th width="30%">message</th>
+                            <th width="10%">cost ms</th>
                             <th width="20%">created date</th>
                         </tr>
                         ${
@@ -60,8 +61,8 @@ h.group('/app/job') {
                        <tr>
                             <td>${it.title}</td>
                             <td><p ng-class="${it.isOk ? 'bg-success' : 'bg-danger'}">${it.isOk}</p></td>
-                            <td><p style="max-width: 700px; background-color: #d9edf7; text-align: left;">${it.message}
-                                <p></td>
+                            <td>${it.message}</td>
+                            <td>${it.costMs}</td>
                             <td>${new SimpleDateFormat('yyyy-MM-dd HH:mm:ss').format(it.createdDate)}</td>
                         </tr>
 """
@@ -103,12 +104,13 @@ h.group('/api/job') {
         Map body = req.bodyAs()
         int jobId = body.remove('jobId') as int
         int instanceIndex = body.remove('instanceIndex') as int
+        int costMs = body.remove('costMs') as int
         String title = body.remove('title') as String
 
         String message = new DefaultJsonTransformer().json(body)
 
         new AppJobLogDTO(jobId: jobId, instanceIndex: instanceIndex, title: title,
-                message: message, isOk: true, createdDate: new Date()).add()
+                message: message, isOk: true, costMs: costMs, createdDate: new Date()).add()
 
         [flag: true]
     }
