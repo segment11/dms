@@ -13,13 +13,13 @@ A docker instances manage system like k8s write in java/groovy, including web ui
 - A/B tests
 - traefik http gateway like k8s ingress
 - metrics collect by prometheus, auto reload jobs like k8s service monitor
-- log collect by vector and zincobserve
+- log collect by vector and open observe
 - plugins support like k8s operator
 
 # run dms server
 
 - docker run -v /opt/log:/opt/log -v /data/dms:/data/dms --name=dms -d --net=host key232323/dms
-- open http://your-ip:5010/admin/login.html user/password -> admin/123456
+- open http://your-ip:5010/admin/login.html user/password -> admin/abc
 
 # or run dms server by compiling from source
 
@@ -32,7 +32,7 @@ TIPS: Need jdk17+/gradle7+
 - cd ~/ws/dms/dms
 - gradle buildToRun
 - cd ~/ws/dms/dms/build/libs & java -cp . -jar dms_server-1.2.jar
-- open http://your-ip:5010/admin/login.html user/password -> admin/kerry123456
+- open http://your-ip:5010/admin/login.html user/password -> admin/abc
 
 # run dms agent
 
@@ -68,9 +68,15 @@ run 'java -Djava.library.path=. -cp . -jar dms_agent-1.2.jar' on another node, w
 
 ![node init deploy](./pic/node_init_deploy.PNG)
 
+![node chart](./pic/node_chart.png)
+
 ![application list](./pic/application_list.PNG)
 
 ![application one](./pic/application_one.PNG)
+
+![application event list](./pic/application_event_list.png)
+
+![job steps](./pic/job_steps.png)
 
 # author contact
 
