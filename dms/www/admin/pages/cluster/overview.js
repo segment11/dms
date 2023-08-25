@@ -72,8 +72,13 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         $http.get('/dms/container/manage/list', {params: {clusterId: $scope.tmp.clusterId}}).success(function (data) {
             $scope.groupByApp = groupByToList(data.groupByApp);
             $scope.groupByNodeIp = groupByToList(data.groupByNodeIp);
+
             var cpusetCpusMapByNodeIp = data.cpusetCpusMapByNodeIp;
             var cpuUsedPercentMapByNodeIp = data.cpuUsedPercentMapByNodeIp;
+
+            var memByNodeIp = data.memByNodeIp;
+            var memRssUsedMapByNodeIp = data.memRssUsedMapByNodeIp;
+
             _.each($scope.groupByNodeIp, function (it) {
                 var nodeIp = it.key;
                 var cpusetCpus = cpusetCpusMapByNodeIp[nodeIp];
@@ -87,6 +92,25 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
                     clist.push({vcore: _vcore, required: sum, usedPercent: cpuUsedPercentCpus[_vcore]});
                 }
                 it.clist = clist;
+
+                // long
+                var mem = memByNodeIp[nodeIp];
+                // map<string,long>
+                var memRssUsed = memRssUsedMapByNodeIp[nodeIp];
+                var mlist = [];
+                var memLeft = mem;
+                for (appName in memRssUsed) {
+                    var memRss = memRssUsed[appName];
+                    var memUsed = Math.round(memRss / mem * 10000) / 10000;
+                    mlist.push({appName: appName, memUsed: memUsed, memRss: memRss});
+                    memLeft = memLeft - memUsed;
+                }
+
+                it.mlist = _.sortBy(mlist, function (it) {
+                    return -it.memRss;
+                });
+                it.memLeft = Math.round(memLeft);
+                it.memLeftUsed = Math.round(memLeft / mem * 10000) / 10000;
             });
 
             var appCheckOkList = data.appCheckOkList;

@@ -180,7 +180,7 @@
                                     <span class="bg-tips">{{one.key}}</span>
                                     <ul style="text-align: center;" ng-if="one.clist">
                                         <li>
-                                            <div class="row">
+                                            <div class="row" style="color: blue;font-weight: bold;">
                                                 <div class="col-md-4">
                                                     Cpu Index
                                                 </div>
@@ -202,6 +202,59 @@
                                                 </div>
                                                 <div class="col-md-4">
                                                     {{x.usedPercent}}
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                    <ul style="text-align: center;" ng-if="one.mlist">
+                                        <li>
+                                            <div class="row" style="color: blue;font-weight: bold;">
+                                                <div class="col-md-4">
+                                                    Memory Left
+                                                </div>
+                                                <div class="col-md-4">
+                                                    Rss MB
+                                                </div>
+                                                <div class="col-md-4">
+                                                    Left Percent
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="row" style="color: blue;font-weight: bold;">
+                                                <div class="col-md-4">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    {{one.memLeft}}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    {{one.memLeftUsed}}
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    App Name
+                                                </div>
+                                                <div class="col-md-4">
+                                                    Rss MB
+                                                </div>
+                                                <div class="col-md-4">
+                                                    Used Percent
+                                                </div>
+                                            </div>
+                                        </li>
+                                        <li ng-repeat="x in one.mlist">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    {{x.appName}}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    {{x.memRss}}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    {{x.memUsed}}
                                                 </div>
                                             </div>
                                         </li>

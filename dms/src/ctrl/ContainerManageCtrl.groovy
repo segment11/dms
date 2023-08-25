@@ -83,12 +83,19 @@ h.group('/container/manage') {
 
         Map<String, Map<Integer, List<Double>>> cpusetCpusMapByNodeIp = [:]
         Map<String, Map<Integer, Double>> cpuUsedPercentMapByNodeIp = [:]
+
+        Map<String, Long> memByNodeIp = [:]
+        Map<String, Map<String, Long>> memRssUsedMapByNodeIp = [:]
+
         groupByNodeIp.each { k, v ->
             Map<Integer, List<Double>> map = [:]
             cpusetCpusMapByNodeIp[k] = map
 
             Map<Integer, Double> mapUsedPercent = [:]
             cpuUsedPercentMapByNodeIp[k] = mapUsedPercent
+
+            Map<String, Long> mapMemRssUsed = [:]
+            memRssUsedMapByNodeIp[k] = mapMemRssUsed
 
             def nodeInfo = InMemoryAllContainerManager.instance.getNodeInfo(k)
             for (i in 0..<nodeInfo.cpuNumber()) {
@@ -97,8 +104,13 @@ h.group('/container/manage') {
 
                 cpuUsedPercentMapByNodeIp[k][i] = nodeInfo.cpuPercList[i].usedPercent()
             }
+            memByNodeIp[k] = nodeInfo.mem.total.longValue()
 
             for (x in v) {
+                if (x.running()) {
+                    mapMemRssUsed[x.name()] = (x.memResident / 1024 / 1024).longValue()
+                }
+
                 def appOne = appList.find { it.id == x.appId() }
                 if (!appOne) {
                     // should never happen
@@ -132,7 +144,9 @@ h.group('/container/manage') {
          groupByNodeIp            : groupByNodeIp,
          appCheckOkList           : appCheckOkList,
          cpusetCpusMapByNodeIp    : cpusetCpusMapByNodeIp,
-         cpuUsedPercentMapByNodeIp: cpuUsedPercentMapByNodeIp]
+         cpuUsedPercentMapByNodeIp: cpuUsedPercentMapByNodeIp,
+         memByNodeIp              : memByNodeIp,
+         memRssUsedMapByNodeIp    : memRssUsedMapByNodeIp]
     }.get('/bind/list') { req, resp ->
         def id = req.param('id')
         assert id

@@ -79,6 +79,7 @@ class ContainerInfo implements Comparable<ContainerInfo> {
         one.created = created
         one.state = state
         one.status = status
+        one.memResident = memResident
         one.isLiveCheckOk = isLiveCheckOk
 
         one.name = name()
