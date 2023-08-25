@@ -26,7 +26,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog, uiValid) {
         $http.get('/dms/deploy/node-file/list', {params: p}).success(function (data) {
             $scope.deployFileList = data.deployFileList;
             if (!data.deployFileList.length) {
-                uiTips.tips('No files get! Change another keyword to query!', 3, 'alert.gif');
+                // uiTips.tips('No files get! Change another keyword to query!', 3, 'alert.gif');
             }
             if (p.keyword) {
                 $('#deploy-tabs').find('a').eq(1).trigger('click');
@@ -285,7 +285,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog, uiValid) {
 
             $scope.deployFileList = data.deployFileList;
             if (!data.deployFileList.length) {
-                uiTips.tips('No files get! Change another keyword to query!', 3, 'alert.gif');
+                // uiTips.tips('No files get! Change another keyword to query!', 3, 'alert.gif');
             }
         });
     };
