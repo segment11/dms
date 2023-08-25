@@ -61,20 +61,33 @@ run 'java -Djava.library.path=. -cp . -jar dms_agent-1.2.jar' on another node, w
 
 - cluster overview
 
-
 ![cluster overview](./pic/cluster_overview.PNG)
+
+- cluster container overview by node ip
 
 ![cluster container overview](./pic/cluster_container_overview.PNG)
 
+- worker node init
+
 ![node init deploy](./pic/node_init_deploy.PNG)
+
+- node cpu stats 
 
 ![node chart](./pic/node_chart.png)
 
+- application list
+
 ![application list](./pic/application_list.PNG)
+
+- one application container list
 
 ![application one](./pic/application_one.PNG)
 
+- one application event list
+
 ![application event list](./pic/application_event_list.png)
+
+- job steps log
 
 ![job steps](./pic/job_steps.png)
 
