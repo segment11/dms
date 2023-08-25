@@ -14,6 +14,8 @@ def createConf = ToJson.read(jsonStr, CreateContainerConf)
 def conf = createConf.conf
 
 conf.fileVolumeList.eachWithIndex { FileVolumeMount one, int i ->
+    def beginT = System.currentTimeMillis()
+
     def content = Agent.instance.post('/dms/api/container/create/tpl',
             [clusterId           : createConf.clusterId,
              appId               : createConf.appId,
@@ -30,8 +32,10 @@ conf.fileVolumeList.eachWithIndex { FileVolumeMount one, int i ->
     FileUtils.forceMkdirParent(localFile)
     localFile.text = content
     Utils.setFileRead(localFile)
+
+    def costT = System.currentTimeMillis() - beginT
     Agent.instance.addJobStep(createConf.jobId, createConf.instanceIndex,
-            'update tpl', [hostFile: one.dist, fileContent: content])
+            'update tpl', [hostFile: one.dist, fileContent: content], costT.intValue())
 }
 
 [flag: true]

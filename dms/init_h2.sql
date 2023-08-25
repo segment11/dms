@@ -124,6 +124,7 @@ create table app_job_log (
     is_ok bit,
     title varchar(100),
     message text,
+    cost_ms int,
     created_date timestamp
 );
 create index idx_app_job_log_job_id on app_job_log(job_id);

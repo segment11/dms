@@ -19,5 +19,7 @@ class AppJobLogDTO extends BaseRecord<AppJobLogDTO> {
 
     Boolean isOk
 
+    Integer costMs
+
     Date createdDate
 }

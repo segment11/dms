@@ -149,11 +149,12 @@ class Agent extends IntervalJob {
         JSON.parseObject(body, clz)
     }
 
-    void addJobStep(int jobId, int instanceIndex, String title, Map message) {
-        message.jobId = jobId
-        message.instanceIndex = instanceIndex
-        message.title = title
-        post('/dms/api/job/step/add', message, null) { body ->
+    void addJobStep(int jobId, int instanceIndex, String title, Map data, int costMs = 0) {
+        data.jobId = jobId
+        data.instanceIndex = instanceIndex
+        data.title = title
+        data.costMs = costMs
+        post('/dms/api/job/step/add', data, null) { body ->
             log.info 'add job step fail as body: ', body
         }
     }
