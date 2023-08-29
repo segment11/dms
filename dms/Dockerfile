@@ -22,4 +22,4 @@ env ADMIN_PASSWORD=123456
 env DB_DATA_FILE=/data/dms/db;FILE_LOCK=SOCKET
 env LOCAL_IP_FILTER_PRE=192.
 
-cmd java -cp . -jar dms_server-1.2.jar
+cmd java -XX:+UseZGC -Xms512M -Xmx1024M -cp . -jar dms_server-1.2.jar
