@@ -151,9 +151,9 @@ h.group('/gw/frontend') {
         def envDomain = consulApp.conf.envList.find { it.key == 'DOMAIN' }
 
         // default dns service name
-        def dc = envDc ? envDc.value.toString() : 'consul'
+        def dc = envDc ? envDc.value.toString() : 'cluster'
         def domain = envDomain ? envDomain.value.toString() : 'local'
-        String suffix = ".svc.${dc}.${domain}".toString()
+        String suffix = ".service.${dc}.${domain}".toString()
         def dnsServiceName = "gw_${one.clusterId}_${one.id}".toString() + suffix
 
         if (one.conf.ruleConfList.find { it.rule == dnsServiceName } == null) {

@@ -157,8 +157,8 @@ cmdArgs.join(' ')
         conf.portList << new PortMapping(privatePort: 8500, publicPort: 8500)
         conf.portList << new PortMapping(privatePort: 8600, publicPort: 8600)
 
-        conf.envList << new KVPair('DATA_CENTER', 'dc1')
-        conf.envList << new KVPair('DOMAIN', 'consul')
+        conf.envList << new KVPair('DATA_CENTER', 'cluster')
+        conf.envList << new KVPair('DOMAIN', 'local')
 
         app
     }

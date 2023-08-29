@@ -118,7 +118,9 @@ class DnsOperator {
 
         def appService = app.name.replaceAll(' ', '_').toLowerCase()
         def full = appService + '_' + x.instanceIndex()
+
         agentClient.deregister(full + '_host')
+        agentClient.deregister(full)
     }
 
     void refreshContainerDns(AppDTO app, List<ContainerInfo> runningContainerList) {
@@ -151,21 +153,26 @@ class DnsOperator {
         if (cluster == null) {
             cluster = new GwClusterDTO(id: frontend.clusterId).one()
         }
-        def address = cluster.serverUrl.replace('http://', '')
 
-        def name = "gw_${cluster.id}_${frontend.id}".toString()
-        def id = name + '_host'
+        if (cluster) {
+            def appOne = InMemoryCacheSupport.instance.oneApp(cluster.appId)
+            def nodeIpList = InMemoryAllContainerManager.instance.getContainerList(appOne.clusterId, appOne.id).collect { x ->
+                x.nodeIp
+            }
+            nodeIpList.eachWithIndex { String nodeIp, int i ->
+                def name = "gw_${cluster.id}_${frontend.id}".toString()
+                def id = name + '_' + i
 
-        if (isServiceIdMatchAddress(id, address)) {
-            return
+                def address = nodeIp
+
+                def service = ImmutableRegistration.builder()
+                        .id(id)
+                        .name(name)
+                        .address(address)
+                        .tags(tags)
+                        .build()
+                agentClient.register(service)
+            }
         }
-
-        def service = ImmutableRegistration.builder()
-                .id(id)
-                .name(name)
-                .address(address)
-                .tags(tags)
-                .build()
-        agentClient.register(service)
     }
 }
