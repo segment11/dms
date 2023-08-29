@@ -118,24 +118,23 @@ h.group('/container/manage') {
                 }
 
                 def conf = appOne.conf
-                if (conf.cpusetCpus) {
-                    if (!x.labels) {
-                        x.labels = [:]
-                    }
-                    def cpusetCpuList = Utils.cpusetCpusToList(conf.cpusetCpus)
-                    x.labels.cpusetCpus = cpusetCpuList.join(',')
-                    double vCpuNumber = 0
-                    if (conf.cpuShares) {
-                        vCpuNumber = (conf.cpuShares / 1024).round(2).doubleValue()
-                    } else if (conf.cpuFixed) {
-                        vCpuNumber = conf.cpuFixed
-                    }
-                    x.labels.vCpuNumber = vCpuNumber.toString()
+                String cpusetCpus = conf.cpusetCpus ?: '0-' + (nodeInfo.cpuNumber() - 1)
+                if (!x.labels) {
+                    x.labels = [:]
+                }
+                def cpusetCpuList = Utils.cpusetCpusToList(cpusetCpus)
+                x.labels.cpusetCpus = cpusetCpuList.join(',')
+                double vCpuNumber = 0
+                if (conf.cpuShares) {
+                    vCpuNumber = (conf.cpuShares / 1024).round(2).doubleValue()
+                } else if (conf.cpuFixed) {
+                    vCpuNumber = conf.cpuFixed
+                }
+                x.labels.vCpuNumber = vCpuNumber.toString()
 
-                    double avgInPer = (vCpuNumber / cpusetCpuList.size()).round(2).doubleValue()
-                    for (i in cpusetCpuList) {
-                        map[i] << avgInPer
-                    }
+                double avgInPer = (vCpuNumber / cpusetCpuList.size()).round(2).doubleValue()
+                for (i in cpusetCpuList) {
+                    map[i] << avgInPer
                 }
             }
         }
