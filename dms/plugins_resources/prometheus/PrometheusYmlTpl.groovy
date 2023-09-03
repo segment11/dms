@@ -1,7 +1,7 @@
 package prometheus
 
+import com.segment.common.Utils
 import common.Const
-import common.Utils
 import model.AppDTO
 import model.server.ContainerMountTplHelper
 import server.InMemoryAllContainerManager
