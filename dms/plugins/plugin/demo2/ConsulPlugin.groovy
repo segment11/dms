@@ -8,7 +8,6 @@ import model.json.KVPair
 import model.json.PortMapping
 import plugin.BasePlugin
 import plugin.callback.Observer
-import server.AgentCaller
 import server.InMemoryAllContainerManager
 import server.dns.DnsOperator
 import server.scheduler.checker.HealthChecker
@@ -75,12 +74,8 @@ class ConsulPlugin extends BasePlugin implements Observer {
 
                     // only check first container
                     def x = containerList[0]
-                    def r = AgentCaller.instance.agentScriptExe(app.clusterId, x.nodeIp,
-                            'container init', [id: x.id, initCmd: cmd])
-
-                    def message = r.getString('message')
+                    def message = containerExec(app.clusterId, x.nodeIp, x.id, cmd)
                     if (!message) {
-                        log.warn 'failed get container cmd result message, result: {}', r.toString()
                         return false
                     }
 

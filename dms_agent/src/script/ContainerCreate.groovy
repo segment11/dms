@@ -143,6 +143,7 @@ conf.fileVolumeList.eachWithIndex { FileVolumeMount one, int i ->
              targetNodeIpList: createConf.conf.targetNodeIpList,
              instanceIndex   : createConf.instanceIndex,
              containerNumber : conf.containerNumber,
+             envList         : envList,
              imageTplId      : one.imageTplId], String)
 
     if (one.isParentDirMount) {

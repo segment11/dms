@@ -8,7 +8,6 @@ import model.json.*
 import model.server.CreateContainerConf
 import plugin.BasePlugin
 import plugin.PluginManager
-import server.AgentCaller
 import server.InMemoryAllContainerManager
 import server.scheduler.checker.Checker
 import server.scheduler.checker.CheckerHolder
@@ -80,18 +79,28 @@ class EtcdPlugin extends BasePlugin {
         addNodeVolumeForUpdate('/data/etcd', '/data/etcd')
     }
 
+    private static String getEndpoints(AppConf conf) {
+        def containerNumber = conf.containerNumber
+        def endpoints = (0..<containerNumber).collect {
+            conf.isLimitNode ? "http://${conf.targetNodeIpList[0]}:${2379 + 100 * it}".toString()
+                    : "http://${conf.targetNodeIpList[it]}:2379".toString()
+        }
+        endpoints.join(',')
+    }
+
     private void initChecker() {
         CheckerHolder.instance.add new Checker() {
 
             @Override
             boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
-                def containerNumber = conf.conf.containerNumber
-                def endpoints = (0..<containerNumber).collect {
-                    conf.conf.isLimitNode ? "http://${conf.conf.targetNodeIpList[0]}:${2379 + 100 * it}"
-                            : "http://${conf.conf.targetNodeIpList[it]}:2379"
-                }
+                conf.conf.envList << new KVPair('ENDPOINTS', getEndpoints(conf.conf))
 
-                conf.conf.envList << new KVPair('ENDPOINTS', endpoints.join(','))
+                def instanceIndexList = memberInstanceIndexList(conf.app, conf.instanceIndex)
+                conf.conf.envList << new KVPair('instanceIndexList', instanceIndexList)
+
+                def isNewMember = instanceIndexList && !(conf.instanceIndex in instanceIndexList)
+                conf.conf.envList << new KVPair('isNewMember', isNewMember)
+
                 true
             }
 
@@ -124,8 +133,6 @@ class EtcdPlugin extends BasePlugin {
 
             @Override
             boolean check(AppDTO app) {
-                final String cmd = '/etcd/etcdctl --write-out=table --endpoints=$ENDPOINTS endpoint status'
-
                 def containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id)
                 if (!containerList) {
                     log.warn 'failed get container list, clusterId: {}, appId: {}', app.clusterId, app.id
@@ -133,14 +140,12 @@ class EtcdPlugin extends BasePlugin {
                 }
 
                 def containerNumber = app.conf.containerNumber
+                def endpoints = getEndpoints(app.conf)
+                String cmd = "/etcd/etcdctl --write-out=table --endpoints=${endpoints} endpoint status".toString()
 
                 for (x in containerList) {
-                    def r = AgentCaller.instance.agentScriptExe(app.clusterId, x.nodeIp,
-                            'container init', [id: x.id, initCmd: cmd])
-
-                    def message = r.getString('message')
+                    def message = containerExec(app.clusterId, x.nodeIp, x.id, cmd)
                     if (!message) {
-                        log.warn 'failed get container cmd result message, result: {}', r.toString()
                         return false
                     }
 
@@ -216,11 +221,13 @@ class EtcdPlugin extends BasePlugin {
 
         if (conf.isLimitNode) {
             conf.fileVolumeList << new FileVolumeMount(
+                    isReloadInterval: true,
                     paramList: paramList,
                     dist: '/etcd/etcd.yml',
                     imageTplId: getImageTplIdByName('etcd.yml.single.node.tpl'))
         } else {
             conf.fileVolumeList << new FileVolumeMount(
+                    isReloadInterval: true,
                     paramList: paramList,
                     dist: '/etcd/etcd.yml',
                     imageTplId: getImageTplIdByName('etcd.yml.tpl'))
@@ -229,5 +236,36 @@ class EtcdPlugin extends BasePlugin {
         conf.portList << new PortMapping(privatePort: 2380, publicPort: 2380)
 
         app
+    }
+
+    static List<Integer> memberInstanceIndexList(AppDTO app, int instanceIndex) {
+        // check if add a member to exists cluster
+        if (instanceIndex == 0) {
+            return []
+        }
+
+        def containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id)
+        // usually the first one
+        def runningOne = containerList.find { x ->
+            x.running() && x.instanceIndex() < instanceIndex
+        }
+
+        if (!runningOne) {
+            return []
+        }
+
+        def cmd = '/etcd/etcdctl member list'
+        def message = containerExec(app.clusterId, runningOne.nodeIp, runningOne.id, cmd)
+        if (!message) {
+            return []
+        }
+
+        def instanceIndexList = message.readLines().collect { line ->
+            def arr = line.split(',')
+            def s = arr[2].trim()
+            s ? s['etcd'.length()..-1].toInteger() : -1
+        }
+
+        instanceIndexList
     }
 }

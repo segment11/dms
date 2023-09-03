@@ -353,15 +353,16 @@ private static void callAgentScript(Req req, Resp resp, String scriptName) {
 h.post('/api/container/create/tpl') { req, resp ->
     /*
     def content = Agent.instance.post('/dms/api/container/create/tpl',
-            [clusterId           : createConf.clusterId,
-             appId               : createConf.appId,
-             appIdList           : createConf.appIdList,
-             nodeIp              : createConf.nodeIp,
-             nodeIpList          : createConf.nodeIpList,
-             targetNodeIpList    : createConf.conf.targetNodeIpList,
-             instanceIndex       : createConf.instanceIndex,
-             containerNumber     : conf.containerNumber,
-             imageTplId          : one.imageTplId], String)
+            [clusterId       : createConf.clusterId,
+             appId           : createConf.appId,
+             appIdList       : createConf.appIdList,
+             nodeIp          : createConf.nodeIp,
+             nodeIpList      : createConf.nodeIpList,
+             targetNodeIpList: createConf.conf.targetNodeIpList,
+             instanceIndex   : createConf.instanceIndex,
+             containerNumber : conf.containerNumber,
+             envList         : envList,
+             imageTplId      : one.imageTplId], String)
      */
     HashMap map = req.bodyAs()
     int clusterId = map.clusterId as int
