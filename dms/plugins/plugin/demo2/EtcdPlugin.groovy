@@ -8,6 +8,7 @@ import model.json.*
 import model.server.CreateContainerConf
 import plugin.BasePlugin
 import plugin.PluginManager
+import server.AgentCaller
 import server.InMemoryAllContainerManager
 import server.scheduler.checker.Checker
 import server.scheduler.checker.CheckerHolder
@@ -88,6 +89,18 @@ class EtcdPlugin extends BasePlugin {
         endpoints.join(',')
     }
 
+    private static String containerExec(Integer clusterId, String nodeIp, String id, String cmd) {
+        def r = AgentCaller.instance.agentScriptExe(clusterId, nodeIp,
+                'container init', [id: id, initCmd: cmd])
+
+        def message = r.getString('message')
+        if (!message) {
+            log.warn 'failed get container exec result message, result: {}', r.toString()
+            return null
+        }
+        message
+    }
+
     private void initChecker() {
         CheckerHolder.instance.add new Checker() {
 
@@ -100,6 +113,14 @@ class EtcdPlugin extends BasePlugin {
 
                 def isNewMember = instanceIndexList && !(conf.instanceIndex in instanceIndexList)
                 conf.conf.envList << new KVPair('isNewMember', isNewMember)
+
+                if (isNewMember) {
+                    // add member to old cluster members
+                    def isAdded = addNewMember(conf)
+                    if (!isAdded) {
+                        return false
+                    }
+                }
 
                 true
             }
@@ -267,5 +288,34 @@ class EtcdPlugin extends BasePlugin {
         }
 
         instanceIndexList
+    }
+
+    static boolean addNewMember(CreateContainerConf conf) {
+        def app = conf.app
+
+        String cmd
+        if (app.conf.isLimitNode) {
+            cmd = "/etcd/etcdctl member add etcd${conf.instanceIndex} --peer-urls=http://${conf.nodeIp}:${2380 + 100 * conf.instanceIndex}"
+        } else {
+            cmd = "/etcd/etcdctl member add etcd${conf.instanceIndex} --peer-urls=http://${conf.nodeIp}:2380"
+        }
+
+        def containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id)
+        for (x in containerList) {
+            if (!x.running()) {
+                continue
+            }
+
+            def message = containerExec(app.clusterId, x.nodeIp, x.id, cmd)
+            if (message) {
+                log.info message
+                if (!message.contains('added to cluster') && !message.contains('unhealthy cluster')) {
+                    return false
+                }
+            } else {
+                return false
+            }
+        }
+        true
     }
 }

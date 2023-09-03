@@ -9,7 +9,6 @@ import org.apache.commons.io.FileUtils
 import org.segment.d.D
 import org.segment.web.common.CachedGroovyClassLoader
 import plugin.model.Menu
-import server.AgentCaller
 
 @CompileStatic
 @Slf4j
@@ -189,18 +188,6 @@ abstract class BasePlugin implements Plugin {
         } catch (Exception e) {
             log.error 'eval ctrl plugin file error - {}', f.name, e
         }
-    }
-
-    protected static String containerExec(Integer clusterId, String nodeIp, String id, String cmd) {
-        def r = AgentCaller.instance.agentScriptExe(clusterId, nodeIp,
-                'container init', [id: id, initCmd: cmd])
-
-        def message = r.getString('message')
-        if (!message) {
-            log.warn 'failed get container exec result message, result: {}', r.toString()
-            return null
-        }
-        message
     }
 
     @Override

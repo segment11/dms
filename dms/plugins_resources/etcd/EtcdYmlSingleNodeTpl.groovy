@@ -11,11 +11,16 @@ def nodeIpList = super.binding.getProperty('nodeIpList') as List<String>
 
 List<Map> envList = super.binding.getProperty('envList') as List<Map>
 Boolean isNewMember = envList.find { 'isNewMember' == it.key }?.value as Boolean
+//List<Integer> instanceIndexList = envList.find { 'instanceIndexList' == it.key }?.value as List<Integer>
 
 def step = instanceIndex * 100
 
 def list = []
 containerNumber.times { i ->
+//    if (isNewMember && !(i in instanceIndexList)) {
+//        return
+//    }
+
     def ip = nodeIpList.size() > i ? nodeIpList[i] : nodeIpList[0]
     list << "etcd${i}=http://${ip}:${2380 + i * 100}"
 }
@@ -28,6 +33,7 @@ listen-client-urls: http://${nodeIp}:${2379 + step},http://127.0.0.1:${2379 + st
 advertise-client-urls: http://${nodeIp}:${2379 + step},http://127.0.0.1:${2379 + step}
 
 listen-peer-urls: http://${nodeIp}:${2380 + step}
+#initial-advertise-peer-urls: http://${nodeIp}:2380
 initial-cluster: ${cluster}
 initial-cluster-state: ${isNewMember ? 'existing' : 'new'}
 initial-cluster-token: cluster-${appId}
