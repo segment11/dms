@@ -27,6 +27,8 @@ def conf = createConf.conf
 
 def log = LoggerFactory.getLogger(this.getClass())
 
+List<String> changedDistList = []
+
 conf.fileVolumeList.findAll { it.isReloadInterval }.each { FileVolumeMount one ->
     def content = Agent.instance.post('/dms/api/container/create/tpl',
             [clusterId       : createConf.clusterId,
@@ -58,6 +60,8 @@ conf.fileVolumeList.findAll { it.isReloadInterval }.each { FileVolumeMount one -
             FileUtils.forceMkdirParent(localFile)
             localFile.text = content
 
+            changedDistList << one.dist
+
             Agent.instance.addEvent Event.builder().type(Event.Type.node).reason('file volume reload').result('app ' + createConf.appId).
                     build().log(content)
         }
@@ -76,6 +80,8 @@ conf.fileVolumeList.findAll { it.isReloadInterval }.each { FileVolumeMount one -
                 localFile.text = content
                 Utils.setFileRead(localFile)
 
+                changedDistList << one.dist
+
                 Agent.instance.addEvent Event.builder().type(Event.Type.node).reason('file volume reload').result('app ' + createConf.appId).
                         build().log(content)
             }
@@ -85,4 +91,4 @@ conf.fileVolumeList.findAll { it.isReloadInterval }.each { FileVolumeMount one -
     }
 }
 
-[flag: true]
+[flag: true, changedDistList: changedDistList]

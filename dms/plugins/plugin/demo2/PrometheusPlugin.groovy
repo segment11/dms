@@ -10,19 +10,15 @@ import model.json.*
 import model.server.CreateContainerConf
 import plugin.BasePlugin
 import plugin.PluginManager
-import server.InMemoryAllContainerManager
+import plugin.callback.ConfigFileReloaded
 import server.scheduler.checker.Checker
 import server.scheduler.checker.CheckerHolder
-import server.scheduler.checker.HealthChecker
-import server.scheduler.checker.HealthCheckerHolder
 import server.scheduler.processor.JobStepKeeper
 import transfer.ContainerInfo
 
-import java.util.concurrent.atomic.AtomicInteger
-
 @CompileStatic
 @Slf4j
-class PrometheusPlugin extends BasePlugin {
+class PrometheusPlugin extends BasePlugin implements ConfigFileReloaded {
     @Override
     String name() {
         'prometheus'
@@ -100,46 +96,6 @@ class PrometheusPlugin extends BasePlugin {
             String imageName() {
                 PrometheusPlugin.this.imageName()
             }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                null
-            }
-        }
-
-        HealthCheckerHolder.instance.add new HealthChecker() {
-
-            private AtomicInteger count = new AtomicInteger(0)
-
-            @Override
-            String name() {
-                'prometheus reload'
-            }
-
-            @Override
-            String imageName() {
-                PrometheusPlugin.this.imageName()
-            }
-
-            @Override
-            boolean check(AppDTO app) {
-                def c = count.incrementAndGet()
-                if (c % 2 != 0) {
-                    return true
-                }
-
-                List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id)
-                if (!containerList) {
-                    return true
-                }
-                containerList.every { x ->
-                    String url = "http://${x.nodeIp}:${x.publicPort(9090)}/-/reload"
-                    def code = HttpRequest.post(url).code()
-                    log.info 'refresh prometheus reload - {}', code
-
-                    code == 200
-                }
-            }
         }
     }
 
@@ -175,5 +131,12 @@ class PrometheusPlugin extends BasePlugin {
         conf.portList << new PortMapping(privatePort: 9090, publicPort: 9090)
 
         app
+    }
+
+    @Override
+    void reloaded(AppDTO app, ContainerInfo x, List<String> changedDistList) {
+        String url = "http://${x.nodeIp}:${x.publicPort(9090)}/-/reload"
+        def code = HttpRequest.post(url).code()
+        log.info 'refresh prometheus reload - {}', code
     }
 }

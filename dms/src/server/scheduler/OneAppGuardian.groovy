@@ -11,6 +11,7 @@ import model.ClusterDTO
 import org.segment.d.json.DefaultJsonTransformer
 import org.segment.d.json.JsonTransformer
 import plugin.PluginManager
+import plugin.callback.ConfigFileReloaded
 import plugin.callback.Observer
 import server.AgentCaller
 import server.scheduler.checker.HealthCheckerHolder
@@ -196,6 +197,15 @@ class OneAppGuardian {
                     Event.builder().type(Event.Type.app).reason('container file volume reload').
                             result(app.id).build().log(fileVolumeNeedReloadList.collect { it.dist }.join(',') + ' - ' + r.toString()).
                             toDto().add()
+
+                    List<String> changedDistList = r.get('changedDistList') as List<String>
+                    if (changedDistList) {
+                        for (plugin in PluginManager.instance.pluginList) {
+                            if (plugin instanceof ConfigFileReloaded) {
+                                plugin.reloaded(app, x, changedDistList)
+                            }
+                        }
+                    }
                 }
             }
 
