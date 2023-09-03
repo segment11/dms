@@ -294,11 +294,6 @@ class PatroniPlugin extends BasePlugin {
             String imageName() {
                 PatroniPlugin.this.imageName()
             }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                null
-            }
         }
 
         CheckerHolder.instance.add new Checker() {
@@ -405,11 +400,6 @@ chown postgres:postgres /var/lib/pgbackrest
             @Override
             String imageName() {
                 PatroniPlugin.this.imageName()
-            }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                null
             }
         }
     }
@@ -563,11 +553,6 @@ chown postgres:postgres /var/lib/pgbackrest
             String imageName() {
                 PatroniPlugin.this.imageName()
             }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                null
-            }
         }
     }
 
@@ -673,11 +658,6 @@ chown postgres:postgres /var/lib/pgbackrest
             @Override
             String imageName() {
                 PatroniPlugin.this.imageName()
-            }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                null
             }
         }
     }

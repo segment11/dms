@@ -116,11 +116,6 @@ class ZookeeperPlugin extends BasePlugin {
             String imageName() {
                 ZookeeperPlugin.this.imageName()
             }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                null
-            }
         }
     }
 

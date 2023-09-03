@@ -66,11 +66,6 @@ class NodeExporterPlugin extends BasePlugin {
             String imageName() {
                 NodeExporterPlugin.this.imageName()
             }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                null
-            }
         }
     }
 

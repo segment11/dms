@@ -224,11 +224,6 @@ class N9ePlugin extends BasePlugin {
             String imageName() {
                 N9ePlugin.this.imageName()
             }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                null
-            }
         }
     }
 

@@ -200,11 +200,6 @@ class RedisPlugin extends BasePlugin {
             String imageName() {
                 RedisPlugin.this.imageName()
             }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                return null
-            }
         }
 
         CheckerHolder.instance.add new Checker() {
@@ -428,11 +423,6 @@ class RedisPlugin extends BasePlugin {
             @Override
             String imageName() {
                 RedisPlugin.this.imageName()
-            }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                null
             }
         }
     }

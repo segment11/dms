@@ -14,7 +14,9 @@ interface Checker {
 
     String imageName()
 
-    String script(CreateContainerConf conf)
+    default String script(CreateContainerConf conf) {
+        null
+    }
 
     @CompileStatic
     static enum Type {

@@ -175,11 +175,6 @@ class MySQLPlugin extends BasePlugin {
             String imageName() {
                 MySQLPlugin.this.imageName()
             }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                null
-            }
         }
 
         CheckerHolder.instance.add new Checker() {
@@ -268,11 +263,6 @@ class MySQLPlugin extends BasePlugin {
             @Override
             String imageName() {
                 MySQLPlugin.this.imageName()
-            }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                null
             }
         }
 
@@ -392,11 +382,6 @@ start slave;
             @Override
             String imageName() {
                 MySQLPlugin.this.imageName()
-            }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                null
             }
         })
     }
@@ -534,11 +519,6 @@ start slave;
             @Override
             String imageName() {
                 MySQLPlugin.this.imageName()
-            }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                null
             }
         }
     }
