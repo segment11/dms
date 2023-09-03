@@ -194,12 +194,13 @@ class OneAppGuardian {
 
                     def createP = [jsonStr: json.json(createContainerConf), containerId: containerId]
                     def r = AgentCaller.instance.agentScriptExe(cluster.id, nodeIp, 'container file volume reload', createP)
-                    Event.builder().type(Event.Type.app).reason('container file volume reload').
-                            result(app.id).build().log(fileVolumeNeedReloadList.collect { it.dist }.join(',') + ' - ' + r.toString()).
-                            toDto().add()
 
                     List<String> changedDistList = r.get('changedDistList') as List<String>
                     if (changedDistList) {
+                        Event.builder().type(Event.Type.app).reason('container file volume reload').
+                                result(app.id).build().log(changedDistList.join(',')).
+                                toDto().add()
+
                         for (plugin in PluginManager.instance.pluginList) {
                             if (plugin instanceof ConfigFileReloaded) {
                                 plugin.reloaded(app, x, changedDistList)
