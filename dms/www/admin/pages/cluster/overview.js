@@ -89,7 +89,11 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
                     var sum = _.reduce(requiredList, function (memo, it) {
                         return memo + it;
                     }, 0);
-                    clist.push({vcore: _vcore, required: sum, usedPercent: cpuUsedPercentCpus[_vcore]});
+                    clist.push({
+                        vcore: _vcore,
+                        required: Math.round(sum * 10000) / 10000,
+                        usedPercent: cpuUsedPercentCpus[_vcore]
+                    });
                 }
                 it.clist = clist;
 
