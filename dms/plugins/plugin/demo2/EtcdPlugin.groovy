@@ -5,8 +5,16 @@ import groovy.util.logging.Slf4j
 import model.AppDTO
 import model.ImageTplDTO
 import model.json.*
+import model.server.CreateContainerConf
 import plugin.BasePlugin
 import plugin.PluginManager
+import server.AgentCaller
+import server.InMemoryAllContainerManager
+import server.scheduler.checker.Checker
+import server.scheduler.checker.CheckerHolder
+import server.scheduler.checker.HealthChecker
+import server.scheduler.checker.HealthCheckerHolder
+import server.scheduler.processor.JobStepKeeper
 
 @CompileStatic
 @Slf4j
@@ -21,6 +29,7 @@ class EtcdPlugin extends BasePlugin {
         super.init()
 
         initImageConfig()
+        initChecker()
     }
 
     private void initImageConfig() {
@@ -69,6 +78,111 @@ class EtcdPlugin extends BasePlugin {
         }
 
         addNodeVolumeForUpdate('/data/etcd', '/data/etcd')
+    }
+
+    private void initChecker() {
+        CheckerHolder.instance.add new Checker() {
+
+            @Override
+            boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
+                def containerNumber = conf.conf.containerNumber
+                def endpoints = (0..<containerNumber).collect {
+                    conf.conf.isLimitNode ? "http://${conf.conf.targetNodeIpList[0]}:${2379 + 100 * it}"
+                            : "http://${conf.conf.targetNodeIpList[it]}:2379"
+                }
+
+                conf.conf.envList << new KVPair('ENDPOINTS', endpoints.join(','))
+                true
+            }
+
+            @Override
+            Checker.Type type() {
+                Checker.Type.before
+            }
+
+            @Override
+            String name() {
+                'etcd set env'
+            }
+
+            @Override
+            String imageName() {
+                EtcdPlugin.this.imageName()
+            }
+        }
+
+        HealthCheckerHolder.instance.add new HealthChecker() {
+            @Override
+            String name() {
+                'etcd endpoints status'
+            }
+
+            @Override
+            String imageName() {
+                EtcdPlugin.this.imageName()
+            }
+
+            @Override
+            boolean check(AppDTO app) {
+                final String cmd = '/etcd/etcdctl --write-out=table --endpoints=$ENDPOINTS endpoint status'
+
+                def containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id)
+                if (!containerList) {
+                    log.warn 'failed get container list, clusterId: {}, appId: {}', app.clusterId, app.id
+                    return false
+                }
+
+                def containerNumber = app.conf.containerNumber
+
+                for (x in containerList) {
+                    def r = AgentCaller.instance.agentScriptExe(app.clusterId, x.nodeIp,
+                            'container init', [id: x.id, initCmd: cmd])
+
+                    def message = r.getString('message')
+                    if (!message) {
+                        log.warn 'failed get container cmd result message, result: {}', r.toString()
+                        return false
+                    }
+
+                    def lines = message.readLines()
+                    if (lines.size() < (containerNumber + 1)) {
+                        log.warn 'etcd endpoints status lines not match, result: {}', message
+                        return false
+                    }
+
+                    def arrList = lines[(-containerNumber - 1)..-2].collect { line ->
+                        def arr = line.split(/\|/)
+                        arr
+                    }
+
+                    Set<String> raftTermSet = []
+                    for (arr in arrList) {
+                        if (arr.size() < 10) {
+                            log.warn 'etcd endpoints status line not match, arr: {}', arr
+                            return false
+                        }
+
+                        raftTermSet << arr[7]
+                    }
+
+                    if (raftTermSet.size() > 1) {
+                        log.warn 'etcd raft term not match, raft term: {}', raftTermSet
+                        return false
+                    }
+
+                    // only one leader
+                    def leaderCount = arrList.count { arr ->
+                        'true' == arr[5].trim()
+                    }
+                    if (leaderCount != 1) {
+                        log.warn 'etcd leader number not match, leader count: {}', leaderCount
+                        return false
+                    }
+                }
+
+                true
+            }
+        }
     }
 
     @Override
