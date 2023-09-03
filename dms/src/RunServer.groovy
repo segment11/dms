@@ -81,8 +81,9 @@ if (!tableNameList.contains('CLUSTER')) {
         }
     }
 }
+
 // load script for dms agent
-LocalGroovyScriptLoader.loadWhenFirstStart()
+LocalGroovyScriptLoader.loadWhenFirstStart(c.isOn('agent.isScriptUpdateForce'))
 // done undone jobs
 JobBatchDone.doneJobWhenFirstStart()
 // create first cluster
