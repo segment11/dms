@@ -1,5 +1,6 @@
 package plugin.demo2
 
+import common.Event
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AppDTO
@@ -98,7 +99,7 @@ class EtcdPlugin extends BasePlugin implements Observer {
 
         def message = r.getString('message')
         if (!message) {
-            log.warn 'failed get container exec result message, cmd: {}, result: {}', cmd, r.toString()
+            log.warn 'etcd failed get container exec result message, cmd: {}, result: {}', cmd, r.toString()
             return null
         }
         message
@@ -159,7 +160,7 @@ class EtcdPlugin extends BasePlugin implements Observer {
             boolean check(AppDTO app) {
                 def containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id)
                 if (!containerList) {
-                    log.warn 'failed get container list, clusterId: {}, appId: {}', app.clusterId, app.id
+                    log.warn 'etcd failed get container list, cluster id: {}, app id: {}', app.clusterId, app.id
                     return false
                 }
 
@@ -311,7 +312,9 @@ class EtcdPlugin extends BasePlugin implements Observer {
 
             def message = containerExec(app.clusterId, x.nodeIp, x.id, cmd)
             if (message) {
-                log.info message
+                Event.builder().type(Event.Type.app).reason('member add result').result(app.id).
+                        build().log(message).toDto().add()
+
                 if (!message.contains('added to cluster') && !message.contains('unhealthy cluster')) {
                     return false
                 }
@@ -361,7 +364,9 @@ class EtcdPlugin extends BasePlugin implements Observer {
             return
         }
         def memberId = line.split(',')[0].trim()
-        log.warn 'etcd remove member id: {}', memberId
+
+        Event.builder().type(Event.Type.app).reason('member remove').result(app.id).
+                build().log('etcd remove member id: ' + memberId).toDto().add()
 
         // etcd member remove
         def cmdRemove = "/etcd/etcdctl member remove ${memberId}".toString()
@@ -377,7 +382,8 @@ class EtcdPlugin extends BasePlugin implements Observer {
 
             def messageRemove = containerExec(app.clusterId, container.nodeIp, container.id, cmdRemove)
             if (messageRemove) {
-                log.info messageRemove
+                Event.builder().type(Event.Type.app).reason('member remove result').result(app.id).
+                        build().log(messageRemove).toDto().add()
             }
         }
     }
