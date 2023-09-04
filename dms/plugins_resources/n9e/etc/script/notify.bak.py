@@ -42,7 +42,7 @@ class Sender(object):
             return
 
         recipients = emails.keys()
-        mail_body = payload.get('tpls').get("mailbody.tpl", "mailbody.tpl not found")
+        mail_body = payload.get('tpls').get("email.tpl", "email.tpl not found")
         message = MIMEText(mail_body, 'html', 'utf-8')
         message['From'] = mail_from
         message['To'] = ", ".join(recipients)
@@ -147,8 +147,6 @@ class Sender(object):
             contacts = u.get("contacts")
             if contacts.get("feishu_robot_token", ""):
                 tokens[contacts.get("feishu_robot_token", "")] = 1
-            if contacts.get("feishu_user_id", ""):
-                tokens[contacts.get("feishu_user_id", "")] = 1
 
         opener = urllib2.build_opener(urllib2.HTTPHandler())
         method = "POST"

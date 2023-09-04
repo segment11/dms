@@ -90,34 +90,24 @@ class N9ePlugin extends BasePlugin {
         // cmd /app/n9e webapi
         def imageName = imageName()
 
-        [18000, 19000].each {
+        [17000].each {
             def one = new ImagePortDTO(imageName: imageName, port: it).one()
             if (!one) {
                 new ImagePortDTO(imageName: imageName, name: it.toString(), port: it).add()
             }
         }
 
-        final String tplName = 'webapi.conf.tpl'
-        final String tplName2 = 'server.conf.tpl'
+        final String tplName = 'config.toml.tpl'
 
-        String tplFilePath = PluginManager.pluginsResourceDirPath() + '/n9e/WebapiConfTpl.groovy'
-        String tplFilePath2 = PluginManager.pluginsResourceDirPath() + '/n9e/ServerConfTpl.groovy'
+        String tplFilePath = PluginManager.pluginsResourceDirPath() + '/n9e/ConfigTomlTpl.groovy'
         String content = new File(tplFilePath).text
-        String content2 = new File(tplFilePath2).text
 
         TplParamsConf tplParams = new TplParamsConf()
         tplParams.addParam('host', '192.168.1.100', 'string')
         tplParams.addParam('port', '3306', 'int')
         tplParams.addParam('user', 'root', 'string')
         tplParams.addParam('password', 'root1234', 'string')
-        tplParams.addParam('promAddressList', 'http://localhost:9090', 'string')
-
-        TplParamsConf tplParams2 = new TplParamsConf()
-        tplParams2.addParam('host', '192.168.1.100', 'string')
-        tplParams2.addParam('port', '3306', 'int')
-        tplParams2.addParam('user', 'root', 'string')
-        tplParams2.addParam('password', 'root1234', 'string')
-        tplParams2.addParam('promAddressWrite', 'http://localhost:9090', 'string')
+        tplParams.addParam('signingKey', '5b94a0fd640fe2765af826acfe42d151', 'string')
 
         def one = new ImageTplDTO(imageName: imageName, name: tplName).queryFields('id').one()
         if (!one) {
@@ -125,42 +115,26 @@ class N9ePlugin extends BasePlugin {
                     name: tplName,
                     imageName: imageName,
                     tplType: ImageTplDTO.TplType.mount.name(),
-                    mountDist: '/app/etc/webapi.conf',
+                    mountDist: '/app/etc/config.toml',
                     content: content,
                     isParentDirMount: false,
                     params: tplParams
             ).add()
         }
-        def one2 = new ImageTplDTO(imageName: imageName, name: tplName2).queryFields('id').one()
-        if (!one2) {
-            new ImageTplDTO(
-                    name: tplName2,
-                    imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
-                    mountDist: '/app/etc/server.conf',
-                    content: content2,
-                    isParentDirMount: false,
-                    params: tplParams2
-            ).add()
-        }
-
-//        addNodeVolumeForUpdate('n9e etc dir', '/data/n9e/etc', '/app/etc_ext')
     }
 
-    private static String getParamOneValue(AppConf conf, String key) {
-        def mountFileOne = conf.fileVolumeList.find { it.dist == '/app/etc/config.toml' }
-        def paramOne = mountFileOne.paramList.find { it.key == key }
-        paramOne.value
+    private String getParamValue(AppConf conf, String key) {
+        getParamValueFromTpl(conf, '/app/etc/config.toml', key)
     }
 
     private void initChecker() {
         CheckerHolder.instance.add new Checker() {
             @Override
             boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
-                def host = getParamOneValue(conf.conf, 'host')
-                int port = getParamOneValue(conf.conf, 'port') as int
-                def user = getParamOneValue(conf.conf, 'user')
-                def password = getParamOneValue(conf.conf, 'password')
+                def host = getParamValue(conf.conf, 'host')
+                int port = getParamValue(conf.conf, 'port') as int
+                def user = getParamValue(conf.conf, 'user')
+                def password = getParamValue(conf.conf, 'password')
 
                 Ds ds
                 try {
@@ -239,6 +213,6 @@ class N9ePlugin extends BasePlugin {
 
     @Override
     String version() {
-        'v5'
+        'v6'
     }
 }
