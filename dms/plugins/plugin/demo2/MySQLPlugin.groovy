@@ -93,8 +93,8 @@ class MySQLPlugin extends BasePlugin {
         addNodeVolumeForUpdate('log-dir', '/data/mysql-log')
     }
 
-    static int getPublicPort(AppConf conf) {
-        def port = getParamOneValue(conf, 'port') as int
+    int getPublicPort(AppConf conf) {
+        def port = getParamValue(conf, 'port') as int
 
         int publicPort = port
         if ('host' != conf.networkMode) {
@@ -106,22 +106,15 @@ class MySQLPlugin extends BasePlugin {
         publicPort
     }
 
-    static String getParamOneValue(AppConf conf, String key) {
-        def mountFileOne = conf.fileVolumeList.find { it.dist == '/etc/my.cnf' }
-        def paramOne = mountFileOne.paramList.find { it.key == key }
-        paramOne.value
-    }
-
-    static String getEnvOneValue(AppConf conf, String key) {
-        def envOne = conf.envList.find { it.key == key }
-        envOne?.value.toString()
+    String getParamValue(AppConf conf, String key) {
+        getParamValueFromTpl(conf, '/etc/my.cnf', key)
     }
 
     private void initChecker() {
         CheckerHolder.instance.add new Checker() {
             @Override
             boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
-                def fileName = getEnvOneValue(conf.conf, 'DEFAULT_PARAMS_TPL_FILE') ?: 'conf_output_mysql.json'
+                def fileName = getEnvValue(conf.conf, 'DEFAULT_PARAMS_TPL_FILE') ?: 'conf_output_mysql.json'
                 def file = new File(PluginManager.pluginsResourceDirPath() + '/mysql/' + fileName)
                 if (!file.exists()) {
                     log.warn 'default parameters config file not exists: ' + file.absolutePath
@@ -138,7 +131,7 @@ class MySQLPlugin extends BasePlugin {
                 def paramDefaultParameters = mountFileOne.paramList.find { it.key == 'defaultParameters' }
 
                 Set<String> skipKeySet = []
-                def oldValue = getParamOneValue(conf.conf, 'customParameters')
+                def oldValue = getParamValue(conf.conf, 'customParameters')
                 if (oldValue) {
                     def oldValueArr = oldValue.split(',')
                     for (oldValueOne in oldValueArr) {
@@ -182,9 +175,9 @@ class MySQLPlugin extends BasePlugin {
             boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
                 int publicPort = getPublicPort(conf.conf)
 
-                def password = getEnvOneValue(conf.conf, 'MYSQL_ROOT_PASSWORD')
-                def databaseName = getEnvOneValue(conf.conf, 'INIT_DATABASE_NAME')
-                def databaseUser = getEnvOneValue(conf.conf, 'INIT_DATABASE_USER')
+                def password = getEnvValue(conf.conf, 'MYSQL_ROOT_PASSWORD')
+                def databaseName = getEnvValue(conf.conf, 'INIT_DATABASE_NAME')
+                def databaseUser = getEnvValue(conf.conf, 'INIT_DATABASE_USER')
 
                 Ds ds
                 try {
@@ -270,7 +263,7 @@ class MySQLPlugin extends BasePlugin {
             @Override
             boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
                 int publicPort = getPublicPort(conf.conf)
-                def password = getEnvOneValue(conf.conf, 'MYSQL_ROOT_PASSWORD')
+                def password = getEnvValue(conf.conf, 'MYSQL_ROOT_PASSWORD')
 
                 Ds ds
                 try {
@@ -539,9 +532,9 @@ start slave;
             @Override
             boolean check(AppDTO app) {
                 def publicPort = getPublicPort(app.conf)
-                def password = getEnvOneValue(app.conf, 'MYSQL_ROOT_PASSWORD')
+                def password = getEnvValue(app.conf, 'MYSQL_ROOT_PASSWORD')
 
-                def isMasterSlave = 'true' == getParamOneValue(app.conf, 'isMasterSlave')
+                def isMasterSlave = 'true' == getParamValue(app.conf, 'isMasterSlave')
 
                 def targetNodeIpList = app.conf.targetNodeIpList
                 (0..<app.conf.containerNumber).each { instanceIndex ->

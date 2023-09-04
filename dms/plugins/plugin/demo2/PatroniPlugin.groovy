@@ -195,8 +195,8 @@ class PatroniPlugin extends BasePlugin {
         }
     }
 
-    static int getPublicPort(AppConf conf, String key = 'pgPort') {
-        def port = getParamOneValue(conf, key) as int
+    int getPublicPort(AppConf conf, String key = 'pgPort') {
+        def port = getParamValue(conf, key) as int
 
         int publicPort = port
         if ('host' != conf.networkMode) {
@@ -208,15 +208,8 @@ class PatroniPlugin extends BasePlugin {
         publicPort
     }
 
-    static String getParamOneValue(AppConf conf, String key) {
-        def mountFileOne = conf.fileVolumeList.find { it.dist == '/etc/patroni.yml' }
-        def paramOne = mountFileOne.paramList.find { it.key == key }
-        paramOne.value
-    }
-
-    static String getEnvOneValue(AppConf conf, String key) {
-        def envOne = conf.envList.find { it.key == key }
-        envOne?.value.toString()
+    String getParamValue(AppConf conf, String key) {
+        getParamValueFromTpl(conf, '/etc/patroni.yml', key)
     }
 
     private void initChecker() {
@@ -240,7 +233,7 @@ class PatroniPlugin extends BasePlugin {
 //                log.warn 'ready mkdir dirs: {}', dir
 //                AgentCaller.instance.agentScriptExe(conf.app.clusterId, conf.nodeIp, 'mk dir', [dir: dir])
 
-                def fileName = getEnvOneValue(conf.conf, 'DEFAULT_PARAMS_TPL_FILE') ?: 'conf_output_postgresql.json'
+                def fileName = getEnvValue(conf.conf, 'DEFAULT_PARAMS_TPL_FILE') ?: 'conf_output_postgresql.json'
                 def file = new File(PluginManager.pluginsResourceDirPath() + '/patroni/' + fileName)
                 if (!file.exists()) {
                     log.warn 'default parameters config file not exists: ' + file.absolutePath
@@ -257,7 +250,7 @@ class PatroniPlugin extends BasePlugin {
                 def paramDefaultParameters = mountFileOne.paramList.find { it.key == 'defaultParameters' }
 
                 Set<String> skipKeySet = []
-                def oldValue = getParamOneValue(conf.conf, 'customParameters')
+                def oldValue = getParamValue(conf.conf, 'customParameters')
                 if (oldValue) {
                     def oldValueArr = oldValue.split(',')
                     for (oldValueOne in oldValueArr) {
@@ -336,7 +329,7 @@ chown postgres:postgres /var/lib/pgbackrest
             @Override
             boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
                 int publicPort = getPublicPort(conf.conf)
-                def password = getParamOneValue(conf.conf, 'pgPassword')
+                def password = getParamValue(conf.conf, 'pgPassword')
 
                 Ds ds
                 try {

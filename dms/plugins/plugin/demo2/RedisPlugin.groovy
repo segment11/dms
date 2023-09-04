@@ -122,8 +122,8 @@ class RedisPlugin extends BasePlugin {
         addNodeVolumeForUpdate('sentinel-data-dir', '/data/sentinel', '-v /data/sentinel:/data/sentinel')
     }
 
-    private static int getPublicPort(AppConf conf) {
-        def port = getParamOneValue(conf, 'port') as int
+    private int getPublicPort(AppConf conf) {
+        def port = getParamValue(conf, 'port') as int
 
         int publicPort = port
         if ('host' != conf.networkMode) {
@@ -135,10 +135,8 @@ class RedisPlugin extends BasePlugin {
         publicPort
     }
 
-    private static String getParamOneValue(AppConf conf, String key) {
-        def mountFileOne = conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
-        def paramOne = mountFileOne.paramList.find { it.key == key }
-        paramOne.value
+    String getParamValue(AppConf conf, String key) {
+        getParamValueFromTpl(conf, '/etc/redis/redis.conf', key)
     }
 
     private void initChecker() {
@@ -306,7 +304,7 @@ class RedisPlugin extends BasePlugin {
                     return
                 }
                 def publicPort = getPublicPort(cc.conf)
-                def password = getParamOneValue(cc.conf, 'password')
+                def password = getParamValue(cc.conf, 'password')
 
                 def app = new AppDTO()
                 app.name = cc.appId + '_' + cc.app.name + '_exporter'

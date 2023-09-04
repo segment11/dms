@@ -123,7 +123,7 @@ class N9ePlugin extends BasePlugin {
         }
     }
 
-    private String getParamValue(AppConf conf, String key) {
+    String getParamValue(AppConf conf, String key) {
         getParamValueFromTpl(conf, '/app/etc/config.toml', key)
     }
 

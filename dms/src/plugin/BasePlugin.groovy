@@ -106,6 +106,21 @@ abstract class BasePlugin implements Plugin {
         }
     }
 
+    String getParamValueFromTpl(AppConf conf, String dist, String key) {
+        def mountFileOne = conf.fileVolumeList.find { it.dist == dist }
+        if (!mountFileOne) {
+            log.warn 'not found mount file - {}', dist
+            return null
+        }
+        def paramOne = mountFileOne.paramList.find { it.key == key }
+        paramOne?.value
+    }
+
+    String getEnvValue(AppConf conf, String key) {
+        def envOne = conf.envList.find { it.key == key }
+        envOne?.value?.toString()
+    }
+
     String imageName() {
         group() + '/' + image()
     }
