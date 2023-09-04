@@ -24,7 +24,7 @@ listen-client-urls: http://${nodeIp}:2379,http://127.0.0.1:2379
 advertise-client-urls: http://${nodeIp}:2379,http://127.0.0.1:2379
 
 listen-peer-urls: http://${nodeIp}:2380
-#initial-advertise-peer-urls: http://${nodeIp}:2380
+initial-advertise-peer-urls: http://${nodeIp}:2380
 initial-cluster: ${cluster}
 initial-cluster-state: ${isNewMember ? 'existing' : 'new'}
 initial-cluster-token: cluster-${appId}

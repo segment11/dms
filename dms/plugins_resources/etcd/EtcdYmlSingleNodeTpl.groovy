@@ -33,7 +33,7 @@ listen-client-urls: http://${nodeIp}:${2379 + step},http://127.0.0.1:${2379 + st
 advertise-client-urls: http://${nodeIp}:${2379 + step},http://127.0.0.1:${2379 + step}
 
 listen-peer-urls: http://${nodeIp}:${2380 + step}
-#initial-advertise-peer-urls: http://${nodeIp}:2380
+initial-advertise-peer-urls: http://${nodeIp}:${2380 + step}
 initial-cluster: ${cluster}
 initial-cluster-state: ${isNewMember ? 'existing' : 'new'}
 initial-cluster-token: cluster-${appId}

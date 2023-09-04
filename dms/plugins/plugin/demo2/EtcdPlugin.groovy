@@ -8,17 +8,20 @@ import model.json.*
 import model.server.CreateContainerConf
 import plugin.BasePlugin
 import plugin.PluginManager
+import plugin.callback.Observer
 import server.AgentCaller
 import server.InMemoryAllContainerManager
 import server.scheduler.checker.Checker
 import server.scheduler.checker.CheckerHolder
 import server.scheduler.checker.HealthChecker
 import server.scheduler.checker.HealthCheckerHolder
+import server.scheduler.processor.ContainerRunResult
 import server.scheduler.processor.JobStepKeeper
+import transfer.ContainerInfo
 
 @CompileStatic
 @Slf4j
-class EtcdPlugin extends BasePlugin {
+class EtcdPlugin extends BasePlugin implements Observer {
     @Override
     String name() {
         'etcd'
@@ -95,7 +98,7 @@ class EtcdPlugin extends BasePlugin {
 
         def message = r.getString('message')
         if (!message) {
-            log.warn 'failed get container exec result message, result: {}', r.toString()
+            log.warn 'failed get container exec result message, cmd: {}, result: {}', cmd, r.toString()
             return null
         }
         message
@@ -317,5 +320,70 @@ class EtcdPlugin extends BasePlugin {
             }
         }
         true
+    }
+
+    @Override
+    void afterContainerRun(AppDTO app, int instanceIndex, ContainerRunResult result) {
+
+    }
+
+    @Override
+    void beforeContainerStop(AppDTO app, ContainerInfo x, JobStepKeeper keeper) {
+
+    }
+
+    @Override
+    void afterContainerStopped(AppDTO app, ContainerInfo x, boolean flag) {
+        def containerNumber = app.conf.containerNumber
+        if (x.instanceIndex() < containerNumber) {
+            return
+        }
+
+        // etcd get member id
+        def containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id)
+        def runningOne = containerList.find { it.running() && it.instanceIndex() < containerNumber }
+        if (!runningOne) {
+            return
+        }
+
+        def cmd = "/etcd/etcdctl member list"
+        def message = containerExec(app.clusterId, runningOne.nodeIp, runningOne.id, cmd)
+        if (!message) {
+            return
+        }
+
+        def line = message.readLines().find { line ->
+            def arr = line.split(',')
+            def s = arr[2].trim()
+            s ? s['etcd'.length()..-1].toInteger() == x.instanceIndex() : false
+        }
+        if (!line) {
+            return
+        }
+        def memberId = line.split(',')[0].trim()
+        log.warn 'etcd remove member id: {}', memberId
+
+        // etcd member remove
+        def cmdRemove = "/etcd/etcdctl member remove ${memberId}".toString()
+
+        // only need remove one, others will sync, just give warning as member not found
+        for (container in containerList) {
+            if (!container.running()) {
+                continue
+            }
+            if (container.instanceIndex() == x.instanceIndex()) {
+                continue
+            }
+
+            def messageRemove = containerExec(app.clusterId, container.nodeIp, container.id, cmdRemove)
+            if (messageRemove) {
+                log.info messageRemove
+            }
+        }
+    }
+
+    @Override
+    void refresh(AppDTO app, List<ContainerInfo> runningContainerList) {
+
     }
 }
