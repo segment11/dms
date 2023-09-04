@@ -46,5 +46,6 @@ STOP    19    暂停（同 Ctrl + Z）
     docker.killContainerCmd(id).exec()
 }
 
+Thread.sleep(1000)
 Agent.instance.sendContainer()
 [flag: true]

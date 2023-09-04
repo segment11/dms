@@ -53,5 +53,6 @@ STOP    19    暂停（同 Ctrl + Z）
     }
 }
 
+Thread.sleep(1000)
 Agent.instance.sendContainer()
 [flag: true]
