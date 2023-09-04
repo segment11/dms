@@ -10,8 +10,7 @@ import transfer.ContainerInfo
 def intervalSecondsGlobal = super.binding.getProperty('intervalSecondsGlobal') as Integer
 
 ContainerMountTplHelper applications = super.binding.getProperty('applications') as ContainerMountTplHelper
-ContainerMountTplHelper.OneApp serverApp = applications.app('n9e_server')
-ContainerMountTplHelper.OneApp webapiApp = applications.app('n9e_webapi')
+ContainerMountTplHelper.OneApp n9eApp = applications.app('n9e')
 
 def list = []
 
@@ -19,27 +18,17 @@ def list = []
 list << """
   - job_name: dms_server
     static_configs:
-      - targets: [${Utils.localIp()}:${Const.METRICS_HTTP_LISTEN_PORT}]
-        labels: 
-          ip: ${Utils.localIp()}
+      - targets: ['${Utils.localIp()}:${Const.METRICS_HTTP_LISTEN_PORT}']
 """
 
-if (serverApp && serverApp.running()) {
+if (n9eApp && n9eApp.running()) {
     list << """
-  - job_name: nserver
+  - job_name: n9e
+    metrics_path: /metrics
     static_configs:
-      - targets: [${serverApp.allNodeIpList[0]}:19000]
+      - targets: [${n9eApp.allNodeIpList[0]}:17000]
 """
 }
-
-if (webapiApp && webapiApp.running()) {
-    list << """
-  - job_name: nwebapi
-    static_configs:
-      - targets: [${webapiApp.allNodeIpList[0]}:18000]
-"""
-}
-
 
 List<AppDTO> appMonitorList = super.binding.getProperty('appMonitorList') as List<AppDTO>
 appMonitorList.each { app ->
