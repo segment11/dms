@@ -31,11 +31,12 @@ h.group('/plugin') {
         def filterList = keyword ? list.findAll {
             it.name().contains(keyword) || it.group().contains(keyword) || it.image().contains(keyword)
         } : list
+        def sortedList = filterList.sort { -it.loadTime().time }
 
-        def totalCount = filterList.size()
+        def totalCount = sortedList.size()
         def pager = new Pager(pageNum, pageSize)
         pager.totalCount = totalCount
-        def thisPageList = filterList[pager.start..<pager.end]
+        def thisPageList = sortedList[pager.start..<pager.end]
 
         [list     : thisPageList.collect {
             [name       : it.name(), version: it.version(),
