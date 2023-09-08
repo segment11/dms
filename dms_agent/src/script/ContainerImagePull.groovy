@@ -17,6 +17,9 @@ if (!image) {
     return [error: 'image required']
 }
 
+def jobId = params.jobId as int
+def instanceIndex = params.instanceIndex as int
+
 ImageRegistryDTO hub = Agent.instance.get('/dms/api/image/pull/hub/info',
         [registryId: registryId as Object], ImageRegistryDTO)
 
@@ -26,9 +29,14 @@ AuthConfig authConfig = new AuthConfig().
         withPassword(hub.anon() ? null : hub.loginPassword)
 
 def cmd = docker.pullImageCmd(image).withAuthConfig(authConfig)
+
 def callback = new PullImageCallback()
+callback.trigger = { percent, costMs ->
+    Agent.instance.addJobStep(jobId, instanceIndex, 'image pull percent', [percent: percent], costMs as int)
+}
+
 cmd.exec(callback)
 
-def timeout = Conf.instance.getInt('agent.imagePullTimeoutSeconds', 50) as long
+def timeout = Conf.instance.getInt('agent.imagePullTimeoutSeconds', 120) as long
 def flag = callback.awaitCompletion(timeout, TimeUnit.SECONDS)
 [isError: !flag]
