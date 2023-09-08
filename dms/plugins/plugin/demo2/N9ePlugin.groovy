@@ -1,24 +1,13 @@
 package plugin.demo2
 
-import common.Event
 import groovy.transform.CompileStatic
-import groovy.util.logging.Slf4j
 import model.ImagePortDTO
 import model.ImageTplDTO
-import model.json.AppConf
 import model.json.TplParamsConf
-import model.server.CreateContainerConf
-import org.segment.d.D
-import org.segment.d.Ds
-import org.segment.d.dialect.MySQLDialect
 import plugin.BasePlugin
 import plugin.PluginManager
-import server.scheduler.checker.Checker
-import server.scheduler.checker.CheckerHolder
-import server.scheduler.processor.JobStepKeeper
 
 @CompileStatic
-@Slf4j
 class N9ePlugin extends BasePlugin {
     @Override
     String name() {
@@ -31,8 +20,6 @@ class N9ePlugin extends BasePlugin {
 
         initImageConfigIbex()
         initImageConfig()
-
-//        initChecker()
     }
 
     private void initImageConfigIbex() {
@@ -87,10 +74,11 @@ class N9ePlugin extends BasePlugin {
     }
 
     private void initImageConfig() {
-        // cmd /app/n9e webapi
+        // cmd /app/n9e
+        // cmd /app/n9e-edge --configs /app/etc/edge/
         def imageName = imageName()
 
-        [17000].each {
+        [17000, 19000].each {
             def one = new ImagePortDTO(imageName: imageName, port: it).one()
             if (!one) {
                 new ImagePortDTO(imageName: imageName, name: it.toString(), port: it).add()
@@ -98,9 +86,12 @@ class N9ePlugin extends BasePlugin {
         }
 
         final String tplName = 'config.toml.tpl'
+        final String tplName2 = 'edge.toml.tpl'
 
         String tplFilePath = PluginManager.pluginsResourceDirPath() + '/n9e/ConfigTomlTpl.groovy'
+        String tplFilePath2 = PluginManager.pluginsResourceDirPath() + '/n9e/EdgeTomlTpl.groovy'
         String content = new File(tplFilePath).text
+        String content2 = new File(tplFilePath2).text
 
         TplParamsConf tplParams = new TplParamsConf()
         tplParams.addParam('host', '192.168.1.100', 'string')
@@ -108,6 +99,12 @@ class N9ePlugin extends BasePlugin {
         tplParams.addParam('user', 'root', 'string')
         tplParams.addParam('password', 'root1234', 'string')
         tplParams.addParam('signingKey', '5b94a0fd640fe2765af826acfe42d151', 'string')
+
+        TplParamsConf tplParams2 = new TplParamsConf()
+        tplParams2.addParam('centerAddr', 'http://192.168.1.100:17000', 'string')
+        tplParams2.addParam('authUser', 'user001', 'string')
+        tplParams2.addParam('authPass', 'ccc26da7b9aba533cbb263a36c07dcc5', 'string')
+        tplParams2.addParam('prometheusAddr', 'http://192.168.1.100:9090', 'string')
 
         def one = new ImageTplDTO(imageName: imageName, name: tplName).queryFields('id').one()
         if (!one) {
@@ -121,83 +118,18 @@ class N9ePlugin extends BasePlugin {
                     params: tplParams
             ).add()
         }
-    }
 
-    String getParamValue(AppConf conf, String key) {
-        getParamValueFromTpl(conf, '/app/etc/config.toml', key)
-    }
-
-    private void initChecker() {
-        CheckerHolder.instance.add new Checker() {
-            @Override
-            boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
-                def host = getParamValue(conf.conf, 'host')
-                int port = getParamValue(conf.conf, 'port') as int
-                def user = getParamValue(conf.conf, 'user')
-                def password = getParamValue(conf.conf, 'password')
-
-                Ds ds
-                try {
-                    ds = Ds.dbType(Ds.DBType.mysql).connect(host, port, 'mysql', user, password)
-                } catch (Exception e) {
-                    log.error('reconnect mysql error', e)
-                    return false
-                }
-                def d = new D(ds, new MySQLDialect())
-
-                List<String> ddlList = []
-
-                String sqlFilePath = PluginManager.pluginsResourceDirPath() + '/n9e/initsql/a-n9e.sql'
-                String sqlFilePath2 = PluginManager.pluginsResourceDirPath() + '/n9e/initsql/b-n9e.sql'
-
-                for (str in new File(sqlFilePath).text.split(';')) {
-                    ddlList << str
-                }
-                for (str in new File(sqlFilePath2).text.split(';')) {
-                    ddlList << str
-                }
-
-                try {
-                    ddlList.each {
-                        def line = it.trim()
-                        if (!line) {
-                            return
-                        }
-                        Event.builder().type(Event.Type.app).reason('before init sql execute').result(conf.appId).
-                                build().log(conf.nodeIp + ' - ' + line).toDto().add()
-                        try {
-                            d.exe(line)
-                        } catch (Exception e) {
-                            Event.builder().type(Event.Type.app).reason('before init sql execute error').result(conf.appId).
-                                    build().log(conf.nodeIp + ' - ' + line + ' - ' + e.message).toDto().add()
-                            log.error('after init sql execute error - ' + line, e)
-                        }
-                        log.info 'done sql <-'
-                    }
-                    keeper.next(JobStepKeeper.Step.yourStep, 'before init create database', 'n9e')
-                    true
-                } finally {
-                    if (ds) {
-                        ds.closeConnect()
-                    }
-                    true
-                }
-            }
-
-            @Override
-            Checker.Type type() {
-                Checker.Type.before
-            }
-
-            @Override
-            String name() {
-                'N9e create database'
-            }
-
-            @Override
-            String imageName() {
-                N9ePlugin.this.imageName()
-            }
+        def one2 = new ImageTplDTO(imageName: imageName, name: tplName2).queryFields('id').one()
+        if (!one2) {
+            new ImageTplDTO(
+                    name: tplName2,
+                    imageName: imageName,
+                    tplType: ImageTplDTO.TplType.mount.name(),
+                    mountDist: '/app/etc/edge/edge.toml',
+                    content: content2,
+                    isParentDirMount: false,
+                    params: tplParams2
+            ).add()
         }
     }
 
