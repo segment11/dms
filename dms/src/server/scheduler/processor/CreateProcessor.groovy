@@ -452,6 +452,8 @@ class CreateProcessor implements GuardianProcessor {
             p.image = imageWithTag
             p.registryId = confCopy.registryId
             p.readTimeout = Conf.instance.getInt('pull.image.readTimeout.Millis', 1000 * 60)
+            p.jobId = jobId
+            p.instanceIndex = instanceIndex
             def pullImageR = AgentCaller.instance.agentScriptExe(app.clusterId, nodeIp, 'container image pull', p)
             Boolean isError = pullImageR.getBoolean('isError')
             if (isError != null && isError.booleanValue()) {
