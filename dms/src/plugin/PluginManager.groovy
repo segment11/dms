@@ -48,7 +48,7 @@ class PluginManager {
         loadPlugin('plugin.demo2.RedisPlugin', false)
         loadPlugin('plugin.demo2.TraefikPlugin', false)
         loadPlugin('plugin.demo2.VectorPlugin', false)
-        loadPlugin('plugin.demo2.ZincObservePlugin', false)
+        loadPlugin('plugin.demo2.OpenobservePlugin', false)
         loadPlugin('plugin.demo2.ZookeeperPlugin', false)
 
         loadPlugin('plugin.demo2.InitToolPlugin', false)

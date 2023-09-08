@@ -10,10 +10,10 @@ import plugin.BasePlugin
 
 @CompileStatic
 @Slf4j
-class ZincObservePlugin extends BasePlugin {
+class OpenobservePlugin extends BasePlugin {
     @Override
     String name() {
-        'zincobserve'
+        'openobserve'
     }
 
     @Override
@@ -31,7 +31,7 @@ class ZincObservePlugin extends BasePlugin {
 
         addPortIfNotExists('5080', 5080)
 
-        addNodeVolumeForUpdate('data-dir', '/data/zinc-observe',
+        addNodeVolumeForUpdate('data-dir', '/data/openobserve',
                 'need mount to /data same value as env ZO_DATA_DIR')
     }
 
@@ -47,7 +47,7 @@ class ZincObservePlugin extends BasePlugin {
 
     @Override
     String image() {
-        'zincobserve'
+        'openobserve'
     }
 
     @Override
@@ -63,8 +63,8 @@ class ZincObservePlugin extends BasePlugin {
         conf.cpuShares = 512
 
         conf.dirVolumeList << new DirVolumeMount(
-                dir: '/data/zinc-observe', dist: '/data', mode: 'rw',
-                nodeVolumeId: getNodeVolumeIdByDir('/data/zinc-observe'))
+                dir: '/data/openobserve', dist: '/data', mode: 'rw',
+                nodeVolumeId: getNodeVolumeIdByDir('/data/openobserve'))
 
         conf.portList << new PortMapping(privatePort: 5080, publicPort: 5080)
 

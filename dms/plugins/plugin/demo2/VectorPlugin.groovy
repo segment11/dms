@@ -33,7 +33,7 @@ class VectorPlugin extends BasePlugin {
         String content = new File(tplFilePath).text
 
         TplParamsConf tplParams = new TplParamsConf()
-        tplParams.addParam('zincobserveAppName', 'zincobserve', 'string')
+        tplParams.addParam('openobserveAppName', 'openobserve', 'string')
 
         def imageName = imageName()
 
@@ -88,13 +88,13 @@ class VectorPlugin extends BasePlugin {
                 nodeVolumeId: getNodeVolumeIdByDir('/var/run/docker.sock'))
 
         conf.fileVolumeList << new FileVolumeMount(
-                paramList: [new KVPair<String>('zincobserveAppName', 'zincobserve')],
+                paramList: [new KVPair<String>('openobserveAppName', 'openobserve')],
                 dist: '/etc/vector/vector.toml',
                 imageTplId: getImageTplIdByName('vector.toml.tpl'))
 
         conf.portList << new PortMapping(privatePort: 8686, publicPort: 8686)
 
-        conf.dependAppIdList << new AppDTO(name: 'zincobserve').queryFields('id').one().id
+        conf.dependAppIdList << new AppDTO(name: 'openobserve').queryFields('id').one().id
 
         app
     }

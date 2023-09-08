@@ -9,9 +9,9 @@ def nodeIp = super.binding.getProperty('nodeIp') as String
 
 def list = []
 
-def zincobserveAppName = super.binding.getProperty('zincobserveAppName') as String
+def openobserveAppName = super.binding.getProperty('openobserveAppName') as String
 ContainerMountTplHelper applications = super.binding.getProperty('applications') as ContainerMountTplHelper
-ContainerMountTplHelper.OneApp zincApp = applications.app(zincobserveAppName)
+ContainerMountTplHelper.OneApp ooApp = applications.app(openobserveAppName)
 
 // dms server and dms agent
 list << """
@@ -73,12 +73,12 @@ include = [ "${logFile.pathPattern}" ]
     }
 }
 
-if (zincApp && zincApp.containerList) {
-    def user = zincApp.app.conf.envList.find { it.key == 'ZO_ROOT_USER_EMAIL' }.value as String
-    def pass = zincApp.app.conf.envList.find { it.key == 'ZO_ROOT_USER_PASSWORD' }.value as String
+if (ooApp && ooApp.containerList) {
+    def user = ooApp.app.conf.envList.find { it.key == 'ZO_ROOT_USER_EMAIL' }.value as String
+    def pass = ooApp.app.conf.envList.find { it.key == 'ZO_ROOT_USER_PASSWORD' }.value as String
 
-    def zincNodeIp = zincApp.containerList[0].nodeIp
-    int zincPort = zincApp.containerList[0].publicPort(5080)
+    def ooNodeIp = ooApp.containerList[0].nodeIp
+    int ooPort = ooApp.containerList[0].publicPort(5080)
 
     appSourceIds << 'local_docker_logs'
     appSourceIds << 'dms_server'
@@ -88,10 +88,10 @@ if (zincApp && zincApp.containerList) {
 [sources.local_docker_logs]
 type = "docker_logs"
 
-[sinks.zinc]
+[sinks.oo]
 type = "http"
 inputs = [${appSourceIds.collect { '"' + it + '"' }.join(',')}]
-uri = "http://${zincNodeIp}:${zincPort}/api/default/default/_json"
+uri = "http://${ooNodeIp}:${ooPort}/api/default/default/_json"
 method = "post"
 auth.strategy = "basic"
 auth.user = "${user}"

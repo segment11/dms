@@ -110,8 +110,8 @@ class InitToolPlugin extends BasePlugin {
             def appGrafana = new GrafanaPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
             def grafanaAppId = addAppIfNotExists(appGrafana)
 
-            def appZo = new ZincObservePlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
-            def zoAppId = addAppIfNotExists(appZo)
+            def appOo = new OpenobservePlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
+            def ooAppId = addAppIfNotExists(appOo)
 
             def appVector = new VectorPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
             addAppIfNotExists(appVector)
@@ -148,7 +148,7 @@ class InitToolPlugin extends BasePlugin {
 
             addGwFrontendIfNotExists(gwClusterId, prometheusAppId, 'prometheus', 9090)
             addGwFrontendIfNotExists(gwClusterId, grafanaAppId, 'grafana', 3000)
-            addGwFrontendIfNotExists(gwClusterId, zoAppId, 'zincobserve', 5080)
+            addGwFrontendIfNotExists(gwClusterId, ooAppId, 'openobserve', 5080)
             addGwFrontendIfNotExists(gwClusterId, consulAppId, 'consul', 8500)
 
             'ok'
