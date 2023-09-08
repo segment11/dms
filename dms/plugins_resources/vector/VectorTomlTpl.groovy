@@ -5,6 +5,9 @@ import model.json.LogConf
 import model.server.ContainerMountTplHelper
 import server.InMemoryAllContainerManager
 
+def appId = super.binding.getProperty('appId') as int
+def instanceIndex = super.binding.getProperty('instanceIndex') as int
+
 def nodeIp = super.binding.getProperty('nodeIp') as String
 
 def list = []
@@ -87,6 +90,7 @@ if (ooApp && ooApp.containerList) {
     list << """
 [sources.local_docker_logs]
 type = "docker_logs"
+exclude_containers = [ "app_${appId}_${instanceIndex}", "dms" ]
 
 [sinks.oo]
 type = "http"
