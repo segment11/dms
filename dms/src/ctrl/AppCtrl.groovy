@@ -1,6 +1,7 @@
 package ctrl
 
 import auth.User
+import com.segment.common.Conf
 import common.Event
 import common.Utils
 import model.*
@@ -180,8 +181,10 @@ h.group('/app') {
         def one = req.bodyAs(AppDTO)
         assert one.name && one.namespaceId
 
+        def instance = InMemoryAllContainerManager.instance
+
         def conf = one.conf
-        def nodeList = InMemoryAllContainerManager.instance.getHeartBeatOkNodeList(one.clusterId)
+        def nodeList = instance.getHeartBeatOkNodeList(one.clusterId)
         if (conf.containerNumber > nodeList.size() && !conf.isLimitNode) {
             resp.halt(500, 'container number <= available node size - ' + nodeList.size())
         }
@@ -200,13 +203,40 @@ h.group('/app') {
 
             def cpusetCpuList = Utils.cpusetCpusToList(conf.cpusetCpus)
             for (nodeIp in targetNodeIpList) {
-                def nodeInfo = InMemoryAllContainerManager.instance.getNodeInfo(nodeIp)
+                def nodeInfo = instance.getNodeInfo(nodeIp)
                 if (!nodeInfo) {
                     resp.halt(500, 'node ip not found - ' + nodeIp)
                 }
                 def allNodeCpuList = 0..<nodeInfo.cpuNumber()
                 if (cpusetCpuList.any { !allNodeCpuList.contains(it) }) {
                     resp.halt(500, 'cpuset cpus must be in node cpu list - ' + nodeIp)
+                }
+            }
+        }
+
+        if (conf.memMB && conf.targetNodeIpList) {
+            // check if memory require > node memory - system used memory
+            def systemUsedMB = Conf.instance.getInt('node.systemUsedMB', 1024)
+            def targetNodeIpList = conf.targetNodeIpList
+            for (nodeIp in targetNodeIpList) {
+                def nodeInfo = instance.getNodeInfo(nodeIp)
+                if (!nodeInfo) {
+                    resp.halt(500, 'node ip not found - ' + nodeIp)
+                }
+
+                int memMBTotal = nodeInfo.mem.total.intValue()
+
+                def containerList = instance.getContainerList(0, 0, nodeIp)
+                int memMBUsed = 0
+                for (x in containerList) {
+                    def appOne = InMemoryCacheSupport.instance.oneApp(x.appId())
+                    if (appOne.id == one.id) {
+                        continue
+                    }
+                    memMBUsed += appOne.conf.memMB
+                }
+                if (conf.memMB + memMBUsed > memMBTotal - systemUsedMB) {
+                    resp.halt(500, 'memory require > node memory - system used memory - ' + nodeIp)
                 }
             }
         }
@@ -235,7 +265,7 @@ h.group('/app') {
                     }
 
                     // check if need a scroll job
-                    List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(one.clusterId, one.id)
+                    List<ContainerInfo> containerList = instance.getContainerList(one.clusterId, one.id)
                     if (containerList.size() == oldConf.containerNumber) {
                         def jobId = new AppJobDTO(appId: one.id, failNum: 0,
                                 status: AppJobDTO.Status.created.val,
@@ -257,7 +287,7 @@ h.group('/app') {
                 if (isAdd) {
                     List<Integer> needRunInstanceIndexList = []
 
-                    List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(one.clusterId, one.id)
+                    List<ContainerInfo> containerList = instance.getContainerList(one.clusterId, one.id)
                     (0..<conf.containerNumber).each { i ->
                         def runningOne = containerList.find { x ->
                             i == x.instanceIndex()
