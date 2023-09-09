@@ -28,6 +28,7 @@
 						Is In Guard : <button class="btn btn-red"
                                               ng-click="toggleClusterIsInGuard()">{{tmp.clusterChoose.isInGuard}}</button>
 						</span>
+                        <button class="btn" ng-click="onClusterChoose()">Refresh</button>
                     </div>
 
                     <div class="row">
@@ -211,12 +212,18 @@
                                             <div class="row" style="color: blue;font-weight: bold;">
                                                 <div class="col-md-4">
                                                     Memory
+                                                    <br />
+                                                    Left
                                                 </div>
                                                 <div class="col-md-4">
                                                     Rss MB
+                                                    <br />
+                                                    Required MB
                                                 </div>
                                                 <div class="col-md-4">
                                                     Left
+                                                    <br />
+                                                    Required
                                                 </div>
                                             </div>
                                         </li>
@@ -226,9 +233,13 @@
                                                 </div>
                                                 <div class="col-md-4">
                                                     {{one.memLeft}}
+                                                    <br />
+                                                    {{one.memRequiredLeft}}
                                                 </div>
                                                 <div class="col-md-4">
                                                     {{one.memLeftUsed}}
+                                                    <br />
+                                                    {{one.memRequiredLeftUsed}}
                                                 </div>
                                             </div>
                                         </li>
@@ -239,9 +250,13 @@
                                                 </div>
                                                 <div class="col-md-4">
                                                     Rss MB
+                                                    <br />
+                                                    Required MB
                                                 </div>
                                                 <div class="col-md-4">
                                                     Used
+                                                    <br />
+                                                    Required
                                                 </div>
                                             </div>
                                         </li>
@@ -251,10 +266,10 @@
                                                     {{x.appName}}
                                                 </div>
                                                 <div class="col-md-4">
-                                                    {{x.memRss}}
+                                                    {{x.memRss}}/{{x.memRequiredThisApp}}
                                                 </div>
                                                 <div class="col-md-4">
-                                                    {{x.memUsed}}
+                                                    {{x.memUsed}}/{{x.memRequiredUsedThisApp}}
                                                 </div>
                                             </div>
                                         </li>

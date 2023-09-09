@@ -86,25 +86,28 @@ h.group('/container/manage') {
 
         Map<String, Long> memByNodeIp = [:]
         Map<String, Map<String, Long>> memRssUsedMapByNodeIp = [:]
+        Map<String, Map<String, Integer>> memRequiredMapByNodeIp = [:]
 
-        groupByNodeIp.each { k, v ->
+        groupByNodeIp.each { nodeIpInner, v ->
             Map<Integer, List<Double>> map = [:]
-            cpusetCpusMapByNodeIp[k] = map
+            cpusetCpusMapByNodeIp[nodeIpInner] = map
 
             Map<Integer, Double> mapUsedPercent = [:]
-            cpuUsedPercentMapByNodeIp[k] = mapUsedPercent
+            cpuUsedPercentMapByNodeIp[nodeIpInner] = mapUsedPercent
 
             Map<String, Long> mapMemRssUsed = [:]
-            memRssUsedMapByNodeIp[k] = mapMemRssUsed
+            Map<String, Integer> mapRequired = [:]
+            memRssUsedMapByNodeIp[nodeIpInner] = mapMemRssUsed
+            memRequiredMapByNodeIp[nodeIpInner] = mapRequired
 
-            def nodeInfo = InMemoryAllContainerManager.instance.getNodeInfo(k)
+            def nodeInfo = InMemoryAllContainerManager.instance.getNodeInfo(nodeIpInner)
             for (i in 0..<nodeInfo.cpuNumber()) {
                 List<Double> subList = []
                 map[i] = subList
 
-                cpuUsedPercentMapByNodeIp[k][i] = nodeInfo.cpuPercList[i].usedPercent()
+                cpuUsedPercentMapByNodeIp[nodeIpInner][i] = nodeInfo.cpuPercList[i].usedPercent()
             }
-            memByNodeIp[k] = nodeInfo.mem.total.longValue()
+            memByNodeIp[nodeIpInner] = nodeInfo.mem.total.longValue()
 
             for (x in v) {
                 if (x.running()) {
@@ -136,6 +139,8 @@ h.group('/container/manage') {
                 for (i in cpusetCpuList) {
                     map[i] << avgInPer
                 }
+
+                mapRequired[x.name()] = conf.memMB
             }
         }
 
@@ -145,7 +150,8 @@ h.group('/container/manage') {
          cpusetCpusMapByNodeIp    : cpusetCpusMapByNodeIp,
          cpuUsedPercentMapByNodeIp: cpuUsedPercentMapByNodeIp,
          memByNodeIp              : memByNodeIp,
-         memRssUsedMapByNodeIp    : memRssUsedMapByNodeIp]
+         memRssUsedMapByNodeIp    : memRssUsedMapByNodeIp,
+         memRequiredMapByNodeIp   : memRequiredMapByNodeIp]
     }.get('/bind/list') { req, resp ->
         def id = req.param('id')
         assert id

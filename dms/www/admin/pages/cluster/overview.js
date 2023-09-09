@@ -78,6 +78,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
 
             var memByNodeIp = data.memByNodeIp;
             var memRssUsedMapByNodeIp = data.memRssUsedMapByNodeIp;
+            var memRequiredMapByNodeIp = data.memRequiredMapByNodeIp;
 
             _.each($scope.groupByNodeIp, function (it) {
                 var nodeIp = it.key;
@@ -101,13 +102,21 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
                 var mem = memByNodeIp[nodeIp];
                 // map<string,long>
                 var memRssUsed = memRssUsedMapByNodeIp[nodeIp];
+                var memRequired = memRequiredMapByNodeIp[nodeIp];
                 var mlist = [];
                 var memLeft = mem;
+                var memRequiredLeft = mem;
                 for (appName in memRssUsed) {
                     var memRss = memRssUsed[appName];
                     var memUsed = Math.round(memRss / mem * 10000) / 10000;
-                    mlist.push({appName: appName, memUsed: memUsed, memRss: memRss});
-                    memLeft = memLeft - memUsed;
+                    memLeft = memLeft - memRss;
+
+                    var memRequiredThisApp = memRequired[appName];
+                    var memRequiredUsedThisApp = Math.round(memRequiredThisApp / mem * 10000) / 10000;
+                    memRequiredLeft = memRequiredLeft - memRequiredThisApp;
+
+                    mlist.push({appName: appName, memUsed: memUsed, memRss: memRss,
+                        memRequiredUsedThisApp: memRequiredUsedThisApp, memRequiredThisApp: memRequiredThisApp});
                 }
 
                 it.mlist = _.sortBy(mlist, function (it) {
@@ -115,6 +124,8 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
                 });
                 it.memLeft = Math.round(memLeft);
                 it.memLeftUsed = Math.round(memLeft / mem * 10000) / 10000;
+                it.memRequiredLeft = Math.round(memRequiredLeft);
+                it.memRequiredLeftUsed = Math.round(memRequiredLeft / mem * 10000) / 10000;
             });
 
             var appCheckOkList = data.appCheckOkList;
