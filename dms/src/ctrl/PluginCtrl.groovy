@@ -58,6 +58,7 @@ h.group('/plugin') {
         def one = pluginList.find { it.name() == name }
         if (one) {
             pluginList.remove(one)
+            one.destroy()
         }
         [flag: true]
     }.get('/menu/list') { req, resp ->
