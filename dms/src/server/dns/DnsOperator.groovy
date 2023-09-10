@@ -52,11 +52,6 @@ class DnsOperator {
     }
 
     boolean isServiceIdMatchAddress(String id, String address) {
-        def agentClient = getAgentClient()
-        if (!agentClient) {
-            return false
-        }
-
         QueryOptions options = QueryOptions.BLANK
         FullService serviceOld
         try {

@@ -9,7 +9,8 @@ import org.segment.d.D
 @CompileStatic
 @Slf4j
 class LocalGroovyScriptLoader {
-    static void loadWhenFirstStart(boolean forceUpdate = false) { def agentScriptOne = new AgentScriptDTO().queryFields('id').noWhere().one()
+    static void loadWhenFirstStart(boolean forceUpdate = false) {
+        def agentScriptOne = new AgentScriptDTO().queryFields('id').noWhere().one()
         if (!agentScriptOne || forceUpdate) {
             load()
         }

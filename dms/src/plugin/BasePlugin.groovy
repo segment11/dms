@@ -6,19 +6,12 @@ import groovy.util.logging.Slf4j
 import model.*
 import model.json.AppConf
 import org.apache.commons.io.FileUtils
-import org.segment.d.D
 import org.segment.web.common.CachedGroovyClassLoader
 import plugin.model.Menu
 
 @CompileStatic
 @Slf4j
 abstract class BasePlugin implements Plugin {
-    private D d
-
-    void setD(D d) {
-        this.d = d
-    }
-
     protected void addEnvIfNotExists(String name, String envName, String des = null) {
         def imageName = imageName()
         def one = new ImageEnvDTO(imageName: imageName, env: envName).one()
@@ -106,7 +99,7 @@ abstract class BasePlugin implements Plugin {
         }
     }
 
-    String getParamValueFromTpl(AppConf conf, String dist, String key) {
+    static String getParamValueFromTpl(AppConf conf, String dist, String key) {
         def mountFileOne = conf.fileVolumeList.find { it.dist == dist }
         if (!mountFileOne) {
             log.warn 'not found mount file - {}', dist
@@ -116,7 +109,7 @@ abstract class BasePlugin implements Plugin {
         paramOne?.value
     }
 
-    String getEnvValue(AppConf conf, String key) {
+    static String getEnvValue(AppConf conf, String key) {
         def envOne = conf.envList.find { it.key == key }
         envOne?.value?.toString()
     }
