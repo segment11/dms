@@ -163,7 +163,7 @@ class InMemoryAllContainerManager extends IntervalJob implements AllContainerMan
         Set<Integer> userAccessAppIdSet
         if (user && !user.isAdmin()) {
             userAccessAppIdSet = user.getAccessAppIdSet(clusterId)
-            if (appId != 0 && !(appId in userAccessAppIdSet)) {
+            if (appId != 0 && appId !in userAccessAppIdSet) {
                 return []
             }
         } else {

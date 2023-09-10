@@ -66,7 +66,7 @@ class User {
     Set<Integer> getAccessAppIdSet(int clusterId) {
         def userAccessAppIdSet = new HashSet<Integer>()
         def userAccessClusterIdList = permitList.findAll { it.type == PermitType.cluster }.collect { it.id }
-        if (clusterId != 0 && !(clusterId in userAccessClusterIdList)) {
+        if (clusterId != 0 && clusterId !in userAccessClusterIdList) {
             return userAccessAppIdSet
         }
 

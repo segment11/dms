@@ -154,7 +154,7 @@ class CreateProcessor implements GuardianProcessor {
         }
         if (excludeNodeIpList) {
             list = list.findAll {
-                !(it.ip in excludeNodeIpList)
+                it.ip !in excludeNodeIpList
             }
         }
         list
@@ -482,12 +482,12 @@ class CreateProcessor implements GuardianProcessor {
             one.conf.dirVolumeList.collect {
                 it.dir
             }.findAll {
-                !(it in skipVolumeDirSet)
+                it !in skipVolumeDirSet
             }.each {
                 otherAppMountVolumeDirList << it
             }
         }
-        def thisAppMountVolumeDirList = confCopy.dirVolumeList.collect { it.dir }.findAll { !(it in skipVolumeDirSet) }
+        def thisAppMountVolumeDirList = confCopy.dirVolumeList.collect { it.dir }.findAll { it !in skipVolumeDirSet }
         if (thisAppMountVolumeDirList.any { it in otherAppMountVolumeDirList }) {
             throw new JobProcessException('node volume conflict check fail - ' + nodeIp + ' - ' + thisAppMountVolumeDirList)
         }
