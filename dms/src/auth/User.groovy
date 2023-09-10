@@ -3,6 +3,7 @@ package auth
 import groovy.transform.CompileStatic
 import model.AppDTO
 import model.NamespaceDTO
+import server.InMemoryCacheSupport
 
 @CompileStatic
 class User {
@@ -60,5 +61,27 @@ class User {
             }
         }
         false
+    }
+
+    Set<Integer> getAccessAppIdSet(int clusterId) {
+        def userAccessAppIdSet = new HashSet<Integer>()
+        def userAccessClusterIdList = permitList.findAll { it.type == PermitType.cluster }.collect { it.id }
+        if (clusterId != 0 && !(clusterId in userAccessClusterIdList)) {
+            return userAccessAppIdSet
+        }
+
+        def cacheSupport = InMemoryCacheSupport.instance
+        permitList.each {
+            if (it.type == PermitType.cluster) {
+                def appList = cacheSupport.appList.findAll { it.clusterId == it.id }
+                userAccessAppIdSet.addAll(appList.collect { it.id })
+            } else if (it.type == PermitType.namespace) {
+                def appList = cacheSupport.appList.findAll { it.namespaceId == it.id }
+                userAccessAppIdSet.addAll(appList.collect { it.id })
+            } else if (it.type == PermitType.app) {
+                userAccessAppIdSet.add(it.id)
+            }
+        }
+        userAccessAppIdSet
     }
 }

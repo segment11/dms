@@ -1,13 +1,12 @@
 package server
 
-import auth.PermitType
+
 import auth.User
 import com.segment.common.Conf
 import com.segment.common.job.IntervalJob
 import common.Utils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import model.AppDTO
 import model.NodeDTO
 import transfer.ContainerInfo
 import transfer.NodeInfo
@@ -160,31 +159,15 @@ class InMemoryAllContainerManager extends IntervalJob implements AllContainerMan
         if (isUseRedis) {
             return inner.getContainerList(clusterId, appId, nodeIp, user)
         }
-        def userAccessAppIdSet = new HashSet<Integer>()
-        // check not admin user's permit
+
+        Set<Integer> userAccessAppIdSet
         if (user && !user.isAdmin()) {
-            // no permit to get this cluster
-            def userAccessClusterIdList = user.permitList.findAll { it.type == PermitType.cluster }.collect { it.id }
-            if (clusterId != 0 && !(clusterId in userAccessClusterIdList)) {
-                return []
-            }
-
-            user.permitList.each {
-                if (it.type == PermitType.cluster) {
-                    def appList = new AppDTO(clusterId: it.id).queryFields('id').list()
-                    userAccessAppIdSet.addAll(appList.collect { it.id })
-                } else if (it.type == PermitType.namespace) {
-                    def appList = new AppDTO(namespaceId: it.id).queryFields('id').list()
-                    userAccessAppIdSet.addAll(appList.collect { it.id })
-                } else if (it.type == PermitType.app) {
-                    userAccessAppIdSet.add(it.id)
-                }
-            }
-
-            // no permit to get this app
+            userAccessAppIdSet = user.getAccessAppIdSet(clusterId)
             if (appId != 0 && !(appId in userAccessAppIdSet)) {
                 return []
             }
+        } else {
+            userAccessAppIdSet = []
         }
 
         List<ContainerInfo> list = []

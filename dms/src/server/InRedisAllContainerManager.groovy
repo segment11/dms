@@ -1,6 +1,6 @@
 package server
 
-import auth.PermitType
+
 import auth.User
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -10,7 +10,6 @@ import common.Utils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import ha.JedisPoolHolder
-import model.AppDTO
 import model.NodeDTO
 import org.segment.d.json.DefaultJsonTransformer
 import redis.clients.jedis.JedisPool
@@ -122,11 +121,7 @@ class InRedisAllContainerManager extends IntervalJob implements AllContainerMana
 
     @Override
     List<NodeDTO> getHeartBeatOkNodeList(int clusterId) {
-        def dat = Utils.getNodeAliveCheckLastDate(3)
-        def r = new NodeDTO().where('cluster_id = ?', clusterId).
-                where('updated_date > ?', dat).list()
-        r.sort { a, b -> Utils.compareIp(a.ip, b.ip) }
-        r
+        InMemoryAllContainerManager.instance.getHeartBeatOkNodeList(clusterId)
     }
 
     @Override
@@ -174,36 +169,17 @@ class InRedisAllContainerManager extends IntervalJob implements AllContainerMana
     @Override
     List<ContainerInfo> getContainerList(int clusterId, int appId = 0,
                                          String nodeIp = null, User user = null) {
-
-        def userAccessAppIdSet = new HashSet<Integer>()
-        // check not admin user's permit
+        Set<Integer> userAccessAppIdSet
         if (user && !user.isAdmin()) {
-            // no permit to get this cluster
-            def userAccessClusterIdList = user.permitList.findAll { it.type == PermitType.cluster }.collect { it.id }
-            if (clusterId != 0 && !(clusterId in userAccessClusterIdList)) {
-                return []
-            }
-
-            user.permitList.each {
-                if (it.type == PermitType.cluster) {
-                    def appList = new AppDTO(clusterId: it.id).queryFields('id').list()
-                    userAccessAppIdSet.addAll(appList.collect { it.id })
-                } else if (it.type == PermitType.namespace) {
-                    def appList = new AppDTO(namespaceId: it.id).queryFields('id').list()
-                    userAccessAppIdSet.addAll(appList.collect { it.id })
-                } else if (it.type == PermitType.app) {
-                    userAccessAppIdSet.add(it.id)
-                }
-            }
-
-            // no permit to get this app
+            userAccessAppIdSet = user.getAccessAppIdSet(clusterId)
             if (appId != 0 && !(appId in userAccessAppIdSet)) {
                 return []
             }
+        } else {
+            userAccessAppIdSet = []
         }
 
         List<ContainerInfo> list = []
-
         if (nodeIp) {
             list.addAll getContainerListByNodeIp(nodeIp)
         } else {
@@ -235,7 +211,6 @@ class InRedisAllContainerManager extends IntervalJob implements AllContainerMana
                 }
             }
         }
-
         if (!list) {
             return []
         }
