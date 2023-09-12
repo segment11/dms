@@ -114,6 +114,27 @@ abstract class BasePlugin implements Plugin {
         envOne?.value?.toString()
     }
 
+    static int createAppCreateJob(int appId, AppConf conf) {
+        List<Integer> needRunInstanceIndexList = []
+        (0..<conf.containerNumber).each {
+            needRunInstanceIndexList << it
+        }
+        def job = new AppJobDTO(appId: appId,
+                failNum: 0,
+                status: AppJobDTO.Status.created.val,
+                jobType: AppJobDTO.JobType.create.val,
+                createdDate: new Date(),
+                updatedDate: new Date()).
+                needRunInstanceIndexList(needRunInstanceIndexList)
+        int jobId = job.add()
+        job.id = jobId
+
+        // set auto so dms can handle this job
+        new AppDTO(id: appId, status: AppDTO.Status.auto.val).update()
+        log.info 'done create related application job, job id: {}', jobId
+        jobId
+    }
+
     String imageName() {
         group() + '/' + image()
     }

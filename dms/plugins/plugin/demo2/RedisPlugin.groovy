@@ -4,16 +4,21 @@ import common.Utils
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import ha.JedisPoolHolder
-import model.*
+import model.AppDTO
+import model.ImageEnvDTO
+import model.ImagePortDTO
+import model.ImageTplDTO
 import model.json.*
 import model.server.CreateContainerConf
 import plugin.BasePlugin
 import plugin.PluginManager
 import server.AgentCaller
+import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
 import server.scheduler.checker.Checker
 import server.scheduler.checker.CheckerHolder
 import server.scheduler.processor.JobStepKeeper
+import transfer.ContainerInfo
 
 @CompileStatic
 @Slf4j
@@ -73,6 +78,7 @@ class RedisPlugin extends BasePlugin {
         tplParams.addParam('dataDir', '/data/redis', 'string')
         tplParams.addParam('password', '123456', 'string')
         tplParams.addParam('isMasterSlave', 'true', 'string')
+        tplParams.addParam('sentinelAppName', 'sentinel', 'string')
         tplParams.addParam('customParameters', 'cluster-enabled no', 'string')
 
         TplParamsConf tplParams3 = new TplParamsConf()
@@ -122,23 +128,6 @@ class RedisPlugin extends BasePlugin {
         addNodeVolumeForUpdate('sentinel-data-dir', '/data/sentinel', '-v /data/sentinel:/data/sentinel')
     }
 
-    private int getPublicPort(AppConf conf) {
-        def port = getParamValue(conf, 'port') as int
-
-        int publicPort = port
-        if ('host' != conf.networkMode) {
-            def pm = conf.portList.find { it.privatePort == port }
-            if (pm) {
-                publicPort = pm.publicPort
-            }
-        }
-        publicPort
-    }
-
-    String getParamValue(AppConf conf, String key) {
-        getParamValueFromTpl(conf, '/etc/redis/redis.conf', key)
-    }
-
     private void initChecker() {
         CheckerHolder.instance.add new Checker() {
 
@@ -155,7 +144,7 @@ class RedisPlugin extends BasePlugin {
                 // check if single node
                 boolean isSingleNode
                 if (isSentinel) {
-                    isSingleNode = sentinelConfOne.paramList.find { it.key == 'isSingleNode' }.value == 'true'
+                    isSingleNode = sentinelConfOne.paramValue('isSingleNode') == 'true'
                 } else {
                     def confOne = conf.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
                     if (confOne) {
@@ -206,60 +195,131 @@ class RedisPlugin extends BasePlugin {
                 def sentinelConfThisOne = conf.conf.fileVolumeList.find { it.dist.contains('/sentinel') }
                 def isSentinel = sentinelConfThisOne != null
                 if (isSentinel) {
-                    log.info 'skip redis sentinel init'
+                    log.info 'it is redis sentinel, skip'
+                    return true
+                }
+
+                // if use agent proxy, dms server can not connect agent directly
+                def clusterOne = InMemoryCacheSupport.instance.oneCluster(conf.clusterId)
+                if (clusterOne.globalEnvConf.proxyNodeIp) {
+                    log.warn 'this cluster is using agent proxy, skip'
                     return true
                 }
 
                 def confOne = conf.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
-                def isMasterSlave = confOne.paramList.find { it.key == 'isMasterSlave' }.value == 'true'
+                def isMasterSlave = confOne.paramValue('isMasterSlave') == 'true'
                 if (!isMasterSlave) {
-                    log.info 'skip redis master slave init as not master slave'
+                    log.info 'not run as master slave, skip'
                     return true
                 }
 
-                // check if there is a sentinel and do failover
+                // check if there is a sentinel application already includes this application
                 def sentinelAppList = InMemoryCacheSupport.instance.appList.findAll {
-                    (it.conf.group + '/' + it.conf.image == RedisPlugin.this.imageName()) &&
+                    it.clusterId == conf.clusterId &&
+                            (it.conf.group + '/' + it.conf.image == RedisPlugin.this.imageName()) &&
                             it.conf.fileVolumeList.any { fv -> fv.dist.contains('/sentinel') }
                 }
                 if (sentinelAppList.any {
                     def sentinelConfOne = it.conf.fileVolumeList.find { it.dist.contains('/sentinel') }
-                    def redisAppNames = sentinelConfOne.paramList.find { it.key == 'redisAppNames' }.value
+                    def redisAppNames = sentinelConfOne.paramValue('redisAppNames') as String
                     redisAppNames.split(',').contains(conf.app.name)
                 }) {
-                    log.info 'skip redis master slave init as there is a sentinel'
+                    log.info 'there is a sentinel application already include this application, skip'
                     return true
                 }
 
-                // only first container is master
+                def primaryNodeIp = conf.nodeIpList[0]
+                def redisPort = confOne.paramValue('port') as int
+                def redisPassword = confOne.paramValue('password') as String
+
+                def tplOne = new ImageTplDTO(id: confOne.imageTplId).one()
+                def isSingleNode = tplOne.name.contains('single.node')
+                def finalPort = redisPort + (isSingleNode ? conf.instanceIndex : 0)
+
+                // if set a sentinel application name
+                // set monitor
+                def sentinelAppName = confOne.paramValue('sentinelAppName')
+                if (sentinelAppName && conf.instanceIndex == 0) {
+                    def sentinelAppOne = InMemoryCacheSupport.instance.appList.find {
+                        it.clusterId == conf.clusterId && it.name == sentinelAppName
+                    }
+                    if (!sentinelAppOne) {
+                        log.warn 'sentinel application not exists, {}', sentinelAppName
+                        return false
+                    }
+
+                    def masterName = 'redis-app-' + conf.appId
+                    def quorum = (conf.nodeIpList.size() / 2).intValue() + 1
+
+                    def sentinelConfOne = sentinelAppOne.conf.fileVolumeList.find {
+                        it.dist.contains('/sentinel')
+                    }
+
+                    Map<String, String> sentinelParams = [:]
+                    sentinelParams['down-after-milliseconds'] = sentinelConfOne.paramValue('downAfterMs').toString()
+                    sentinelParams['failover-timeout'] = sentinelConfOne.paramValue('failoverTimeout').toString()
+                    sentinelParams['parallel-syncs'] = '1'
+
+                    def sentinelPort = sentinelConfOne.paramValue('port') as int
+                    def sentinelPassword = sentinelConfOne.paramValue('password') as String
+
+                    // add to sentinel
+                    def containerList = InMemoryAllContainerManager.instance.getContainerList(0, sentinelAppOne.id)
+                    for (x in containerList) {
+                        if (!x.running()) {
+                            continue
+                        }
+
+                        def finalSentinelPort = sentinelPort + (isSingleNode ? x.instanceIndex() : 0)
+                        def jedisPool = JedisPoolHolder.instance.create(x.nodeIp, finalSentinelPort, sentinelPassword)
+                        JedisPoolHolder.instance.useRedisPool(jedisPool) { jedis ->
+                            def infoSentinel = jedis.info('sentinel')
+                            if (infoSentinel.contains(masterName + ',')) {
+                                log.info 'sentinel monitor already added, instance index: {}, master name: {}', x.instanceIndex(), masterName
+                                return
+                            }
+
+                            def r = jedis.sentinelMonitor(masterName, primaryNodeIp, finalPort, quorum)
+                            log.info 'sentinel monitor, instance index: {}, master name: {}, result: {}',
+                                    x.instanceIndex(), masterName, r
+                            def r2 = jedis.sentinelSet(masterName, sentinelParams)
+                            log.info 'sentinel set, instance index: {}, master name: {}, result: {}, params: {}',
+                                    x.instanceIndex(), masterName, r2, sentinelParams
+                        }
+                    }
+                }
+
                 if (conf.instanceIndex == 0) {
-                    log.info 'skip redis master slave init as is the first container'
+                    log.info 'only instance index > 0 need init replica of, skip'
                     return true
                 }
 
                 // check if master is ready
-                // if use agent proxy, dms server can not connect agent directly
-                def clusterOne = InMemoryCacheSupport.instance.oneCluster(conf.clusterId)
-                if (clusterOne.globalEnvConf.proxyNodeIp) {
-                    log.warn 'skip redis master slave init as use agent proxy'
+                if (Utils.isPortListenAvailable(finalPort, primaryNodeIp)) {
+                    log.warn 'master node {}:{} is not ready, skip', primaryNodeIp, finalPort
                     return true
                 }
 
-                def masterNodeIp = conf.nodeIpList[0]
-                def port = confOne.paramList.find { it.key == 'port' }.value as int
-                if (Utils.isPortListenAvailable(port, masterNodeIp)) {
-                    log.warn 'master node {}:{} is not ready, skip redis master slave init', masterNodeIp, port
-                    return true
-                }
-
-                def tplOne = new ImageTplDTO(id: confOne.imageTplId).one()
-                def isSingleNode = tplOne.name.contains('single.node')
-
-                def password = confOne.paramList.find { it.key == 'password' }.value
-                def jedisPool = JedisPoolHolder.instance.create(conf.nodeIp, port + (isSingleNode ? conf.instanceIndex : 0), password)
+                def jedisPool = JedisPoolHolder.instance.create(conf.nodeIp, finalPort, redisPassword)
                 def isOk = JedisPoolHolder.instance.useRedisPool(jedisPool) { jedis ->
-                    def r = jedis.replicaof(masterNodeIp, port)
-                    log.info 'redis master slave init result: {}', r
+                    def infoReplication = jedis.info('replication')
+                    def lines = infoReplication.readLines()
+                    if (lines.find { it.contains('role:slave') }) {
+                        log.warn 'it is already slave, node ip: {}', conf.nodeIp
+                        return true
+                    }
+
+                    def lineConnectedSlaves = lines.find { it.contains('connected_slaves:') }
+                    if (lineConnectedSlaves) {
+                        def num = lineConnectedSlaves.replace('connected_slaves:', '') as int
+                        if (num > 0) {
+                            log.warn 'it is master, but has slaves, skip replica of'
+                            return true
+                        }
+                    }
+
+                    def r = jedis.replicaof(primaryNodeIp, redisPort)
+                    log.info 'replica of {}:{}, result: {}', primaryNodeIp, redisPort, r
                     'OK' == r
                 } as boolean
 
@@ -280,11 +340,6 @@ class RedisPlugin extends BasePlugin {
             String imageName() {
                 RedisPlugin.this.imageName()
             }
-
-            @Override
-            String script(CreateContainerConf conf) {
-                return null
-            }
         }
     }
 
@@ -295,7 +350,7 @@ class RedisPlugin extends BasePlugin {
                 def sentinelConfThisOne = cc.conf.fileVolumeList.find { it.dist.contains('/sentinel') }
                 def isSentinel = sentinelConfThisOne != null
                 if (isSentinel) {
-                    log.info 'skip create exporter as is redis sentinel'
+                    log.info 'it is redis sentinel, skip'
                     return true
                 }
 
@@ -303,8 +358,13 @@ class RedisPlugin extends BasePlugin {
                 if (cc.instanceIndex != cc.conf.containerNumber - 1) {
                     return
                 }
-                def publicPort = getPublicPort(cc.conf)
-                def password = getParamValue(cc.conf, 'password')
+
+                def confOne = cc.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
+                def redisPort = confOne.paramValue('port') as int
+                def redisPassword = confOne.paramValue('password') as String
+
+                def tplOne = new ImageTplDTO(id: confOne.imageTplId).one()
+                def isSingleNode = tplOne.name.contains('single.node')
 
                 def app = new AppDTO()
                 app.name = cc.appId + '_' + cc.app.name + '_exporter'
@@ -343,37 +403,30 @@ class RedisPlugin extends BasePlugin {
                 conf.cpuFixed = 0.1
                 conf.user = '59000:59000'
 
-                // check if single node
-                boolean isSingleNode
-                def confOne = cc.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
-                if (confOne) {
-                    def tplOne = new ImageTplDTO(id: confOne.imageTplId).one()
-                    isSingleNode = tplOne.name.contains('single.node')
-                } else {
-                    isSingleNode = false
-                }
-
                 String envValue
                 if (isSingleNode) {
                     // ${nodeIp} is a placeholder, will be replaced by real ip
-                    envValue = "redis://\${nodeIp}:\${${publicPort} + instanceIndex}".toString()
+                    envValue = "redis://\${nodeIp}:\${${redisPort} + instanceIndex}".toString()
                 } else {
-                    envValue = "redis://\${nodeIp}:${publicPort}".toString()
+                    envValue = "redis://\${nodeIp}:${redisPort}".toString()
                 }
 
                 conf.envList << new KVPair<String>('REDIS_ADDR', envValue)
-                conf.envList << new KVPair<String>('REDIS_PASSWORD', password)
+                conf.envList << new KVPair<String>('REDIS_PASSWORD', redisPassword)
 
                 final int exporterPort = 9121
-                def exporterPublicPort = exporterPort + (6379 - publicPort)
-                conf.envList << new KVPair<String>('REDIS_EXPORTER_WEB_LISTEN_ADDRESS', '0.0.0.0:${' + exporterPublicPort + '+instanceIndex}')
+                def exporterPublicPort = exporterPort + (6379 - redisPort)
+
+                if (isSingleNode) {
+                    conf.envList << new KVPair<String>('REDIS_EXPORTER_WEB_LISTEN_ADDRESS', '0.0.0.0:${' + exporterPublicPort + '+instanceIndex}')
+                    conf.envList << new KVPair<String>(ContainerInfo.ENV_KEY_PUBLIC_PORT, '${' + exporterPublicPort + '+instanceIndex}')
+                } else {
+                    conf.envList << new KVPair<String>('REDIS_EXPORTER_WEB_LISTEN_ADDRESS', "0.0.0.0:${exporterPublicPort}".toString())
+                    conf.envList << new KVPair<String>(ContainerInfo.ENV_KEY_PUBLIC_PORT, exporterPublicPort.toString())
+                }
 
                 conf.networkMode = 'host'
-                if (isSingleNode) {
-                    conf.portList << new PortMapping(privatePort: exporterPort, publicPort: exporterPublicPort)
-                } else {
-                    conf.portList << new PortMapping(privatePort: exporterPort, publicPort: exporterPublicPort)
-                }
+                conf.portList << new PortMapping(privatePort: exporterPort, publicPort: exporterPublicPort)
 
                 // monitor
                 def monitorConf = new MonitorConf()
@@ -385,26 +438,10 @@ class RedisPlugin extends BasePlugin {
                 // add application to dms
                 int appId = app.add() as int
                 app.id = appId
-                log.info 'done create related exporter application {}', appId
+                log.info 'done create related exporter application, app id: {}', appId
 
                 // create dms job
-                List<Integer> needRunInstanceIndexList = []
-                (0..<conf.containerNumber).each {
-                    needRunInstanceIndexList << it
-                }
-                def job = new AppJobDTO(appId: appId,
-                        failNum: 0,
-                        status: AppJobDTO.Status.created.val,
-                        jobType: AppJobDTO.JobType.create.val,
-                        createdDate: new Date(),
-                        updatedDate: new Date()).
-                        needRunInstanceIndexList(needRunInstanceIndexList)
-                int jobId = job.add()
-                job.id = jobId
-
-                // set auto so dms can handle this job
-                new AppDTO(id: appId, status: AppDTO.Status.auto.val).update()
-                log.info 'done create related exporter application start job {}', jobId
+                createAppCreateJob(appId, conf)
                 true
             }
 
@@ -415,7 +452,7 @@ class RedisPlugin extends BasePlugin {
 
             @Override
             String name() {
-                'Redis create exporter application'
+                'redis create exporter application'
             }
 
             @Override

@@ -19,7 +19,13 @@ def redisAppNames = super.binding.getProperty('redisAppNames') as String
 ContainerMountTplHelper applications = super.binding.getProperty('applications') as ContainerMountTplHelper
 List<String> list = []
 redisAppNames.split(',').each { redisAppName ->
+    if (!redisAppName) {
+        return
+    }
     ContainerMountTplHelper.OneApp redisApp = applications.app(redisAppName)
+    if (!redisApp) {
+        return
+    }
 
     def redisFirstNodeIp = redisApp.allNodeIpList[0]
     def confOne = redisApp.app.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }

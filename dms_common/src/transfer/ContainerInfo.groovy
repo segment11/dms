@@ -3,12 +3,14 @@ package transfer
 import common.ContainerHelper
 import groovy.transform.CompileStatic
 import groovy.transform.ToString
+import model.json.KVPair
 
 @CompileStatic
 @ToString(includeNames = true)
 class ContainerInfo implements Comparable<ContainerInfo> {
     final static String STATE_RUNNING = 'running'
     final static String STATE_EXITED = 'exited'
+    final static String ENV_KEY_PUBLIC_PORT = 'X-env-public-port'
 
     @Override
     int compareTo(ContainerInfo y) {
@@ -62,6 +64,8 @@ class ContainerInfo implements Comparable<ContainerInfo> {
     Long sizeRw
     Long sizeRootFs
 
+    List<KVPair<String>> envList = []
+
     List<Mount> mounts
 
     boolean checkOk() {
@@ -97,6 +101,13 @@ class ContainerInfo implements Comparable<ContainerInfo> {
     }
 
     Integer publicPort(Integer privatePort) {
+        if (envList) {
+            def envOne = envList.find { it.key == ENV_KEY_PUBLIC_PORT }
+            if (envOne) {
+                return envOne.value as Integer
+            }
+        }
+
         def one = ports?.find {
             it.privatePort == privatePort
         }

@@ -12,6 +12,10 @@ class FileVolumeMount {
 
     List<KVPair<String>> paramList = []
 
+    Object paramValue(String key) {
+        paramList.find { it.key == key }?.value
+    }
+
     String dist
 
     String content
