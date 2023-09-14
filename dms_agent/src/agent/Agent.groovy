@@ -10,6 +10,7 @@ import common.*
 import ex.HttpInvokeException
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import model.json.KVPair
 import model.json.LiveCheckConf
 import org.hyperic.sigar.Sigar
 import org.segment.web.json.DefaultJsonTransformer
@@ -223,6 +224,16 @@ class Agent extends IntervalJob {
                 def procMem = sigar.getProcMem(pid)
                 if (procMem) {
                     containerInfo.memResident = procMem.resident
+                }
+
+                // set env
+                def env = inspect.config.env
+                if (env) {
+                    for (envStr in env) {
+                        def arr = envStr.split('=')
+                        def envValue = arr.length > 2 ? arr[1..-1].join('=') : arr[-1]
+                        containerInfo.envList << new KVPair<String>(arr[0], envValue)
+                    }
                 }
             }
 
