@@ -46,7 +46,7 @@ bind ${nodeIp} -::1
 protected-mode no
 port ${port + (isSingleNode ? instanceIndex : 0)}
 ${password ? 'requirepass ' + password : ''}
-${password ? 'sentinel sentinel-pass ' + password : ''}
+${password ? 'masterauth ' + password : ''}
 daemonize no
 pidfile /var/run/redis-sentinel.pid
 logfile ""

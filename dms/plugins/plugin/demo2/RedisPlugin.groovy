@@ -264,6 +264,9 @@ class RedisPlugin extends BasePlugin {
                     sentinelParams['down-after-milliseconds'] = sentinelConfOne.paramValue('downAfterMs').toString()
                     sentinelParams['failover-timeout'] = sentinelConfOne.paramValue('failoverTimeout').toString()
                     sentinelParams['parallel-syncs'] = '1'
+                    if (redisPassword) {
+                        sentinelParams['auth-pass'] = redisPassword
+                    }
 
                     def sentinelPort = sentinelConfOne.paramValue('port') as int
                     def sentinelPassword = sentinelConfOne.paramValue('password') as String
