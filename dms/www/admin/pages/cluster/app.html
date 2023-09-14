@@ -40,10 +40,11 @@
                                 <br/>
                                 {{one.des}}
                                 <br/>
-                                <p ng-class="{'bg-info': one.status == 0, 'bg-danger': one.status == 1}">
+                                <p ng-class="{'bg-info': one.status == 0, 'bg-tips': one.status == 1}">
                                     {{one.status == 0 ? 'auto' : 'manual'}}</p>
                                 <p ng-show="one.jobConf" class="bg-danger">Cron Job</p>
                                 <p ng-show="!one.isLiveCheckOk" class="bg-danger">Live Check Fail</p>
+                                <p ng-show="!one.isHealthCheckOk" class="bg-danger">Health Check Fail</p>
                             </td>
                             <td>
                                 {{one.conf.group}}/{{one.conf.image}}

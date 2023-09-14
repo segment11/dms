@@ -38,9 +38,19 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
             $scope.pager = {pageNum: data.pageNum, pageSize: data.pageSize, totalCount: data.totalCount};
             $scope.tmp.pageNum = data.pageNum;
 
-            _.each(data.list, function (it) {
-                if (!it.logConf) {
-                    it.logConf = {logFileList: []};
+            _.each(data.list, function (one) {
+                if (!one.logConf) {
+                    one.logConf = {logFileList: []};
+                }
+
+                if (one.healthCheckResults) {
+                    // one.healthCheckResults -> [['checker name', true, timeMs]]
+                    var isOk = _.every(one.healthCheckResults, function (it) {
+                        return it[1];
+                    });
+                    one.isHealthCheckOk = isOk;
+                } else {
+                    one.isHealthCheckOk = true;
                 }
             });
         });
@@ -283,7 +293,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
         });
         $.dialog({
             title: one.name + ' / Is Ok: ' + isOk,
-            content: _.map(one.healthCheckResults.reverse(), function (it) {
+            content: _.map(one.healthCheckResults, function (it) {
                 return '<span class="' + (it[1] ? 'bg-success' : 'bg-danger') + '">' + it[0] + ': ' + it[1] + ' / ' +
                     new Date(it[2]).format('yyyy-MM-dd HH:mm:ss') + '</span>';
             }).join('<br />')

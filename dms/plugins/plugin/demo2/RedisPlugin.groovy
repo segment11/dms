@@ -17,6 +17,8 @@ import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
 import server.scheduler.checker.Checker
 import server.scheduler.checker.CheckerHolder
+import server.scheduler.checker.HealthChecker
+import server.scheduler.checker.HealthCheckerHolder
 import server.scheduler.processor.JobStepKeeper
 import transfer.ContainerInfo
 
@@ -195,7 +197,7 @@ class RedisPlugin extends BasePlugin {
                 def sentinelConfThisOne = conf.conf.fileVolumeList.find { it.dist.contains('/sentinel') }
                 def isSentinel = sentinelConfThisOne != null
                 if (isSentinel) {
-                    log.info 'it is redis sentinel, skip'
+                    log.info 'it is redis sentinel, skip init master slave'
                     return true
                 }
 
@@ -209,7 +211,7 @@ class RedisPlugin extends BasePlugin {
                 def confOne = conf.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
                 def isMasterSlave = confOne.paramValue('isMasterSlave') == 'true'
                 if (!isMasterSlave) {
-                    log.info 'not run as master slave, skip'
+                    log.info 'it is not master slave mode, skip init master slave'
                     return true
                 }
 
@@ -224,22 +226,25 @@ class RedisPlugin extends BasePlugin {
                     def redisAppNames = sentinelConfOne.paramValue('redisAppNames') as String
                     redisAppNames.split(',').contains(conf.app.name)
                 }) {
-                    log.info 'there is a sentinel application already include this application, skip'
+                    log.info 'there is a sentinel application already include this application, skip init master slave'
                     return true
                 }
 
                 def primaryNodeIp = conf.nodeIpList[0]
                 def redisPort = confOne.paramValue('port') as int
+                def primaryPort = redisPort
                 def redisPassword = confOne.paramValue('password') as String
 
+                def thisInstanceNodeIp = conf.nodeIp
                 def tplOne = new ImageTplDTO(id: confOne.imageTplId).one()
                 def isSingleNode = tplOne.name.contains('single.node')
-                def finalPort = redisPort + (isSingleNode ? conf.instanceIndex : 0)
+                def thisInstanceRedisPort = redisPort + (isSingleNode ? conf.instanceIndex : 0)
 
-                // if set a sentinel application name
-                // set monitor
+                // get master address from sentinel or just use first node ip and port
+                Set<String> multiMasterAddressSet = []
+                String masterAddress
                 def sentinelAppName = confOne.paramValue('sentinelAppName')
-                if (sentinelAppName && conf.instanceIndex == 0) {
+                if (sentinelAppName) {
                     def sentinelAppOne = InMemoryCacheSupport.instance.appList.find {
                         it.clusterId == conf.clusterId && it.name == sentinelAppName
                     }
@@ -262,6 +267,7 @@ class RedisPlugin extends BasePlugin {
 
                     def sentinelPort = sentinelConfOne.paramValue('port') as int
                     def sentinelPassword = sentinelConfOne.paramValue('password') as String
+                    def isSentinelSingleNode = 'true' == sentinelConfOne.paramValue('isSingleNode')
 
                     // add to sentinel
                     def containerList = InMemoryAllContainerManager.instance.getContainerList(0, sentinelAppOne.id)
@@ -270,56 +276,97 @@ class RedisPlugin extends BasePlugin {
                             continue
                         }
 
-                        def finalSentinelPort = sentinelPort + (isSingleNode ? x.instanceIndex() : 0)
+                        def finalSentinelPort = sentinelPort + (isSentinelSingleNode ? x.instanceIndex() : 0)
                         def jedisPool = JedisPoolHolder.instance.create(x.nodeIp, finalSentinelPort, sentinelPassword)
                         JedisPoolHolder.instance.useRedisPool(jedisPool) { jedis ->
                             def infoSentinel = jedis.info('sentinel')
                             if (infoSentinel.contains(masterName + ',')) {
                                 log.info 'sentinel monitor already added, instance index: {}, master name: {}', x.instanceIndex(), masterName
-                                return
-                            }
+                                def masterAddressAlreadyAdded = jedis.sentinelGetMasterAddrByName(masterName).join(':')
+                                multiMasterAddressSet << masterAddressAlreadyAdded
+                                if (!masterAddress) {
+                                    masterAddress = masterAddressAlreadyAdded
+                                }
+                            } else {
+                                if (!masterAddress) {
+                                    masterAddress = primaryNodeIp + ':' + primaryPort
+                                }
+                                multiMasterAddressSet << masterAddress
 
-                            def r = jedis.sentinelMonitor(masterName, primaryNodeIp, finalPort, quorum)
-                            log.info 'sentinel monitor, instance index: {}, master name: {}, result: {}',
-                                    x.instanceIndex(), masterName, r
-                            def r2 = jedis.sentinelSet(masterName, sentinelParams)
-                            log.info 'sentinel set, instance index: {}, master name: {}, result: {}, params: {}',
-                                    x.instanceIndex(), masterName, r2, sentinelParams
+                                def r = jedis.sentinelMonitor(masterName, primaryNodeIp, primaryPort, quorum)
+                                log.info 'sentinel monitor, instance index: {}, master name: {}, result: {}',
+                                        x.instanceIndex(), masterName, r
+                                def r2 = jedis.sentinelSet(masterName, sentinelParams)
+                                log.info 'sentinel set, instance index: {}, master name: {}, result: {}, params: {}',
+                                        x.instanceIndex(), masterName, r2, sentinelParams
+                            }
                         }
                     }
                 }
 
-                if (conf.instanceIndex == 0) {
-                    log.info 'only instance index > 0 need init replica of, skip'
-                    return true
+                if (multiMasterAddressSet.size() > 1) {
+                    log.warn 'multi master address, master address list: {}, will use first one: {}', multiMasterAddressSet, masterAddress
+                }
+
+                String masterNodeIp
+                int masterPort
+                if (!masterAddress) {
+                    masterNodeIp = primaryNodeIp
+                    masterPort = primaryPort
+                } else {
+                    def arr = masterAddress.split(':')
+                    masterNodeIp = arr[0]
+                    masterPort = arr[1] as int
                 }
 
                 // check if master is ready
-                if (Utils.isPortListenAvailable(finalPort, primaryNodeIp)) {
-                    log.warn 'master node {}:{} is not ready, skip', primaryNodeIp, finalPort
+                if (Utils.isPortListenAvailable(masterPort, masterNodeIp)) {
+                    log.warn 'master node {}:{} is not ready, skip init master slave', masterNodeIp, masterPort
                     return true
                 }
 
-                def jedisPool = JedisPoolHolder.instance.create(conf.nodeIp, finalPort, redisPassword)
+                def jedisPool = JedisPoolHolder.instance.create(thisInstanceNodeIp, thisInstanceRedisPort, redisPassword)
                 def isOk = JedisPoolHolder.instance.useRedisPool(jedisPool) { jedis ->
                     def infoReplication = jedis.info('replication')
                     def lines = infoReplication.readLines()
                     if (lines.find { it.contains('role:slave') }) {
-                        log.warn 'it is already slave, node ip: {}', conf.nodeIp
+                        log.warn 'it is slave, node ip: {}, port: {}', thisInstanceNodeIp, thisInstanceRedisPort
+                        // master may be not target master, so check it
+                        def lineMasterHost = lines.find { it.contains('master_host:') }
+                        def thisInstanceMasterHost = lineMasterHost.replace('master_host:', '').trim()
+                        def lineMasterPort = lines.find { it.contains('master_port:') }
+                        def thisInstanceMasterPort = lineMasterPort.replace('master_port:', '').trim() as int
+
+                        if (thisInstanceMasterHost == masterNodeIp && thisInstanceMasterPort == masterPort) {
+                            log.info 'master host and port is same, skip'
+                            return true
+                        } else {
+                            log.warn 'master host or port is not same, slave of target master'
+                            def r = jedis.replicaof(masterNodeIp, masterPort)
+                            log.info 'replica of {}:{}, result: {}', masterNodeIp, masterPort, r
+                            return 'OK' == r
+                        }
+                    }
+
+                    // role:master
+                    // check if master is self
+                    if (masterNodeIp == thisInstanceNodeIp && masterPort == thisInstanceRedisPort) {
+                        log.info 'master address is self, skip init master slave'
                         return true
                     }
 
+                    // check if master has slaves
                     def lineConnectedSlaves = lines.find { it.contains('connected_slaves:') }
                     if (lineConnectedSlaves) {
                         def num = lineConnectedSlaves.replace('connected_slaves:', '') as int
                         if (num > 0) {
-                            log.warn 'it is master, but has slaves, skip replica of'
-                            return true
+                            log.warn 'it is master, but has slaves, check data after replica of, node ip: {}, port: {}', thisInstanceNodeIp, thisInstanceRedisPort
+                            log.warn 'slaves will change to new master address, master node ip: {}, port: {}', masterNodeIp, masterPort
                         }
                     }
 
-                    def r = jedis.replicaof(primaryNodeIp, redisPort)
-                    log.info 'replica of {}:{}, result: {}', primaryNodeIp, redisPort, r
+                    def r = jedis.replicaof(masterNodeIp, masterPort)
+                    log.info 'replica of {}:{}, result: {}', masterNodeIp, masterPort, r
                     'OK' == r
                 } as boolean
 
@@ -341,6 +388,120 @@ class RedisPlugin extends BasePlugin {
                 RedisPlugin.this.imageName()
             }
         }
+
+        HealthCheckerHolder.instance.add new HealthChecker() {
+            @Override
+            String name() {
+                'redis master slave status check'
+            }
+
+            @Override
+            String imageName() {
+                RedisPlugin.this.imageName()
+            }
+
+            @Override
+            boolean check(AppDTO app) {
+                def sentinelConfOne = app.conf.fileVolumeList.find { it.dist.contains('/sentinel') }
+                if (sentinelConfOne) {
+                    def isSentinelSingleNode = 'true' == sentinelConfOne.paramValue('isSingleNode')
+                    def sentinelPort = sentinelConfOne.paramValue('port') as int
+                    def sentinelPassword = sentinelConfOne.paramValue('password') as String
+
+                    // check all master status
+                    def containerList = InMemoryAllContainerManager.instance.getContainerList(0, app.id)
+                    for (x in containerList) {
+                        if (!x.running()) {
+                            continue
+                        }
+
+                        def finalSentinelPort = sentinelPort + (isSentinelSingleNode ? x.instanceIndex() : 0)
+                        def jedisPool = JedisPoolHolder.instance.create(x.nodeIp, finalSentinelPort, sentinelPassword)
+                        def isMastersAllOk = JedisPoolHolder.instance.useRedisPool(jedisPool) { jedis ->
+                            def infoSentinel = jedis.info('sentinel')
+                            def lines = infoSentinel.readLines()
+                            def masterLines = lines.findAll { it.contains('redis-app-') }
+                            if (!masterLines) {
+                                return true
+                            }
+                            return masterLines.every {
+                                def arr = it.split(',')
+                                for (str in arr) {
+                                    def arr2 = str.split('=')
+                                    if (arr2[0] == 'status' && arr2[1] != 'ok') {
+                                        log.warn 'master status is not ok, master name: {}, status: {}', arr[0], arr2[1]
+                                        return false
+                                    }
+                                }
+                                true
+                            }
+                        }
+
+                        if (!isMastersAllOk) {
+                            return false
+                        }
+                    }
+                }
+
+                def confOne = app.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
+                if (!confOne) {
+                    return true
+                }
+
+                def isMasterSlave = confOne.paramValue('isMasterSlave') == 'true'
+                if (!isMasterSlave) {
+                    log.info 'it is not master slave mode, skip health check'
+                    return true
+                }
+
+                def containerList = InMemoryAllContainerManager.instance.getContainerList(0, app.id)
+                def roleList = containerList.collect {
+                    if (!it.running()) {
+                        return 'unknown'
+                    }
+
+                    def redisPort = confOne.paramValue('port') as int
+                    def redisPassword = confOne.paramValue('password') as String
+
+                    def tplOne = new ImageTplDTO(id: confOne.imageTplId).one()
+                    def isSingleNode = tplOne.name.contains('single.node')
+                    def finalPort = redisPort + (isSingleNode ? it.instanceIndex() : 0)
+
+                    def jedisPool = JedisPoolHolder.instance.create(it.nodeIp, finalPort, redisPassword)
+                    JedisPoolHolder.instance.useRedisPool(jedisPool) { jedis ->
+                        String role
+                        def infoReplication = jedis.info('replication')
+                        def lines = infoReplication.readLines()
+                        if (lines.find { it.contains('role:slave') }) {
+                            role = 'slave'
+                        } else if (lines.find { it.contains('role:master') }) {
+                            role = 'master'
+                        } else {
+                            role = 'unknown'
+                        }
+                        role
+                    }
+                }
+
+                if (roleList.any { it == 'unknown' }) {
+                    log.warn 'unknown role, app id: {}, role list: {}', app.id, roleList
+                    return false
+                }
+
+                if (roleList.count { it == 'master' } != 1) {
+                    log.warn 'master count is not 1, app id: {}, role list: {}', app.id, roleList
+                    return false
+                }
+
+                def expectSlaveCount = containerList.size() - 1
+                if (roleList.count { it == 'slave' } != expectSlaveCount) {
+                    log.warn 'slave count is not {}, app id: {}, role list: {}', expectSlaveCount, app.id, roleList
+                    return false
+                }
+
+                return true
+            }
+        }
     }
 
     private void initExporter() {
@@ -350,7 +511,7 @@ class RedisPlugin extends BasePlugin {
                 def sentinelConfThisOne = cc.conf.fileVolumeList.find { it.dist.contains('/sentinel') }
                 def isSentinel = sentinelConfThisOne != null
                 if (isSentinel) {
-                    log.info 'it is redis sentinel, skip'
+                    log.info 'it is redis sentinel, skip init exporter'
                     return true
                 }
 
