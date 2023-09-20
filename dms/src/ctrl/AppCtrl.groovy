@@ -146,7 +146,7 @@ h.group('/app') {
         assert id
 
         AppDTO one = new AppDTO(id: id as int).one()
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAccessNamespace(one.namespaceId)) {
             resp.halt(500, 'not this namespace manager')
         }
@@ -243,7 +243,7 @@ h.group('/app') {
 
         one.updatedDate = new Date()
         if (one.id) {
-            User u = req.session('user') as User
+            User u = req.attr('user') as User
             if (!u.isAccessApp(one.id)) {
                 resp.halt(500, 'not this app manager')
             }
@@ -309,7 +309,7 @@ h.group('/app') {
                 return [id: one.id, jobId: jobId]
             }
         } else {
-            User u = req.session('user') as User
+            User u = req.attr('user') as User
             if (!u.isAccessNamespace(one.namespaceId)) {
                 resp.halt(500, 'not this namespace manager')
             }
@@ -336,7 +336,7 @@ h.group('/app') {
         def one = req.bodyAs(AppDTO)
         assert one.id
 
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAccessApp(one.id)) {
             resp.halt(500, 'not this app manager')
         }
@@ -359,7 +359,7 @@ h.group('/app') {
         def id = form.id as int
         def scaleNumber = form.scaleNumber as int
 
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAccessApp(id)) {
             resp.halt(500, 'not this app manager')
         }

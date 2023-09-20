@@ -22,7 +22,7 @@ def h = ChainHandler.instance
 
 h.group('/node') {
     h.get('/tag/update') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }
@@ -33,7 +33,7 @@ h.group('/node') {
         new NodeDTO(id: id as int, tags: tags ?: '').update()
         [flag: true]
     }.post('/key-pair/reset-root-pass') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }
@@ -67,7 +67,7 @@ h.group('/node') {
                     message: 'Please view log for detail']
         }
     }.post('/key-pair/init') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }
@@ -144,7 +144,7 @@ h.group('/node') {
             }
         }
     }.post('/agent/init') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }
@@ -178,7 +178,7 @@ h.group('/node') {
                     message: 'Please view log for detail']
         }
     }.post('/agent/start') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }
@@ -234,7 +234,7 @@ h.group('/node') {
                     message: 'Please view log for detail']
         }
     }.post('/agent/stop') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }
@@ -271,7 +271,7 @@ h.group('/node') {
                     message: 'Please view log for detail']
         }
     }.delete('/agent/remove-node') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }
@@ -336,7 +336,7 @@ h.group('/node') {
         }
     }.get('/call') { req, resp ->
         // for debug
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }

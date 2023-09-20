@@ -14,7 +14,7 @@ h.group('/app/job') {
     h.get('/list') { req, resp ->
         def appId = req.param('appId')
         assert appId
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAccessApp(appId as int)) {
             resp.halt(403, 'not this app manager')
         }
@@ -26,7 +26,7 @@ h.group('/app/job') {
         def job = new AppJobDTO(id: jobId as int).one()
         assert job
 
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAccessApp(job.appId)) {
             resp.halt(403, 'not this app manager')
         }
@@ -89,7 +89,7 @@ h.group('/app/job') {
             return [flag: true]
         }
 
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAccessApp(one.appId)) {
             resp.halt(500, 'not this application manager')
         }

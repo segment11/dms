@@ -12,7 +12,7 @@ def h = ChainHandler.instance
 def log = LoggerFactory.getLogger(this.getClass())
 
 h.get('/manage/conf/reload') { req, resp ->
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     if (!u.isAdmin()) {
         resp.halt(403, 'not admin')
     }
@@ -20,14 +20,14 @@ h.get('/manage/conf/reload') { req, resp ->
     def c = Conf.instance.load()
     c.params
 }.get('/manage/conf/view') { req, resp ->
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     if (!u.isAdmin()) {
         resp.halt(403, 'not admin')
     }
 
     Conf.instance.params
 }.get('/manage/conf/set') { req, resp ->
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     if (!u.isAdmin()) {
         resp.halt(403, 'not admin')
     }
@@ -50,7 +50,7 @@ h.get('/manage/conf/reload') { req, resp ->
     log.info 'dns update - {}/{}/{}', hostname, ip, ttl
     'ok'
 }.get('/manage/sql/exe') { req, resp ->
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     if (!u.isAdmin()) {
         resp.halt(403, 'not admin')
     }
@@ -59,7 +59,7 @@ h.get('/manage/conf/reload') { req, resp ->
     new EventDTO().useD().exeUpdate(sql)
     'ok'
 }.get('/manage/sql/set/view') { req, resp ->
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     if (!u.isAdmin()) {
         resp.halt(403, 'not admin')
     }

@@ -13,7 +13,7 @@ import server.InMemoryCacheSupport
 def h = ChainHandler.instance
 
 h.before('/plugin/**') { req, resp ->
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     if (!u?.isAdmin()) {
         resp.halt(403, 'not a admin')
     }

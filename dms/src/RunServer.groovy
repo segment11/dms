@@ -22,10 +22,7 @@ import server.gateway.ZkClientHolder
 import server.lock.CuratorFrameworkClientHolder
 import server.scheduler.Guardian
 import server.scheduler.processor.CreateProcessor
-import support.DefaultLocalH2DataSourceCreator
-import support.FirstClusterCreate
-import support.JobBatchDone
-import support.LocalGroovyScriptLoader
+import support.*
 
 import java.sql.Types
 
@@ -119,6 +116,8 @@ guardian.start()
 def cacheSupport = InMemoryCacheSupport.instance
 cacheSupport.start()
 
+AuthTokenCacheHolder.instance.init()
+
 def localIp = Utils.localIp()
 
 // create jetty server, load route define interval using cached groovy class loader
@@ -144,13 +143,14 @@ def stopCl = {
     leaderFlagHolder.stop()
     ZkClientHolder.instance.close()
     JedisPoolHolder.instance.close()
+    AuthTokenCacheHolder.instance.cleanUp()
     Ds.disconnectAll()
 }
 
 Runtime.addShutdownHook stopCl
 
 ChainHandler.instance.get('/manage/stop/all') { req, resp ->
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     if (!u.isAdmin()) {
         resp.halt(403, 'not admin')
     }

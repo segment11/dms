@@ -1,20 +1,23 @@
 package ctrl
 
+import auth.Permit
 import auth.User
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import com.auth0.jwt.exceptions.JWTVerificationException
 import common.Const
 import common.TimerSupport
 import org.apache.commons.codec.digest.DigestUtils
 import org.segment.web.handler.ChainHandler
+import org.slf4j.LoggerFactory
 import server.InMemoryCacheSupport
+import support.AuthTokenCacheHolder
 
 def h = ChainHandler.instance
-h.before('/api/**') { req, resp ->
-    User u = req.session('user') as User
-    // admin can debug
-    if (u && u.isAdmin()) {
-        return
-    }
 
+def log = LoggerFactory.getLogger(this.getClass())
+
+h.before('/api/**') { req, resp ->
     // check auth token
     def authToken = req.header(Const.AUTH_TOKEN_HEADER)
     def clusterId = req.header(Const.CLUSTER_ID_HEADER)
@@ -46,10 +49,46 @@ h.before('/**') { req, resp ->
     }
 
     // check login
-    User u = req.session('user') as User
-    if (!u) {
+    def authToken = req.cookie('Auth-Token')
+    if (!authToken) {
         resp.halt(403, 'need login')
+    } else {
+        // default 3600s
+        resp.cookie('Auth-Token', authToken)
     }
+
+    def instance = AuthTokenCacheHolder.instance
+    def user = instance.get(authToken)
+    if (user) {
+        req.attr('user', user)
+    } else {
+        def algorithm = Algorithm.HMAC256(AuthTokenCacheHolder.ALG_SECRET + instance.date.toString())
+        def verifier = JWT.require(algorithm)
+                .withIssuer('dms')
+                .build()
+
+        try {
+            def jwt = verifier.verify(authToken)
+            def claims = jwt.claims
+            def name = claims.get('name').asString()
+            def permitFormatStringList = claims.get('permitList').asArray(String)
+            def lastLoginTime = claims.get('lastLoginTime').asDate()
+
+            def userPut = new User()
+            userPut.name = name
+            userPut.lastLoginTime = lastLoginTime
+            for (str in permitFormatStringList) {
+                userPut.permitList << Permit.fromFormatString(str)
+            }
+
+            req.attr('user', userPut)
+            instance.put(authToken, userPut)
+        } catch (JWTVerificationException e) {
+            log.error('jwt verify fail', e)
+            resp.halt(403, 'token not match')
+        }
+    }
+    return
 }
 
 h.afterAfter('/**') { req, resp ->

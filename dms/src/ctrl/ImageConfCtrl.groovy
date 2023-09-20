@@ -9,12 +9,12 @@ def h = ChainHandler.instance
 
 h.group('/image/config') {
     h.before(~/\/[^\/]+\/delete\/.*/) { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isImageManager()) {
             resp.halt(403, 'not a docker manager')
         }
     }.before(~/\/[^\/]+\/update/) { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isImageManager()) {
             resp.halt(403, 'not a docker manager')
         }

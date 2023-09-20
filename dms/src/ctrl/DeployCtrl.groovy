@@ -19,7 +19,7 @@ def h = ChainHandler.instance
 def log = LoggerFactory.getLogger(this.getClass())
 
 h.get('/deploy/node-file/list') { req, resp ->
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     if (!u.isAdmin()) {
         resp.halt(403, 'not admin')
     }
@@ -64,7 +64,7 @@ h.get('/deploy/node-file/list') { req, resp ->
 
     [pager: pager2, deployFileList: deployFileList]
 }.post('/deploy/begin') { req, resp ->
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     if (!u.isAdmin()) {
         resp.halt(403, 'not admin')
     }
@@ -134,7 +134,7 @@ h.group('/deploy-file') {
                         '%' + keyword + '%', '%' + keyword + '%').list()
         [deployFileList: deployFileList]
     }.delete('/delete') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }
@@ -144,7 +144,7 @@ h.group('/deploy-file') {
         new DeployFileDTO(id: id as int).delete()
         [flag: true]
     }.post('/update') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }

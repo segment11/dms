@@ -26,7 +26,7 @@ h.group('/namespace') {
         assert id
 
         NamespaceDTO one = new NamespaceDTO(id: id as int).queryFields('cluster_id').one()
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAccessCluster(one.clusterId)) {
             resp.halt(403, 'not this cluster manager')
         }
@@ -43,7 +43,7 @@ h.group('/namespace') {
         assert one.name && one.clusterId
         one.updatedDate = new Date()
         if (one.id) {
-            User u = req.session('user') as User
+            User u = req.attr('user') as User
             if (!u.isAccessNamespace(one.id)) {
                 resp.halt(403, 'not this namespace manager')
             }
@@ -51,7 +51,7 @@ h.group('/namespace') {
             one.update()
             return [id: one.id]
         } else {
-            User u = req.session('user') as User
+            User u = req.attr('user') as User
             if (!u.isAccessCluster(one.clusterId)) {
                 resp.halt(403, 'not this cluster manager')
             }

@@ -10,7 +10,7 @@ import server.InMemoryCacheSupport
 def h = ChainHandler.instance
 
 h.post('/agent/image/init/load') { req, resp ->
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     if (!u.isAdmin()) {
         resp.halt(403, 'not admin')
     }
@@ -66,7 +66,7 @@ h.post('/agent/image/init/load') { req, resp ->
 }
 
 h.get('/agent/image/init/view') { req, resp ->
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     if (!u.isAdmin()) {
         resp.halt(403, 'not admin')
     }

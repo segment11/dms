@@ -28,7 +28,7 @@ h.group('/agent/script') {
         new AgentScriptDTO().noWhere().where(keyword as boolean, '(name like ?) or (des like ?)',
                 '%' + keyword + '%', '%' + keyword + '%').listPager(pageNum, pageSize)
     }.delete('/delete') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }
@@ -38,7 +38,7 @@ h.group('/agent/script') {
         new AgentScriptDTO(id: id as int).delete()
         [flag: true]
     }.post('/update') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }
@@ -54,7 +54,7 @@ h.group('/agent/script') {
             return [id: id]
         }
     }.get('/update/batch') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }
@@ -64,7 +64,7 @@ h.group('/agent/script') {
 
         [flag: true]
     }.options('/exe') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(500, 'not admin')
         }

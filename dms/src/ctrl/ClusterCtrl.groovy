@@ -11,7 +11,7 @@ import server.scheduler.Guardian
 def h = ChainHandler.instance
 
 h.get('/guard/toggle') { req, resp ->
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     if (!u.isAdmin()) {
         resp.halt(403, 'not admin')
     }
@@ -27,7 +27,7 @@ h.group('/cluster') {
         def list = new ClusterDTO().noWhere().queryFields('id,name,des,is_in_guard').list()
         [list: list, isGuardianRunning: Guardian.instance.isRunning]
     }.delete('/delete') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }
@@ -56,7 +56,7 @@ h.group('/cluster') {
         assert one.name && one.secret
         one.updatedDate = new Date()
         if (one.id) {
-            User u = req.session('user') as User
+            User u = req.attr('user') as User
             if (!u.isAccessCluster(one.id)) {
                 resp.halt(403, 'not this cluster manager')
             }
@@ -64,7 +64,7 @@ h.group('/cluster') {
             one.update()
             return [id: one.id]
         } else {
-            User u = req.session('user') as User
+            User u = req.attr('user') as User
             if (!u.isAdmin()) {
                 resp.halt(403, 'not admin')
             }

@@ -46,7 +46,7 @@ h.group('/container/manage') {
         assert clusterId
         def appId = req.param('appId')
         def nodeIp = req.param('nodeIp')
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(clusterId as int,
                 appId ? appId as int : 0, nodeIp, u) ?: []
         def simpleContainerList = containerList.collect { x ->
@@ -165,7 +165,7 @@ h.group('/container/manage') {
             resp.halt(500, 'no app get')
         }
 
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAccessApp(appId)) {
             resp.halt(403, 'not this app manager')
         }
@@ -217,7 +217,7 @@ h.group('/container/manage') {
             resp.halt(500, 'no app get')
         }
 
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAccessApp(appId)) {
             resp.halt(403, 'not this app manager')
         }
@@ -250,7 +250,7 @@ h.group('/container/manage') {
             resp.halt(500, 'no app get')
         }
 
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAccessApp(appId)) {
             resp.halt(403, 'not this app manager')
         }
@@ -288,7 +288,7 @@ private static void callAgentScript(Req req, Resp resp, String scriptName) {
         resp.halt(500, 'no app get')
     }
 
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     if (!u.isAccessApp(appId)) {
         resp.halt(403, 'not this app manager')
     }
@@ -410,7 +410,7 @@ h.group('/container') {
         def app = new AppDTO(id: appId as int).one()
         assert app
 
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.
                 getContainerList(app.clusterId, app.id, null, u) ?: []
         def simpleContainerList = containerList.collect { x ->
@@ -430,7 +430,7 @@ h.group('/container') {
             resp.halt(500, 'no app get')
         }
 
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAccessApp(appId)) {
             resp.halt(403, 'not this app manager')
         }

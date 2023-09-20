@@ -3,6 +3,8 @@ package ctrl
 import auth.LoginService
 import auth.PermitType
 import auth.User
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import com.segment.common.Conf
 import common.Const
 import common.Event
@@ -14,6 +16,7 @@ import org.apache.commons.codec.digest.DigestUtils
 import org.segment.d.Pager
 import org.segment.web.handler.ChainHandler
 import spi.SpiSupport
+import support.AuthTokenCacheHolder
 
 def h = ChainHandler.instance
 
@@ -24,6 +27,9 @@ h.post('/login') { req, resp ->
 
     def passwordMd5 = DigestUtils.md5Hex(password)
 
+    def instance = AuthTokenCacheHolder.instance
+    def algorithm = Algorithm.HMAC256(AuthTokenCacheHolder.ALG_SECRET + instance.date.toString())
+
     if ('admin' == user) {
         def envPass = System.getenv('ADMIN_PASSWORD')
         def adminPasswordMd5 = envPass ? DigestUtils.md5Hex(envPass) :
@@ -33,8 +39,15 @@ h.post('/login') { req, resp ->
                 def u = new User()
                 u.name = user
                 u.permitList << User.PermitAdmin
+                String authToken = JWT.create()
+                        .withIssuer('dms')
+                        .withClaim('name', user)
+                        .withClaim('permitList', u.permitList.collect { it.toFormatString() })
+                        .withClaim('lastLoginTime', new Date())
+                        .sign(algorithm)
+                resp.cookie('Auth-Token', authToken)
+                instance.remove(authToken)
 
-                req.session('user', u)
                 Event.builder().type(Event.Type.user).reason('login').result(user).
                         build().log(req.ip()).toDto().add()
                 resp.redirect('/admin/index.html')
@@ -53,25 +66,37 @@ h.post('/login') { req, resp ->
         return
     }
 
-    req.session('user', u)
+    String authToken = JWT.create()
+            .withIssuer('dms')
+            .withClaim('name', user)
+            .withClaim('permitList', u.permitList.collect { it.toFormatString() })
+            .withClaim('lastLoginTime', new Date())
+            .sign(algorithm)
+    resp.cookie('Auth-Token', authToken)
+    instance.remove(authToken)
+
     Event.builder().type(Event.Type.user).reason('login').result(user).
             build().log(req.ip()).toDto().add()
     resp.redirect('/admin/index.html')
 }
 
 h.get('/login/user') { req, resp ->
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     u
 }
 
 h.get('/logout') { req, resp ->
-    User u = req.session('user') as User
+    User u = req.attr('user') as User
     if (u) {
         Event.builder().type(Event.Type.user).reason('logout').result(u.name).
                 build().log(req.ip()).toDto().add()
     }
 
-    req.removeSession('user')
+    resp.removeCookie('Auth-Token')
+    def authToken = req.cookie('Auth-Token')
+    if (authToken) {
+        AuthTokenCacheHolder.instance.remove(authToken)
+    }
     resp.redirect('/admin/login.html')
 }
 
@@ -150,7 +175,7 @@ h.group('/permit') {
     }.post('/update') { req, resp ->
         def one = req.bodyAs(UserPermitDTO)
         assert one.user && one.permitType
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         one.createdUser = u.name
         one.updatedDate = new Date()
         if (one.id) {
