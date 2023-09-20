@@ -45,7 +45,7 @@ h.post('/login') { req, resp ->
                         .withClaim('permitList', u.permitList.collect { it.toFormatString() })
                         .withClaim('lastLoginTime', new Date())
                         .sign(algorithm)
-                resp.cookie('Auth-Token', authToken)
+                instance.setCookie(req, resp, authToken)
                 instance.remove(authToken)
 
                 Event.builder().type(Event.Type.user).reason('login').result(user).
@@ -72,7 +72,7 @@ h.post('/login') { req, resp ->
             .withClaim('permitList', u.permitList.collect { it.toFormatString() })
             .withClaim('lastLoginTime', new Date())
             .sign(algorithm)
-    resp.cookie('Auth-Token', authToken)
+    instance.setCookie(req, resp, authToken)
     instance.remove(authToken)
 
     Event.builder().type(Event.Type.user).reason('login').result(user).

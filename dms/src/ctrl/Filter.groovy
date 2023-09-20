@@ -54,7 +54,7 @@ h.before('/**') { req, resp ->
         resp.halt(403, 'need login')
     } else {
         // default 3600s
-        resp.cookie('Auth-Token', authToken)
+        AuthTokenCacheHolder.instance.setCookie(req, resp, authToken)
     }
 
     def instance = AuthTokenCacheHolder.instance

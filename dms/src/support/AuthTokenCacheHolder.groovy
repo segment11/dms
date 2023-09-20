@@ -5,6 +5,8 @@ import com.google.common.cache.Cache
 import com.google.common.cache.CacheBuilder
 import com.segment.common.Conf
 import groovy.transform.CompileStatic
+import org.segment.web.handler.Req
+import org.segment.web.handler.Resp
 
 import java.time.Duration
 
@@ -44,5 +46,11 @@ class AuthTokenCacheHolder {
 
     void remove(String authToken) {
         cache.invalidate(authToken)
+    }
+
+    void setCookie(Req req, Resp resp, String authToken) {
+        def host = req.host()
+        resp.cookie('Auth-Token', authToken, 3600, '/',
+                host.contains(':') ? host.substring(0, host.indexOf(':')) : host)
     }
 }
