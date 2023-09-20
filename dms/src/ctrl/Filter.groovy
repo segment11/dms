@@ -84,7 +84,7 @@ h.before('/**') { req, resp ->
             req.attr('user', userPut)
             instance.put(authToken, userPut)
         } catch (JWTVerificationException e) {
-            log.error('jwt verify fail', e)
+            log.error 'jwt verify fail', e
             resp.halt(403, 'token not match')
         }
     }

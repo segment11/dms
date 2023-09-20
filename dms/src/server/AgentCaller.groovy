@@ -82,7 +82,7 @@ class AgentCaller {
             def body = req.body()
             if (req.code() != 200) {
                 if (failCallback) {
-                    log.warn('server get agent info fail - ' + uri + ' - ' + params + ' - ' + body)
+                    log.warn 'server get agent info fail - ' + uri + ' - ' + params + ' - ' + body
                     failCallback.call(body)
                 } else {
                     throw new HttpInvokeException('server get agent info fail - ' + uri + ' - ' + params + ' - ' + body)

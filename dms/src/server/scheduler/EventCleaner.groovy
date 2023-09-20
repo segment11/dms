@@ -37,7 +37,7 @@ class EventCleaner {
             def num3 = one.useD().exeUpdate('delete from ' + one3.tbl() + ' where created_date < ?', [oldDay])
             log.info 'done delete old job - {}', num3
         } catch (Exception e) {
-            log.error('clear old event log error', e)
+            log.error 'clear old event log error', e
         }
     }
 }

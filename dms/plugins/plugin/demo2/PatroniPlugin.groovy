@@ -340,7 +340,7 @@ chown postgres:postgres /var/lib/pgbackrest
                     try {
                         ds = Ds.dbType(Ds.DBType.postgresql).connect(conf.nodeIp, publicPort, 'postgres', 'postgres', password)
                     } catch (Exception ee) {
-                        log.error('reconnect pg error', ee)
+                        log.error 'reconnect pg error', ee
                         return false
                     }
                 }
@@ -366,7 +366,7 @@ chown postgres:postgres /var/lib/pgbackrest
                         } catch (Exception e) {
                             Event.builder().type(Event.Type.app).reason('after init sql execute error').result(conf.appId).
                                     build().log(conf.nodeIp + ' - ' + line + ' - ' + e.message).toDto().add()
-                            log.error('after init sql execute error - ' + line, e)
+                            log.error 'after init sql execute error - ' + line, e
                         }
                         log.info 'done sql <-'
                     }

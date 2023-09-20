@@ -188,7 +188,7 @@ class MySQLPlugin extends BasePlugin {
                     try {
                         ds = Ds.dbType(Ds.DBType.mysql).connect(conf.nodeIp, publicPort, 'mysql', 'root', password)
                     } catch (Exception ee) {
-                        log.error('reconnect mysql error', ee)
+                        log.error 'reconnect mysql error', ee
                         return false
                     }
                 }
@@ -203,7 +203,7 @@ class MySQLPlugin extends BasePlugin {
                     } catch (Exception e) {
                         Event.builder().type(Event.Type.app).reason('after init sql execute error').result(conf.appId).
                                 build().log(conf.nodeIp + ' - ' + createDbSql + ' - ' + e.message).toDto().add()
-                        log.error('after init sql execute error - ' + createDbSql, e)
+                        log.error 'after init sql execute error - ' + createDbSql, e
                     }
                     keeper.next(JobStepKeeper.Step.yourStep, 'after init create database', databaseName)
 
@@ -229,7 +229,7 @@ class MySQLPlugin extends BasePlugin {
                         } catch (Exception e) {
                             Event.builder().type(Event.Type.app).reason('after init sql execute error').result(conf.appId).
                                     build().log(conf.nodeIp + ' - ' + line + ' - ' + e.message).toDto().add()
-                            log.error('after init sql execute error - ' + line, e)
+                            log.error 'after init sql execute error - ' + line, e
                         }
                         log.info 'done sql <-'
                     }
@@ -274,7 +274,7 @@ class MySQLPlugin extends BasePlugin {
                     try {
                         ds = Ds.dbType(Ds.DBType.mysql).connect(conf.nodeIp, publicPort, 'mysql', 'root', password)
                     } catch (Exception ee) {
-                        log.error('reconnect mysql error', ee)
+                        log.error 'reconnect mysql error', ee
                         return false
                     }
                 }
@@ -307,7 +307,7 @@ flush privileges;
                             } catch (Exception e) {
                                 Event.builder().type(Event.Type.app).reason('master sql execute error').result(conf.appId).
                                         build().log(conf.nodeIp + ' - ' + line + ' - ' + e.message).toDto().add()
-                                log.error('master sql execute error - ' + line, e)
+                                log.error 'master sql execute error - ' + line, e
                             }
                             log.info 'done sql <-'
                         }
@@ -342,7 +342,7 @@ start slave;
                             } catch (Exception e) {
                                 Event.builder().type(Event.Type.app).reason('slave sql execute error').result(conf.appId).
                                         build().log(conf.nodeIp + ' - ' + line + ' - ' + e.message).toDto().add()
-                                log.error('slave sql execute error - ' + line, e)
+                                log.error 'slave sql execute error - ' + line, e
                             }
                             log.info 'done sql <-'
                         }

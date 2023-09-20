@@ -164,7 +164,7 @@ class OneAppGuardian {
                     result(job.appId).build().log('update job status to done').toDto().add()
             return true
         } catch (Exception e) {
-            log.error('process app job error - ' + job.appId, e)
+            log.error 'process app job error - ' + job.appId, e
             new AppJobDTO(id: job.id, status: AppJobDTO.Status.failed.val, message: e.message,
                     failNum: job.failNum + 1, updatedDate: new Date()).update()
             Event.builder().type(Event.Type.app).reason('process job').
@@ -244,7 +244,7 @@ class OneAppGuardian {
                 return false
             }
         } catch (Exception e) {
-            log.error('guard app error - ' + app.name, e)
+            log.error 'guard app error - ' + app.name, e
             return false
         }
     }

@@ -368,7 +368,7 @@ class GatewayOperator {
                 }
                 log.warn 'health check fail for ' + url + ' - code - ' + code + ' - ' + req.body()
             } catch (Exception e) {
-                log.error('health check error for ' + url, e)
+                log.error 'health check error for ' + url, e
             } finally {
                 if (i != times - 1) {
                     Thread.sleep((conf.healthCheckIntervalSeconds ?: 10) * 1000)

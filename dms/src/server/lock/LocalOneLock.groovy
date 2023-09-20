@@ -44,7 +44,7 @@ class LocalOneLock implements OneLock {
             localLock.tryLock()
         } catch (Exception e) {
             if (debug) {
-                log.error('try lock error ' + lockKey, e)
+                log.error 'try lock error ' + lockKey, e
             }
             false
         }

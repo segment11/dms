@@ -74,7 +74,7 @@ if (!tableNameList.contains('CLUSTER')) {
         try {
             d.exe(ddl)
         } catch (Exception e) {
-            log.error('execute ddl error, ddl: ' + ddl, e)
+            log.error 'execute ddl error, ddl: ' + ddl, e
         }
     }
 }

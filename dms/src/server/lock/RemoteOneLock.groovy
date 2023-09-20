@@ -35,7 +35,7 @@ class RemoteOneLock implements OneLock {
             lock.acquire(acquireTrySeconds, TimeUnit.SECONDS)
         } catch (Exception e) {
             if (debug) {
-                log.error('try lock error ' + lockKey, e)
+                log.error 'try lock error ' + lockKey, e
             }
             return false
         }

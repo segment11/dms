@@ -11,7 +11,7 @@ def h = ChainHandler.instance
 def log = LoggerFactory.getLogger(this.getClass())
 
 h.exceptionHandler { req, resp, t ->
-    log.error('', t)
+    log.error '', t
     resp.status = 500
     resp.outputStream << t.message ?: Utils.getStackTraceString(t)
 }.get('/route/list') { req, resp ->

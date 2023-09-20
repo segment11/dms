@@ -112,7 +112,7 @@ class CreateProcessor implements GuardianProcessor {
                 try {
                     startOneContainer(app, job.id, instanceIndex, nodeIpListCopy, nodeIp, confCopy)
                 } catch (Exception e) {
-                    log.error('start one container error - ' + confCopy.image + ' - ' + instanceIndex + ' - ' + nodeIp, e)
+                    log.error 'start one container error - ' + confCopy.image + ' - ' + instanceIndex + ' - ' + nodeIp, e
                     exceptionByInstanceIndex[instanceIndex] = e
                 } finally {
                     latch.countDown()
@@ -265,7 +265,7 @@ class CreateProcessor implements GuardianProcessor {
                 }
             }
         } catch (Exception e) {
-            log.error('get container info error - ' + id + ' for app - ' + app.name, e)
+            log.error 'get container info error - ' + id + ' for app - ' + app.name, e
             keeper.next(JobStepKeeper.Step.stopAndRemoveContainer, 'stop container', 'error: ' + e.message, false)
             keeper.next(JobStepKeeper.Step.done, 'job finished', '', false)
         }
