@@ -4,8 +4,8 @@ import auth.User
 import com.segment.common.Conf
 import com.segment.common.Utils
 import common.AgentConf
-import common.Event
 import common.Const
+import common.Event
 import deploy.DeploySupport
 import deploy.InitAgentEnvSupport
 import model.AppDTO
@@ -412,7 +412,9 @@ h.group('/api') {
             } else {
                 new NodeDTO(ip: nodeIp, clusterId: info.clusterId, agentVersion: info.version, updatedDate: info.hbTime).add()
             }
-            'ok'
+
+            def clusterOne = InMemoryCacheSupport.instance.oneCluster(info.clusterId)
+            [envList: clusterOne.globalEnvConf.envList, dnsServer: clusterOne.globalEnvConf.dnsServer]
         }.post('/container') { req, resp ->
             X x = req.bodyAs(X)
             InMemoryAllContainerManager.instance.addContainers(x.clusterId, x.nodeIp, x.containers)

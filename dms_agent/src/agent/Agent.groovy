@@ -1,5 +1,6 @@
 package agent
 
+import agent.script.ScriptHolder
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import com.github.dockerjava.api.DockerClient
@@ -13,6 +14,7 @@ import groovy.util.logging.Slf4j
 import model.json.KVPair
 import model.json.LiveCheckConf
 import org.hyperic.sigar.Sigar
+import org.segment.web.common.CachedGroovyClassLoader
 import org.segment.web.json.DefaultJsonTransformer
 import org.segment.web.json.JsonTransformer
 import support.ToJson
@@ -179,8 +181,21 @@ class Agent extends IntervalJob {
         AgentTempInfoHolder.instance.addNode(info)
 
         isSendNodeInfoOk = true
-        post('/dms/api/hb/node', info, String) { body ->
+        def body = post('/dms/api/hb/node', info, String) { body ->
             isSendNodeInfoOk = false
+        }
+        if (isSendNodeInfoOk) {
+            def jo = JSON.parseObject(body)
+            String scriptContent = ScriptHolder.instance.getContentByName('after node hb')
+            if (scriptContent) {
+                Map<String, Object> params = [:]
+                params.jo = jo
+                try {
+                    CachedGroovyClassLoader.instance.eval(scriptContent, params)
+                } catch (Exception e) {
+                    log.error('after node hb script execute error', e)
+                }
+            }
         }
     }
 
