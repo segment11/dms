@@ -257,6 +257,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
         delete one.isConfGateway;
         delete one.isLiveCheckOk;
         delete one.healthCheckResults;
+        delete one.isHealthCheckOk;
         $http.post('/dms/app/update', one).success(function (data) {
             if (data.jobId) {
                 $scope.ctrl.isShowAdd = false;
