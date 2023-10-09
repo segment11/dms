@@ -42,7 +42,7 @@ class CmdExecutor {
             }
             true
         } catch (Exception ee) {
-            log.error('shell exec error - ' + ee.message)
+            log.error 'shell exec error - ' + ee.message
             return false
         } finally {
             if (shell != null) {
