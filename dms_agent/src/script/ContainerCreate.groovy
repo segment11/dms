@@ -157,8 +157,10 @@ conf.fileVolumeList.eachWithIndex { FileVolumeMount one, int i ->
         }
 
         def localFile = new File(hostFileFinal)
-        FileUtils.forceMkdirParent(localFile)
-        localFile.text = content
+        if (!localFile.exists()) {
+            FileUtils.forceMkdirParent(localFile)
+            localFile.text = content
+        }
     } else {
         String hostFilePath = tplConfFileDir + ('/' + createConf.appId + '/' + Utils.uuid() + '.file')
         def localFile = new File(hostFilePath)
