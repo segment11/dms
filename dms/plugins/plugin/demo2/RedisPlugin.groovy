@@ -131,6 +131,65 @@ class RedisPlugin extends BasePlugin {
 
     private void initChecker() {
         CheckerHolder.instance.add new Checker() {
+            @Override
+            boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
+//                if ('host' != conf.conf.networkMode) {
+//                    return true
+//                }
+
+                def conf0 = conf.conf
+                def confOne = conf0.fileVolumeList.find {
+                    it.dist.contains('/sentinel') || it.dist == '/etc/redis/redis.conf'
+                }
+                def checkPort = confOne.paramValue('port') as int
+
+                for (otherApp in InMemoryCacheSupport.instance.appList) {
+                    // exclude self
+                    if (otherApp.id == conf.appId) {
+                        continue
+                    }
+
+                    // just check redis
+                    def conf1 = otherApp.conf
+                    if (conf1.group == conf0.group && conf1.image == conf0.image) {
+                        def otherConfOne = conf1.fileVolumeList.find {
+                            it.dist.contains('/sentinel') || it.dist == '/etc/redis/redis.conf'
+                        }
+                        if (otherConfOne) {
+                            def otherPort = otherConfOne.paramValue('port') as int
+                            if (otherPort == checkPort) {
+                                log.warn 'port {} is already used, app id: {}, app name: {}', checkPort, otherApp.id, otherApp.name
+                                return false
+                            }
+                        }
+                    }
+                }
+
+//                if (!Utils.isPortListenAvailable(checkPort, conf.nodeIp)) {
+//                    log.warn 'port {} is not available, node ip: {}', checkPort, conf.nodeIp
+//                    return false
+//                }
+
+                true
+            }
+
+            @Override
+            Checker.Type type() {
+                Checker.Type.before
+            }
+
+            @Override
+            String name() {
+                'redis port conflict check'
+            }
+
+            @Override
+            String imageName() {
+                RedisPlugin.this.imageName()
+            }
+        }
+
+        CheckerHolder.instance.add new Checker() {
 
             @Override
             boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
@@ -430,7 +489,7 @@ class RedisPlugin extends BasePlugin {
                                 for (str in arr) {
                                     def arr2 = str.split('=')
                                     if (arr2[0] == 'status' && arr2[1] != 'ok') {
-                                        log.warn 'master status is not ok, master name: {}, status: {}', arr[0], arr2[1]
+                                        log.warn 'master status is not ok, master name: {}, status: {}, sentinel node ip: {}', arr[0], arr2[1], x.nodeIp
                                         return false
                                     }
                                 }
@@ -577,7 +636,7 @@ class RedisPlugin extends BasePlugin {
                 conf.envList << new KVPair<String>('REDIS_PASSWORD', redisPassword)
 
                 final int exporterPort = 9121
-                def exporterPublicPort = exporterPort + (6379 - redisPort)
+                def exporterPublicPort = exporterPort + (redisPort - 6379)
 
                 if (isSingleNode) {
                     conf.envList << new KVPair<String>('REDIS_EXPORTER_WEB_LISTEN_ADDRESS', '0.0.0.0:${' + exporterPublicPort + '+instanceIndex}')
