@@ -21,7 +21,9 @@ class AppConf implements JSONFiled {
 
     String user
 
-    int memMB = 1024
+    int memMB = 0
+
+    int memReservationMB = 256
 
     int cpuShares = 1024
 

@@ -74,18 +74,24 @@ if (conf.cpuShares) {
     hostConfig.withCpuPeriod(cpuPeriod).withCpuQuota(cpuQuota)
     vCpuNumber = conf.cpuFixed
 }
+envList << new KVPair(key: 'X_vCpuNumber', value: vCpuNumber)
 
 if (conf.cpusetCpus) {
     hostConfig.withCpusetCpus(conf.cpusetCpus)
     envList << new KVPair(key: 'X_cpusetCpus', value: conf.cpusetCpus)
 }
 
-long MBSize = (1024 * 1024) as long
-long mem = conf.memMB * MBSize
-hostConfig.withMemory(mem)
-
-envList << new KVPair(key: 'X_memory', value: mem)
-envList << new KVPair(key: 'X_vCpuNumber', value: vCpuNumber)
+final long MBSize = (1024 * 1024) as long
+if (conf.memMB > 0) {
+    long mem = conf.memMB * MBSize
+    hostConfig.withMemory(mem)
+    envList << new KVPair(key: 'X_memory', value: mem)
+}
+if (conf.memReservationMB > 0) {
+    long memReservation = conf.memReservationMB * MBSize
+    hostConfig.withMemoryReservation(memReservation)
+    envList << new KVPair(key: 'X_memory_reservation', value: memReservation)
+}
 
 // network *** ***
 def networkMode = conf.networkMode ?: 'host'
