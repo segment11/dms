@@ -102,7 +102,7 @@ class ContainerInfo implements Comparable<ContainerInfo> {
 
     Integer publicPort(Integer privatePort) {
         if (envList) {
-            def envOne = envList.find { it.key == ENV_KEY_PUBLIC_PORT }
+            def envOne = envList.find { it.key == (ENV_KEY_PUBLIC_PORT + privatePort) }
             if (envOne) {
                 return envOne.value as Integer
             }

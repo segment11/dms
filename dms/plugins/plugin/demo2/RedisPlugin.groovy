@@ -47,7 +47,7 @@ class RedisPlugin extends BasePlugin {
     private void initImageConfig() {
         // exporter env
         def exporterImageName = 'oliver006/redis_exporter'
-        ['REDIS_ADDR', 'REDIS_PASSWORD', 'REDIS_EXPORTER_WEB_LISTEN_ADDRESS'].each {
+        ['REDIS_ADDR', 'REDIS_PASSWORD', 'REDIS_EXPORTER_WEB_LISTEN_ADDRESS', 'X-env-public-port9121'].each {
             def one = new ImageEnvDTO(imageName: exporterImageName, env: it).one()
             if (!one) {
                 new ImageEnvDTO(imageName: exporterImageName, name: it, env: it).add()
@@ -87,7 +87,6 @@ class RedisPlugin extends BasePlugin {
         tplParams3.addParam('port', '26379', 'int')
         tplParams3.addParam('password', '123456', 'string')
         tplParams3.addParam('isSingleNode', 'false', 'string')
-        tplParams3.addParam('redisAppNames', 'redis', 'string')
         tplParams3.addParam('downAfterMs', '30000', 'int')
         tplParams3.addParam('failoverTimeout', '180000', 'int')
 
@@ -131,6 +130,65 @@ class RedisPlugin extends BasePlugin {
     }
 
     private void initChecker() {
+        CheckerHolder.instance.add new Checker() {
+            @Override
+            boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
+//                if ('host' != conf.conf.networkMode) {
+//                    return true
+//                }
+
+                def conf0 = conf.conf
+                def confOne = conf0.fileVolumeList.find {
+                    it.dist.contains('/sentinel') || it.dist == '/etc/redis/redis.conf'
+                }
+                def checkPort = confOne.paramValue('port') as int
+
+                for (otherApp in InMemoryCacheSupport.instance.appList) {
+                    // exclude self
+                    if (otherApp.id == conf.appId) {
+                        continue
+                    }
+
+                    // just check redis
+                    def conf1 = otherApp.conf
+                    if (conf1.group == conf0.group && conf1.image == conf0.image) {
+                        def otherConfOne = conf1.fileVolumeList.find {
+                            it.dist.contains('/sentinel') || it.dist == '/etc/redis/redis.conf'
+                        }
+                        if (otherConfOne) {
+                            def otherPort = otherConfOne.paramValue('port') as int
+                            if (otherPort == checkPort) {
+                                log.warn 'port {} is already used, app id: {}, app name: {}', checkPort, otherApp.id, otherApp.name
+                                return false
+                            }
+                        }
+                    }
+                }
+
+//                if (!Utils.isPortListenAvailable(checkPort, conf.nodeIp)) {
+//                    log.warn 'port {} is not available, node ip: {}', checkPort, conf.nodeIp
+//                    return false
+//                }
+
+                true
+            }
+
+            @Override
+            Checker.Type type() {
+                Checker.Type.before
+            }
+
+            @Override
+            String name() {
+                'redis port conflict check'
+            }
+
+            @Override
+            String imageName() {
+                RedisPlugin.this.imageName()
+            }
+        }
+
         CheckerHolder.instance.add new Checker() {
 
             @Override
@@ -215,21 +273,6 @@ class RedisPlugin extends BasePlugin {
                     return true
                 }
 
-                // check if there is a sentinel application already includes this application
-                def sentinelAppList = InMemoryCacheSupport.instance.appList.findAll {
-                    it.clusterId == conf.clusterId &&
-                            (it.conf.group + '/' + it.conf.image == RedisPlugin.this.imageName()) &&
-                            it.conf.fileVolumeList.any { fv -> fv.dist.contains('/sentinel') }
-                }
-                if (sentinelAppList.any {
-                    def sentinelConfOne = it.conf.fileVolumeList.find { it.dist.contains('/sentinel') }
-                    def redisAppNames = sentinelConfOne.paramValue('redisAppNames') as String
-                    redisAppNames.split(',').contains(conf.app.name)
-                }) {
-                    log.info 'there is a sentinel application already include this application, skip init master slave'
-                    return true
-                }
-
                 def primaryNodeIp = conf.nodeIpList[0]
                 def redisPort = confOne.paramValue('port') as int
                 def primaryPort = redisPort
@@ -242,6 +285,7 @@ class RedisPlugin extends BasePlugin {
 
                 // get master address from sentinel or just use first node ip and port
                 Set<String> multiMasterAddressSet = []
+                Set<String> replicaAddressSet = []
                 String masterAddress
                 def sentinelAppName = confOne.paramValue('sentinelAppName')
                 if (sentinelAppName) {
@@ -289,6 +333,13 @@ class RedisPlugin extends BasePlugin {
                                 multiMasterAddressSet << masterAddressAlreadyAdded
                                 if (!masterAddress) {
                                     masterAddress = masterAddressAlreadyAdded
+                                }
+
+                                for (sr in jedis.sentinelReplicas(masterName)) {
+                                    def ip = sr.ip
+                                    def port = sr.port as int
+                                    def replicaAddress = ip + ':' + port
+                                    replicaAddressSet << replicaAddress
                                 }
                             } else {
                                 if (!masterAddress) {
@@ -355,6 +406,12 @@ class RedisPlugin extends BasePlugin {
                     // check if master is self
                     if (masterNodeIp == thisInstanceNodeIp && masterPort == thisInstanceRedisPort) {
                         log.info 'master address is self, skip init master slave'
+                        return true
+                    }
+
+                    // if sentinel replicas address already added, skip
+                    if (replicaAddressSet.contains(thisInstanceNodeIp + ':' + thisInstanceRedisPort)) {
+                        log.info 'replica address already added, skip init master slave, sentinel will do it'
                         return true
                     }
 
@@ -432,7 +489,7 @@ class RedisPlugin extends BasePlugin {
                                 for (str in arr) {
                                     def arr2 = str.split('=')
                                     if (arr2[0] == 'status' && arr2[1] != 'ok') {
-                                        log.warn 'master status is not ok, master name: {}, status: {}', arr[0], arr2[1]
+                                        log.warn 'master status is not ok, master name: {}, status: {}, sentinel node ip: {}', arr[0], arr2[1], x.nodeIp
                                         return false
                                     }
                                 }
@@ -483,7 +540,7 @@ class RedisPlugin extends BasePlugin {
                             role = 'unknown'
                         }
                         role
-                    }
+                    } as String
                 }
 
                 if (roleList.any { it == 'unknown' }) {
@@ -579,14 +636,14 @@ class RedisPlugin extends BasePlugin {
                 conf.envList << new KVPair<String>('REDIS_PASSWORD', redisPassword)
 
                 final int exporterPort = 9121
-                def exporterPublicPort = exporterPort + (6379 - redisPort)
+                def exporterPublicPort = exporterPort + (redisPort - 6379)
 
                 if (isSingleNode) {
                     conf.envList << new KVPair<String>('REDIS_EXPORTER_WEB_LISTEN_ADDRESS', '0.0.0.0:${' + exporterPublicPort + '+instanceIndex}')
-                    conf.envList << new KVPair<String>(ContainerInfo.ENV_KEY_PUBLIC_PORT, '${' + exporterPublicPort + '+instanceIndex}')
+                    conf.envList << new KVPair<String>(ContainerInfo.ENV_KEY_PUBLIC_PORT + exporterPort, '${' + exporterPublicPort + '+instanceIndex}')
                 } else {
                     conf.envList << new KVPair<String>('REDIS_EXPORTER_WEB_LISTEN_ADDRESS', "0.0.0.0:${exporterPublicPort}".toString())
-                    conf.envList << new KVPair<String>(ContainerInfo.ENV_KEY_PUBLIC_PORT, exporterPublicPort.toString())
+                    conf.envList << new KVPair<String>(ContainerInfo.ENV_KEY_PUBLIC_PORT + exporterPort, exporterPublicPort.toString())
                 }
 
                 conf.networkMode = 'host'

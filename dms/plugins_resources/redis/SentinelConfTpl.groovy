@@ -1,9 +1,7 @@
 package redis
 
-import model.server.ContainerMountTplHelper
-
-def nodeIpList = super.binding.getProperty('nodeIpList') as List<String>
 def nodeIp = super.binding.getProperty('nodeIp') as String
+def appId = super.binding.getProperty('appId') as int
 def instanceIndex = super.binding.getProperty('instanceIndex') as int
 
 def port = super.binding.getProperty('port') as int
@@ -12,34 +10,10 @@ def isSingleNode = 'true' == (super.binding.getProperty('isSingleNode') as Strin
 
 String dataDir = isSingleNode ? "/data/sentinel/instance_${instanceIndex}" : '/data/sentinel'
 
-def downAfterMs = super.binding.getProperty('downAfterMs') as int
-def failoverTimeout = super.binding.getProperty('failoverTimeout') as int
-
-def redisAppNames = super.binding.getProperty('redisAppNames') as String
-ContainerMountTplHelper applications = super.binding.getProperty('applications') as ContainerMountTplHelper
-List<String> list = []
-redisAppNames.split(',').each { redisAppName ->
-    if (!redisAppName) {
-        return
-    }
-    ContainerMountTplHelper.OneApp redisApp = applications.app(redisAppName)
-    if (!redisApp) {
-        return
-    }
-
-    def redisFirstNodeIp = redisApp.allNodeIpList[0]
-    def confOne = redisApp.app.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
-    def redisPort = confOne.paramList.find { it.key == 'port' }.value as int
-    def redisPassword = confOne.paramList.find { it.key == 'password' }.value
-
-    list << """
-sentinel monitor ${redisAppName} ${redisFirstNodeIp} ${redisPort} ${nodeIpList.size() >= 3 ? 2 : 1}
-${redisPassword ? 'sentinel auth-pass ' + redisAppName + ' ' + redisPassword : ''}
-sentinel down-after-milliseconds ${redisAppName} ${downAfterMs}
-sentinel failover-timeout ${redisAppName} ${failoverTimeout}
-sentinel parallel-syncs ${redisAppName} 1
-"""
-}
+def prefix = "s${appId}x${instanceIndex}".toString()
+final int len = 40
+int moreNumber = len - prefix.length() - 1
+def nodeId = prefix + 'x' + (0..<moreNumber).collect { 'a' }.join('')
 
 """
 bind ${nodeIp} -::1
@@ -53,9 +27,8 @@ logfile ""
 dir ${dataDir}
 acllog-max-len 128
 
-sentinel deny-scripts-reconfig yes
+SENTINEL deny-scripts-reconfig yes
 SENTINEL resolve-hostnames no
 SENTINEL announce-hostnames no
-
-${list.join("\n\n")}
+SENTINEL myid ${nodeId}
 """

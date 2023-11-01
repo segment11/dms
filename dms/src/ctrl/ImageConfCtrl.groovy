@@ -6,19 +6,18 @@ import org.segment.web.handler.ChainHandler
 
 def h = ChainHandler.instance
 
-
 h.group('/image/config') {
-    h.before(~/\/[^\/]+\/delete\/.*/) { req, resp ->
+    h.before(~/\/[^\/]+\/delete\/.*/, { req, resp ->
         User u = req.attr('user') as User
         if (!u.isImageManager()) {
             resp.halt(403, 'not a docker manager')
         }
-    }.before(~/\/[^\/]+\/update/) { req, resp ->
+    }, 10).before(~/\/[^\/]+\/update/, { req, resp ->
         User u = req.attr('user') as User
         if (!u.isImageManager()) {
             resp.halt(403, 'not a docker manager')
         }
-    }
+    }, 10)
 
     h.group('/env') {
         h.get('/list') { req, resp ->

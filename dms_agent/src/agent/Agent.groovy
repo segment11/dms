@@ -246,7 +246,8 @@ class Agent extends IntervalJob {
                 if (env) {
                     for (envStr in env) {
                         def arr = envStr.split('=')
-                        def envValue = arr.length > 2 ? arr[1..-1].join('=') : arr[-1]
+                        def envValue = arr.length == 1 ? '' :
+                                (arr.length > 2 ? arr[1..-1].join('=') : arr[-1])
                         containerInfo.envList << new KVPair<String>(arr[0], envValue)
                     }
                 }
