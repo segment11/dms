@@ -1,6 +1,7 @@
 package deploy
 
 import com.jcraft.jsch.JSch
+import com.jcraft.jsch.KeyPair
 import com.jcraft.jsch.KeyPairRSA
 import groovy.transform.CompileStatic
 
@@ -12,11 +13,10 @@ class RsaKeyPairGenerator {
         String privateKeyBase64
     }
 
-    One generate(int keySize = 2048, String comment = '123456@dms') {
+    static One generate(int keySize = 2048, String comment = '123456@dms') {
         def one = new One()
 
-        KeyPairRSA kp = com.jcraft.jsch.KeyPair.
-                genKeyPair(new JSch(), com.jcraft.jsch.KeyPair.RSA, keySize) as KeyPairRSA
+        KeyPairRSA kp = KeyPair.genKeyPair(new JSch(), KeyPair.RSA, keySize) as KeyPairRSA
 
         def os = new ByteArrayOutputStream()
         kp.writePublicKey(os, comment)

@@ -2,6 +2,7 @@ package deploy
 
 import com.jcraft.jsch.ChannelSftp
 import com.jcraft.jsch.JSch
+import com.jcraft.jsch.Session
 import com.segment.common.Conf
 import common.Event
 import groovy.transform.CompileStatic
@@ -115,7 +116,7 @@ class DeploySupport {
             throw new IllegalStateException('local file can not read: ' + localFilePath)
         }
 
-        com.jcraft.jsch.Session session
+        Session session
         try {
             session = connect(remoteInfo)
 
@@ -174,7 +175,7 @@ class DeploySupport {
             }
         }
 
-        com.jcraft.jsch.Session session
+        Session session
         try {
             session = connect(remoteInfo)
 

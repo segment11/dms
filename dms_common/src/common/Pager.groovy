@@ -46,7 +46,7 @@ class Pager<T> {
         sb << totalPage
         sb << ' Total:'
         sb << totalCount
-        sb << ' PageSize:'
+        sb << ' Page Size:'
         sb << pageSize
         if (list != null) {
             sb << ' Page List:'

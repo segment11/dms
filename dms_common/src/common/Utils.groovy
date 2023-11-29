@@ -26,7 +26,7 @@ class Utils {
         try {
             tc.connect(host, port)
             return false
-        } catch (Exception e) {
+        } catch (Exception ignored) {
             return true
         } finally {
             tc.disconnect()

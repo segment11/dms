@@ -54,7 +54,7 @@ class OneCmd {
         one
     }
 
-    private String read(InputStream is) {
+    private static String read(InputStream is) {
         def buf = new StringBuilder(1024)
         def tmp = new byte[1024]
         while (is.available() > 0) {

@@ -98,11 +98,11 @@ status ${status} result ${result}""".toString()
                 if (channel) {
                     try {
                         channel.inputStream.close()
-                    } catch (Exception e) {
+                    } catch (Exception ignored) {
                     }
                     try {
                         channel.disconnect()
-                    } catch (Exception e) {
+                    } catch (Exception ignored) {
                     }
                 }
             }

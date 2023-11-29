@@ -13,7 +13,7 @@ class FilePutProgressMonitor extends TimerTask implements SftpProgressMonitor {
 
     private boolean isEnd = false
 
-    private long transfered
+    private long transferred
 
     private long fileSize
 
@@ -23,16 +23,17 @@ class FilePutProgressMonitor extends TimerTask implements SftpProgressMonitor {
 
     FilePutProgressMonitor(long fileSize, long progressInterval = 2000) {
         this.fileSize = fileSize
+        this.progressInterval = progressInterval
     }
 
     @Override
     void run() {
         if (!isEnd()) {
             log.info("Transfer is in progress.")
-            long transfered = getTransfered()
-            if (transfered != fileSize) {
-                log.info("Current transfered: " + transfered + " bytes")
-                sendProgressMessage(transfered)
+            long transferred = getTransferred()
+            if (transferred != fileSize) {
+                log.info("Current transferred: " + transferred + " bytes")
+                sendProgressMessage(transferred)
             } else {
                 log.info("File transfer is done.")
                 setEnd(true)
@@ -40,7 +41,6 @@ class FilePutProgressMonitor extends TimerTask implements SftpProgressMonitor {
         } else {
             log.info("Transfer done. Cancel timer.")
             stop()
-            return
         }
     }
 
@@ -67,15 +67,15 @@ class FilePutProgressMonitor extends TimerTask implements SftpProgressMonitor {
 
     /**
      * print process info
-     * @param transfered
+     * @param transferred
      */
-    private void sendProgressMessage(long transfered) {
+    private void sendProgressMessage(long transferred) {
         if (fileSize != 0) {
-            double d = ((double) transfered * 100) / (double) fileSize
+            double d = ((double) transferred * 100) / (double) fileSize
             DecimalFormat df = new DecimalFormat("#.##")
             log.info("Sending progress message: " + df.format(d) + "%")
         } else {
-            log.info("Sending progress message: " + transfered)
+            log.info("Sending progress message: " + transferred)
         }
     }
 
@@ -96,15 +96,11 @@ class FilePutProgressMonitor extends TimerTask implements SftpProgressMonitor {
     }
 
     private synchronized void add(long count) {
-        transfered = transfered + count
+        this.transferred = this.transferred + count
     }
 
-    private synchronized long getTransfered() {
-        return transfered
-    }
-
-    synchronized void setTransfered(long transfered) {
-        this.transfered = transfered
+    private synchronized long getTransferred() {
+        return this.transferred
     }
 
     private synchronized void setEnd(boolean isEnd) {
