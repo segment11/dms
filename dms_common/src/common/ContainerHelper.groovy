@@ -4,12 +4,14 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 class ContainerHelper {
+    // set these env values for created containers
     static final String KEY_NODE_IP = 'Node_Ip'
     static final String KEY_NODE_IP_LIST = 'Node_Ip_List'
     static final String KEY_CLUSTER_ID = 'Cluster_Id'
     static final String KEY_APP_ID = 'App_Id'
     static final String KEY_INSTANCE_INDEX = 'Instance_Index'
 
+    // fix container name prefix
     static final String CONTAINER_NAME_PRE = '/app_'
 
     static String generateContainerName(int appId, int instanceIndex) {
@@ -21,6 +23,7 @@ class ContainerHelper {
         generateContainerName(appId, instanceIndex)[1..-1]
     }
 
+    // host process mock as a container with id start with process_app_
     static String generateProcessAsContainerId(int appId, int instanceIndex, int pid) {
         "process_app_${appId}_${instanceIndex}_pid_${pid}".toString()
     }
