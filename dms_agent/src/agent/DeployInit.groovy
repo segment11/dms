@@ -13,6 +13,8 @@ class DeployInit {
         if (isInitDone) {
             return
         }
+
+        // dms agent handle important events need to post to dms server
         DeploySupport.instance.eventHandler = new EventHandler() {
             @Override
             void handle(Event event) {

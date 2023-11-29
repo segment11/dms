@@ -13,6 +13,7 @@ class PullImageCallback extends PullImageResultCallback {
     long beginT = System.currentTimeMillis()
 
     PullImageCallback() {
+        // each 10% step post to dms server
         10.times {
             percentPassedSet << (it * 10)
         }

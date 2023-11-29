@@ -39,7 +39,7 @@ class AgentHelper {
         info
     }
 
-    static ContainerInfo transfer(Container it) {
+    static ContainerInfo convert(Container it) {
         def one = new ContainerInfo()
         one.id = it.id
         one.names = it.names.toList()

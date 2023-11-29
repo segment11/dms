@@ -34,6 +34,8 @@ class AgentTempInfoHolder {
         }
     }
 
+    @Deprecated
+    // create a prometheus application with dms plugin and set other applications' monitor config
     void addAppMetric(Integer appId, Integer instanceIndex, Map gauges, String body) {
         def set = new HashSet(gauges.keySet())
         set.remove('containerId')
@@ -60,6 +62,7 @@ class AgentTempInfoHolder {
         }
     }
 
+    @Deprecated
     void addContainerMetric(ContainerMetrics one) {
         one.time = new Date()
         one.nodeIp = Agent.instance.nodeIp

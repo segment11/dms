@@ -26,7 +26,7 @@ import transfer.X
 @Singleton
 @Slf4j
 class Agent extends IntervalJob {
-    String version = '1.1'
+    String version = '1.2'
 
     String serverHost
 
@@ -86,7 +86,7 @@ class Agent extends IntervalJob {
         interval = c.getInt('agentIntervalSeconds', 10)
     }
 
-    public <T> T get(String uri, Map<String, Object> params = null, Class<T> clz = String,
+    <T> T get(String uri, Map<String, Object> params = null, Class<T> clz = String,
                      Closure<Void> failCallback = null) {
         def needProxy = proxyNodeIp && proxyNodeIp != nodeIp
         String serverHttpServerUrl = needProxy ?
@@ -118,7 +118,7 @@ class Agent extends IntervalJob {
         JSON.parseObject(body, clz)
     }
 
-    public <T> T post(String uri, Object params, Class<T> clz = String,
+    <T> T post(String uri, Object params, Class<T> clz = String,
                       Closure failCallback = null) {
         def needProxy = proxyNodeIp && proxyNodeIp != nodeIp
         String serverHttpServerUrl = needProxy ?
@@ -225,7 +225,7 @@ class Agent extends IntervalJob {
 
         def containers = docker.listContainersCmd().withShowAll(true).exec()
         List<ContainerInfo> listDaemon = containers.collect {
-            def containerInfo = AgentHelper.transfer(it)
+            def containerInfo = AgentHelper.convert(it)
             containerInfo.nodeIp = nodeIp
             containerInfo.clusterId = clusterId
 

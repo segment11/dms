@@ -34,10 +34,11 @@ class ScriptHolder extends IntervalJob {
             if (exist) {
                 exist.content = one.content
                 exist.updatedDate = one.updatedDate
+                log.info 'updated - ' + one.name
             } else {
                 scripts[one.name] = one
+                log.info 'added - ' + one.name
             }
-            log.info 'updated - ' + one.name
         }
     }
 }
