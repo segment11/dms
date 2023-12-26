@@ -12,6 +12,8 @@ import model.AppDTO
 import model.NodeDTO
 import model.NodeKeyPairDTO
 import org.segment.web.handler.ChainHandler
+import plugin.PluginManager
+import plugin.callback.LiveCheckResultHandler
 import server.AgentCaller
 import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
@@ -416,8 +418,16 @@ h.group('/api') {
             def clusterOne = InMemoryCacheSupport.instance.oneCluster(info.clusterId)
             [envList: clusterOne.globalEnvConf.envList, dnsServer: clusterOne.globalEnvConf.dnsServer]
         }.post('/container') { req, resp ->
-            X x = req.bodyAs(X)
-            InMemoryAllContainerManager.instance.addContainers(x.clusterId, x.nodeIp, x.containers)
+            X nodeX = req.bodyAs(X)
+            InMemoryAllContainerManager.instance.addContainers(nodeX.clusterId, nodeX.nodeIp, nodeX.containers)
+
+            for (plugin in PluginManager.instance.pluginList) {
+                if (plugin instanceof LiveCheckResultHandler) {
+                    for (x in nodeX.containers) {
+                        plugin.liveCheckResultHandle(x)
+                    }
+                }
+            }
             'ok'
         }
     }

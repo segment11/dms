@@ -7,9 +7,11 @@ import model.json.DirVolumeMount
 import model.json.KVPair
 import model.json.PortMapping
 import plugin.BasePlugin
+import plugin.callback.LiveCheckResultHandler
 import plugin.callback.Observer
 import server.AgentCaller
 import server.InMemoryAllContainerManager
+import server.InMemoryCacheSupport
 import server.dns.DnsOperator
 import server.scheduler.checker.HealthChecker
 import server.scheduler.checker.HealthCheckerHolder
@@ -19,7 +21,7 @@ import transfer.ContainerInfo
 
 @CompileStatic
 @Slf4j
-class ConsulPlugin extends BasePlugin implements Observer {
+class ConsulPlugin extends BasePlugin implements Observer, LiveCheckResultHandler {
     @Override
     String name() {
         'consul'
@@ -174,11 +176,21 @@ cmdArgs.join(' ')
 
     @Override
     void afterContainerStopped(AppDTO app, ContainerInfo x, boolean flag) {
-        DnsOperator.instance.deregister(app, x)
+        DnsOperator.instance.deregister(app, x.instanceIndex())
     }
 
     @Override
     void refresh(AppDTO app, List<ContainerInfo> runningContainerList) {
         DnsOperator.instance.refreshContainerDns(app, runningContainerList)
+    }
+
+    @Override
+    void liveCheckResultHandle(ContainerInfo x) {
+        var app = InMemoryCacheSupport.instance.oneApp(x.appId())
+        if (x.isLiveCheckOk) {
+            DnsOperator.instance.register(app, x.nodeIp, x.instanceIndex())
+        } else {
+            DnsOperator.instance.deregister(app, x.instanceIndex())
+        }
     }
 }

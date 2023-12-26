@@ -105,14 +105,14 @@ class DnsOperator {
         agentClient.register(service2)
     }
 
-    void deregister(AppDTO app, ContainerInfo x) {
+    void deregister(AppDTO app, int instanceIndex) {
         def agentClient = getAgentClient()
         if (!agentClient) {
             return
         }
 
         def appService = app.name.replaceAll(' ', '_').toLowerCase()
-        def full = appService + '_' + x.instanceIndex()
+        def full = appService + '_' + instanceIndex
 
         agentClient.deregister(full + '_host')
         agentClient.deregister(full)
