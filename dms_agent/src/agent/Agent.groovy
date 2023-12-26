@@ -352,6 +352,7 @@ class Agent extends IntervalJob {
 
         Map<Integer, Boolean> liveCheckResult = [:]
         confMap.each { appId, liveCheckConf ->
+            // one node one app container, no overlay network
             def container = runningList.find {
                 appId == it.appId()
             }
@@ -368,7 +369,7 @@ class Agent extends IntervalJob {
                 if (cachedResult != null) {
                     isCheckOk = cachedResult.booleanValue()
                 } else {
-                    isCheckOk = true
+                    isCheckOk = false
                 }
             } else {
                 isCheckOk = liveCheckOneContainer(appId, container, liveCheckConf)
