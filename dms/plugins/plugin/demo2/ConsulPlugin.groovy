@@ -172,16 +172,19 @@ cmdArgs.join(' ')
 
     @Override
     void beforeContainerStop(AppDTO app, ContainerInfo x, JobStepKeeper keeper) {
-    }
-
-    @Override
-    void afterContainerStopped(AppDTO app, ContainerInfo x, boolean flag) {
         DnsOperator.instance.deregister(app, x.instanceIndex())
     }
 
     @Override
+    void afterContainerStopped(AppDTO app, ContainerInfo x, boolean flag) {
+    }
+
+    @Override
     void refresh(AppDTO app, List<ContainerInfo> runningContainerList) {
-        DnsOperator.instance.refreshContainerDns(app, runningContainerList)
+        def liveOkContainerList = runningContainerList.findAll {
+            it.isLiveCheckOk == null || it.isLiveCheckOk.booleanValue()
+        }
+        DnsOperator.instance.refreshContainerDns(app, liveOkContainerList)
     }
 
     @Override
