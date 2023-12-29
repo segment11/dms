@@ -17,7 +17,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     queryLl();
 
     $http.get('/dms/gw/cluster/list/simple').success(function (data) {
-        $scope.tmp.clusterList = data;
+        $scope.tmp.clusterList = data.list;
     });
 
     $scope.back = function () {

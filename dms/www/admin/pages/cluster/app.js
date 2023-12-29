@@ -321,7 +321,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
 
         if (index == 5) {
             $http.get('/dms/gw/cluster/list/simple').success(function (data) {
-                $scope.tmp.gwClusterList = data;
+                $scope.tmp.gwClusterList = data.list;
             });
         }
         return true;

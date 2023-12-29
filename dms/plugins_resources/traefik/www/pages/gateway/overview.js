@@ -4,9 +4,9 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     $scope.ctrl = {};
 
     $http.get('/dms/gw/cluster/list/simple').success(function (data) {
-        $scope.clusterList = data;
-        if (data.length) {
-            $scope.tmp.clusterId = data[0].id;
+        $scope.clusterList = data.list;
+        if (data.list.length) {
+            $scope.tmp.clusterId = data.list[0].id;
             $scope.onClusterChoose();
         }
     });
@@ -17,7 +17,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
             return;
         }
         $http.get('/dms/gw/cluster/overview', {params: {clusterId: $scope.tmp.clusterId}}).success(function (data) {
-            $scope.list = data;
+            $scope.list = data.list;
         });
     };
 });

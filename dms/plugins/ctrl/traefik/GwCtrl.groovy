@@ -64,7 +64,7 @@ h.group('/gw/cluster') {
 
         list
     }.get('/list/simple') { req, resp ->
-        new GwClusterDTO().noWhere().queryFields('id,name,des').list()
+        [list: new GwClusterDTO().noWhere().queryFields('id,name,des').list()]
     }.get('/overview') { req, resp ->
         def clusterId = req.param('clusterId')
         assert clusterId
@@ -74,13 +74,13 @@ h.group('/gw/cluster') {
         if (!containerList || containerList.every { x ->
             !x.running()
         }) {
-            return []
+            return [list: []]
         }
 
         def r = GatewayOperator.getBackendListFromApi(clusterId as int)
 
         def list = new GwFrontendDTO(clusterId: clusterId as int).list()
-        list.collect {
+        def resultList = list.collect {
             List<GwBackendServer> apiBackendList = r[it.id] ?: []
             def serverList = it.backend.serverList
 
@@ -112,6 +112,7 @@ h.group('/gw/cluster') {
             [id  : it.id, name: it.name, des: it.des, isNotMatch: isNotMatch,
              conf: it.conf, serverList: serverList, apiBackendList: apiBackendList]
         }
+        [list: resultList]
     }
 }
 
