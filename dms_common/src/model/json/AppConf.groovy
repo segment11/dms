@@ -15,6 +15,10 @@ class AppConf implements JSONFiled {
 
     String image
 
+    String imageName() {
+        group + '/' + image
+    }
+
     String tag
 
     String cmd

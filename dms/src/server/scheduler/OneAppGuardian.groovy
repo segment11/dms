@@ -271,7 +271,7 @@ class OneAppGuardian {
 
     private boolean healthCheck() {
         // user defined application health check
-        String imageName = app.conf.group + '/' + app.conf.image
+        String imageName = app.conf.imageName()
         def checkerList = HealthCheckerHolder.instance.checkerList.findAll { it.imageName() == imageName }
         if (!checkerList) {
             return true

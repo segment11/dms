@@ -166,7 +166,7 @@ h.group('/app') {
 
         Guardian.instance.stopOneRunning(one.id)
 
-        String imageName = one.conf.group + '/' + one.conf.image
+        String imageName = one.conf.imageName()
         def cleanerList = CleanerHolder.instance.cleanerList.findAll { it.imageName().contains(imageName) }
         if (cleanerList) {
             for (cleaner in cleanerList) {

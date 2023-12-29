@@ -13,6 +13,7 @@ import groovy.util.logging.Slf4j
 import model.AppDTO
 import model.GwClusterDTO
 import model.GwFrontendDTO
+import plugin.demo2.ConsulPlugin
 import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
 import transfer.ContainerInfo
@@ -32,7 +33,7 @@ class DnsOperator {
 
         synchronized (this) {
             def consulApp = InMemoryCacheSupport.instance.appList.find {
-                it.conf.group == 'library' && it.conf.image == 'consul'
+                it.conf.imageName() == new ConsulPlugin().imageName()
             }
             if (!consulApp) {
                 return null
@@ -65,6 +66,10 @@ class DnsOperator {
         false
     }
 
+    static String appServiceName(AppDTO app) {
+        app.name.replaceAll(' ', '_').toLowerCase()
+    }
+
     void register(AppDTO app, String nodeIp, int instanceIndex) {
         def agentClient = getAgentClient()
         if (!agentClient) {
@@ -74,7 +79,7 @@ class DnsOperator {
         def address = nodeIp
 
         // app_appId
-        def appService = app.name.replaceAll(' ', '_').toLowerCase()
+        def appService = appServiceName(app)
         def full = appService + '_' + instanceIndex
 
         if (isServiceIdMatchAddress(full, address)) {
@@ -111,7 +116,7 @@ class DnsOperator {
             return
         }
 
-        def appService = app.name.replaceAll(' ', '_').toLowerCase()
+        def appService = appServiceName(app)
         def full = appService + '_' + instanceIndex
 
         agentClient.deregister(full + '_host')

@@ -278,7 +278,7 @@ class CreateProcessor implements GuardianProcessor {
         if (imageWithTag == null) {
             def registryOne = new ImageRegistryDTO(id: confCopy.registryId).one()
             assert registryOne
-            imageWithTagFinal = registryOne.trimScheme() + '/' + confCopy.group + '/' + confCopy.image + ':' + confCopy.tag
+            imageWithTagFinal = registryOne.trimScheme() + '/' + confCopy.imageName() + ':' + confCopy.tag
         } else {
             imageWithTagFinal = imageWithTag
         }
@@ -308,7 +308,7 @@ class CreateProcessor implements GuardianProcessor {
     }
 
     private static boolean beforeCheck(CreateContainerConf c, JobStepKeeper keeper) {
-        String imageName = c.conf.group + '/' + c.conf.image
+        String imageName = c.conf.imageName()
 
         def checkerList = CheckerHolder.instance.checkerList.findAll { it.imageName() == imageName }
         def beforeCheckList = checkerList.findAll { it.type() == Checker.Type.before }
@@ -338,7 +338,7 @@ class CreateProcessor implements GuardianProcessor {
     }
 
     private static boolean afterCheck(CreateContainerConf c, JobStepKeeper keeper) {
-        String imageName = c.conf.group + '/' + c.conf.image
+        String imageName = c.conf.imageName()
 
         def checkerList = CheckerHolder.instance.checkerList.findAll { it.imageName() == imageName }
         def afterCheckList = checkerList.findAll { it.type() == Checker.Type.after }
@@ -369,7 +369,7 @@ class CreateProcessor implements GuardianProcessor {
     }
 
     private static boolean initCheck(CreateContainerConf c, JobStepKeeper keeper, String containerId) {
-        String imageName = c.conf.group + '/' + c.conf.image
+        String imageName = c.conf.imageName()
 
         def checkerList = CheckerHolder.instance.checkerList.findAll { it.imageName() == imageName }
         def initCheckList = checkerList.findAll { it.type() == Checker.Type.init }
@@ -385,7 +385,7 @@ class CreateProcessor implements GuardianProcessor {
                         if (isErrorInit != null && isErrorInit.booleanValue()) {
                             Event.builder().type(Event.Type.app).reason('after start init fail').
                                     result(c.appId).build().
-                                    log('init container fail - ' + c.conf.group + '/' + c.conf.image + ' - ' +
+                                    log('init container fail - ' + c.conf.imageName() + ' - ' +
                                             initR.getString('message')).toDto().add()
                             return false
                         }
@@ -431,9 +431,9 @@ class CreateProcessor implements GuardianProcessor {
 
         String imageWithTag
         if (registryOne.local() || registryOne.dockerIo()) {
-            imageWithTag = confCopy.group + '/' + confCopy.image + ':' + confCopy.tag
+            imageWithTag = confCopy.imageName() + ':' + confCopy.tag
         } else {
-            imageWithTag = registryOne.trimScheme() + '/' + confCopy.group + '/' + confCopy.image + ':' + confCopy.tag
+            imageWithTag = registryOne.trimScheme() + '/' + confCopy.imageName() + ':' + confCopy.tag
         }
 
         def keeper = passedKeeper ?: new JobStepKeeper(jobId: jobId, instanceIndex: instanceIndex, nodeIp: nodeIp)
@@ -543,7 +543,7 @@ class CreateProcessor implements GuardianProcessor {
     private static ContainerRunResult startOneProcess(AppDTO app, int jobId, int instanceIndex,
                                                       List<String> nodeIpList, String nodeIp,
                                                       AppConf confCopy, JobStepKeeper passedKeeper) {
-        def imageWithTag = confCopy.group + '/' + confCopy.image + ':' + confCopy.tag
+        def imageWithTag = confCopy.imageName() + ':' + confCopy.tag
         def createContainerConf = prepareCreateContainerConf(confCopy, app, instanceIndex, nodeIp, nodeIpList, imageWithTag)
         log.info createContainerConf.toString()
         createContainerConf.jobId = jobId
