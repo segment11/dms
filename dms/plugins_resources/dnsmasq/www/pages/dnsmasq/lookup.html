@@ -1,0 +1,44 @@
+<div ng-controller="MainCtrl">
+
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Dns Lookup Overview</h5>
+                </div>
+                <div class="widget-content">
+                    <div class="form-group">
+                        <label>Cluster: </label>
+                        <select ng-model="tmp.clusterId" ng-options="a.id as a.name for a in clusterList"
+                                style="width: 200px;" ng-change="onClusterChoose()">
+                            <option value="" selected>--/--</option>
+                        </select>
+                    </div>
+
+                    <div class="row" ng-repeat="one in list" style="border: 2px gray solid; padding-bottom: 10px;">
+                        <div class="col-md-2" style="border-right: 2px blue dotted;">
+                            <h3>{{one.appName}}</h3>
+                            <p style="text-align: center;">{{one.service}}</p>
+                            <button class="btn" ng-click="goAppOne(one)">Go</button>
+                        </div>
+                        <div class="col-md-2" style="border-right: 2px blue dotted;">
+                            <legend>A Records</legend>
+                            <ul>
+                                <li ng-repeat="x in one.answers">
+                                    <span class="bg-info">{{x}}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div><!-- /.row-fluid -->
+
+    </div>
+
+</div>

@@ -23,6 +23,11 @@ import transfer.ContainerInfo
 @Slf4j
 class ConsulPlugin extends BasePlugin implements Observer, LiveCheckResultHandler {
     @Override
+    String group() {
+        'hashicorp'
+    }
+
+    @Override
     String name() {
         'consul'
     }
@@ -190,7 +195,7 @@ cmdArgs.join(' ')
     @Override
     void liveCheckResultHandle(ContainerInfo x) {
         var app = InMemoryCacheSupport.instance.oneApp(x.appId())
-        if (x.isLiveCheckOk) {
+        if (x.isLiveCheckOk == null || x.isLiveCheckOk.booleanValue()) {
             DnsOperator.instance.register(app, x.nodeIp, x.instanceIndex())
         } else {
             DnsOperator.instance.deregister(app, x.instanceIndex())

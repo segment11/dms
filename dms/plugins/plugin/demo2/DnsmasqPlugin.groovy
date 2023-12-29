@@ -10,6 +10,7 @@ import model.json.PortMapping
 import model.json.TplParamsConf
 import plugin.BasePlugin
 import plugin.PluginManager
+import plugin.model.Menu
 
 @CompileStatic
 @Slf4j
@@ -43,7 +44,7 @@ class DnsmasqPlugin extends BasePlugin {
         tplParams.addParam('port', '53', 'int')
         tplParams.addParam('defaultServer', '119.29.29.29,182.254.116.116', 'string')
         tplParams.addParam('consulAppName', 'consul', 'string')
-        tplParams.addParam('domain', 'consul', 'string')
+        tplParams.addParam('domain', 'local', 'string')
 
         def imageName = imageName()
 
@@ -98,5 +99,16 @@ class DnsmasqPlugin extends BasePlugin {
         conf.dependAppIdList << new AppDTO(name: 'consul').queryFields('id').one().id
 
         app
+    }
+
+    @Override
+    List<Menu> menus() {
+        List<Menu> menus = []
+
+        menus << new Menu(title: 'DNS', icon: 'icon-cloud', children: [
+                new Menu(title: 'Lookup-Overview', module: 'dnsmasq', page: 'lookup', icon: 'icon-dashboard')
+        ])
+
+        menus
     }
 }
