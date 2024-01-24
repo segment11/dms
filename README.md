@@ -16,6 +16,20 @@ A docker instances manage system like k8s write in java/groovy, including web ui
 - log collect by vector and open observe
 - plugins support like k8s operator
 
+# architecture
+
+## dms server agent overview
+![dms server agent overview](./pic/arch/dms-server-agent.png)
+
+## dms server agent modules
+![dms server agent modules](./pic/arch/dms-server-agent-module.png)
+
+## create container/process steps
+![create container/process steps](./pic/arch/dms-create-container.png)
+
+## dms build-in plugins
+![dms build-in plugins](./pic/arch/dms-plugin-build-in.png)
+
 # run dms server
 
 - docker run -v /opt/log:/opt/log -v /data/dms:/data/dms --name=dms -d --net=host key232323/dms
