@@ -18,32 +18,52 @@ class InMemoryCacheSupport extends IntervalJob {
         'in memory cache load'
     }
 
-    ClusterDTO oneCluster(int clusterId) {
+    synchronized ClusterDTO oneCluster(int clusterId) {
         if (!clusterList) {
             return null
         }
         clusterList.find { it.id == clusterId }
     }
 
-    AppDTO oneApp(int appId) {
+    synchronized AppDTO oneApp(int appId) {
         if (!appList) {
             return null
         }
         appList.find { it.id == appId }
     }
 
-    int getClusterIdByAppId(int appId) {
-        oneApp(appId).clusterId
+    synchronized int getClusterIdByAppId(int appId) {
+        // null not safe
+        def app = oneApp(appId)
+        app ? app.clusterId : 0
+    }
+
+    synchronized void appUpdated(AppDTO app) {
+        def exist = appList.find { it.id == app.id }
+        if (exist) {
+            if (exist.updatedDate != app.updatedDate) {
+                appList.remove(exist)
+                appList.add(app)
+            }
+        } else {
+            appList.add(app)
+        }
+    }
+
+    synchronized void appDeleted(int appId) {
+        appList?.removeIf { it.id == appId }
     }
 
     @Override
     void doJob() {
-        // cost too much time, todo: use cache
-        def beginT = System.currentTimeMillis()
-        appList = new AppDTO().noWhere().list()
-        def costT = System.currentTimeMillis() - beginT
-        log.info 'load app, app size: {}, cost {} ms', appList.size(), costT
-        clusterList = new ClusterDTO().noWhere().list()
+        synchronized (this) {
+            // cost too much time, todo: compare update date / version
+            def beginT = System.currentTimeMillis()
+            appList = new AppDTO().noWhere().list()
+            def costT = System.currentTimeMillis() - beginT
+            log.info 'load app, app size: {}, cost {} ms', appList.size(), costT
+            clusterList = new ClusterDTO().noWhere().list()
+        }
 
         if (intervalCount % 10 == 0) {
             log.info 'load app, app size: {}', appList.size()

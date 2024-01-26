@@ -163,6 +163,7 @@ h.group('/app') {
             new AppJobDTO(appId: one.id).deleteAll()
         }
         new AppDTO(id: one.id).delete()
+        InMemoryCacheSupport.instance.appDeleted(one.id)
 
         Guardian.instance.stopOneRunning(one.id)
 
@@ -214,6 +215,7 @@ h.group('/app') {
             }
         }
 
+        def cacheSupport = InMemoryCacheSupport.instance
         if (conf.memMB && conf.targetNodeIpList) {
             // check if memory require > node memory - system used memory
             def systemUsedMB = Conf.instance.getInt('node.systemUsedMB', 1024)
@@ -229,7 +231,7 @@ h.group('/app') {
                 def containerList = instance.getContainerList(0, 0, nodeIp)
                 int memMBUsed = 0
                 for (x in containerList) {
-                    def appOne = InMemoryCacheSupport.instance.oneApp(x.appId())
+                    def appOne = cacheSupport.oneApp(x.appId())
                     if (appOne.id == one.id) {
                         continue
                     }
@@ -258,6 +260,7 @@ h.group('/app') {
                 } else {
                     one.update()
                     log.info 'change from {} to {}', oldConf, conf
+                    cacheSupport.appUpdated(one)
 
                     // do not create job
                     if (!oldOne.autoManage()) {
@@ -279,6 +282,7 @@ h.group('/app') {
             } else {
                 if (oldConf.containerNumber == conf.containerNumber || !oldOne.autoManage()) {
                     one.update()
+                    cacheSupport.appUpdated(one)
                     return [id: one.id]
                 }
 
@@ -302,6 +306,8 @@ h.group('/app') {
                 }
 
                 one.update()
+                cacheSupport.appUpdated(one)
+
                 log.info 'scale from {} to {}', oldConf.containerNumber, conf.containerNumber
                 def jobType = isAdd ? AppJobDTO.JobType.create : AppJobDTO.JobType.remove
                 def jobId = new AppJobDTO(appId: one.id, failNum: 0, jobType: jobType.val,
@@ -316,6 +322,8 @@ h.group('/app') {
 
             one.status = AppDTO.Status.auto.val
             def id = one.add()
+            one.id = id
+            cacheSupport.appUpdated(one)
 
             def jobId = new AppJobDTO(appId: one.id, failNum: 0, jobType: AppJobDTO.JobType.create.val,
                     createdDate: new Date(), updatedDate: new Date()).add()
