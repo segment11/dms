@@ -27,14 +27,14 @@ h.post('/agent/image/init/load') { req, resp ->
     }
 
     def clusterOne = InMemoryCacheSupport.instance.oneCluster(kp.clusterId)
-    def conf = clusterOne.globalEnvConf
-    def proxyNodeIp = conf.proxyNodeIp
+    def proxyInfo = clusterOne.globalEnvConf.getProxyInfo(kp.ip)
+    def needProxy = proxyInfo && proxyInfo.proxyNodeIp != kp.ip
 
     def support = new InitAgentEnvSupport(kp)
     String imageTarGzName = params.imageTarGzName
     String localFilePath = support.userHomeDir + '/images/' + imageTarGzName
 
-    if (!proxyNodeIp || proxyNodeIp == kp.ip) {
+    if (!needProxy) {
         boolean isCopyDone = support.copyFileIfNotExists(localFilePath, false, true)
         if (!isCopyDone) {
             return [flag   : isCopyDone,

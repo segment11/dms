@@ -97,10 +97,11 @@ h.get('/deploy/node-file/list') { req, resp ->
             return [flag: false, message: 'Node is not init ssh connect: ' + nodeIp]
         }
 
-        def one = InMemoryCacheSupport.instance.oneCluster(kp.clusterId)
-        String proxyNodeIp = one.globalEnvConf.proxyNodeIp
+        def clusterOne = InMemoryCacheSupport.instance.oneCluster(kp.clusterId)
+        def proxyInfo = clusterOne.globalEnvConf.getProxyInfo(kp.ip)
+        def needProxy = proxyInfo && proxyInfo.proxyNodeIp != kp.ip
 
-        if (proxyNodeIp && proxyNodeIp != kp.ip) {
+        if (needProxy) {
             def r = AgentCaller.instance.doSshCopy(kp, targetOne.localPath, targetOne.destPath,
                     null, 30000, [isOverwrite: true])
             log.info r ? r.toString() : '...'
@@ -110,7 +111,7 @@ h.get('/deploy/node-file/list') { req, resp ->
         }
 
         if (oneCmd) {
-            if (proxyNodeIp && proxyNodeIp != kp.ip) {
+            if (needProxy) {
                 def r = AgentCaller.instance.doSshExec(kp, oneCmd.cmd)
                 log.info r ? r.toString() : '...'
             } else {

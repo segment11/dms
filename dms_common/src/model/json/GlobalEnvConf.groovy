@@ -13,12 +13,21 @@ class GlobalEnvConf implements JSONFiled {
     List<KVPair> skipConflictCheckVolumeDirList = []
     List<KVPair> envList = []
 
-    // vpc endpoint service vip for agent
-    String proxyNodeIp
-    Integer proxyNodePort
+    // internet dms server http server host port
+    String internetHostPort
+    String sameVpcNodeIpPrefix
 
-    // vpc endpoint service vip for server
-    String serverHost
-    Integer serverPort
-    String localIpFilterPre
+    List<ProxyInfo> proxyInfoList = []
+
+    ProxyInfo getProxyInfo(String nodeIp) {
+        proxyInfoList.find { nodeIp.startsWith(it.matchNodeIpPrefix) }
+    }
+
+    @CompileStatic
+    static class ProxyInfo {
+        // internet dms agent http server host
+        String proxyNodeIp
+        Integer proxyNodePort
+        String matchNodeIpPrefix
+    }
 }

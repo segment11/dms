@@ -34,11 +34,8 @@
                                     <li ng-show="one.globalEnvConf.dnsServer">DNS Server:
                                         <span class="bg-success">{{one.globalEnvConf.dnsServer}}</span>
                                     </li>
-                                    <li ng-show="one.globalEnvConf.proxyNodeIp">Agent Proxy Node Ip:
-                                        <span class="bg-success">{{one.globalEnvConf.proxyNodeIp}}:{{one.globalEnvConf.proxyNodePort}}</span>
-                                    </li>
-                                    <li ng-show="one.globalEnvConf.localIpFilterPre">Network Interface Ip Prefix:
-                                        <span class="bg-info">{{one.globalEnvConf.localIpFilterPre}}</span>
+                                    <li ng-show="one.globalEnvConf.sameVpcNodeIpPrefix">Same Vpc Network Interface Ip Prefix:
+                                        <span class="bg-info">{{one.globalEnvConf.sameVpcNodeIpPrefix}}</span>
                                     </li>
                                 </ul>
                             </td>
@@ -105,23 +102,44 @@
                                placeholder="3600" ui-valid="int"/>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Agent Proxy Node Ip:</label>
+                        <label class="form-label">Internet DMS Server Host Port:</label>
                         <input type="text" class="form-control"
-                               ng-model="editOne.globalEnvConf.proxyNodeIp"
-                               placeholder="ip" ui-valid="ips"/>
+                               ng-model="editOne.globalEnvConf.internetHostPort"
+                               placeholder="127.0.0.1:5010" ui-valid="endpoints"/>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Agent Proxy Node Port:</label>
+                        <label class="form-label">Same Vpc Network Interface Ip Prefix:</label>
                         <input type="text" class="form-control"
-                               ng-model="editOne.globalEnvConf.proxyNodePort"
-                               placeholder="5010" ui-valid="int"/>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Network Interface Ip Prefix:</label>
-                        <input type="text" class="form-control"
-                               ng-model="editOne.globalEnvConf.localIpFilterPre"
+                               ng-model="editOne.globalEnvConf.sameVpcNodeIpPrefix"
                                placeholder="192." ui-valid="r"/>
                     </div>
+                    <div style="margin: 5px;">
+                        <button class="btn" ng-click="editOne.globalEnvConf.proxyInfoList.push({})">Add
+                            Agent Proxy Info
+                        </button>
+                    </div>
+                    <div style="margin: 5px;" ng-repeat="proxyInfo in editOne.globalEnvConf.proxyInfoList"
+                         class="row">
+                        <div class="col-sm-3">
+                            Proxy Host: <input type="text" class="form-control input-short"
+                                   ng-model="proxyInfo.proxyNodeIp" placeholder="171.0.0.1" ui-valid="r ips"/>
+                        </div>
+                        <div class="col-sm-3">
+                            Proxy Port: <input type="text" class="form-control input-short"
+                                               ng-model="proxyInfo.proxyNodePort" placeholder="6010" ui-valid="r int"/>
+                        </div>
+                        <div class="col-sm-3">
+                            Ip Prefix: <input type="text" class="form-control input-short"
+                                               ng-model="proxyInfo.matchNodeIpPrefix" placeholder="171.0." ui-valid="r"/>
+                        </div>
+                        <div class="col-sm-3">
+                            <button class="btn"
+                                    ng-click="editOne.globalEnvConf.proxyInfoList.remove(proxyInfo)"
+                                    style="min-width: 20px;">-
+                            </button>
+                        </div>
+                    </div>
+                    <hr/>
                     <div style="margin: 5px;">
                         <button class="btn" ng-click="editOne.globalEnvConf.skipConflictCheckVolumeDirList.push({})">Add
                             One Skip Conflict Check Volume Dir

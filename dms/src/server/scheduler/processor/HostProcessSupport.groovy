@@ -47,8 +47,8 @@ class HostProcessSupport {
             }
 
             def clusterOne = InMemoryCacheSupport.instance.oneCluster(c.clusterId)
-            String proxyNodeIp = clusterOne.globalEnvConf.proxyNodeIp
-            def needProxy = proxyNodeIp && proxyNodeIp != kp.ip
+            def proxyInfo = clusterOne.globalEnvConf.getProxyInfo(kp.ip)
+            def needProxy = proxyInfo && proxyInfo.proxyNodeIp != kp.ip
 
             for (deployFile in deployFileList) {
                 if (needProxy) {
@@ -143,8 +143,8 @@ class HostProcessSupport {
         }
 
         def clusterOne = InMemoryCacheSupport.instance.oneCluster(clusterId)
-        String proxyNodeIp = clusterOne.globalEnvConf.proxyNodeIp
-        def needProxy = proxyNodeIp && proxyNodeIp != kp.ip
+        def proxyInfo = clusterOne.globalEnvConf.getProxyInfo(kp.ip)
+        def needProxy = proxyInfo && proxyInfo.proxyNodeIp != kp.ip
 
         def passwordTips = Conf.instance.getString('sudo.shell.password.input.tips', 'Password:')
 
@@ -202,8 +202,8 @@ class HostProcessSupport {
         def kp = new NodeKeyPairDTO(clusterId: clusterId, ip: nodeIp).one()
 
         def clusterOne = InMemoryCacheSupport.instance.oneCluster(clusterId)
-        String proxyNodeIp = clusterOne.globalEnvConf.proxyNodeIp
-        def needProxy = proxyNodeIp && proxyNodeIp != kp.ip
+        def proxyInfo = clusterOne.globalEnvConf.getProxyInfo(kp.ip)
+        def needProxy = proxyInfo && proxyInfo.proxyNodeIp != kp.ip
 
         def passwordTips = Conf.instance.getString('sudo.shell.password.input.tips', 'Password:')
 

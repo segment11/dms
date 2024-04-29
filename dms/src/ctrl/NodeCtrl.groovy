@@ -55,9 +55,9 @@ h.group('/node') {
                 result(kp.ip).build().log('cluster id: ' + kp.clusterId).toDto().add()
 
         def clusterOne = InMemoryCacheSupport.instance.oneCluster(kp.clusterId)
-        def proxyNodeIp = clusterOne.globalEnvConf.proxyNodeIp
+        def proxyInfo = clusterOne.globalEnvConf.getProxyInfo(kp.ip)
         def support = new InitAgentEnvSupport(kp)
-        if (!proxyNodeIp || proxyNodeIp == kp.ip) {
+        if (!proxyInfo) {
             boolean isDone = support.resetRootPassword()
             return [flag   : isDone,
                     steps  : support.getSteps(),
@@ -166,9 +166,11 @@ h.group('/node') {
                 result(kp.ip).build().log('cluster id: ' + kp.clusterId).toDto().add()
 
         def clusterOne = InMemoryCacheSupport.instance.oneCluster(kp.clusterId)
-        def proxyNodeIp = clusterOne.globalEnvConf.proxyNodeIp
+        def proxyInfo = clusterOne.globalEnvConf.getProxyInfo(kp.ip)
+        def needProxy = proxyInfo && proxyInfo.proxyNodeIp != kp.ip
+
         def support = new InitAgentEnvSupport(kp)
-        if (!proxyNodeIp || proxyNodeIp == kp.ip) {
+        if (!needProxy) {
             boolean isDone = support.initNodeAgent()
             return [flag   : isDone,
                     steps  : support.getSteps(),
@@ -200,19 +202,22 @@ h.group('/node') {
                 result(kp.ip).build().log('cluster id: ' + kp.clusterId).toDto().add()
 
         def clusterOne = InMemoryCacheSupport.instance.oneCluster(kp.clusterId)
-        def conf = clusterOne.globalEnvConf
+        def globalEnvConf = clusterOne.globalEnvConf
 
         def agentConf = new AgentConf()
         agentConf.clusterId = clusterOne.id
         agentConf.secret = clusterOne.secret
-        agentConf.serverHost = conf.serverHost ?: Utils.localIp()
-        agentConf.serverPort = conf.serverPort ?: Const.SERVER_HTTP_LISTEN_PORT
-        agentConf.localIpFilterPre = conf.localIpFilterPre
+        agentConf.serverHost = globalEnvConf.internetHostPort ? globalEnvConf.internetHostPort.split(':')[0] : Utils.localIp()
+        agentConf.serverPort = globalEnvConf.internetHostPort ? globalEnvConf.internetHostPort.split(':')[1] as int : Const.SERVER_HTTP_LISTEN_PORT
+
+        def proxyInfo = globalEnvConf.getProxyInfo(kp.ip)
+        agentConf.localIpFilterPre = proxyInfo ? proxyInfo.matchNodeIpPrefix : globalEnvConf.sameVpcNodeIpPrefix
         agentConf.agentIntervalSeconds = Conf.instance.getInt('agent.interval.seconds', 5)
 
-        def proxyNodeIp = conf.proxyNodeIp
+        def needProxy = proxyInfo && proxyInfo.proxyNodeIp != kp.ip
+
         def support = new InitAgentEnvSupport(kp)
-        if (!proxyNodeIp || proxyNodeIp == kp.ip) {
+        if (!needProxy) {
             support.initAgentConf(agentConf)
             boolean isDone = support.startAgentCmd()
             return [flag   : isDone,
@@ -256,11 +261,13 @@ h.group('/node') {
                 result(kp.ip).build().log('cluster id: ' + kp.clusterId).toDto().add()
 
         def clusterOne = InMemoryCacheSupport.instance.oneCluster(kp.clusterId)
-        def conf = clusterOne.globalEnvConf
+        def globalEnvConf = clusterOne.globalEnvConf
 
-        def proxyNodeIp = conf.proxyNodeIp
+        def proxyInfo = globalEnvConf.getProxyInfo(kp.ip)
+        def needProxy = proxyInfo && proxyInfo.proxyNodeIp != kp.ip
+
         def support = new InitAgentEnvSupport(kp)
-        if (!proxyNodeIp || proxyNodeIp == kp.ip) {
+        if (!needProxy) {
             boolean isDone = support.stopAgent()
             return [flag   : isDone,
                     steps  : support.getSteps(),

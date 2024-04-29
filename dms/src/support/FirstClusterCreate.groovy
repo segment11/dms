@@ -16,7 +16,7 @@ class FirstClusterCreate {
         if (!clusterOne) {
             def localIpFilterPre = Conf.instance.getString('localIpFilterPre', '192.')
             new ClusterDTO(id: 1, name: 'Cluster For Test', secret: '1', isInGuard: false,
-                    globalEnvConf: new GlobalEnvConf(localIpFilterPre: localIpFilterPre)).add()
+                    globalEnvConf: new GlobalEnvConf(sameVpcNodeIpPrefix: localIpFilterPre)).add()
             log.info 'done create first cluster for test'
 
             def ns = new NamespaceDTO(clusterId: 1).one()

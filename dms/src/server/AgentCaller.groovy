@@ -29,15 +29,14 @@ class AgentCaller {
     private <T> T httpRequest(int clusterId, String nodeIp, String uri, Map params, Class<T> clz = String,
                               Closure failCallback, boolean isPost = false) {
         def one = InMemoryCacheSupport.instance.oneCluster(clusterId as int)
-        String proxyNodeIp = one.globalEnvConf.proxyNodeIp
-        Integer proxyNodePort = one.globalEnvConf.proxyNodePort
+        def proxyInfo = one.globalEnvConf.getProxyInfo(nodeIp)
 
-        def needProxy = proxyNodeIp && proxyNodeIp != nodeIp
+        def needProxy = proxyInfo && proxyInfo.proxyNodeIp != nodeIp
         String agentHttpServerUrl = needProxy ?
-                'http://' + proxyNodeIp + ':' + proxyNodePort :
+                'http://' + proxyInfo.proxyNodeIp + ':' + proxyInfo.proxyNodePort :
                 'http://' + nodeIp + ':' + Const.AGENT_HTTP_LISTEN_PORT
 
-        def targetNodeIp = needProxy ? proxyNodeIp : nodeIp
+        def targetNodeIp = needProxy ? proxyInfo.proxyNodeIp : nodeIp
         String authToken = InMemoryAllContainerManager.instance.getAuthToken(targetNodeIp)
         if (!authToken) {
             if (failCallback) {
@@ -102,17 +101,17 @@ class AgentCaller {
     }
 
     <T> T get(int clusterId, String nodeIp, String uri, Map params = null, Class<T> clz = String,
-                     Closure<Void> failCallback = null) {
+              Closure<Void> failCallback = null) {
         httpRequest(clusterId, nodeIp, uri, params, clz, failCallback)
     }
 
     <T> T post(int clusterId, String nodeIp, String uri, Map params = null, Class<T> clz = String,
-                      Closure failCallback = null) {
+               Closure failCallback = null) {
         httpRequest(clusterId, nodeIp, uri, params, clz, failCallback, true)
     }
 
     <T> T agentScriptExeAs(int clusterId, String nodeIp, String scriptName, Class<T> clz, Map params = null,
-                                  Closure failCallback = null) {
+                           Closure failCallback = null) {
         Map p = params ?: [:]
         p.scriptName = scriptName
         String body = post(clusterId, nodeIp, '/dmc/script/exe', p, String, failCallback)
@@ -150,9 +149,9 @@ class AgentCaller {
         }
 
         def one = InMemoryCacheSupport.instance.oneCluster(kp.clusterId)
-        String proxyNodeIp = one.globalEnvConf.proxyNodeIp
+        def proxyInfo = one.globalEnvConf.getProxyInfo(kp.ip)
 
-        agentScriptExe(kp.clusterId, proxyNodeIp, scriptName, params)
+        agentScriptExe(kp.clusterId, proxyInfo.proxyNodeIp, scriptName, params)
     }
 
     JSONObject doSshCopy(NodeKeyPairDTO kp, String localFilePath, String remoteFilePath,

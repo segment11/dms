@@ -261,7 +261,7 @@ class RedisPlugin extends BasePlugin {
 
                 // if use agent proxy, dms server can not connect agent directly
                 def clusterOne = InMemoryCacheSupport.instance.oneCluster(conf.clusterId)
-                if (clusterOne.globalEnvConf.proxyNodeIp) {
+                if (clusterOne.globalEnvConf.proxyInfoList) {
                     log.warn 'this cluster is using agent proxy, skip'
                     return true
                 }
