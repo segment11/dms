@@ -36,13 +36,12 @@ class AgentCaller {
                 'http://' + proxyInfo.proxyNodeIp + ':' + proxyInfo.proxyNodePort :
                 'http://' + nodeIp + ':' + Const.AGENT_HTTP_LISTEN_PORT
 
-        def targetNodeIp = needProxy ? proxyInfo.proxyNodeIp : nodeIp
-        String authToken = InMemoryAllContainerManager.instance.getAuthToken(targetNodeIp)
+        String authToken = InMemoryAllContainerManager.instance.getAuthToken(nodeIp)
         if (!authToken) {
             if (failCallback) {
-                failCallback.call('target node ip is not connected - ' + targetNodeIp)
+                failCallback.call('target node ip is not connected - ' + nodeIp)
             } else {
-                throw new HttpInvokeException('target node ip is not connected - ' + targetNodeIp)
+                throw new HttpInvokeException('target node ip is not connected - ' + nodeIp)
             }
         }
 
