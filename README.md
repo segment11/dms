@@ -15,6 +15,7 @@ A docker instances manage system like k8s write in java/groovy, including web ui
 - metrics collect by prometheus, auto reload jobs like k8s service monitor
 - log collect by vector and open observe
 - plugins support like k8s operator
+- multi-region worker node support by underlay network
 
 # architecture
 
