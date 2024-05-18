@@ -21,6 +21,7 @@ import transfer.ContainerInfo
 @CompileStatic
 @Singleton
 @Slf4j
+@Deprecated
 class DnsOperator {
     static final List<String> tags = ['dms']
 
@@ -89,7 +90,6 @@ class DnsOperator {
         // default 10min
         def defaultTtl = Conf.instance.getInt('default.ttl', 600)
         def cluster = InMemoryCacheSupport.instance.oneCluster(app.clusterId)
-        def dnsTtl = cluster.globalEnvConf.dnsTtl ?: defaultTtl
 
         def service = ImmutableRegistration.builder()
                 .id(full + '_host')

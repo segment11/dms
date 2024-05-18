@@ -21,6 +21,7 @@ import transfer.ContainerInfo
 
 @CompileStatic
 @Slf4j
+@Deprecated
 class ConsulPlugin extends BasePlugin implements Observer, LiveCheckResultHandler {
     @Override
     String group() {

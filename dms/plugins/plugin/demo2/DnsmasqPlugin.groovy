@@ -14,6 +14,7 @@ import plugin.model.Menu
 
 @CompileStatic
 @Slf4j
+@Deprecated
 class DnsmasqPlugin extends BasePlugin {
     @Override
     String name() {

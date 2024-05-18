@@ -1,6 +1,7 @@
 package script
 
 import com.alibaba.fastjson.JSONObject
+import model.json.GlobalEnvConf
 import org.slf4j.LoggerFactory
 
 def log = LoggerFactory.getLogger(this.getClass())
@@ -8,13 +9,13 @@ def log = LoggerFactory.getLogger(this.getClass())
 JSONObject jo = super.binding.getProperty('jo') as JSONObject
 
 //def envList = jo.getJSONArray('envList')
-def dnsServer = jo.getString('dnsServer')
+def dnsInfo = jo.getObject('dnsInfo', GlobalEnvConf.DnsInfo)
 
-if (dnsServer) {
+if (dnsInfo && dnsInfo.nameservers) {
     final String filePath = '/etc/resolv.conf'
     def lines = new File(filePath).text.readLines().reverse()
 
-    def arr = dnsServer.split(',')
+    def arr = dnsInfo.nameservers.split(',')
     boolean needRewrite = false
     for (s in arr) {
         def ns = 'nameserver ' + s

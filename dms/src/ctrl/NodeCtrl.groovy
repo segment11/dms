@@ -423,7 +423,7 @@ h.group('/api') {
             }
 
             def clusterOne = InMemoryCacheSupport.instance.oneCluster(info.clusterId)
-            [envList: clusterOne.globalEnvConf.envList, dnsServer: clusterOne.globalEnvConf.dnsServer]
+            [envList: clusterOne.globalEnvConf.envList, dnsInfo: clusterOne.globalEnvConf.dnsInfo]
         }.post('/container') { req, resp ->
             X nodeX = req.bodyAs(X)
             InMemoryAllContainerManager.instance.addContainers(nodeX.clusterId, nodeX.nodeIp, nodeX.containers)

@@ -31,8 +31,8 @@
                             <td>{{one.secret}}</td>
                             <td>
                                 <ul>
-                                    <li ng-show="one.globalEnvConf.dnsServer">DNS Server:
-                                        <span class="bg-success">{{one.globalEnvConf.dnsServer}}</span>
+                                    <li ng-show="one.globalEnvConf.dnsInfo.nameservers">DNS Server:
+                                        <span class="bg-success">{{one.globalEnvConf.dnsInfo.nameservers}}</span>
                                     </li>
                                     <li ng-show="one.globalEnvConf.sameVpcNodeIpPrefix">Same Vpc Network Interface Ip Prefix:
                                         <span class="bg-info">{{one.globalEnvConf.sameVpcNodeIpPrefix}}</span>
@@ -46,6 +46,10 @@
                                 </div>
                                 <div class="btn-line">
                                     <button class="btn" ng-click="edit(one)">Update</button>
+                                </div>
+                                <div class="btn-line" ng-show="$index == 0">
+                                    <button class="btn" ng-click="toggleDnsServer(one)" ng-class="{'btn-gray': tmp.isDnsServerListening, 'btn-red': !tmp.isDnsServerListening}">
+                                        {{tmp.isDnsServerListening ? 'Off DNSServer' : 'On DNSServer'}}</button>
                                 </div>
                             </td>
                         </tr>
@@ -90,18 +94,6 @@
                 <td>Configuration</td>
                 <td>
                     <div class="form-group">
-                        <label class="form-label">DNS Server:</label>
-                        <input type="text" class="form-control"
-                               ng-model="editOne.globalEnvConf.dnsServer"
-                               placeholder="ip1,ip2" ui-valid="ips"/>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">DNS Ttl (s):</label>
-                        <input type="text" class="form-control"
-                               ng-model="editOne.globalEnvConf.dnsTtl"
-                               placeholder="3600" ui-valid="int"/>
-                    </div>
-                    <div class="form-group">
                         <label class="form-label">Internet DMS Server Host Port:</label>
                         <input type="text" class="form-control"
                                ng-model="editOne.globalEnvConf.internetHostPort"
@@ -112,6 +104,39 @@
                         <input type="text" class="form-control"
                                ng-model="editOne.globalEnvConf.sameVpcNodeIpPrefix"
                                placeholder="192." ui-valid="r"/>
+                    </div>
+                    <div style="margin: 5px;">
+                        <button class="btn" disabled>Edit DNS Info</button>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">DNS Servers:</label>
+                        <input type="text" class="form-control"
+                               ng-model="editOne.globalEnvConf.dnsInfo.nameservers"
+                               placeholder="ip1,ip2" ui-valid="ips"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">DNS Ttl (s):</label>
+                        <input type="text" class="form-control"
+                               ng-model="editOne.globalEnvConf.dnsInfo.ttl"
+                               placeholder="3600" ui-valid="int"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">DNS Listen Port:</label>
+                        <input type="text" class="form-control"
+                               ng-model="editOne.globalEnvConf.dnsInfo.listenPort"
+                               placeholder="6363" ui-valid="int"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">DNS Proxy Target Ip:</label>
+                        <input type="text" class="form-control"
+                               ng-model="editOne.globalEnvConf.dnsInfo.targetIp"
+                               placeholder="127.0.0.1" ui-valid="ips"/>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">DNS Proxy Target Port:</label>
+                        <input type="text" class="form-control"
+                               ng-model="editOne.globalEnvConf.dnsInfo.targetPort"
+                               placeholder="53" ui-valid="int"/>
                     </div>
                     <div style="margin: 5px;">
                         <button class="btn" ng-click="editOne.globalEnvConf.proxyInfoList.push({})">Add

@@ -44,6 +44,8 @@ compileGroovy {
     groovyOptions.configurationScript = file("config.groovy")
 }
 
+String nettyVersion = '4.1.100.Final'
+
 configurations {
     runtime.exclude group: "org.slf4j", module: "slf4j-log4j12"
     compile.exclude group: "org.slf4j", module: "slf4j-log4j12"
@@ -82,6 +84,13 @@ dependencies {
     implementation group: 'com.github.kevinsawicki', name: 'http-request', version: '6.0'
     implementation group: 'com.orbitz.consul', name: 'consul-client', version: '1.5.3'
     implementation group: 'dnsjava', name: 'dnsjava', version: '3.5.3'
+
+    implementation group: 'io.netty', name: 'netty-handler', version: nettyVersion
+    implementation group: 'io.netty', name: 'netty-codec', version: nettyVersion
+    implementation group: 'io.netty', name: 'netty-codec-dns', version: nettyVersion
+    implementation group: 'io.netty', name: 'netty-common', version: nettyVersion
+    implementation group: 'io.netty', name: 'netty-buffer', version: nettyVersion
+    implementation group: 'io.netty', name: 'netty-transport', version: nettyVersion
 
     implementation group: 'io.prometheus', name: 'simpleclient', version: '0.15.0'
     implementation group: 'io.prometheus', name: 'simpleclient_httpserver', version: '0.15.0'

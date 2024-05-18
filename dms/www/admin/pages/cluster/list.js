@@ -2,11 +2,12 @@ var md = angular.module('module_cluster/list', ['base']);
 md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     $scope.ctrl = {};
     $scope.tmp = {};
-    $scope.editOne = {globalEnvConf: {}};
+    $scope.editOne = {globalEnvConf: {dnsInfo: {}}};
 
     $scope.queryLl = function () {
         $http.get('/dms/cluster/list', {params: {}}).success(function (data) {
-            $scope.ll = data;
+            $scope.ll = data.list;
+            $scope.tmp.isDnsServerListening = data.isDnsServerListening;
         });
     };
 
@@ -41,5 +42,15 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
                 }
             });
         }, null);
+    };
+
+    $scope.toggleDnsServer = function (one) {
+        uiTips.loading();
+        $http.post('/dms/cluster/on-off-dns-server', {id: one.id}).success(function (data) {
+            uiTips.unloading();
+            
+            $scope.tmp.isDnsServerListening = data.isDnsServerListening;
+            uiTips.tips(data.isDnsServerListening ? 'Dns Server Start' : 'Dns Server Stop');
+        });
     };
 });

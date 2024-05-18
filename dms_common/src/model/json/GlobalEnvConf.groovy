@@ -7,8 +7,8 @@ import org.segment.d.json.JSONFiled
 @CompileStatic
 @ToString(includeNames = true)
 class GlobalEnvConf implements JSONFiled {
-    String dnsServer
-    Integer dnsTtl
+    DnsInfo dnsInfo = new DnsInfo()
+
     // use KVPair so the web javascript bind easy
     List<KVPair> skipConflictCheckVolumeDirList = []
     List<KVPair> envList = []
@@ -21,6 +21,15 @@ class GlobalEnvConf implements JSONFiled {
 
     ProxyInfo getProxyInfo(String nodeIp) {
         proxyInfoList.find { nodeIp.startsWith(it.matchNodeIpPrefix) }
+    }
+
+    @CompileStatic
+    static class DnsInfo {
+        String nameservers
+        Integer ttl
+        Integer listenPort
+        String targetIp
+        Integer targetPort
     }
 
     @CompileStatic
