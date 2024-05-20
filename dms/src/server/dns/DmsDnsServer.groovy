@@ -1,6 +1,5 @@
 package server.dns
 
-import com.segment.common.Conf
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import io.netty.bootstrap.Bootstrap
@@ -60,6 +59,6 @@ class DmsDnsServer {
             workerGroup = null
         }
 
-        DmsDnsProxy.instance.clear()
+        DmsDnsProxy.instance.stop()
     }
 }
