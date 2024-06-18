@@ -65,7 +65,7 @@ def localIp = Utils.localIp()
 def server = RouteServer.instance
 server.loader = RouteRefreshLoader.create(loader.gcl).addClasspath(srcDirPath).
         addDir(c.projectPath('/src/agent/ctrl')).jarLoad(c.isOn('server.runtime.jar'))
-server.start(Const.AGENT_HTTP_LISTEN_PORT, localIp)
+server.start(Const.AGENT_HTTP_LISTEN_PORT, c.getString('agent.http.listen.ip', localIp))
 
 // prometheus metrics
 DefaultExports.initialize()
