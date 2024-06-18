@@ -5,12 +5,14 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AppDTO
 import model.ClusterDTO
+import model.NamespaceDTO
 
 @CompileStatic
 @Singleton
 @Slf4j
 class InMemoryCacheSupport extends IntervalJob {
     List<AppDTO> appList = []
+    List<NamespaceDTO> namespaceList = []
     List<ClusterDTO> clusterList = []
 
     @Override
@@ -62,11 +64,14 @@ class InMemoryCacheSupport extends IntervalJob {
             appList = new AppDTO().noWhere().list()
             def costT = System.currentTimeMillis() - beginT
             log.info 'load app, app size: {}, cost {} ms', appList.size(), costT
+
+            namespaceList = new NamespaceDTO().noWhere().list()
             clusterList = new ClusterDTO().noWhere().list()
         }
 
         if (intervalCount % 10 == 0) {
             log.info 'load app, app size: {}', appList.size()
+            log.info 'load namespace, namespace size: {}', namespaceList.size()
             log.info 'load cluster, cluster size: {}', clusterList.size()
         }
     }

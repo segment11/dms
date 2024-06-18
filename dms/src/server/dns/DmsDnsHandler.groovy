@@ -2,10 +2,11 @@ package server.dns
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import io.netty.buffer.Unpooled
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.SimpleChannelInboundHandler
-import io.netty.handler.codec.dns.*
+import io.netty.handler.codec.dns.DatagramDnsQuery
+import io.netty.handler.codec.dns.DatagramDnsResponse
+import io.netty.handler.codec.dns.DnsSection
 import io.netty.util.AttributeKey
 
 @CompileStatic
@@ -30,18 +31,12 @@ class DmsDnsHandler extends SimpleChannelInboundHandler<DatagramDnsQuery> {
             resp.addRecord(DnsSection.QUESTION, dnsQuestion)
         }
 
-        String name = dnsQuestion.name()
-        def rawBytes = answerHandler.answer(dnsQuestion.name())
-        if (rawBytes != null) {
-            def queryAnswer = new DefaultDnsRawRecord(
-                    name,
-                    DnsRecordType.A,
-                    ttl,
-                    Unpooled.wrappedBuffer(rawBytes))
-            resp.addRecord(DnsSection.ANSWER, queryAnswer)
+        def answerList = answerHandler.answer(dnsQuestion, ttl)
+        if (answerList != null) {
+            answerList.each { resp.addRecord(DnsSection.ANSWER, it) }
             channel.writeAndFlush(resp)
         } else {
-            DmsDnsProxy.instance.send(name, msg.id(), channel)
+            DmsDnsProxy.instance.send(dnsQuestion.name(), msg.id(), channel)
         }
     }
 

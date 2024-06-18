@@ -1,8 +1,9 @@
 package server.dns
 
 import groovy.transform.CompileStatic
+import io.netty.handler.codec.dns.DnsRecord
 
 @CompileStatic
 interface DmsDnsAnswerHandler {
-    byte[] answer(String domain)
+    List<DnsRecord> answer(DnsRecord dnsQuestion, int ttl)
 }
