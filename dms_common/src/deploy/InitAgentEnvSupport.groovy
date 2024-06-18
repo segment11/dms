@@ -259,7 +259,7 @@ class InitAgentEnvSupport {
         String javaCmd = Conf.instance.getString('agent.java.cmd',
                 'java -Xms128m -Xmx256m')
         String startCommand = "nohup ${javaCmd} ".toString() +
-                "-Djava.library.path=. -cp . -jar dms_agent-1.2.jar > dmc.log 2>&1 &"
+                "-Djava.library.path=. -cp . -jar dms_agent-1.2.jar > /dev/null 2>&1 &"
         List<OneCmd> commandList = cmdAsRoot new OneCmd(cmd: 'cd ' + destAgentDir, checker: OneCmd.keyword('agentV2')),
                 new OneCmd(cmd: startCommand, checker: OneCmd.any())
 
