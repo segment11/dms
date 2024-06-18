@@ -117,8 +117,8 @@ if (!isNetworkHost) {
 
 // dns *** ***
 List<String> dnsServerList = []
-if (conf.isNetworkDnsUsingCluster && createConf.globalEnvConf.dnsServer) {
-    createConf.globalEnvConf.dnsServer.split(',').each {
+if (conf.isNetworkDnsUsingCluster && createConf.globalEnvConf.dnsInfo) {
+    createConf.globalEnvConf.dnsInfo.nameservers?.split(',').each {
         dnsServerList << it.toString()
     }
 }
