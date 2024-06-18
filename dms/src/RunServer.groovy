@@ -1,11 +1,11 @@
 import auth.User
 import com.segment.common.Conf
 import com.segment.common.Utils
-import com.segment.common.job.leader.LeaderFlagHolder
 import common.Const
 import ha.JedisPoolHolder
 import io.prometheus.client.exporter.HTTPServer
 import io.prometheus.client.hotspot.DefaultExports
+import model.DynConfigDTO
 import org.segment.d.D
 import org.segment.d.Ds
 import org.segment.d.dialect.MySQLDialect
@@ -16,6 +16,7 @@ import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
 import plugin.PluginManager
 import server.AgentCaller
+import server.DBLeaderFlagHolder
 import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
 import server.gateway.ZkClientHolder
@@ -89,15 +90,14 @@ FirstClusterCreate.create()
 D.classTypeBySqlType[Types.TINYINT] = Integer
 D.classTypeBySqlType[Types.SMALLINT] = Integer
 
-def leaderFlagHolder = LeaderFlagHolder.instance
-if (c.get('leader.etcdAddr')) {
-    leaderFlagHolder.init()
-    leaderFlagHolder.doJob()
-    leaderFlagHolder.start()
-} else {
-    // if not etcd addr given, default is leader
-    leaderFlagHolder.isLeader = true
-}
+DynConfigDTO.addServerLeaderLockRow()
+log.info 'server leader lock row added'
+
+def leaderFlagHolder = DBLeaderFlagHolder.instance
+leaderFlagHolder.interval = c.getInt('leader.holder.interval.seconds', 5)
+leaderFlagHolder.ttl = c.getInt('leader.holder.ttl.seconds', 5)
+leaderFlagHolder.doJob()
+leaderFlagHolder.start()
 
 // agent send container or node info to this manager
 def containerManager = InMemoryAllContainerManager.instance

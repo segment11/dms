@@ -1,12 +1,12 @@
 package server.scheduler
 
 import com.segment.common.job.IntervalJob
-import com.segment.common.job.leader.LeaderFlagHolder
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import io.prometheus.client.Summary
 import model.AppDTO
 import model.ClusterDTO
+import server.DBLeaderFlagHolder
 import server.InMemoryAllContainerManager
 
 import java.util.concurrent.ConcurrentHashMap
@@ -65,7 +65,7 @@ class Guardian extends IntervalJob {
 
     @Override
     void doJob() {
-        if (!LeaderFlagHolder.instance.isLeader) {
+        if (!DBLeaderFlagHolder.instance.isLeader) {
             log.warn 'i am not the leader'
             return
         }

@@ -1,9 +1,9 @@
 package ctrl
 
 import com.segment.common.Utils
-import com.segment.common.job.leader.LeaderFlagHolder
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
+import server.DBLeaderFlagHolder
 import server.scheduler.Guardian
 
 def h = ChainHandler.instance
@@ -30,6 +30,6 @@ h.exceptionHandler { req, resp, t ->
 }.get('/leader/hz') { req, resp ->
     // for haproxy proxy dms server, only proxy leader, others stand by
     // because jobs, dms server is a stateful application
-    def isLeader = LeaderFlagHolder.instance.isLeader
+    def isLeader = DBLeaderFlagHolder.instance.isLeader
     resp.status(isLeader ? 200 : 400).end('leader: ' + isLeader)
 }
