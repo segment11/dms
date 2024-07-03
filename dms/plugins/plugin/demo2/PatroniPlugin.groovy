@@ -334,7 +334,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 Ds ds
                 try {
                     ds = Ds.dbType(Ds.DBType.postgresql).connect(conf.nodeIp, publicPort, 'postgres', 'postgres', password)
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                     // retry once
                     Thread.sleep(10000)
                     try {
@@ -462,7 +462,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 def conf = new AppConf()
                 app.conf = conf
 
-                int registryId = BasePlugin.addRegistryIfNotExist('quay.io', 'https://quay.io')
+                int registryId = addRegistryIfNotExist('quay.io', 'https://quay.io')
                 // one pg instance -> one postgres-exporter application
                 conf.containerNumber = createContainerConf.conf.containerNumber
                 conf.targetNodeIpList = createContainerConf.conf.targetNodeIpList
@@ -586,7 +586,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 def conf = new AppConf()
                 app.conf = conf
 
-                int registryId = BasePlugin.addRegistryIfNotExist('docker.io', 'https://docker.io')
+                int registryId = addRegistryIfNotExist('docker.io', 'https://docker.io')
 
                 // one patroni instance -> one haproxy application
                 conf.containerNumber = defaultContainerNumber

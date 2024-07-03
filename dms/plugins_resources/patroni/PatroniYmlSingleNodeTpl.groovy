@@ -1,4 +1,4 @@
-package script.tpl
+package patroni
 
 import model.server.ContainerMountTplHelper
 

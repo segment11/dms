@@ -182,7 +182,7 @@ class MySQLPlugin extends BasePlugin {
                 Ds ds
                 try {
                     ds = Ds.dbType(Ds.DBType.mysql).connect(conf.nodeIp, publicPort, 'mysql', 'root', password)
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                     // retry once
                     Thread.sleep(10000)
                     try {
@@ -268,7 +268,7 @@ class MySQLPlugin extends BasePlugin {
                 Ds ds
                 try {
                     ds = Ds.dbType(Ds.DBType.mysql).connect(conf.nodeIp, publicPort, 'mysql', 'root', password)
-                } catch (Exception e) {
+                } catch (Exception ignored) {
                     // retry once
                     Thread.sleep(10000)
                     try {

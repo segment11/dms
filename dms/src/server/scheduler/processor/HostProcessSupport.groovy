@@ -26,7 +26,7 @@ class HostProcessSupport {
 
     private static JsonTransformer json = new DefaultJsonTransformer()
 
-    int startOneProcess(CreateContainerConf c, JobStepKeeper keeper) {
+    static int startOneProcess(CreateContainerConf c, JobStepKeeper keeper) {
         def deployFileIdList = c.conf.deployFileIdList
 
         if (deployFileIdList.size() == 1 && deployFileIdList[0] == skipDeployFileId) {
