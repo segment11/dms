@@ -5,6 +5,7 @@ import groovy.transform.ToString
 
 @CompileStatic
 @ToString(includeNames = true)
+@Deprecated
 class GwFrontendRuleConf {
     String type
     String rule

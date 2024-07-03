@@ -8,6 +8,7 @@ import model.json.GwFrontendConf
 
 @CompileStatic
 @ToString(includeNames = true, includeSuper = false)
+@Deprecated
 class GwFrontendDTO extends BaseRecord<GwFrontendDTO> {
 
     Integer id

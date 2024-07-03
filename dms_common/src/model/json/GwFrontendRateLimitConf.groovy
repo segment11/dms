@@ -5,6 +5,7 @@ import groovy.transform.ToString
 
 @CompileStatic
 @ToString(includeNames = true)
+@Deprecated
 class GwFrontendRateLimitConf {
     int period
     int average

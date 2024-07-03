@@ -6,6 +6,7 @@ import org.segment.d.json.JSONFiled
 
 @CompileStatic
 @ToString(includeNames = true)
+@Deprecated
 class GwFrontendConf implements JSONFiled {
     boolean passHostHeader
 
