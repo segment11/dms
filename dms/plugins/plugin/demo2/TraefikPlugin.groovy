@@ -88,10 +88,10 @@ class TraefikPlugin extends BasePlugin {
                 nodeVolumeId: getNodeVolumeIdByDir('/var/log/traefik'))
 
         List<KVPair<String>> paramList = []
-        paramList << new KVPair<String>(key: 'logLevel', value: 'info')
-        paramList << new KVPair<String>(key: 'logDir', value: '/var/log/traefik')
-        paramList << new KVPair<String>(key: 'serverPort', value: '80')
-        paramList << new KVPair<String>(key: 'dashboardPort', value: '8080')
+        paramList << new KVPair<String>('logLevel', 'info')
+        paramList << new KVPair<String>('logDir', '/var/log/traefik')
+        paramList << new KVPair<String>('serverPort', '80')
+        paramList << new KVPair<String>('dashboardPort', '8080')
 
         conf.fileVolumeList << new FileVolumeMount(
                 paramList: paramList,

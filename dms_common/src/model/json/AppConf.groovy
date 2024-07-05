@@ -66,7 +66,7 @@ class AppConf implements JSONFiled {
 
     String pidMode
 
-    List<KVPair> envList = []
+    List<KVPair<String>> envList = []
 
     List<ULimit> uLimitList = []
 

@@ -145,11 +145,11 @@ class ZookeeperPlugin extends BasePlugin {
                 nodeVolumeId: getNodeVolumeIdByDir('/data/zookeeper'))
 
         List<KVPair<String>> paramList = []
-        paramList << new KVPair<String>(key: 'tickTime', value: '2000')
-        paramList << new KVPair<String>(key: 'initLimit', value: '5')
-        paramList << new KVPair<String>(key: 'syncLimit', value: '2')
-        paramList << new KVPair<String>(key: 'dataDir', value: '/data/zookeeper')
-        paramList << new KVPair<String>(key: 'isMetricsExport', value: 'false')
+        paramList << new KVPair<String>('tickTime', '2000')
+        paramList << new KVPair<String>('initLimit', '5')
+        paramList << new KVPair<String>('syncLimit', '2')
+        paramList << new KVPair<String>('dataDir', '/data/zookeeper')
+        paramList << new KVPair<String>('isMetricsExport', 'false')
 
         if (conf.isLimitNode) {
             conf.fileVolumeList << new FileVolumeMount(

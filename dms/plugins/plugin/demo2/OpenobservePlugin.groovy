@@ -68,8 +68,8 @@ class OpenobservePlugin extends BasePlugin {
 
         conf.portList << new PortMapping(privatePort: 5080, publicPort: 5080)
 
-        conf.envList << new KVPair('ZO_ROOT_USER_EMAIL', 'admin@163.com')
-        conf.envList << new KVPair('ZO_ROOT_USER_PASSWORD', 'admin@pass')
+        conf.envList << new KVPair<String>('ZO_ROOT_USER_EMAIL', 'admin@163.com')
+        conf.envList << new KVPair<String>('ZO_ROOT_USER_PASSWORD', 'admin@pass')
 
         app
     }

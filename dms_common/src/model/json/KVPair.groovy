@@ -10,7 +10,6 @@ import groovy.transform.TupleConstructor
 class KVPair<E> {
     String key
     E value
-    String type
 
     @Override
     boolean equals(Object obj) {
@@ -18,6 +17,6 @@ class KVPair<E> {
             return false
         }
         def one = (KVPair) obj
-        key == one.key && type == one.type && value == one.value
+        key == one.key && value == one.value
     }
 }

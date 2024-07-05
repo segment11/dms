@@ -64,39 +64,39 @@ class GwRouterDTO extends BaseRecord<GwRouterDTO> {
 
     Date updatedDate
 
-    List<KVPair> toKVList() {
+    List<KVPair<String>> toKVList() {
         // refer to https://doc.traefik.io/traefik/routing/routers/
         // https://doc.traefik.io/traefik/routing/providers/kv/
         final String prefix = '/http/routers/' + name + '/'
 
-        List<KVPair> kvList = []
-        kvList << new KVPair(key: prefix + 'rule', value: rule)
-        kvList << new KVPair(key: prefix + 'service', value: service.name)
+        List<KVPair<String>> kvList = []
+        kvList << new KVPair(prefix + 'rule', rule)
+        kvList << new KVPair(prefix + 'service', service.name)
 
         if (priority) {
-            kvList << new KVPair(key: prefix + 'priority', value: priority.toString())
+            kvList << new KVPair(prefix + 'priority', priority.toString())
         }
 
         if (entryPoints) {
             entryPoints.entryPoints.eachWithIndex { String entryPoint, int i ->
-                kvList << new KVPair(key: prefix + 'entryPoints/' + i, value: entryPoint)
+                kvList << new KVPair(prefix + 'entryPoints/' + i, entryPoint)
             }
         }
 
         if (tls) {
-            kvList << new KVPair(key: prefix + 'tls', value: 'true')
+            kvList << new KVPair(prefix + 'tls', 'true')
             if (tls.options) {
-                kvList << new KVPair(key: prefix + 'tls/options', value: tls.options)
+                kvList << new KVPair(prefix + 'tls/options', tls.options)
             }
             if (tls.certResolver) {
-                kvList << new KVPair(key: prefix + 'tls/certResolver', value: tls.certResolver)
+                kvList << new KVPair(prefix + 'tls/certResolver', tls.certResolver)
             }
             if (tls.domains) {
                 tls.domains.eachWithIndex { Domain domain, int i ->
-                    kvList << new KVPair(key: prefix + 'tls/domains/' + i + '/main', value: domain.main)
+                    kvList << new KVPair(prefix + 'tls/domains/' + i + '/main', domain.main)
                     if (domain.sans) {
                         domain.sans.eachWithIndex { String san, int j ->
-                            kvList << new KVPair(key: prefix + 'tls/domains/' + i + '/sans/' + j, value: san)
+                            kvList << new KVPair(prefix + 'tls/domains/' + i + '/sans/' + j, san)
                         }
                     }
                 }
@@ -104,8 +104,8 @@ class GwRouterDTO extends BaseRecord<GwRouterDTO> {
         }
 
         if (failover) {
-            kvList << new KVPair(key: '/http/services/' + name + '/failover/service', value: failover.service)
-            kvList << new KVPair(key: '/http/services/' + name + '/failover/fallback', value: failover.fallback)
+            kvList << new KVPair('/http/services/' + name + '/failover/service', failover.service)
+            kvList << new KVPair('/http/services/' + name + '/failover/fallback', failover.fallback)
         }
 
         if (service) {
