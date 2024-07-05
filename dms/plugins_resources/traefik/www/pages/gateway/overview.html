@@ -21,11 +21,11 @@
                     <div class="row" ng-repeat="one in list" style="border: 2px gray solid;">
                         <div class="col-md-4" style="border-right: 2px blue dotted;">
                             <h3>{{one.name}}</h3>
-                            <p style="text-align: center;">{{one.des}}</p>
-                            <p style="text-align: center;">{{one.rule}}</p>
+                            <h4>{{one.rule}}</h4>
+                            <p>{{one.des}}</p>
                         </div>
                         <div class="col-md-8">
-                            <legend>LoadBalancer Server List</legend>
+                            <legend>LoadBalancer Server Url List</legend>
                             <p ng-show="one.isNotMatch" class="bg-danger">Running container server url not match</p>
                             <div ui-mind="one" style="height: 300px;"></div>
                         </div>

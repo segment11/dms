@@ -4,9 +4,7 @@ import auth.User
 import model.GwClusterDTO
 import model.GwRouterDTO
 import org.segment.web.handler.ChainHandler
-import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
-import transfer.ContainerInfo
 
 def h = ChainHandler.instance
 
@@ -52,22 +50,54 @@ h.group('/gw/cluster') {
     }.get('/list/simple') { req, resp ->
         [list: new GwClusterDTO().noWhere().queryFields('id,name,des').list()]
     }.get('/overview') { req, resp ->
-        def clusterId = req.param('clusterId')
-        assert clusterId
+        def clusterIdStr = req.param('clusterId')
+        assert clusterIdStr
+
+        def clusterId = clusterIdStr as int
 
         // eg.
-        // list one -> [id: 1, serverUrlList: [[url: '', weight: 10]]
+        // list one -> [id: 1, isNotMatch: false, serverUrlList: [[url: '', weight: 10]]
 
-        GwClusterDTO clusterOne = new GwClusterDTO(id: clusterId as int).one()
-        List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(0, clusterOne.appId)
-        if (!containerList || containerList.every { x ->
-            !x.running()
-        }) {
+        GwClusterDTO clusterOne = new GwClusterDTO(id: clusterId).one()
+        if (!clusterOne) {
             return [list: []]
         }
 
+        def gwRouterList = new GwRouterDTO(clusterId: clusterId).list()
+        if (!gwRouterList) {
+            return [list: []]
+        }
 
-        [list: []]
+        def list = []
+
+        for (gwRouter in gwRouterList) {
+            def one = [:]
+            one.id = gwRouter.id
+            one.name = gwRouter.name
+            one.des = gwRouter.des
+            one.rule = gwRouter.rule
+
+            // todo: check gateway config applications running containers
+            one.isNotMatch = false
+
+            def serverUrlList = []
+            one.serverUrlList = serverUrlList
+
+            gwRouter.service.loadBalancer?.serverUrlList.each { serverUrl ->
+                def inner = [:]
+                inner.url = serverUrl.v1
+                inner.weight = 10
+                serverUrlList << inner
+            }
+
+            if (gwRouter.service.weighted) {
+
+            }
+
+            list << one
+        }
+
+        [list: list]
     }
 }
 

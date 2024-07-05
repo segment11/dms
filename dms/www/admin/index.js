@@ -467,7 +467,7 @@ $(function () {
                 el[0].id = 'show-' + one.id;
 
                 var data = [{id: 'root', isroot: true, topic: 'Router'}];
-                _.each(one.serverList, function (it, i) {
+                _.each(one.serverUrlList, function (it, i) {
                     data.push({id: 'sub' + i, parentid: 'root', topic: it.url + ' __ weight:' + it.weight});
                 });
 
