@@ -2,14 +2,10 @@ package ctrl.traefik
 
 import auth.User
 import model.GwClusterDTO
-import model.GwFrontendDTO
-import model.json.GwBackendServer
-import model.json.GwFrontendRuleConf
+import model.GwRouterDTO
 import org.segment.web.handler.ChainHandler
 import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
-import server.dns.DnsOperator
-import server.gateway.GatewayOperator
 import transfer.ContainerInfo
 
 def h = ChainHandler.instance
@@ -77,54 +73,20 @@ h.group('/gw/cluster') {
             return [list: []]
         }
 
-        def r = GatewayOperator.getBackendListFromApi(clusterId as int)
 
-        def list = new GwFrontendDTO(clusterId: clusterId as int).list()
-        def resultList = list.collect {
-            List<GwBackendServer> apiBackendList = r[it.id] ?: []
-            def serverList = it.backend.serverList
-
-            boolean isNotMatch = false
-            serverList.each { server ->
-                def one = apiBackendList.find { t -> t.url == server.url }
-                if (!one) {
-                    server.url += ' - !!! not found from api'
-                    isNotMatch = true
-                } else {
-                    if (one.weight != server.weight) {
-                        server.url += (' - !!! weight api - ' + one.weight)
-                        isNotMatch = true
-                    }
-                }
-            }
-            apiBackendList.each { server ->
-                def one = serverList.find { t -> t.url == server.url }
-                if (!one) {
-                    server.url += ' - !!! not found from local config'
-                    isNotMatch = true
-                } else {
-                    if (one.weight != server.weight) {
-                        server.url += (' - !!! weight local - ' + one.weight)
-                        isNotMatch = true
-                    }
-                }
-            }
-            [id  : it.id, name: it.name, des: it.des, isNotMatch: isNotMatch,
-             conf: it.conf, serverList: serverList, apiBackendList: apiBackendList]
-        }
-        [list: resultList]
+        [list: []]
     }
 }
 
-h.group('/gw/frontend') {
+h.group('/gw/router') {
     h.get('/list') { req, resp ->
         def clusterId = req.param('clusterId')
         assert clusterId
-        new GwFrontendDTO(clusterId: clusterId as int).list()
+        new GwRouterDTO(clusterId: clusterId as int).list()
     }.get('/list/simple') { req, resp ->
         def clusterId = req.param('clusterId')
         assert clusterId
-        new GwFrontendDTO(clusterId: clusterId as int).queryFields('id,name,des').list()
+        new GwRouterDTO(clusterId: clusterId as int).queryFields('id,name,des').list()
     }.delete('/delete') { req, resp ->
         User u = req.session('user') as User
         if (!u.isAdmin()) {
@@ -133,7 +95,7 @@ h.group('/gw/frontend') {
 
         def id = req.param('id')
         assert id
-        new GwFrontendDTO(id: id as int).delete()
+        new GwRouterDTO(id: id as int).delete()
         [flag: true]
     }.post('/update') { req, resp ->
         User u = req.session('user') as User
@@ -141,27 +103,9 @@ h.group('/gw/frontend') {
             resp.halt(403, 'not admin')
         }
 
-        def one = req.bodyAs(GwFrontendDTO)
+        def one = req.bodyAs(GwRouterDTO)
         assert one.name && one.clusterId
         one.updatedDate = new Date()
-
-        def consulApp = InMemoryCacheSupport.instance.appList.find {
-            it.conf.group == 'library' && it.conf.image == 'consul'
-        }
-        def envDc = consulApp.conf.envList.find { it.key == 'DATA_CENTER' }
-        def envDomain = consulApp.conf.envList.find { it.key == 'DOMAIN' }
-
-        // default dns service name
-        def dc = envDc ? envDc.value.toString() : 'cluster'
-        def domain = envDomain ? envDomain.value.toString() : 'local'
-        String suffix = ".service.${dc}.${domain}".toString()
-        def dnsServiceName = "gw_${one.clusterId}_${one.id}".toString() + suffix
-
-        if (one.conf.ruleConfList.find { it.rule == dnsServiceName } == null) {
-            if (one.conf.ruleConfList.find { it.type == 'Host:' } == null) {
-                one.conf.ruleConfList << new GwFrontendRuleConf(type: 'Host:', rule: dnsServiceName)
-            }
-        }
 
         if (one.id) {
             one.update()
@@ -170,8 +114,6 @@ h.group('/gw/frontend') {
             one.id = id
         }
 
-        GatewayOperator.updateFrontend(one)
-        DnsOperator.instance.refreshGwFrontendDns(one)
         return [id: one.id]
     }
 }

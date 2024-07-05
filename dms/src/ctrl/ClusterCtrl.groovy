@@ -116,5 +116,11 @@ h.group('/cluster') {
         }
 
         [isDnsServerListening: isDnsServerListening]
+    }.get('/dns/lookup') { req, resp ->
+        if (!DmsDnsServer.instance.isListening()) {
+            return [list: []]
+        }
+
+        // todo
     }
 }

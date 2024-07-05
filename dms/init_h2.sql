@@ -198,16 +198,18 @@ create table gw_cluster
 );
 create index idx_gw_cluster_app_id on gw_cluster (app_id);
 
-create table gw_frontend
+create table gw_router
 (
     id           int auto_increment primary key,
     cluster_id   int, -- fk -> gw_cluster.id
     name         varchar(50),
     des          varchar(200),
-    backend      varchar(1000),
-    auth         varchar(4000),
+    role         varchar(200),
+    service      varchar(4000),
+    tls          varchar(200),
+    failover     varchar(200),
+    entry_points varchar(200),
     priority     int,
-    conf         varchar(4000),
     created_date timestamp,
     updated_date timestamp default current_timestamp
 );

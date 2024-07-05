@@ -52,6 +52,11 @@ class GwLoadBalancer {
             if (healthCheck.timeout) {
                 kvList << new KVPair(key: prefix + 'healthcheck/timeout', value: healthCheck.timeout.toString())
             }
+            if (healthCheck.headers) {
+                healthCheck.headers.each { String header, String value ->
+                    kvList << new KVPair(key: prefix + 'healthcheck/headers/' + header, value: value)
+                }
+            }
         }
 
         if (stickyCookie) {

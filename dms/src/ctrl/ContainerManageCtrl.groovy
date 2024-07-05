@@ -16,7 +16,6 @@ import server.AgentCaller
 import server.ContainerMountFileGenerator
 import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
-import server.gateway.GatewayOperator
 import server.scheduler.processor.HostProcessSupport
 import spi.SpiSupport
 import transfer.ContainerInfo
@@ -321,8 +320,6 @@ private static void callAgentScript(Req req, Resp resp, String scriptName) {
                     }
                 }
             }
-
-            GatewayOperator.create(appId, app.gatewayConf).removeBackend(nodeIp, publicPort)
         }
         readTimeout = 1000 * 30
     }

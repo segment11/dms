@@ -1,4 +1,4 @@
-var md = angular.module('module_dnsmasq/lookup', ['base']);
+var md = angular.module('module_cluster/lookup', ['base']);
 md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     $scope.tmp = {};
     $scope.ctrl = {};

@@ -10,11 +10,11 @@ class GatewayConf implements JSONFiled {
 
     Integer clusterId
 
-    Integer frontendId
+    Integer routerId
 
     Integer containerPrivatePort
 
-    String healthCheckUri
+    String healthCheckPath
 
     Integer healthCheckDelaySeconds
 
@@ -25,6 +25,6 @@ class GatewayConf implements JSONFiled {
     Integer healthCheckTotalTimes
 
     boolean asBoolean() {
-        clusterId != null && frontendId != null
+        clusterId != null && routerId != null
     }
 }

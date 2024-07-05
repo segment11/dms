@@ -19,7 +19,6 @@ import server.AgentCaller
 import server.DBLeaderFlagHolder
 import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
-import server.gateway.ZkClientHolder
 import server.lock.CuratorFrameworkClientHolder
 import server.scheduler.Guardian
 import server.scheduler.processor.CreateProcessor
@@ -141,7 +140,6 @@ def stopCl = {
     curatorClientHolder.close()
     containerManager.stop()
     leaderFlagHolder.stop()
-    ZkClientHolder.instance.close()
     JedisPoolHolder.instance.close()
     AuthTokenCacheHolder.instance.cleanUp()
     Ds.disconnectAll()

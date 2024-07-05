@@ -3,7 +3,8 @@ package plugin.demo2
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.*
-import model.json.*
+import model.json.GatewayConf
+import model.json.GwService
 import org.segment.web.handler.ChainHandler
 import plugin.BasePlugin
 
@@ -37,29 +38,22 @@ class InitToolPlugin extends BasePlugin {
         }
     }
 
-    private static void addGwFrontendIfNotExists(int gwClusterId, int appId, String appName, int privatePort) {
-        def f = new GwFrontendDTO(clusterId: gwClusterId, name: appName)
-        def one = f.one()
+    private static void addGwRouterIfNotExists(int gwClusterId, int clusterId, int appId, String appName, int privatePort) {
+        def router = new GwRouterDTO(clusterId: gwClusterId, name: appName)
+        def one = router.one()
         if (one) {
-            log.warn 'gw frontend already exists, skip add, app name: {}', appName
+            log.warn 'gw router already exists, skip add, app name: {}', appName
             return
         }
 
-        f.priority = 10
-        f.backend = new GwBackend()
-        f.auth = new GwAuth()
-        def addedId = f.add()
-
-        def suffix = '.service.dc1.consul'
-        def rule = new GwFrontendRuleConf(type: 'Host:', rule: "gw_${gwClusterId}_${addedId}".toString() + suffix)
-
-        def conf = new GwFrontendConf()
-        conf.ruleConfList << rule
-
-        new GwFrontendDTO(id: addedId, conf: conf).update()
+        router.priority = 10
+        router.service = new GwService()
+        // todo, refer ClusterDnsAnswerHandler
+        router.rule = 'Host(`' + "app_${appId}.cluster_${clusterId}" + '`)'
+        def routerId = router.add()
 
         // update app gateway config
-        def gatewayConf = new GatewayConf(clusterId: gwClusterId, frontendId: addedId, containerPrivatePort: privatePort)
+        def gatewayConf = new GatewayConf(clusterId: gwClusterId, routerId: routerId, containerPrivatePort: privatePort)
         new AppDTO(id: appId, gatewayConf: gatewayConf).update()
     }
 
@@ -122,16 +116,10 @@ class InitToolPlugin extends BasePlugin {
             def appTraefik = new TraefikPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
             def traefikAppId = addAppIfNotExists(appTraefik)
 
-            def appConsul = new ConsulPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
-            def consulAppId = addAppIfNotExists(appConsul)
-
-            def appDnsmasq = new DnsmasqPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
-            addAppIfNotExists(appDnsmasq)
-
             def appEtcd = new EtcdPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
             addAppIfNotExists(appEtcd)
 
-            cluster.globalEnvConf.dnsServer = nodeIpList.join(',')
+            cluster.globalEnvConf.dnsInfo.nameservers = nodeIpList[0]
             new ClusterDTO(id: clusterId, globalEnvConf: cluster.globalEnvConf, isInGuard: true).update()
 
             // add traefik frontend
@@ -146,10 +134,9 @@ class InitToolPlugin extends BasePlugin {
             gw.updatedDate = new Date()
             def gwClusterId = gw.add()
 
-            addGwFrontendIfNotExists(gwClusterId, prometheusAppId, 'prometheus', 9090)
-            addGwFrontendIfNotExists(gwClusterId, grafanaAppId, 'grafana', 3000)
-            addGwFrontendIfNotExists(gwClusterId, ooAppId, 'openobserve', 5080)
-            addGwFrontendIfNotExists(gwClusterId, consulAppId, 'consul', 8500)
+            addGwRouterIfNotExists(gwClusterId, clusterId, prometheusAppId, 'prometheus', 9090)
+            addGwRouterIfNotExists(gwClusterId, clusterId, grafanaAppId, 'grafana', 3000)
+            addGwRouterIfNotExists(gwClusterId, clusterId, ooAppId, 'openobserve', 5080)
 
             'ok'
         }

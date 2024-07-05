@@ -2,6 +2,7 @@ package model
 
 import groovy.transform.CompileStatic
 import groovy.transform.ToString
+import model.json.GwEntryPoints
 import model.json.GwService
 import model.json.KVPair
 import org.segment.d.json.JSONFiled
@@ -55,7 +56,7 @@ class GwRouterDTO extends BaseRecord<GwRouterDTO> {
 
     Failover failover
 
-    List<String> entryPoints
+    GwEntryPoints entryPoints
 
     Integer priority
 
@@ -77,7 +78,7 @@ class GwRouterDTO extends BaseRecord<GwRouterDTO> {
         }
 
         if (entryPoints) {
-            entryPoints.eachWithIndex { String entryPoint, int i ->
+            entryPoints.entryPoints.eachWithIndex { String entryPoint, int i ->
                 kvList << new KVPair(key: prefix + 'entryPoints/' + i, value: entryPoint)
             }
         }

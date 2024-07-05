@@ -6,7 +6,10 @@ import org.segment.d.json.JSONFiled
 
 @CompileStatic
 @ToString(includeNames = true)
-@Deprecated
-class GwAuth implements JSONFiled {
-    List<KVPair> basicList = []
+class GwEntryPoints implements JSONFiled {
+    List<String> entryPoints = []
+
+    boolean asBoolean() {
+        entryPoints
+    }
 }
