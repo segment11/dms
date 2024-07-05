@@ -10,6 +10,7 @@ import groovy.transform.TupleConstructor
 class KVPair<E> {
     String key
     E value
+    String type
 
     @Override
     boolean equals(Object obj) {

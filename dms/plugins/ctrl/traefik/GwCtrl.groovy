@@ -37,19 +37,9 @@ h.group('/gw/cluster') {
             one.des = app.des
             one.serverUrl = 'http://' + app.conf.targetNodeIpList[0]
 
-            def ymlOne = app.conf.fileVolumeList.find { it.dist == '/etc/traefik/traefik.toml' }
+            def ymlOne = app.conf.fileVolumeList.find { it.dist == '/etc/traefik/traefik.yml' }
             one.serverPort = ymlOne.paramList.find { it.key == 'serverPort' }.value as int
             one.dashboardPort = ymlOne.paramList.find { it.key == 'dashboardPort' }.value as int
-            one.prefix = ymlOne.paramList.find { it.key == 'prefix' }.value
-
-            def zkAppName = ymlOne.paramList.find { it.key == 'zkAppName' }.value
-            def zkApp = InMemoryCacheSupport.instance.appList.find { it.name == zkAppName }
-            if (!zkApp) {
-                resp.halt(400, 'app zk not found')
-            }
-
-            def zkConnectString = zkApp.conf.targetNodeIpList.collect { it + ':2181' }.join(',')
-            one.zkConnectString = zkConnectString
 
             one.updatedDate = new Date()
             def id = one.add()
@@ -64,6 +54,9 @@ h.group('/gw/cluster') {
     }.get('/overview') { req, resp ->
         def clusterId = req.param('clusterId')
         assert clusterId
+
+        // eg.
+        // list one -> [id: 1, serverUrlList: [[url: '', weight: 10]]
 
         GwClusterDTO clusterOne = new GwClusterDTO(id: clusterId as int).one()
         List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(0, clusterOne.appId)
@@ -88,7 +81,7 @@ h.group('/gw/router') {
         assert clusterId
         new GwRouterDTO(clusterId: clusterId as int).queryFields('id,name,des').list()
     }.delete('/delete') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }
@@ -98,7 +91,7 @@ h.group('/gw/router') {
         new GwRouterDTO(id: id as int).delete()
         [flag: true]
     }.post('/update') { req, resp ->
-        User u = req.session('user') as User
+        User u = req.attr('user') as User
         if (!u.isAdmin()) {
             resp.halt(403, 'not admin')
         }
@@ -116,4 +109,51 @@ h.group('/gw/router') {
 
         return [id: one.id]
     }
+}
+
+// for traefik provider, http endpoint
+h.get('/api/gw/provider/json/:appId') { req, resp ->
+    def appId = req.attr(':appId') as int
+
+    def gwCluster = new GwClusterDTO(appId: appId).one()
+    if (!gwCluster) {
+        return [:]
+    }
+
+    def gwRouterList = new GwRouterDTO(clusterId: gwCluster.id).list()
+    if (!gwRouterList) {
+        return [:]
+    }
+
+    def routers = [:]
+    def services = [:]
+
+    for (gwRouter in gwRouterList) {
+        def gwService = gwRouter.service
+
+        def router = [:]
+        router.rule = gwRouter.rule
+        router.service = gwService.name
+        routers[gwRouter.name] = router
+
+        def loadBalancer = [:]
+
+        if (gwService.loadBalancer) {
+            loadBalancer.passHostHeader = gwService.loadBalancer.passHostHeader
+            loadBalancer.serversTransport = gwService.loadBalancer.serversTransport
+            if (gwService.loadBalancer.serverUrlList) {
+                loadBalancer.servers = gwService.loadBalancer.serverUrlList.collect {
+                    [url: it.v1]
+                }
+            }
+        }
+
+        def service = [loadBalancer: loadBalancer]
+        services[gwService.name] = service
+    }
+
+    def http = [routers: routers, services: services]
+
+    def r = [http: http]
+    r
 }

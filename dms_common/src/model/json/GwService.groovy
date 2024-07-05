@@ -9,7 +9,14 @@ import org.segment.d.json.JSONFiled
 class GwService implements JSONFiled {
     @CompileStatic
     @ToString(includeNames = true)
-    class Mirroring {
+    static class Tuple2<T1, T2> {
+        T1 v1
+        T2 v2
+    }
+
+    @CompileStatic
+    @ToString(includeNames = true)
+    static class Mirroring {
         HealthCheck healthCheck
         String service
         // service name -> percent, eg 10 means 10%
@@ -22,7 +29,7 @@ class GwService implements JSONFiled {
 
     @CompileStatic
     @ToString(includeNames = true)
-    class HealthCheck {
+    static class HealthCheck {
         String hostname
         String path
         String method
@@ -41,7 +48,7 @@ class GwService implements JSONFiled {
 
     @CompileStatic
     @ToString(includeNames = true)
-    class StickyCookie {
+    static class StickyCookie {
         boolean httpOnly
         String name
         boolean secure
@@ -55,7 +62,7 @@ class GwService implements JSONFiled {
 
     @CompileStatic
     @ToString(includeNames = true)
-    class Weighted {
+    static class Weighted {
         // service name -> weight
         List<Tuple2<String, Integer>> services = []
         StickyCookie stickyCookie
@@ -69,9 +76,9 @@ class GwService implements JSONFiled {
 
     GwLoadBalancer loadBalancer
 
-    Mirroring mirroring
-
     Weighted weighted
+
+    Mirroring mirroring
 
     List<KVPair<String>> toKVList() {
         // refer to https://doc.traefik.io/traefik/routing/services/

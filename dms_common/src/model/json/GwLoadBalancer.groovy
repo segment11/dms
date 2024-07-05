@@ -6,8 +6,15 @@ import groovy.transform.ToString
 @CompileStatic
 @ToString(includeNames = true)
 class GwLoadBalancer {
+    // for web front bind
+    @CompileStatic
+    @ToString
+    static class Tuple1 {
+        String v1
+    }
+
     // only round robin load balancing is supported
-    List<String> serverUrlList = []
+    List<Tuple1> serverUrlList = []
     boolean passHostHeader
     String serversTransport
     GwService.HealthCheck healthCheck
@@ -20,8 +27,8 @@ class GwLoadBalancer {
         final String prefix = 'loadbalancer/'
 
         List<KVPair<String>> kvList = []
-        serverUrlList.eachWithIndex { String serverUrl, int i ->
-            kvList << new KVPair(prefix + 'servers/' + i + '/url', serverUrl)
+        serverUrlList.eachWithIndex { Tuple1 tuple1, int i ->
+            kvList << new KVPair(prefix + 'servers/' + i + '/url', tuple1.v1)
         }
 
         kvList << new KVPair(prefix + 'passhostheader', passHostHeader.toString())

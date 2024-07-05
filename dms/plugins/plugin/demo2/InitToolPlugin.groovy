@@ -129,8 +129,6 @@ class InitToolPlugin extends BasePlugin {
             gw.serverUrl = 'http://' + nodeIpList[0]
             gw.serverPort = 80
             gw.dashboardPort = 81
-            gw.zkConnectString = nodeIpList[0] + ':2181'
-            gw.prefix = 'traefik'
             gw.updatedDate = new Date()
             def gwClusterId = gw.add()
 

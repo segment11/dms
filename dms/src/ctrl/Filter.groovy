@@ -18,6 +18,13 @@ def h = ChainHandler.instance
 def log = LoggerFactory.getLogger(this.getClass())
 
 h.before('/api/**') { req, resp ->
+    def uri = req.uri()
+
+    // skip gw api
+    if (uri.contains('/gw/')) {
+        return
+    }
+
     // check auth token
     def authToken = req.header(Const.AUTH_TOKEN_HEADER)
     def clusterId = req.header(Const.CLUSTER_ID_HEADER)

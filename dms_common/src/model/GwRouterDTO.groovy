@@ -12,7 +12,7 @@ import org.segment.d.json.JSONFiled
 class GwRouterDTO extends BaseRecord<GwRouterDTO> {
     @CompileStatic
     @ToString(includeNames = true)
-    class Tls implements JSONFiled {
+    static class Tls implements JSONFiled {
         String options
         String certResolver
         List<Domain> domains = []
@@ -24,14 +24,14 @@ class GwRouterDTO extends BaseRecord<GwRouterDTO> {
 
     @CompileStatic
     @ToString(includeNames = true)
-    class Domain {
+    static class Domain {
         String main
         List<String> sans = []
     }
 
     @CompileStatic
     @ToString(includeNames = true)
-    class Failover implements JSONFiled {
+    static class Failover implements JSONFiled {
         String service
         String fallback
 

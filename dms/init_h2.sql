@@ -184,17 +184,15 @@ create table agent_script_pull_log
 -- for traefik
 create table gw_cluster
 (
-    id                int auto_increment primary key,
-    name              varchar(50),
-    des               varchar(200),
-    app_id            int,
-    server_url        varchar(200),
-    server_port       int,
-    dashboard_port    int,
-    zk_connect_string varchar(200),
-    prefix            varchar(50),
-    created_date      timestamp,
-    updated_date      timestamp default current_timestamp
+    id             int auto_increment primary key,
+    name           varchar(50),
+    des            varchar(200),
+    app_id         int,
+    server_url     varchar(200),
+    server_port    int,
+    dashboard_port int,
+    created_date   timestamp,
+    updated_date   timestamp default current_timestamp
 );
 create index idx_gw_cluster_app_id on gw_cluster (app_id);
 
@@ -204,7 +202,7 @@ create table gw_router
     cluster_id   int, -- fk -> gw_cluster.id
     name         varchar(50),
     des          varchar(200),
-    role         varchar(200),
+    rule         varchar(200),
     service      varchar(4000),
     tls          varchar(200),
     failover     varchar(200),
@@ -213,7 +211,7 @@ create table gw_router
     created_date timestamp,
     updated_date timestamp default current_timestamp
 );
-create index idx_gw_frontend_cluster_id on gw_frontend (cluster_id);
+create index idx_gw_router_cluster_id on gw_router (cluster_id);
 
 -- run process ssh support
 create table node_key_pair

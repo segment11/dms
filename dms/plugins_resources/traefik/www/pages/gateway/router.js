@@ -1,4 +1,4 @@
-var md = angular.module('module_gateway/frontend', ['base']);
+var md = angular.module('module_gateway/router', ['base']);
 md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     $scope.ctrl = {};
     $scope.tmp = {};
@@ -10,7 +10,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     $scope.clusterName = params.clusterName;
 
     var queryLl = function () {
-        $http.get('/dms/gw/frontend/list', {params: {clusterId: params.clusterId}}).success(function (data) {
+        $http.get('/dms/gw/router/list', {params: {clusterId: params.clusterId}}).success(function (data) {
             $scope.ll = data;
         });
     };
@@ -25,7 +25,14 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     };
 
     $scope.addOne = function () {
-        $scope.editOne = {conf: {ruleConfList: []}, auth: {basicList: []}, backend: {serverList: []}};
+        $scope.editOne = {
+            service: {
+                name: 'my-service',
+                loadBalancer: {serverUrlList: []},
+                weighted: {services: [], stickyCookie: {}},
+                mirroring: {healthCheck: {}, mirrors: []}
+            }
+        };
         $scope.ctrl.isShowAdd = true;
     };
 
@@ -42,7 +49,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
 
         var one = _.clone($scope.editOne);
         uiTips.loading();
-        $http.post('/dms/gw/frontend/update', one).success(function (data) {
+        $http.post('/dms/gw/router/update', one).success(function (data) {
             if (data.id) {
                 $scope.ctrl.isShowAdd = false;
                 queryLl();
@@ -52,7 +59,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
 
     $scope.delete = function (one) {
         uiTips.confirm('Sure Delete - ' + one.name + '?', function () {
-            $http.delete('/dms/gw/frontend/delete/', {params: {id: one.id}}).success(function (data) {
+            $http.delete('/dms/gw/router/delete/', {params: {id: one.id}}).success(function (data) {
                 if (data.flag) {
                     var i = _.indexOf($scope.ll, one);
                     $scope.ll.splice(i, 1);

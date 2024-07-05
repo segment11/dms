@@ -21,10 +21,6 @@ class GwClusterDTO extends BaseRecord<GwClusterDTO> {
 
     Integer dashboardPort
 
-    String zkConnectString
-
-    String prefix
-
     Date createdDate
 
     Date updatedDate

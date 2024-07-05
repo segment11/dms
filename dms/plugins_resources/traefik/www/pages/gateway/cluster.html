@@ -15,11 +15,9 @@
                     <table class="table table-bordered table-striped">
                         <tr>
                             <th width="10%">app id</th>
-                            <th width="10%">name</th>
-                            <th width="10%">des</th>
+                            <th width="20%">name</th>
+                            <th width="20%">des</th>
                             <th width="15%">server</th>
-                            <th width="15%">zookeeper</th>
-                            <th width="10%">prefix</th>
                             <th width="15%">updated date</th>
                             <th></th>
                         </tr>
@@ -31,12 +29,10 @@
                                 <p>Server: <a ng-href="{{one.serverUrl}}:{{one.serverPort}}" target="_blank">{{one.serverUrl}}:{{one.serverPort}}</a></p>
                                 <p>Dashboard: <a ng-href="{{one.serverUrl}}:{{one.dashboardPort}}" target="_blank">{{one.serverUrl}}:{{one.dashboardPort}}</a></p>
                             </td>
-                            <td>{{one.zkConnectString | shortView}}</td>
-                            <td>{{one.prefix}}</td>
                             <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
                             <td class="opts">
                                 <div class="btn-line">
-                                    <button class="btn" ng-click="goFrontend(one)">Frontend List</button>
+                                    <button class="btn" ng-click="goRouter(one)">Router List</button>
                                 </div>
                             </td>
                         </tr>
