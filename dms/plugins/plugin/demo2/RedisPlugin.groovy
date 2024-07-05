@@ -83,6 +83,12 @@ class RedisPlugin extends BasePlugin {
         tplParams.addParam('sentinelAppName', 'sentinel', 'string')
         tplParams.addParam('customParameters', 'cluster-enabled no', 'string')
 
+        TplParamsConf tplParams2 = new TplParamsConf()
+        tplParams2.addParam('port', '6379', 'int')
+        tplParams2.addParam('dataDir', '/data/redis', 'string')
+        tplParams2.addParam('password', '123456', 'string')
+        tplParams2.addParam('customParameters', 'cluster-enabled no', 'string')
+
         TplParamsConf tplParams3 = new TplParamsConf()
         tplParams3.addParam('port', '26379', 'int')
         tplParams3.addParam('password', '123456', 'string')
@@ -111,7 +117,7 @@ class RedisPlugin extends BasePlugin {
                     mountDist: '/etc/redis/redis.conf',
                     content: content2,
                     isParentDirMount: false,
-                    params: tplParams).add()
+                    params: tplParams2).add()
         }
 
         def one3 = new ImageTplDTO(imageName: imageName, name: tplName3).queryFields('id').one()
