@@ -157,6 +157,33 @@
                         </div>
                     </td>
                 </tr>
+                <tr>
+                    <td>Middlewares</td>
+                    <td>
+                        <div style="margin: 5px;">
+                            <button class="btn" ng-click="editOne.middlewares.list.push({})">Add One
+                                Middleware
+                            </button>
+                        </div>
+                        <div style="margin: 5px;" ng-repeat="param in editOne.middlewares.list">
+                            <span>Type&nbsp;<select ng-model="param.type" style="width: 80px;" ui-valid="r"
+                                                    ng-options="a for a in tmp.middlewareTypeList">
+						        <option value="" selected>--/--</option>
+					            </select>
+                            </span>
+                            <span>Name&nbsp;<input type="text" ng-model="param.name"
+                                                         class="input-short"
+                                                         ui-valid="r"/></span>
+                            <span>JSON Value&nbsp;<input type="text" ng-model="param.json"
+                                                            style="width: 200px;"
+                                                            ui-valid="r"/></span>
+                            <span>
+				                <button class="btn" ng-click="editOne.middlewares.list.remove(param)"
+                                        style="min-width: 20px;">-</button>
+			                </span>
+                        </div>
+                    </td>
+                </tr>
             </table>
         </div>
         <button class="btn btn-blue" ng-click="save()">Save</button>

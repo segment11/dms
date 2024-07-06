@@ -204,6 +204,7 @@ create table gw_router
     des          varchar(200),
     rule         varchar(200),
     service      varchar(4000),
+    middlewares  varchar(1000),
     tls          varchar(200),
     failover     varchar(200),
     entry_points varchar(200),

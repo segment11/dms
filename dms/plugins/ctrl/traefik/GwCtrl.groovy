@@ -165,6 +165,10 @@ h.group('/gw/router') {
     }
 }
 
+h.get('/gw/middleware/type/list') { req, resp ->
+    [list: model.json.GwMiddlewares.Type.values()]
+}
+
 // for traefik provider, http endpoint
 h.get('/api/gw/provider/json/:appId') { req, resp ->
     def appId = req.attr(':appId') as int
@@ -181,6 +185,19 @@ h.get('/api/gw/provider/json/:appId') { req, resp ->
 
     def routers = [:]
     def services = [:]
+    def middlewares = [:]
+
+    for (gwRouter in gwRouterList) {
+        def gwMiddlewares = gwRouter.middlewares
+        if (gwMiddlewares) {
+            for (one in gwMiddlewares.list) {
+                def map = one.toMap()
+                if (map) {
+                    middlewares[one.name] = map
+                }
+            }
+        }
+    }
 
     for (gwRouter in gwRouterList) {
         def gwService = gwRouter.service
@@ -189,6 +206,12 @@ h.get('/api/gw/provider/json/:appId') { req, resp ->
         router.rule = gwRouter.rule
         router.service = gwService.name
         routers[gwRouter.name] = router
+
+        def gwMiddlewares = gwRouter.middlewares
+        if (gwMiddlewares) {
+            def middlewareNames = gwMiddlewares.list.collect { it.name }
+            router.middlewares = middlewareNames
+        }
 
         def loadBalancer = [:]
 
@@ -215,7 +238,7 @@ h.get('/api/gw/provider/json/:appId') { req, resp ->
         services[gwService.name] = service
     }
 
-    def http = [routers: routers, services: services]
+    def http = [routers: routers, services: services, middlewares: middlewares]
 
     def r = [http: http]
     r

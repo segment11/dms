@@ -20,12 +20,17 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         $scope.tmp.clusterList = data.list;
     });
 
+    $http.get('/dms/gw/middleware/type/list').success(function (data) {
+        $scope.tmp.middlewareTypeList = data.list;
+    });
+
     $scope.back = function () {
         Page.go('/page/gateway_cluster');
     };
 
     $scope.addOne = function () {
         $scope.editOne = {
+            middlewares: {list: []},
             service: {
                 name: 'my-service',
                 loadBalancer: {serverUrlList: []},
@@ -37,6 +42,9 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     };
 
     $scope.edit = function (one) {
+        if (!one.middlewares) {
+            one.middlewares = {list: []};
+        }
         $scope.editOne = _.clone(one);
         $scope.ctrl.isShowAdd = true;
     };

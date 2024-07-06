@@ -3,6 +3,7 @@ package model
 import groovy.transform.CompileStatic
 import groovy.transform.ToString
 import model.json.GwEntryPoints
+import model.json.GwMiddlewares
 import model.json.GwService
 import model.json.KVPair
 import org.segment.d.json.JSONFiled
@@ -51,6 +52,8 @@ class GwRouterDTO extends BaseRecord<GwRouterDTO> {
     String rule
 
     GwService service
+
+    GwMiddlewares middlewares
 
     Tls tls
 
