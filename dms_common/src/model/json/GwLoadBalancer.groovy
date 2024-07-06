@@ -9,12 +9,13 @@ class GwLoadBalancer {
     // for web front bind
     @CompileStatic
     @ToString
-    static class Tuple1 {
-        String v1
+    static class ServerUrl {
+        String url
+        Integer weight
     }
 
     // only round robin load balancing is supported
-    List<Tuple1> serverUrlList = []
+    List<ServerUrl> serverUrlList = []
     boolean passHostHeader
     String serversTransport
     GwService.HealthCheck healthCheck
@@ -27,8 +28,9 @@ class GwLoadBalancer {
         final String prefix = 'loadbalancer/'
 
         List<KVPair<String>> kvList = []
-        serverUrlList.eachWithIndex { Tuple1 tuple1, int i ->
-            kvList << new KVPair(prefix + 'servers/' + i + '/url', tuple1.v1)
+        serverUrlList.eachWithIndex { ServerUrl serverUrl, int i ->
+            kvList << new KVPair(prefix + 'servers/' + i + '/url', serverUrl.url)
+//            kvList << new KVPair(prefix + 'servers/' + i + '/weight', serverUrl.weight)
         }
 
         kvList << new KVPair(prefix + 'passhostheader', passHostHeader.toString())

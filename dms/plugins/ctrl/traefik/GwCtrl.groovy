@@ -85,7 +85,7 @@ h.group('/gw/cluster') {
 
             gwRouter.service.loadBalancer?.serverUrlList.each { serverUrl ->
                 def inner = [:]
-                inner.url = serverUrl.v1
+                inner.url = serverUrl.url
                 inner.weight = 10
                 serverUrlList << inner
             }
@@ -130,11 +130,35 @@ h.group('/gw/router') {
         assert one.name && one.clusterId
         one.updatedDate = new Date()
 
+        def gwCluster = new GwClusterDTO(id: one.clusterId).one()
+        if (!gwCluster) {
+            resp.halt(400, 'gw cluster not found')
+        }
+
+        def appOne = InMemoryCacheSupport.instance.appList.find { it.id == gwCluster.appId }
+        if (!appOne) {
+            resp.halt(400, 'app not found')
+        }
+
+        // default rule
+        // refer ClusterDnsAnswerHandler.answerGw
+        boolean needUpdateRule = false
+        if (!one.rule || !one.rule.contains('Host(`gw_')) {
+            one.rule = "Host(`gw_cluster_${appOne.clusterId}.app_${appOne.id}.router_${one.id}.local`)"
+            needUpdateRule = true
+        }
+
         if (one.id) {
             one.update()
         } else {
             def id = one.add()
             one.id = id
+
+            // id == null when add, need update again
+            if (needUpdateRule) {
+                def rule = "Host(`gw_cluster_${appOne.clusterId}.app_${appOne.id}.router_${one.id}.local`)"
+                new GwRouterDTO(id: id, rule: rule).update()
+            }
         }
 
         return [id: one.id]
@@ -173,8 +197,17 @@ h.get('/api/gw/provider/json/:appId') { req, resp ->
             loadBalancer.serversTransport = gwService.loadBalancer.serversTransport
             if (gwService.loadBalancer.serverUrlList) {
                 loadBalancer.servers = gwService.loadBalancer.serverUrlList.collect {
-                    [url: it.v1]
+                    [url: it.url, weight: it.weight]
                 }
+            }
+
+            if (gwService.loadBalancer.healthCheck) {
+                def healthCheck = [:]
+                healthCheck.path = gwService.loadBalancer.healthCheck.path
+                healthCheck.interval = gwService.loadBalancer.healthCheck.interval
+                healthCheck.timeout = gwService.loadBalancer.healthCheck.timeout
+
+                loadBalancer.healthCheck = healthCheck
             }
         }
 

@@ -3,6 +3,8 @@ package traefik
 import com.segment.common.Utils
 import common.Const
 
+def appId = super.binding.getProperty('appId') as int
+
 def logLevel = super.binding.getProperty('logLevel') as String
 def logDir = super.binding.getProperty('logDir') as String
 def serverPort = super.binding.getProperty('serverPort') as int
@@ -23,5 +25,5 @@ entryPoints:
 
 providers:
   http:
-    endpoint: "http://${Utils.localIp()}:${Const.SERVER_HTTP_LISTEN_PORT}" 
+    endpoint: "http://${Utils.localIp()}:${Const.SERVER_HTTP_LISTEN_PORT}/dms/api/gw/provider/json/${appId}" 
 """

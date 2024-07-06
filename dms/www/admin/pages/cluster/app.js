@@ -331,8 +331,8 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
         if (!gwClusterId) {
             return;
         }
-        $http.get('/dms/gw/frontend/list/simple', {params: {clusterId: gwClusterId}}).success(function (data) {
-            $scope.tmp.gwFrontendList = data;
+        $http.get('/dms/gw/router/list/simple', {params: {clusterId: gwClusterId}}).success(function (data) {
+            $scope.tmp.gwRouterList = data;
         });
     });
 

@@ -16,13 +16,9 @@ class GatewayConf implements JSONFiled {
 
     String healthCheckPath
 
-    Integer healthCheckDelaySeconds
-
     Integer healthCheckIntervalSeconds
 
     Integer healthCheckTimeoutSeconds
-
-    Integer healthCheckTotalTimes
 
     boolean asBoolean() {
         clusterId != null && routerId != null

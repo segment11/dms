@@ -378,10 +378,10 @@
                         </td>
                     </tr>
                     <tr>
-                        <td width="30%">frontend</td>
+                        <td width="30%">router</td>
                         <td>
-                            <select ng-model="confOne.gatewayConf.frontendId"
-                                    ng-options="a.id as a.name for a in tmp.gwFrontendList"
+                            <select ng-model="confOne.gatewayConf.routerId"
+                                    ng-options="a.id as a.name for a in tmp.gwRouterList"
                                     style="width: 200px;">
                                 <option value="" selected>--/--</option>
                             </select>
@@ -399,28 +399,14 @@
                     <tr>
                         <td width="30%">health check uri</td>
                         <td>
-                            <input type="text" ng-model="confOne.gatewayConf.healthCheckUri" style="width: 200px;"
-                                   ui-valid="uri"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td width="30%">health check delay seconds</td>
-                        <td>
-                            <input type="text" ng-model="confOne.gatewayConf.healthCheckDelaySeconds"
-                                   style="width: 200px;" ui-valid="int"/>
+                            <input type="text" ng-model="confOne.gatewayConf.healthCheckPath" style="width: 200px;"
+                                   ui-valid="r" placeholder="/"/>
                         </td>
                     </tr>
                     <tr>
                         <td width="30%">health check interval seconds</td>
                         <td>
                             <input type="text" ng-model="confOne.gatewayConf.healthCheckIntervalSeconds"
-                                   style="width: 200px;" ui-valid="int"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td width="30%">health check total times</td>
-                        <td>
-                            <input type="text" ng-model="confOne.gatewayConf.healthCheckTotalTimes"
                                    style="width: 200px;" ui-valid="int"/>
                         </td>
                     </tr>
