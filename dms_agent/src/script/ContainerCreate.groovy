@@ -241,14 +241,20 @@ if (conf.cmd) {
     }
 }
 
+def userGiven = conf.user
+final String anonUser = 'anon'
+
 def createContainerCmd = docker.createContainerCmd(createConf.imageWithTag).
-        withUser(conf.user ?: 'root').
         withEnv(envList.collect {
             "${it.key}=${it.value.toString()}".toString()
         }).
         withName(containerName).
         withHostConfig(hostConfig).
         withCmd(cmd)
+
+if (anonUser != userGiven) {
+    createContainerCmd.withUser(userGiven ?: 'root')
+}
 
 if (!isNetworkHost) {
     createContainerCmd.withHostName(generateContainerHostname(createConf.appId, createConf.instanceIndex))
