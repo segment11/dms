@@ -110,7 +110,7 @@ h.group('/container/manage') {
 
             for (x in v) {
                 if (x.running()) {
-                    mapMemRssUsed[x.name()] = (x.memResident / 1024 / 1024).longValue()
+                    mapMemRssUsed[x.name()] = ((x.memResident ?: 0) / 1024 / 1024).longValue()
                 }
 
                 def appOne = appList.find { it.id == x.appId() }
