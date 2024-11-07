@@ -20,8 +20,8 @@ class DynConfigDTO extends BaseRecord<DynConfigDTO> {
 
         int c = new DynConfigDTO().useD().exeUpdate('''
 update dyn_config set value = ?, updated_date = ? where name = ? and 
-    ((value = ? and updated_date > ?) or updated_date < ?)
-''', [value, now, Const.SERVER_LEADER_LOCK_KEY, value, expiredDate, expiredDate])
+    (value = ? or updated_date < ?)
+''', [value, now, Const.SERVER_LEADER_LOCK_KEY, value, expiredDate])
         c == 1
     }
 
