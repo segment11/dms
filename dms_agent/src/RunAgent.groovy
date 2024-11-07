@@ -10,6 +10,7 @@ import com.segment.common.Utils
 import common.Const
 import io.prometheus.client.exporter.HTTPServer
 import io.prometheus.client.hotspot.DefaultExports
+import org.segment.d.D
 import org.segment.web.RouteRefreshLoader
 import org.segment.web.RouteServer
 import org.segment.web.common.CachedGroovyClassLoader
@@ -20,6 +21,20 @@ def log = LoggerFactory.getLogger(this.getClass())
 
 // project work directory set
 def c = Conf.instance.resetWorkDir().load()
+// overwrite by env
+'''
+SERVER_HOST
+SERVER_PORT
+CLUSTER_ID
+SECRET
+'''.readLines().collect { it.trim() }.findAll { it }.each {
+    def confKey = D.toCamel(it.toLowerCase())
+    def envValue = System.getenv(it)
+    if (envValue) {
+        log.info 'config overwrite by env: ' + confKey + ' = ' + envValue
+        c.params[confKey] = envValue
+    }
+}
 log.info c.toString()
 def srcDirPath = c.projectPath('/src')
 

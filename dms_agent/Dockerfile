@@ -9,7 +9,10 @@ volume /opt/log
 volume /opt/dms/config
 volume /opt/dms_agent/conf.properties
 
-env SERVER_HOST=127.0.0.1
+env SERVER_HOST=
+env SERVER_PORT=
+env CLUSTER_ID=
+env SECRET=
 
 copy build/libs /opt/dms_agent
 
