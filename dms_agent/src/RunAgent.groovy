@@ -44,6 +44,7 @@ if (c.isOn('collectDockerDaemon')) {
             .connectTimeout(200)
             .build()
     agent.docker = DockerClientImpl.getInstance(config, httpClient)
+    agent.initAfterDockerClientSet()
 }
 agent.start()
 

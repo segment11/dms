@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import com.github.dockerjava.api.DockerClient
 import com.github.kevinsawicki.http.HttpRequest
+import com.github.kevinsawicki.http.HttpRequest.HttpRequestException
 import com.segment.common.Conf
 import com.segment.common.job.IntervalJob
 import common.*
@@ -51,6 +52,20 @@ class Agent extends IntervalJob {
 
     DockerClient docker
 
+    private static final String DMS_AGENT_DOCKER_CONTAINER_NAME = 'dms_agent'
+
+    boolean isDmsAgentRunningInDocker
+
+    void initAfterDockerClientSet() {
+        def containers = docker.listContainersCmd().withShowAll(true).exec()
+        isDmsAgentRunningInDocker = containers.any {
+            it.names.any { n ->
+                n.contains(DMS_AGENT_DOCKER_CONTAINER_NAME)
+            }
+        }
+        log.warn 'dms agent running in docker: ' + isDmsAgentRunningInDocker
+    }
+
     Sigar sigar
 
     LimitQueue<Event> eventQueue = new LimitQueue<>(100)
@@ -87,7 +102,7 @@ class Agent extends IntervalJob {
     }
 
     <T> T get(String uri, Map<String, Object> params = null, Class<T> clz = String,
-                     Closure<Void> failCallback = null) {
+              Closure<Void> failCallback = null) {
         def needProxy = proxyNodeIp && proxyNodeIp != nodeIp
         String serverHttpServerUrl = needProxy ?
                 'http://' + proxyNodeIp + ':' + proxyNodePort :
@@ -119,7 +134,7 @@ class Agent extends IntervalJob {
     }
 
     <T> T post(String uri, Object params, Class<T> clz = String,
-                      Closure failCallback = null) {
+               Closure failCallback = null) {
         def needProxy = proxyNodeIp && proxyNodeIp != nodeIp
         String serverHttpServerUrl = needProxy ?
                 'http://' + proxyNodeIp + ':' + proxyNodePort :
@@ -211,13 +226,14 @@ class Agent extends IntervalJob {
         def containers = collectContainers()
         liveCheck(containers)
         sendContainers(containers)
-
-        lastSendTimeMillis = System.currentTimeMillis()
     }
 
     private List<ContainerInfo> collectContainers() {
         List<ContainerInfo> list = []
-        list.addAll(collectContainersFromProcess())
+
+        if (!isDmsAgentRunningInDocker) {
+            list.addAll(collectContainersFromProcess())
+        }
 
         if (!Conf.instance.isOn('collectDockerDaemon')) {
             return list
@@ -235,10 +251,12 @@ class Agent extends IntervalJob {
                 def pid = inspect.state.pidLong
                 containerInfo.pid = pid
 
-                // get mem
-                def procMem = sigar.getProcMem(pid)
-                if (procMem) {
-                    containerInfo.memResident = procMem.resident
+                if (!isDmsAgentRunningInDocker) {
+                    // get mem
+                    def procMem = sigar.getProcMem(pid)
+                    if (procMem) {
+                        containerInfo.memResident = procMem.resident
+                    }
                 }
 
                 // set env
@@ -465,8 +483,13 @@ class Agent extends IntervalJob {
 
     @Override
     void doJob() {
-        sendNode()
-        sendContainer()
+        try {
+            sendNode()
+            sendContainer()
+            lastSendTimeMillis = System.currentTimeMillis()
+        } catch (HttpRequestException e) {
+            log.error 'send node / container info error: ' + e.message
+        }
     }
 
     @Override

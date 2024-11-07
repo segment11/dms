@@ -5,10 +5,7 @@ import com.github.dockerjava.api.model.ContainerPort
 import com.segment.common.Conf
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import org.hyperic.sigar.CpuPerc
-import org.hyperic.sigar.FileSystem
-import org.hyperic.sigar.Mem
-import org.hyperic.sigar.Sigar
+import org.hyperic.sigar.*
 import transfer.ContainerInfo
 import transfer.NodeInfo
 
@@ -30,11 +27,14 @@ class AgentHelper {
             info.loadAverage = sigar.loadAverage
         }
         sigar.fileSystemList.each { FileSystem it ->
-            def usage = sigar.getFileSystemUsage(it.dirName)
-            info.fileUsageList << new NodeInfo.FileUsage(
-                    dirName: it.dirName, total: (usage.total / 1024 / 1024).doubleValue().round(2),
-                    free: (usage.free / 1024 / 1024).doubleValue().round(2),
-                    usePercent: usage.usePercent * 100)
+            try {
+                def usage = sigar.getFileSystemUsage(it.dirName)
+                info.fileUsageList << new NodeInfo.FileUsage(
+                        dirName: it.dirName, total: (usage.total / 1024 / 1024).doubleValue().round(2),
+                        free: (usage.free / 1024 / 1024).doubleValue().round(2),
+                        usePercent: usage.usePercent * 100)
+            } catch (SigarPermissionDeniedException ignored) {
+            }
         }
         info
     }
