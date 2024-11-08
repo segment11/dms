@@ -3,6 +3,7 @@ package deploy
 import com.jcraft.jsch.SftpProgressMonitor
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import org.jetbrains.annotations.VisibleForTesting
 
 import java.text.DecimalFormat
 
@@ -29,77 +30,74 @@ class FilePutProgressMonitor extends TimerTask implements SftpProgressMonitor {
     @Override
     void run() {
         if (!isEnd()) {
-            log.info("Transfer is in progress.")
+            log.info 'Transfer is in progress...'
             long transferred = getTransferred()
             if (transferred != fileSize) {
-                log.info("Current transferred: " + transferred + " bytes")
+                log.info "Transferred: $transferred bytes..."
                 sendProgressMessage(transferred)
             } else {
-                log.info("File transfer is done.")
+                log.info 'Transfer done.'
                 setEnd(true)
             }
         } else {
-            log.info("Transfer done. Cancel timer.")
+            log.info 'Transfer done. Cancel timer.'
             stop()
         }
     }
 
     void stop() {
-        log.info("Try to stop progress monitor.")
+        log.info 'Try to stop progress monitor.'
         if (timer != null) {
             timer.cancel()
             timer.purge()
             timer = null
             isScheduled = false
         }
-        log.info("Progress monitor stopped.")
+        log.info 'Progress monitor stopped.'
     }
 
     void start() {
-        log.info("Try to start progress monitor.")
+        log.info 'Try to start progress monitor.'
         if (timer == null) {
             timer = new Timer()
         }
         timer.schedule(this, 1000, progressInterval)
         isScheduled = true
-        log.info("Progress monitor started.")
+        log.info 'Progress monitor started.'
     }
 
-    /**
-     * print process info
-     * @param transferred
-     */
-    private void sendProgressMessage(long transferred) {
+    @VisibleForTesting
+    void sendProgressMessage(long transferred) {
         if (fileSize != 0) {
             double d = ((double) transferred * 100) / (double) fileSize
-            DecimalFormat df = new DecimalFormat("#.##")
-            log.info("Sending progress message: " + df.format(d) + "%")
+            def df = new DecimalFormat('#.##')
+            log.info 'Sending progress message: {}%', df.format(d)
         } else {
-            log.info("Sending progress message: " + transferred)
+            log.info 'Sending progress message: {}', transferred
         }
     }
 
-
-    boolean count(long count) {
-        if (isEnd()) return false
+    boolean count(long bytesN) {
+        if (isEnd()) {
+            return false
+        }
         if (!isScheduled) {
             start()
         }
-        add(count)
+        add(bytesN)
         return true
     }
 
-
     void end() {
         setEnd(true)
-        log.info("Transfer end.")
+        log.info 'Transfer end.'
     }
 
-    private synchronized void add(long count) {
-        this.transferred = this.transferred + count
+    private synchronized void add(long bytesN) {
+        this.transferred = this.transferred + bytesN
     }
 
-    private synchronized long getTransferred() {
+    synchronized long getTransferred() {
         return this.transferred
     }
 
@@ -107,7 +105,7 @@ class FilePutProgressMonitor extends TimerTask implements SftpProgressMonitor {
         this.isEnd = isEnd
     }
 
-    private synchronized boolean isEnd() {
+    synchronized boolean isEnd() {
         return isEnd
     }
 

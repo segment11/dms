@@ -18,7 +18,7 @@ class CmdExecutor {
     List<OneCmd> cmdList
 
     boolean execShell() {
-        ChannelShell shell = session.openChannel('shell') as ChannelShell
+        def shell = session.openChannel('shell') as ChannelShell
 
         def pipeIn = new PipedInputStream()
         def pipeOut = new PipedOutputStream(pipeIn)
@@ -64,7 +64,7 @@ class CmdExecutor {
                 def errIs = channel.errStream
                 channel.connect()
 
-                String result
+                String result = null
                 Integer status
                 if (!command.contains('nohup')) {
                     // block

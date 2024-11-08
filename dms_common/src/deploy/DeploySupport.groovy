@@ -9,6 +9,7 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.NodeKeyPairDTO
 import org.apache.commons.io.FileUtils
+import org.jetbrains.annotations.VisibleForTesting
 
 @CompileStatic
 @Slf4j
@@ -26,9 +27,10 @@ class DeploySupport {
 
     boolean isAgent = false
 
-    final String userHomeDir = System.getProperty('user.home').replaceAll("\\\\", '/')
+    static final String USER_HOME_DIR = System.getProperty('user.home').replaceAll("\\\\", '/')
+    static final String CURRENT_USER = USER_HOME_DIR.contains('root') ? 'root' : USER_HOME_DIR.split('/')[2]
 
-    private String keyName(String ip) {
+    private static String keyName(String ip) {
         'dms_auto_' + ip.replaceAll(/\./, '_')
     }
 
@@ -38,7 +40,7 @@ class DeploySupport {
         }
         kp.keyName = keyName(kp.ip)
 
-        String locationPublicKey = userHomeDir + '/.ssh/' + kp.keyName + '.pub'
+        String locationPublicKey = USER_HOME_DIR + '/.ssh/' + kp.keyName + '.pub'
         def filePublicKey = new File(locationPublicKey)
         if (!filePublicKey.exists()) {
             FileUtils.touch(filePublicKey)
@@ -46,7 +48,7 @@ class DeploySupport {
 
         def one = new RsaKeyPairGenerator().generate()
 
-        kp.keyType = 'rsa'
+        kp.keyType = RsaKeyPairGenerator.KEY_TYPE_RSA
         kp.keyPrivate = one.privateKeyBase64
         kp.keyPublic = one.publicKeyBase64
         kp.updatedDate = new Date()
@@ -54,7 +56,7 @@ class DeploySupport {
         filePublicKey.text = one.publicKeyBase64
         log.info 'done create public key local file {}', locationPublicKey
 
-        String privateKeyFileLocation = userHomeDir + '/.ssh/' + kp.keyName + '.rsa'
+        String privateKeyFileLocation = USER_HOME_DIR + '/.ssh/' + kp.keyName + '.' + RsaKeyPairGenerator.KEY_TYPE_RSA
         def filePrivateKey = new File(privateKeyFileLocation)
         if (!filePrivateKey.exists()) {
             FileUtils.touch(filePrivateKey)
@@ -79,7 +81,8 @@ class DeploySupport {
         send(RemoteInfo.fromKeyPair(kp), localFilePath, remoteFilePath)
     }
 
-    private com.jcraft.jsch.Session connect(RemoteInfo remoteInfo) {
+    @VisibleForTesting
+    static Session connect(RemoteInfo remoteInfo) {
         def connectTimeoutMillis = Conf.instance.getInt('ssh.sessionConnectTimeoutMillis', 2000)
         final Properties config = new Properties()
         [StrictHostKeyChecking   : 'no',
@@ -88,13 +91,13 @@ class DeploySupport {
         }
 
         def jsch = new JSch()
-        com.jcraft.jsch.Session session = jsch.getSession(remoteInfo.user, remoteInfo.host, remoteInfo.port)
+        def session = jsch.getSession(remoteInfo.user, remoteInfo.host, remoteInfo.port)
         session.timeout = connectTimeoutMillis
 
         if (remoteInfo.isUsePass) {
             session.setPassword(remoteInfo.password)
         } else {
-            String privateKeyFileLocation = userHomeDir + '/.ssh/' + keyName(remoteInfo.host) + remoteInfo.privateKeySuffix
+            def privateKeyFileLocation = USER_HOME_DIR + '/.ssh/' + keyName(remoteInfo.host) + remoteInfo.privateKeySuffix
             def filePrivateKey = new File(privateKeyFileLocation)
             if (!filePrivateKey.exists()) {
                 FileUtils.touch(filePrivateKey)
@@ -170,7 +173,7 @@ class DeploySupport {
                  long timeoutSeconds = 10, boolean isShell = false) {
         for (one in cmdList) {
             // if user not set maxWaitTimes, use avg
-            if (one.maxWaitTimes == 5) {
+            if (one.maxWaitTimes == OneCmd.DEFAULT_MAX_WAIT_TIMES) {
                 one.maxWaitTimes = (timeoutSeconds * 1000 / cmdList.size() / one.waitMsOnce).intValue()
             }
         }
