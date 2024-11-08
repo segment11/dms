@@ -103,7 +103,7 @@ class InitAgentEnvSupport {
 
     boolean copyFileIfNotExists(String localFilePath,
                                 boolean isTarX = true, boolean isCreateDir = false, String destFilePathGiven = null) {
-        String destFilePath = destFilePathGiven ?: localFilePath
+        def destFilePath = destFilePathGiven ?: localFilePath
 
         def deploy = DeploySupport.instance
         def one = OneCmd.simple('ls ' + destFilePath)
@@ -111,7 +111,7 @@ class InitAgentEnvSupport {
         if (!one.ok()) {
             // do not use root to scp
             if (isCreateDir) {
-                String mkdirCommand = 'mkdir -p ' + destFilePath.split(/\//)[0..-2].join('/')
+                def mkdirCommand = 'mkdir -p ' + destFilePath.split(/\//)[0..-2].join('/')
                 def mkdirCmd = OneCmd.simple(mkdirCommand)
                 deploy.exec(info, mkdirCmd)
                 addStep('mkdir', 'for file: ' + destFilePath + ' - ' + mkdirCmd.result)
@@ -189,7 +189,7 @@ class InitAgentEnvSupport {
             throw new DeployException('root password need init - ' + info.host)
         }
 
-        String localFilePath = userHomeDir + '/images/' + imageTarGzName
+        def localFilePath = userHomeDir + '/images/' + imageTarGzName
 
         boolean isCopyDone = copyFileIfNotExists(localFilePath, false, true)
         if (!isCopyDone) {
@@ -206,7 +206,7 @@ class InitAgentEnvSupport {
 
         def deploy = DeploySupport.instance
 
-        String loadCmd = "gunzip -c ${localFilePath}|docker load".toString()
+        def loadCmd = "gunzip -c ${localFilePath}|docker load".toString()
 
         List<OneCmd> commandList = cmdAsRoot new OneCmd(cmd: loadCmd, maxWaitTimes: 300, checker: OneCmd.keyword('Loaded image'))
 
@@ -219,7 +219,7 @@ class InitAgentEnvSupport {
     }
 
     void initAgentConf(AgentConf agentConf) {
-        String destAgentDir = agentTarFile.replace('.tar.gz', '')
+        def destAgentDir = agentTarFile.replace('.tar.gz', '')
 
         final String tmpLocalDir = '/tmp'
         final String fileName = 'conf.properties'
@@ -241,7 +241,7 @@ class InitAgentEnvSupport {
             throw new DeployException('root password need init - ' + info.host)
         }
 
-        String stopCommand = "pgrep -f dms_agent|xargs kill -s 15"
+        def stopCommand = "pgrep -f dms_agent|xargs kill -s 15"
         List<OneCmd> commandList = cmdAsRoot new OneCmd(cmd: stopCommand, checker: OneCmd.any())
 
         DeploySupport.instance.exec(info, commandList, 30, true)
@@ -254,11 +254,11 @@ class InitAgentEnvSupport {
             throw new DeployException('root password need init - ' + info.host)
         }
 
-        String destAgentDir = agentTarFile.replace('.tar.gz', '')
+        def destAgentDir = agentTarFile.replace('.tar.gz', '')
 
-        String javaCmd = Conf.instance.getString('agent.java.cmd',
+        def javaCmd = Conf.instance.getString('agent.java.cmd',
                 'java -Xms128m -Xmx256m')
-        String startCommand = "nohup ${javaCmd} ".toString() +
+        def startCommand = "nohup ${javaCmd} ".toString() +
                 "-Djava.library.path=. -cp . -jar dms_agent-1.2.jar > /dev/null 2>&1 &"
         List<OneCmd> commandList = cmdAsRoot new OneCmd(cmd: 'cd ' + destAgentDir, checker: OneCmd.keyword('agentV2')),
                 new OneCmd(cmd: startCommand, checker: OneCmd.any())

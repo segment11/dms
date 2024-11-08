@@ -40,7 +40,7 @@ class DeploySupport {
         }
         kp.keyName = keyName(kp.ip)
 
-        String locationPublicKey = USER_HOME_DIR + '/.ssh/' + kp.keyName + '.pub'
+        def locationPublicKey = USER_HOME_DIR + '/.ssh/' + kp.keyName + '.pub'
         def filePublicKey = new File(locationPublicKey)
         if (!filePublicKey.exists()) {
             FileUtils.touch(filePublicKey)
@@ -56,7 +56,7 @@ class DeploySupport {
         filePublicKey.text = one.publicKeyBase64
         log.info 'done create public key local file {}', locationPublicKey
 
-        String privateKeyFileLocation = USER_HOME_DIR + '/.ssh/' + kp.keyName + '.' + RsaKeyPairGenerator.KEY_TYPE_RSA
+        def privateKeyFileLocation = USER_HOME_DIR + '/.ssh/' + kp.keyName + '.' + RsaKeyPairGenerator.KEY_TYPE_RSA
         def filePrivateKey = new File(privateKeyFileLocation)
         if (!filePrivateKey.exists()) {
             FileUtils.touch(filePrivateKey)
@@ -65,10 +65,10 @@ class DeploySupport {
         log.info 'done create private key local file {}', filePrivateKey
 
         def remoteInfo = new RemoteInfo(host: kp.ip, port: kp.sshPort, user: kp.user, password: kp.pass)
-        String remoteFilePath = 'root' == kp.user ? '/root/.ssh/' + kp.keyName + '.pub' :
+        def remoteFilePath = 'root' == kp.user ? '/root/.ssh/' + kp.keyName + '.pub' :
                 '/home/' + kp.user + '/.ssh/' + kp.keyName + '.pub'
 
-        String mkdirCommand = 'mkdir ' + remoteFilePath.split(/\//)[0..-2].join('/')
+        def mkdirCommand = 'mkdir ' + remoteFilePath.split(/\//)[0..-2].join('/')
         exec(remoteInfo, OneCmd.simple(mkdirCommand))
 
         send(remoteInfo, locationPublicKey, remoteFilePath)
@@ -85,8 +85,10 @@ class DeploySupport {
     static Session connect(RemoteInfo remoteInfo) {
         def connectTimeoutMillis = Conf.instance.getInt('ssh.sessionConnectTimeoutMillis', 2000)
         final Properties config = new Properties()
-        [StrictHostKeyChecking   : 'no',
-         PreferredAuthentications: 'publickey,gssapi-with-mic,keyboard-interactive,password'].each { k, v ->
+        [
+                StrictHostKeyChecking   : 'no',
+                PreferredAuthentications: 'publickey,gssapi-with-mic,keyboard-interactive,password'
+        ].each { k, v ->
             config[k] = v
         }
 
@@ -134,7 +136,7 @@ class DeploySupport {
                         new FilePutProgressMonitor(f.length()), ChannelSftp.OVERWRITE)
 
                 def costT = System.currentTimeMillis() - beginT
-                String message = "scp cost ${costT}ms to ${remoteFilePath}".toString()
+                def message = "scp cost ${costT}ms to ${remoteFilePath}".toString()
                 if (eventHandler) {
                     def event = Event.builder().type(Event.Type.cluster).reason('scp').
                             result(remoteInfo.host).build().
