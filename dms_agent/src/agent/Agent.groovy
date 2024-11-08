@@ -193,6 +193,8 @@ class Agent extends IntervalJob {
         AgentHelper.collectNodeSigarInfo(info, sigar)
 
         info.time = new Date()
+        info.isDmsAgentRunningInDocker = isDmsAgentRunningInDocker
+
         AgentTempInfoHolder.instance.addNode(info)
 
         isSendNodeInfoOk = true

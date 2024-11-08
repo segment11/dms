@@ -14,12 +14,18 @@ class ScrollProcessor extends CreateProcessor {
         List<String> nodeIpList = containerList.collect { x ->
             x.nodeIp
         }
-        List<String> targetNodeIpList = app.conf.targetNodeIpList ?: nodeIpList
-        if (app.conf.targetNodeTagList || app.conf.excludeNodeTagList) {
-            def nodeIpListFilter = chooseNodeList(app.clusterId, app.conf.excludeNodeTagList, null,
-                    app.conf.targetNodeTagList).collect { it.ip }
+
+        def conf = app.conf
+        List<String> targetNodeIpList = conf.targetNodeIpList ?: nodeIpList
+        if (conf.targetNodeTagList || conf.excludeNodeTagList) {
+            def nodeIpListAfterFilter = filterNodeList(app.clusterId,
+                    conf.excludeNodeTagList,
+                    null,
+                    conf.targetNodeTagList,
+                    conf.isRunningUnbox)
+                    .collect { it.ip }
             targetNodeIpList = targetNodeIpList.findAll {
-                it in nodeIpListFilter
+                it in nodeIpListAfterFilter
             }
         }
         log.info 'target node ip list - {}', targetNodeIpList
@@ -28,12 +34,12 @@ class ScrollProcessor extends CreateProcessor {
         // eg. given: ip1, ip2, ip3 three target node, require run 5 instances, get ip1, ip2, ip3, ip1, ip2
         if (targetNodeIpList.size() < nodeIpList.size()) {
             int needAddInstanceNum = nodeIpList.size() - targetNodeIpList.size()
-            if (app.conf.targetNodeIpList) {
+            if (conf.targetNodeIpList) {
                 needAddInstanceNum.times { i ->
-                    targetNodeIpList << app.conf.targetNodeIpList[i]
+                    targetNodeIpList << conf.targetNodeIpList[i]
                 }
             } else {
-                def otherNodeIpList = chooseNodeList(app.clusterId, app.id, needAddInstanceNum, app.conf, targetNodeIpList)
+                def otherNodeIpList = chooseNodeList(app.clusterId, app.id, needAddInstanceNum, conf, targetNodeIpList)
                 targetNodeIpList += otherNodeIpList
             }
         }
@@ -52,7 +58,7 @@ class ScrollProcessor extends CreateProcessor {
                 return
             }
 
-            def confCopy = app.conf.copy()
+            def confCopy = conf.copy()
             def abConf = app.abConf
             if (abConf) {
                 if (instanceIndex < abConf.containerNumber) {

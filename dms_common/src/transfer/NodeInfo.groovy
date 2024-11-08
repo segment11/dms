@@ -14,6 +14,7 @@ class NodeInfo {
     String version
     Date time
     Date hbTime
+    boolean isDmsAgentRunningInDocker
 
     // server side
     boolean isOk
@@ -42,13 +43,14 @@ class NodeInfo {
     }
 
     Map toMap() {
-        [nodeIp        : nodeIp,
-         loadAverage   : loadAverage,
-         fileUsageList : fileUsageList,
-         cpuPercList   : cpuPercList,
-         time          : time,
-         hbTime        : hbTime,
-         cpuUsedPercent: cpuUsedPercent()]
+        [nodeIp                   : nodeIp,
+         loadAverage              : loadAverage,
+         fileUsageList            : fileUsageList,
+         cpuPercList              : cpuPercList,
+         time                     : time,
+         hbTime                   : hbTime,
+         isDmsAgentRunningInDocker: isDmsAgentRunningInDocker,
+         cpuUsedPercent           : cpuUsedPercent()]
     }
 
     @CompileStatic

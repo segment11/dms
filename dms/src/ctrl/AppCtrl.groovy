@@ -196,6 +196,15 @@ h.group('/app') {
             resp.halt(500, 'run as a process must choose deploy files')
         }
 
+        if (conf.targetNodeIpList && conf.isRunningUnbox) {
+            // check if target node agent is not running in docker
+            for (targetNodeIp in conf.targetNodeIpList) {
+                if (instance.getNodeInfo(targetNodeIp).isDmsAgentRunningInDocker) {
+                    resp.halt(500, 'target node agent is running in docker - ' + targetNodeIp)
+                }
+            }
+        }
+
         if (conf.cpusetCpus) {
             def targetNodeIpList = conf.targetNodeIpList
             if (!targetNodeIpList) {

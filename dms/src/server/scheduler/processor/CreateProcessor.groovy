@@ -128,11 +128,19 @@ class CreateProcessor implements GuardianProcessor {
         }
     }
 
-    protected static List<NodeDTO> chooseNodeList(int clusterId, List<String> excludeNodeTagList,
-                                                  List<String> excludeNodeIpList, List<String> targetNodeTagList) {
-        def nodeList = InMemoryAllContainerManager.instance.getHeartBeatOkNodeList(clusterId)
+    protected static List<NodeDTO> filterNodeList(int clusterId, List<String> excludeNodeTagList,
+                                                  List<String> excludeNodeIpList, List<String> targetNodeTagList,
+                                                  boolean isRunningUnbox) {
+        def instance = InMemoryAllContainerManager.instance
+        def nodeList = instance.getHeartBeatOkNodeList(clusterId)
         if (!nodeList) {
             throw new JobProcessException('node not ready')
+        }
+
+        if (isRunningUnbox) {
+            nodeList = nodeList.findAll {
+                !instance.getNodeInfo(it.ip).isDmsAgentRunningInDocker
+            }
         }
 
         List<NodeDTO> list = nodeList
@@ -162,7 +170,11 @@ class CreateProcessor implements GuardianProcessor {
 
     protected static List<String> chooseNodeList(int clusterId, int appId, int runNumber, AppConf conf,
                                                  List<String> excludeNodeIpList = null) {
-        def nodeList = chooseNodeList(clusterId, conf.excludeNodeTagList, excludeNodeIpList, conf.targetNodeTagList)
+        def nodeIpListAfterFilter = filterNodeList(clusterId,
+                conf.excludeNodeTagList,
+                excludeNodeIpList,
+                conf.targetNodeTagList,
+                conf.isRunningUnbox)
 
         List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(clusterId)
         Map<String, List<ContainerInfo>> groupByNodeIp = containerList.groupBy { x ->
@@ -170,7 +182,7 @@ class CreateProcessor implements GuardianProcessor {
         }
 
         // exclude node that has this app's running container
-        def list = nodeList.findAll {
+        def list = nodeIpListAfterFilter.findAll {
             def subList = groupByNodeIp[it.ip]
             if (!subList) {
                 return true
