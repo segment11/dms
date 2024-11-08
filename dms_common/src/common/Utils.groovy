@@ -73,7 +73,8 @@ class Utils {
         try {
             Files.setPosixFilePermissions(Paths.get(f.absolutePath), set)
         } catch (Exception e) {
-            log.error 'set read permit to file error - ' + f.absolutePath, e        }
+            log.error 'set read permit to file error - ' + f.absolutePath, e
+        }
     }
 
     static void setFileRead(File f) {

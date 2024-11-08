@@ -5,13 +5,15 @@ import groovy.transform.ToString
 import groovy.transform.builder.Builder
 import groovy.util.logging.Slf4j
 import model.EventDTO
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 @CompileStatic
 @Builder
 @Slf4j
 @ToString(includeNames = true)
 class Event {
-//    Logger logAudit = LoggerFactory.getLogger('audit')
+    private Logger logAudit = LoggerFactory.getLogger('audit')
 
     @CompileStatic
     static enum Type {
@@ -38,7 +40,7 @@ class Event {
 
     Event audit(String message = '') {
         this.message = message
-        log.info("{}/{}/{} - {}", type, reason, result, message)
+        logAudit.info("{}/{}/{} - {}", type, reason, result, message)
         this
     }
 

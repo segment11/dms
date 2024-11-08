@@ -24,7 +24,7 @@ class Pager<T> {
     }
 
     boolean hasPre() {
-        pageNum > 1 && totalPage > 1
+        pageNum > 1
     }
 
     int getStart() {
