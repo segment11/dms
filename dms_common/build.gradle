@@ -24,9 +24,15 @@ sourceSets {
         groovy {
             srcDirs = ['src']
         }
+        resources {
+            srcDirs = ['resources']
+        }
     }
     test {
         groovy {
+            srcDirs = ['test']
+        }
+        resources {
             srcDirs = ['test']
         }
     }
@@ -44,6 +50,8 @@ dependencies {
     implementation group: 'org.apache.groovy', name: 'groovy', version: '4.0.12'
     implementation group: 'org.apache.groovy', name: 'groovy-sql', version: '4.0.12'
 
+    implementation group: 'org.jetbrains', name: 'annotations', version: '26.0.1'
+
     implementation group: 'com.alibaba', name: 'fastjson', version: '1.2.83'
     implementation group: 'commons-net', name: 'commons-net', version: '3.9.0'
 
@@ -59,6 +67,9 @@ dependencies {
     implementation group: 'io.github.segment11', name: 'segment_common', version: '1.2-SNAPSHOT'
 
     testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.3-groovy-4.0'
+    testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.20.0'
+    testImplementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.20.0'
+    testImplementation group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.20.0'
 }
 
 test {

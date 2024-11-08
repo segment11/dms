@@ -13,7 +13,7 @@ class RemoteInfo {
 
     boolean isUsePass = true
     String privateKeyContent
-    String privateKeySuffix = '.rsa'
+    String privateKeySuffix = '.' + RsaKeyPairGenerator.KEY_TYPE_RSA
 
     static RemoteInfo fromKeyPair(NodeKeyPairDTO kp) {
         def remoteInfo = new RemoteInfo()
@@ -23,7 +23,7 @@ class RemoteInfo {
         remoteInfo.password = kp.pass
         remoteInfo.rootPass = kp.rootPass
         // null or '' -> use private key
-        remoteInfo.isUsePass = !!kp.pass
+        remoteInfo.isUsePass = kp.pass != null && kp.pass != ''
         remoteInfo.privateKeyContent = kp.keyPrivate
         remoteInfo.privateKeySuffix = '.' + kp.keyType
         remoteInfo

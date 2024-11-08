@@ -7,6 +7,8 @@ import groovy.transform.CompileStatic
 
 @CompileStatic
 class RsaKeyPairGenerator {
+    static final String KEY_TYPE_RSA = 'rsa'
+
     @CompileStatic
     static class One {
         String publicKeyBase64

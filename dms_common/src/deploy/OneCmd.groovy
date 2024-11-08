@@ -2,6 +2,7 @@ package deploy
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import org.jetbrains.annotations.TestOnly
 
 @CompileStatic
 @Slf4j
@@ -14,25 +15,30 @@ class OneCmd {
 
     long waitMsOnce = 200
 
-    int maxWaitTimes = 5
+    static final int DEFAULT_MAX_WAIT_TIMES = 5
+
+    int maxWaitTimes = DEFAULT_MAX_WAIT_TIMES
 
     String result
 
     String endMatchKeyword
 
-    Integer status = -1
+    static final int STATUS_OK = 0
+    static final int STATUS_INIT = -1
+
+    Integer status = STATUS_INIT
 
     long costT = 0
 
     boolean showCmdLog = true
 
     boolean ok() {
-        status == 0
+        status == STATUS_OK
     }
 
     void clear() {
         result = null
-        status = -1
+        status = STATUS_INIT
         costT = 0
     }
 
@@ -101,7 +107,7 @@ class OneCmd {
             boolean isEnd = checker.isEnd(readResult)
             if (isEnd) {
                 endMatchKeyword = checker.endMatchKeyword
-                status = checker.ok() ? 0 : -1
+                status = checker.ok() ? STATUS_OK : STATUS_INIT
                 costT = System.currentTimeMillis() - beginT
                 break
             }
@@ -168,6 +174,11 @@ class OneCmd {
 
         boolean ok() {
             flag
+        }
+
+        @TestOnly
+        void reset() {
+            flag = false
         }
     }
 }
