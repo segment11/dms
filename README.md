@@ -1,7 +1,7 @@
 # dms
 A docker instances manage system like k8s write in java/groovy, including web ui.
 
-# features
+# Features
 
 - docker instance management
 - host machine process management
@@ -17,7 +17,7 @@ A docker instances manage system like k8s write in java/groovy, including web ui
 - plugins support like k8s operator
 - multi-region worker node support by underlay network
 
-# architecture
+# Architecture
 
 ## dms server agent overview
 ![dms server agent overview](./pic/arch/dms-server-agent.png)
@@ -31,12 +31,23 @@ A docker instances manage system like k8s write in java/groovy, including web ui
 ## dms build-in plugins
 ![dms build-in plugins](./pic/arch/dms-plugin-build-in.png)
 
-# run dms server
+# Quick start
 
-- docker run -v /opt/log:/opt/log -v /data/dms:/data/dms --name=dms -d --net=host key232323/dms
+## run dms server
+
+### prepare conf.properties
+
+```properties
+# change here
+dbDataFile=/data/dms/db;FILE_LOCK=SOCKET
+```
+
+### run in docker
+
+- docker run -d --name dms_server --net=host -v /opt/log:/opt/log -v /data/dms:/data/dms -v $pwd/conf.properties:/opt/dms/conf.properties -e ADMIN_PASSWORD=123456 -e LOCAL_IP_FILTER_PRE=192. key232323/dms_server:1.2.0
 - open http://your-ip:5010/admin/login.html user/password -> admin/abc
 
-# or run dms server by compiling from source
+### or run by compiling from source
 
 TIPS: Need jdk17+/gradle7+
 
@@ -49,30 +60,31 @@ TIPS: Need jdk17+/gradle7+
 - cd ~/ws/dms/dms/build/libs & java -cp . -jar dms_server-1.2.jar
 - open http://your-ip:5010/admin/login.html user/password -> admin/abc
 
-# run dms agent
+## run dms agent
+
+### prepare conf.properties
+
+```properties
+# change here
+serverHost=dms_server_ip
+serverPort=5010
+clusterId=1
+secret=1
+collectDockerDaemon=1
+server.runtime.jar=1
+```
+
+### run in docker
+- docker run -d --name dms_agent --cpu-period 1000000 --cpu-quota 250000 --net host -v /opt/log:/opt/log -v /opt/dms/config:/opt/dms/config -v /var/run/docker.sock:/var/run/docker.sock -v $pwd/conf.properties:/opt/dms_agent/conf.properties key232323/dms_agent:1.2.0
+
+### or run by compiling from source
 
 TIPS: Need jdk17+
 
 - cd ~/ws/dms/dms_agent/build/libs
-- vi conf.properties
-
-```properties
-# change to your dms server ip
-serverHost=192.168.1.1
-# change to your host ip prefix
-localIpFilterPre=192.
-# there is cluster demo cluster with id=1 and secret=1
-clusterId=1
-secret=1
-```
-
 - java -Djava.library.path=. -cp . -jar dms_agent-1.2.jar
 
-### TIPS:
-run 'java -Djava.library.path=. -cp . -jar dms_agent-1.2.jar' on another node, will add this node as a work node to target dms cluster.
-
-
-# screenshots
+# Screenshots
 
 - cluster overview
 
@@ -106,7 +118,7 @@ run 'java -Djava.library.path=. -cp . -jar dms_agent-1.2.jar' on another node, w
 
 ![job steps](./pic/job_steps.png)
 
-# author contact
+# Author contact
 
 - wechat: key232323
 - email: dingyong87@163.com
