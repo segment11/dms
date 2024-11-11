@@ -120,7 +120,7 @@ class ContainerInfo implements Comparable<ContainerInfo> {
         if (nameInner) {
             return nameInner
         }
-        nameInner = names.find { name -> name.contains(ContainerHelper.CONTAINER_NAME_PRE) }
+        nameInner = names.find { name -> name.startsWith(ContainerHelper.CONTAINER_NAME_PRE) }
         nameInner
     }
 
@@ -131,7 +131,7 @@ class ContainerInfo implements Comparable<ContainerInfo> {
             return appIdInner
         }
         def name = this.name()
-        if (!name || !name.startsWith(ContainerHelper.CONTAINER_NAME_PRE)) {
+        if (!name) {
             return 0
         }
         appIdInner = name.split('_')[1] as int
@@ -145,7 +145,7 @@ class ContainerInfo implements Comparable<ContainerInfo> {
             return instanceIndexInner
         }
         def name = this.name()
-        if (!name || !name.startsWith(ContainerHelper.CONTAINER_NAME_PRE)) {
+        if (!name) {
             return 0
         }
         instanceIndexInner = name.split('_')[-1] as int

@@ -1,6 +1,5 @@
 package transfer
 
-
 import common.Utils
 import groovy.transform.CompileStatic
 import groovy.transform.ToString
@@ -34,12 +33,16 @@ class NodeInfo {
     }
 
     double cpuUsedPercent() {
+        double sumSysAndUser = 0
         double sum = 0
         for (it in cpuPercList) {
-            sum += (it.sys + it.user)
+            sumSysAndUser += (it.sys + it.user)
+            sum += (it.sys + it.user + it.idle)
         }
-        double r = sum / cpuPercList.size()
-        r.round(4)
+        if (sum == 0) {
+            return 0
+        }
+        (sumSysAndUser / sum).round(4)
     }
 
     Map toMap() {
