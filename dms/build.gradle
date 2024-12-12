@@ -44,7 +44,7 @@ compileGroovy {
     groovyOptions.configurationScript = file("config.groovy")
 }
 
-String nettyVersion = '4.1.100.Final'
+String nettyVersion = '4.1.114.Final'
 
 configurations {
     runtime.exclude group: "org.slf4j", module: "slf4j-log4j12"
@@ -59,6 +59,7 @@ dependencies {
 
     implementation group: 'org.apache.groovy', name: 'groovy', version: '4.0.12'
     implementation group: 'org.apache.groovy', name: 'groovy-sql', version: '4.0.12'
+    implementation group: 'org.apache.groovy', name: 'groovy-dateutil', version: '4.0.12'
 
     implementation group: 'commons-io', name: 'commons-io', version: '2.13.0'
 
