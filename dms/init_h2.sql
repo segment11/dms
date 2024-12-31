@@ -248,7 +248,9 @@ create unique index idx_deploy_file_dest_path on deploy_file (dest_path);
 
 create table dyn_config
 (
-    name         varchar(50) primary key,
+    id           int auto_increment primary key,
+    name         varchar(50),
     value        varchar(500),
     updated_date timestamp default current_timestamp
 );
+create unique index idx_dyn_config_name on dyn_config (name);

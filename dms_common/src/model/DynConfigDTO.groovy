@@ -7,6 +7,7 @@ import groovy.transform.ToString
 @CompileStatic
 @ToString(includeNames = true, includeSuper = false)
 class DynConfigDTO extends BaseRecord<DynConfigDTO> {
+    Integer id
 
     String name
 
