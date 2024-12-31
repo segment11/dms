@@ -41,7 +41,6 @@ lazyfree-lazy-user-del no
 lazyfree-lazy-user-flush no
 repl-disable-tcp-nodelay no
 repl-diskless-sync no
-gopher-enabled no
 aof-rewrite-incremental-fsync yes
 no-appendfsync-on-rewrite no
 cluster-require-full-coverage yes

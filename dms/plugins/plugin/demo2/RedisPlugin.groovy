@@ -79,6 +79,7 @@ class RedisPlugin extends BasePlugin {
         tplParams.addParam('port', '6379', 'int')
         tplParams.addParam('dataDir', '/data/redis', 'string')
         tplParams.addParam('password', '123456', 'string')
+        tplParams.addParam('isSingleNode', 'false', 'string')
         tplParams.addParam('isMasterSlave', 'true', 'string')
         tplParams.addParam('sentinelAppName', 'sentinel', 'string')
         tplParams.addParam('customParameters', 'cluster-enabled no', 'string')
@@ -91,6 +92,7 @@ class RedisPlugin extends BasePlugin {
 
         TplParamsConf tplParams3 = new TplParamsConf()
         tplParams3.addParam('port', '26379', 'int')
+        tplParams2.addParam('dataDir', '/data/sentinel', 'string')
         tplParams3.addParam('password', '123456', 'string')
         tplParams3.addParam('isSingleNode', 'false', 'string')
         tplParams3.addParam('downAfterMs', '30000', 'int')
@@ -213,12 +215,7 @@ class RedisPlugin extends BasePlugin {
                     isSingleNode = sentinelConfOne.paramValue('isSingleNode') == 'true'
                 } else {
                     def confOne = conf.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
-                    if (confOne) {
-                        def tplOne = new ImageTplDTO(id: confOne.imageTplId).one()
-                        isSingleNode = tplOne.name.contains('single.node')
-                    } else {
-                        isSingleNode = false
-                    }
+                    isSingleNode = confOne && confOne.paramValue('isSingleNode') == 'true'
                 }
 
                 if (!isSingleNode) {
