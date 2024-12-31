@@ -504,6 +504,7 @@ class RedisPlugin extends BasePlugin {
                             return false
                         }
                     }
+                    return true
                 }
 
                 def confOne = app.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
