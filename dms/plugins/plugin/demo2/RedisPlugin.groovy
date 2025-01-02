@@ -280,10 +280,9 @@ class RedisPlugin extends BasePlugin {
                 def redisPort = confOne.paramValue('port') as int
                 def primaryPort = redisPort
                 def redisPassword = confOne.paramValue('password') as String
+                def isSingleNode = confOne.paramValue('isSingleNode') == 'true'
 
                 def thisInstanceNodeIp = conf.nodeIp
-                def tplOne = new ImageTplDTO(id: confOne.imageTplId).one()
-                def isSingleNode = tplOne.name.contains('single.node')
                 def thisInstanceRedisPort = redisPort + (isSingleNode ? conf.instanceIndex : 0)
 
                 // get master address from sentinel or just use first node ip and port
@@ -526,9 +525,7 @@ class RedisPlugin extends BasePlugin {
 
                     def redisPort = confOne.paramValue('port') as int
                     def redisPassword = confOne.paramValue('password') as String
-
-                    def tplOne = new ImageTplDTO(id: confOne.imageTplId).one()
-                    def isSingleNode = tplOne.name.contains('single.node')
+                    def isSingleNode = confOne.paramValue('isSingleNode') == 'true'
                     def finalPort = redisPort + (isSingleNode ? it.instanceIndex() : 0)
 
                     def jedisPool = JedisPoolHolder.instance.create(it.nodeIp, finalPort, redisPassword)
@@ -587,9 +584,7 @@ class RedisPlugin extends BasePlugin {
                 def confOne = cc.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
                 def redisPort = confOne.paramValue('port') as int
                 def redisPassword = confOne.paramValue('password') as String
-
-                def tplOne = new ImageTplDTO(id: confOne.imageTplId).one()
-                def isSingleNode = tplOne.name.contains('single.node')
+                def isSingleNode = confOne.paramValue('isSingleNode') == 'true'
 
                 def app = new AppDTO()
                 app.name = cc.appId + '_' + cc.app.name + '_exporter'
