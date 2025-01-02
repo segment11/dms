@@ -289,7 +289,7 @@ class RedisPlugin extends BasePlugin {
                 // get master address from sentinel or just use first node ip and port
                 Set<String> multiMasterAddressSet = []
                 Set<String> replicaAddressSet = []
-                String masterAddress
+                String masterAddress = null
                 def sentinelAppName = confOne.paramValue('sentinelAppName')
                 if (sentinelAppName) {
                     def sentinelAppOne = InMemoryCacheSupport.instance.appList.find {
@@ -301,7 +301,7 @@ class RedisPlugin extends BasePlugin {
                     }
 
                     def masterName = 'redis-app-' + conf.appId
-                    def quorum = (conf.nodeIpList.size() / 2).intValue() + 1
+                    def quorum = (conf.conf.containerNumber / 2).intValue() + 1
 
                     def sentinelConfOne = sentinelAppOne.conf.fileVolumeList.find {
                         it.dist.contains('/sentinel')
@@ -351,11 +351,11 @@ class RedisPlugin extends BasePlugin {
                                 multiMasterAddressSet << masterAddress
 
                                 def r = jedis.sentinelMonitor(masterName, primaryNodeIp, primaryPort, quorum)
-                                log.info 'sentinel monitor, instance index: {}, master name: {}, result: {}',
-                                        x.instanceIndex(), masterName, r
+                                log.info 'sentinel monitor, instance index: {}, master name: {}, target: {}, quorum: {} result: {}',
+                                        x.instanceIndex(), masterName, primaryNodeIp + ':' + primaryPort, quorum, r
                                 def r2 = jedis.sentinelSet(masterName, sentinelParams)
-                                log.info 'sentinel set, instance index: {}, master name: {}, result: {}, params: {}',
-                                        x.instanceIndex(), masterName, r2, sentinelParams
+                                log.info 'sentinel set, instance index: {}, master name: {}, params: {}, result: {}',
+                                        x.instanceIndex(), masterName, sentinelParams, r2
                             }
                         }
                     }
