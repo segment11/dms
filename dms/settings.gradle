@@ -3,4 +3,11 @@ rootProject.name = 'dms_server'
 include ':dms_common'
 project(':dms_common').projectDir = new File(settingsDir, '../dms_common')
 
+include ':segment_common'
+project(':segment_common').projectDir = new File(settingsDir, '../../segment_common')
 
+include ':segmentweb'
+project(':segmentweb').projectDir = new File(settingsDir, '../../segmentweb')
+
+include ':segmentd'
+project(':segmentd').projectDir = new File(settingsDir, '../../segmentd')
