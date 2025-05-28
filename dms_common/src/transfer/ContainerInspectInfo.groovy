@@ -15,7 +15,7 @@ class ContainerInspectInfo {
     String logPath
     String id
 
-    Integer sizeRootFs
+    Long sizeRootFs
     String imageId
     String name
     Integer restartCount
