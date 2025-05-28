@@ -89,7 +89,8 @@ class NodeExporterPlugin extends BasePlugin {
 
         conf.cmd = '--path.rootfs=/host'
 
-        conf.memMB = 64
+        conf.memMB = 128
+        conf.memReservationMB = 128
 
         conf.dirVolumeList << new DirVolumeMount(
                 dir: '/', dist: '/host', mode: 'ro',

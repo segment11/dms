@@ -52,8 +52,12 @@ appMonitorList.each { app ->
 
     if (set) {
         String inner = set.join(',')
+
+        def isNodeExporter = app.conf.imageName() == 'prom/node-exporter'
+        def jobName = isNodeExporter ? 'node' : 'app_' + app.id
+
         list << """
-  - job_name: app_${app.id}
+  - job_name: ${jobName}
     metrics_path: ${monitorConf.httpRequestUri}
     scrape_interval: ${monitorConf.intervalSeconds}s
     static_configs:

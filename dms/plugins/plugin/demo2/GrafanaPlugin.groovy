@@ -3,13 +3,10 @@ package plugin.demo2
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AppDTO
-import model.ImageTplDTO
 import model.json.DirVolumeMount
 import model.json.FileVolumeMount
 import model.json.PortMapping
-import model.json.TplParamsConf
 import plugin.BasePlugin
-import plugin.PluginManager
 
 @CompileStatic
 @Slf4j
@@ -32,28 +29,6 @@ class GrafanaPlugin extends BasePlugin {
 
         addPortIfNotExists('3000', 3000)
 
-        final String tplName = 'grafana.ini.tpl'
-
-        String tplFilePath = PluginManager.pluginsResourceDirPath() + '/grafana/GrafanaIniTpl.groovy'
-        String content = new File(tplFilePath).text
-
-        TplParamsConf tplParams = new TplParamsConf()
-
-        def imageName = imageName()
-
-        def one = new ImageTplDTO(imageName: imageName, name: tplName).queryFields('id').one()
-        if (!one) {
-            new ImageTplDTO(
-                    name: tplName,
-                    imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
-                    mountDist: '/etc/grafana/grafana.ini',
-                    content: content,
-                    isParentDirMount: false,
-                    params: tplParams
-            ).add()
-        }
-
         addNodeVolumeForUpdate('data-dir', '/var/lib/grafana')
     }
 
@@ -74,7 +49,7 @@ class GrafanaPlugin extends BasePlugin {
         def conf = app.conf
         conf.group = group()
         conf.image = image()
-        conf.tag = '8.2.6'
+        conf.tag = 'latest'
 
         conf.memMB = 256
         conf.cpuFixed = 0.2
