@@ -174,7 +174,7 @@ h.group('/permit') {
         [flag: true]
     }.post('/update') { req, resp ->
         def one = req.bodyAs(UserPermitDTO)
-        assert one.user && one.permitType
+        assert one.userName && one.permitType
         User u = req.attr('user') as User
         one.createdUser = u.name
         one.updatedDate = new Date()

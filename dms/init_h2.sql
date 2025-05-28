@@ -144,13 +144,13 @@ create index idx_app_job_log_created_date on app_job_log (created_date);
 create table user_permit
 (
     id           int auto_increment primary key,
-    user         varchar(50),
+    user_name    varchar(50),
     created_user varchar(50),
-    permit_type  varchar(50), -- clusterManager etc.
+    permit_type  varchar(50),
     resource_id  int,
     updated_date timestamp default current_timestamp
 );
-create index idx_user_permit_user on user_permit (user);
+create index idx_user_permit_user_name on user_permit (user_name);
 create index idx_user_permit_permit_type_resource_id on user_permit (permit_type, resource_id);
 
 create table event
@@ -181,7 +181,6 @@ create table agent_script_pull_log
     created_date timestamp
 );
 
--- for traefik
 create table gw_cluster
 (
     id             int auto_increment primary key,
@@ -199,7 +198,7 @@ create index idx_gw_cluster_app_id on gw_cluster (app_id);
 create table gw_router
 (
     id           int auto_increment primary key,
-    cluster_id   int, -- fk -> gw_cluster.id
+    cluster_id   int,
     name         varchar(50),
     des          varchar(200),
     rule         varchar(200),
@@ -214,14 +213,13 @@ create table gw_router
 );
 create index idx_gw_router_cluster_id on gw_router (cluster_id);
 
--- run process ssh support
 create table node_key_pair
 (
     id           int auto_increment primary key,
     cluster_id   int,
     ip           varchar(20),
     ssh_port     int,
-    user         varchar(20),
+    user_name    varchar(20),
     pass         varchar(20),
     root_pass    varchar(20),
     key_name     varchar(100),
@@ -233,7 +231,6 @@ create table node_key_pair
 create index idx_node_key_pair_cluster_id on node_key_pair (cluster_id);
 create unique index idx_node_key_pair_ip on node_key_pair (ip);
 
--- run process ssh copy support
 create table deploy_file
 (
     id           int auto_increment primary key,
@@ -250,7 +247,7 @@ create table dyn_config
 (
     id           int auto_increment primary key,
     name         varchar(50),
-    value        varchar(500),
+    vv           varchar(500),
     updated_date timestamp default current_timestamp
 );
 create unique index idx_dyn_config_name on dyn_config (name);

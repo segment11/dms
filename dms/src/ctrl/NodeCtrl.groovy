@@ -105,7 +105,7 @@ h.group('/node') {
         if (!kp) {
             String message
             kp = new NodeKeyPairDTO(clusterId: clusterId, ip: ip, sshPort: 22,
-                    user: user, pass: pass, rootPass: rootPass)
+                    userName: user, pass: pass, rootPass: rootPass)
             if (!keyPrivate) {
                 DeploySupport.instance.initPrivateKey(kp)
                 message = 'Generate primary key'
@@ -116,10 +116,10 @@ h.group('/node') {
             kp.add()
             [flag: true, message: message]
         } else {
-            boolean isForceUpdatePass = user != kp.user
+            boolean isForceUpdatePass = user != kp.userName
             if (isForceUpdatePass) {
                 String message
-                kp.user = user
+                kp.userName = user
                 kp.pass = pass
                 if (!keyPrivate) {
                     DeploySupport.instance.initPrivateKey(kp)
@@ -132,7 +132,7 @@ h.group('/node') {
                 [flag: true, message: message]
             } else {
                 String message
-                kp.user = user
+                kp.userName = user
                 kp.pass = pass
                 kp.rootPass = rootPass
                 if (keyPrivate && !kp.keyPrivate) {

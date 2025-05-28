@@ -137,7 +137,7 @@ class AgentCaller {
         Map params = [:]
         params.ip = kp.ip
         params.port = kp.sshPort
-        params.user = kp.user
+        params.user = kp.userName
         params.rootPass = kp.rootPass
         params.keyPrivate = kp.keyPrivate
 

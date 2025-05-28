@@ -19,7 +19,7 @@ class RemoteInfo {
         def remoteInfo = new RemoteInfo()
         remoteInfo.host = kp.ip
         remoteInfo.port = kp.sshPort
-        remoteInfo.user = kp.user
+        remoteInfo.user = kp.userName
         remoteInfo.password = kp.pass
         remoteInfo.rootPass = kp.rootPass
         // null or '' -> use private key

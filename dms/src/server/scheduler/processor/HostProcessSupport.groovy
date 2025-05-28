@@ -153,7 +153,7 @@ class HostProcessSupport {
         log.info 'start command: {}, node id: {}', startCommand, nodeIp
 
         List<OneCmd> cmdList = [
-                new OneCmd(cmd: 'pwd', checker: OneCmd.keyword(kp.user + '@')),
+                new OneCmd(cmd: 'pwd', checker: OneCmd.keyword(kp.userName + '@')),
                 new OneCmd(cmd: 'su', checker: OneCmd.keyword(passwordTips)),
                 new OneCmd(cmd: kp.rootPass, showCmdLog: false,
                         checker: OneCmd.keyword('root@').failKeyword('failure')),
@@ -211,7 +211,7 @@ class HostProcessSupport {
         log.info 'set command: {}, node id: {}', setCommand, nodeIp
 
         List<OneCmd> cmdList = [
-                new OneCmd(cmd: 'pwd', checker: OneCmd.keyword(kp.user + '@')),
+                new OneCmd(cmd: 'pwd', checker: OneCmd.keyword(kp.userName + '@')),
                 new OneCmd(cmd: 'su', checker: OneCmd.keyword(passwordTips)),
                 new OneCmd(cmd: kp.rootPass, showCmdLog: false,
                         checker: OneCmd.keyword('root@').failKeyword('failure')),

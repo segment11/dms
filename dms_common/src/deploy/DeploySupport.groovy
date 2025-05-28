@@ -64,9 +64,9 @@ class DeploySupport {
         filePrivateKey.text = one.privateKeyBase64
         log.info 'done create private key local file {}', filePrivateKey
 
-        def remoteInfo = new RemoteInfo(host: kp.ip, port: kp.sshPort, user: kp.user, password: kp.pass)
-        def remoteFilePath = 'root' == kp.user ? '/root/.ssh/' + kp.keyName + '.pub' :
-                '/home/' + kp.user + '/.ssh/' + kp.keyName + '.pub'
+        def remoteInfo = new RemoteInfo(host: kp.ip, port: kp.sshPort, user: kp.userName, password: kp.pass)
+        def remoteFilePath = 'root' == kp.userName ? '/root/.ssh/' + kp.keyName + '.pub' :
+                '/home/' + kp.userName + '/.ssh/' + kp.keyName + '.pub'
 
         def mkdirCommand = 'mkdir ' + remoteFilePath.split(/\//)[0..-2].join('/')
         exec(remoteInfo, OneCmd.simple(mkdirCommand))
