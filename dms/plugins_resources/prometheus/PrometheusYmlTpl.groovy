@@ -8,7 +8,6 @@ import server.InMemoryAllContainerManager
 import transfer.ContainerInfo
 
 def intervalSecondsGlobal = super.binding.getProperty('intervalSecondsGlobal') as Integer
-def dmsServerHost = super.binding.getProperty('dmsServerHost') as String
 
 ContainerMountTplHelper applications = super.binding.getProperty('applications') as ContainerMountTplHelper
 ContainerMountTplHelper.OneApp n9eApp = applications.app('n9e')
@@ -19,7 +18,7 @@ def list = []
 list << """
   - job_name: dms_server
     static_configs:
-      - targets: ['${dmsServerHost ?: Utils.localIp()}:${Const.METRICS_HTTP_LISTEN_PORT}']
+      - targets: ['${Utils.localIp()}:${Const.METRICS_HTTP_LISTEN_PORT}']
 """
 
 if (n9eApp && n9eApp.running()) {
