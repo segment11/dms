@@ -251,3 +251,63 @@ create table dyn_config
     updated_date timestamp default current_timestamp
 );
 create unique index idx_dyn_config_name on dyn_config (name);
+
+-- for redis manager module
+create table rm_service
+(
+    id                   int auto_increment primary key,
+    name                 varchar(50),
+    des                  varchar(200),
+    mode                 varchar(20),   -- standalone/sentinel/cluster
+    engine_type          varchar(20),   -- redis/valkey/engula/kvrocks/velo
+    engine_version       varchar(20),   -- 5.0/6.2/7.2/8.1
+    config_template_id   int,
+    pass                 varchar(200),
+    port                 int,
+    shards               int,
+    replicas             int,
+    backup_policy        varchar(500),
+    log_policy           varchar(200),
+    is_tls_on            bit,
+    app_ids              varchar(200),  -- one replica one application
+    status               varchar(20),
+    cluster_slots_detail varchar(4000), -- for cluster mode
+    created_data         timestamp,
+    updated_date         timestamp default current_timestamp
+);
+create unique index idx_rm_service_name on rm_service (name);
+
+create table rm_service_config_template
+(
+    id           int auto_increment primary key,
+    name         varchar(50),
+    des          varchar(200),
+    config_items text,
+    created_data timestamp,
+    updated_date timestamp default current_timestamp
+);
+create unique index idx_rm_service_config_template_name on rm_service_config_template (name);
+
+-- for redis sentinel mode
+create table rm_sentinel_service
+(
+    id           int auto_increment primary key,
+    name         varchar(50),
+    replicas     int, -- 3 or 5
+    config_items varchar(500),
+    app_id       int,
+    created_data timestamp,
+    updated_date timestamp default current_timestamp
+);
+
+-- for redis manager module
+create table rm_job
+(
+    id           int auto_increment primary key,
+    name         varchar(50),
+    des          varchar(200),
+    service_id   int,
+    created_data timestamp,
+    updated_date timestamp default current_timestamp
+);
+create unique index idx_rm_job_service_id on rm_job (service_id);
