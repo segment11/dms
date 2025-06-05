@@ -37,7 +37,8 @@ appMonitorList.each { app ->
         return
     }
 
-    List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id)
+    def instance = InMemoryAllContainerManager.instance
+    List<ContainerInfo> containerList = instance.getContainerList(app.clusterId, app.id)
 
     Set<String> set = []
     containerList.each { x ->

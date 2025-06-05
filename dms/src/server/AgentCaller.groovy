@@ -36,7 +36,8 @@ class AgentCaller {
                 'http://' + proxyInfo.proxyNodeIp + ':' + proxyInfo.proxyNodePort :
                 'http://' + nodeIp + ':' + Const.AGENT_HTTP_LISTEN_PORT
 
-        String authToken = InMemoryAllContainerManager.instance.getAuthToken(nodeIp)
+        def instance = InMemoryAllContainerManager.instance
+        String authToken = instance.getAuthToken(nodeIp)
         if (!authToken) {
             if (failCallback) {
                 failCallback.call('target node ip is not connected - ' + nodeIp)
@@ -45,7 +46,7 @@ class AgentCaller {
             }
         }
 
-        String authTokenRealServer = InMemoryAllContainerManager.instance.getAuthToken(nodeIp)
+        String authTokenRealServer = instance.getAuthToken(nodeIp)
 
         try {
             def req = isPost ? HttpRequest.post(agentHttpServerUrl + uri) :

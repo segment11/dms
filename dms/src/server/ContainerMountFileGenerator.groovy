@@ -9,7 +9,8 @@ import transfer.ContainerInfo
 class ContainerMountFileGenerator {
 
     static ContainerMountTplHelper prepare(User u, int clusterId) {
-        List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(clusterId, 0, null, u)
+        def instance = InMemoryAllContainerManager.instance
+        List<ContainerInfo> containerList = instance.getContainerList(clusterId, 0, null, u)
         Map<Integer, List<ContainerInfo>> groupByApp = containerList.groupBy { x ->
             x.appId()
         }

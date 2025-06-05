@@ -371,7 +371,8 @@ h.group('/node') {
 
         def p = [type: type, queueType: queueType, containerId: containerId, gaugeName: gaugeName]
         if (containerId) {
-            def appId = InMemoryAllContainerManager.instance.getAppIpByContainerId(containerId)
+            def instance = InMemoryAllContainerManager.instance
+            def appId = instance.getAppIpByContainerId(containerId)
             p.appId = appId
             if ('container' == queueType) {
                 def appOne = new AppDTO(id: appId).queryFields('monitor_conf').one()
@@ -388,7 +389,8 @@ h.group('/node') {
         def containerId = req.param('containerId')
         assert nodeIp && containerId
 
-        def appId = InMemoryAllContainerManager.instance.getAppIpByContainerId(containerId)
+        def instance = InMemoryAllContainerManager.instance
+        def appId = instance.getAppIpByContainerId(containerId)
 
         def p = [:]
         p.appId = appId
@@ -410,8 +412,9 @@ h.group('/api') {
             info.hbTime = new Date()
             def nodeIp = info.nodeIp
 
-            InMemoryAllContainerManager.instance.addAuthToken(nodeIp, authToken)
-            InMemoryAllContainerManager.instance.addNodeInfo(nodeIp, info)
+            def instance = InMemoryAllContainerManager.instance
+            instance.addAuthToken(nodeIp, authToken)
+            instance.addNodeInfo(nodeIp, info)
             def old = new NodeDTO(ip: nodeIp).queryFields('id').one()
             if (old) {
                 old.updatedDate = info.hbTime
@@ -426,7 +429,9 @@ h.group('/api') {
             [envList: clusterOne.globalEnvConf.envList, dnsInfo: clusterOne.globalEnvConf.dnsInfo]
         }.post('/container') { req, resp ->
             X nodeX = req.bodyAs(X)
-            InMemoryAllContainerManager.instance.addContainers(nodeX.clusterId, nodeX.nodeIp, nodeX.containers)
+
+            def instance = InMemoryAllContainerManager.instance
+            instance.addContainers(nodeX.clusterId, nodeX.nodeIp, nodeX.containers)
 
             for (plugin in PluginManager.instance.pluginList) {
                 if (plugin instanceof LiveCheckResultHandler) {

@@ -152,7 +152,8 @@ h.group('/app') {
         }
 
         // check if container running
-        def list = InMemoryAllContainerManager.instance.getContainerList(one.clusterId, one.id)
+        def instance = InMemoryAllContainerManager.instance
+        def list = instance.getContainerList(one.clusterId, one.id)
         if (list) {
             resp.halt(500, 'this app has containers')
         }

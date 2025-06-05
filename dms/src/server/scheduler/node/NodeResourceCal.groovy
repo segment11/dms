@@ -17,7 +17,8 @@ class NodeResourceCal {
         Map<Integer, AppDTO> otherAppCached = [:]
         List<ContainerResourceAsk> leftResourceList = []
 
-        Map<String, NodeInfo> allNodeInfo = InMemoryAllContainerManager.instance.getAllNodeInfo(clusterId)
+        def instance = InMemoryAllContainerManager.instance
+        Map<String, NodeInfo> allNodeInfo = instance.getAllNodeInfo(clusterId)
         for (node in list) {
             def nodeInfo = allNodeInfo[node.ip]
             int cpuNumber = nodeInfo.cpuNumber()

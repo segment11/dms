@@ -121,7 +121,8 @@ class InRedisAllContainerManager extends IntervalJob implements AllContainerMana
 
     @Override
     List<NodeDTO> getHeartBeatOkNodeList(int clusterId) {
-        InMemoryAllContainerManager.instance.getHeartBeatOkNodeList(clusterId)
+        def instance = InMemoryAllContainerManager.instance
+        instance.getHeartBeatOkNodeList(clusterId)
     }
 
     @Override

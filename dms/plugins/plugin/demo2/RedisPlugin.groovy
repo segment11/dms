@@ -319,7 +319,8 @@ class RedisPlugin extends BasePlugin {
                     def isSentinelSingleNode = 'true' == sentinelConfOne.paramValue('isSingleNode')
 
                     // add to sentinel
-                    def containerList = InMemoryAllContainerManager.instance.getContainerList(0, sentinelAppOne.id)
+                    def instance = InMemoryAllContainerManager.instance
+                    def containerList = instance.getContainerList(0, sentinelAppOne.id)
                     for (x in containerList) {
                         if (!x.running()) {
                             continue
@@ -465,13 +466,14 @@ class RedisPlugin extends BasePlugin {
             @Override
             boolean check(AppDTO app) {
                 def sentinelConfOne = app.conf.fileVolumeList.find { it.dist.contains('/sentinel') }
+                def instance = InMemoryAllContainerManager.instance
                 if (sentinelConfOne) {
                     def isSentinelSingleNode = 'true' == sentinelConfOne.paramValue('isSingleNode')
                     def sentinelPort = sentinelConfOne.paramValue('port') as int
                     def sentinelPassword = sentinelConfOne.paramValue('password') as String
 
                     // check all master status
-                    def containerList = InMemoryAllContainerManager.instance.getContainerList(0, app.id)
+                    def containerList = instance.getContainerList(0, app.id)
                     for (x in containerList) {
                         if (!x.running()) {
                             continue
@@ -517,7 +519,7 @@ class RedisPlugin extends BasePlugin {
                     return true
                 }
 
-                def containerList = InMemoryAllContainerManager.instance.getContainerList(0, app.id)
+                def containerList = instance.getContainerList(0, app.id)
                 def roleList = containerList.collect {
                     if (!it.running()) {
                         return 'unknown'

@@ -158,7 +158,8 @@ class EtcdPlugin extends BasePlugin implements Observer {
 
             @Override
             boolean check(AppDTO app) {
-                def containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id)
+                def instance = InMemoryAllContainerManager.instance
+                def containerList = instance.getContainerList(app.clusterId, app.id)
                 if (!containerList) {
                     log.warn 'etcd failed get container list, cluster id: {}, app id: {}', app.clusterId, app.id
                     return false
@@ -269,7 +270,8 @@ class EtcdPlugin extends BasePlugin implements Observer {
             return []
         }
 
-        def containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id)
+        def instance = InMemoryAllContainerManager.instance
+        def containerList = instance.getContainerList(app.clusterId, app.id)
         // usually the first one
         def runningOne = containerList.find { x ->
             x.running() && x.instanceIndex() < instanceIndex
@@ -304,7 +306,8 @@ class EtcdPlugin extends BasePlugin implements Observer {
             cmd = "/etcd/etcdctl member add etcd${conf.instanceIndex} --peer-urls=http://${conf.nodeIp}:2380"
         }
 
-        def containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id)
+        def instance = InMemoryAllContainerManager.instance
+        def containerList = instance.getContainerList(app.clusterId, app.id)
         for (x in containerList) {
             if (!x.running()) {
                 continue
@@ -343,7 +346,8 @@ class EtcdPlugin extends BasePlugin implements Observer {
         }
 
         // etcd get member id
-        def containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id)
+        def instance = InMemoryAllContainerManager.instance
+        def containerList = instance.getContainerList(app.clusterId, app.id)
         def runningOne = containerList.find { it.running() && it.instanceIndex() < containerNumber }
         if (!runningOne) {
             return

@@ -176,7 +176,8 @@ class CreateProcessor implements GuardianProcessor {
                 conf.targetNodeTagList,
                 conf.isRunningUnbox)
 
-        List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(clusterId)
+        def instance = InMemoryAllContainerManager.instance
+        List<ContainerInfo> containerList = instance.getContainerList(clusterId)
         Map<String, List<ContainerInfo>> groupByNodeIp = containerList.groupBy { x ->
             x.nodeIp
         }

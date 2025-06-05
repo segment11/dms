@@ -149,7 +149,8 @@ class ClusterDnsAnswerHandler implements DmsDnsAnswerHandler {
     private List<DnsRecord> answerByApp(int clusterId, int appId, String domain, int ttl) {
         List<DnsRecord> answerList = []
 
-        def containerList = InMemoryAllContainerManager.instance.getContainerList(clusterId, appId)
+        def instance = InMemoryAllContainerManager.instance
+        def containerList = instance.getContainerList(clusterId, appId)
         if (!containerList) {
             log.warn 'no container found for cluster id: {}, app id: {}', clusterId, appId
 
