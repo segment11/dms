@@ -144,10 +144,7 @@ abstract class BasePlugin implements Plugin {
         log.info 'init plugin - {}', name()
 
         def registryUrl = registry()
-        def one = new ImageRegistryDTO(url: registryUrl).one()
-        if (!one) {
-            new ImageRegistryDTO(name: registryUrl, url: registryUrl).add()
-        }
+        addRegistryIfNotExist(registryUrl.replace('https://', ''), registryUrl)
 
         initWww()
         initCtrl()
