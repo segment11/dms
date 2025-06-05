@@ -473,7 +473,7 @@ start slave;
                 monitorConf.httpRequestUri = '/metrics'
 
                 // add application to dms
-                int appId = app.add() as int
+                int appId = app.add()
                 app.id = appId
                 log.info 'done create related exporter application {}', appId
 

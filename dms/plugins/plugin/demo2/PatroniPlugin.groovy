@@ -506,7 +506,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 monitorConf.httpRequestUri = '/metrics'
 
                 // add application to dms
-                int appId = app.add() as int
+                int appId = app.add()
                 app.id = appId
                 log.info 'done create related exporter application {}', appId
 
@@ -612,7 +612,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 conf.fileVolumeList << mountOne
 
                 // add application to dms
-                int appId = app.add() as int
+                int appId = app.add()
                 app.id = appId
                 log.info 'done create related haproxy application {}', appId
 

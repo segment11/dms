@@ -658,7 +658,7 @@ class RedisPlugin extends BasePlugin {
                 monitorConf.httpRequestUri = '/metrics'
 
                 // add application to dms
-                int appId = app.add() as int
+                int appId = app.add()
                 app.id = appId
                 log.info 'done create related exporter application, app id: {}', appId
 
