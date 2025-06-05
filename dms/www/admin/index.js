@@ -96,6 +96,11 @@ $(function () {
             title: 'Plugin', icon: 'icon-cloud-upload', list: [
                 {title: 'Plugin List', page: 'plugin_list', icon: 'icon-cloud-upload'}
             ]
+        },
+        {
+            title: 'Setting', icon: 'icon-gears', list: [
+                {title: 'Admin Password', page: 'setting_admin-password-reset', icon: 'icon-lock'}
+            ]
         }
     ];
 

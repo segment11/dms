@@ -8,10 +8,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.segment.common.Conf
 import common.Const
 import common.Event
-import model.AppDTO
-import model.ClusterDTO
-import model.NamespaceDTO
-import model.UserPermitDTO
+import model.*
 import org.apache.commons.codec.digest.DigestUtils
 import org.segment.d.Pager
 import org.segment.web.handler.ChainHandler
@@ -31,31 +28,43 @@ h.post('/login') { req, resp ->
     def algorithm = Algorithm.HMAC256(AuthTokenCacheHolder.ALG_SECRET + instance.date.toString())
 
     if ('admin' == user) {
-        def envPass = System.getenv('ADMIN_PASSWORD')
-        def adminPasswordMd5 = envPass ? DigestUtils.md5Hex(envPass) :
-                Conf.instance.get('adminPassword')
-        if (adminPasswordMd5) {
-            if (Conf.instance.isDev() || passwordMd5 == adminPasswordMd5) {
-                def u = new User()
-                u.name = user
-                u.permitList << User.PermitAdmin
-                String authToken = JWT.create()
-                        .withIssuer('dms')
-                        .withClaim('name', user)
-                        .withClaim('permitList', u.permitList.collect { it.toFormatString() })
-                        .withClaim('lastLoginTime', new Date())
-                        .sign(algorithm)
-                instance.setCookie(req, resp, authToken)
-                instance.remove(authToken)
+        boolean isPasswordMatch
+        // use db last set pass first
+        def one = new UserAdminPassDTO().noWhere().one()
+        if (one) {
+            isPasswordMatch = one.passwordMd5 == passwordMd5
+        } else {
+            def envPass = System.getenv('ADMIN_PASSWORD')
+            def adminPasswordMd5 = envPass ? DigestUtils.md5Hex(envPass) :
+                    Conf.instance.get('adminPassword')
 
-                Event.builder().type(Event.Type.user).reason('login').result(user).
-                        build().log(req.ip()).toDto().add()
-                resp.redirect('/admin/index.html')
-                return
+            if (adminPasswordMd5) {
+                isPasswordMatch = Conf.instance.isDev() || passwordMd5 == adminPasswordMd5
             } else {
-                resp.redirect('/admin/login.html?error=1')
-                return
+                isPasswordMatch = false
             }
+        }
+
+        if (isPasswordMatch) {
+            def u = new User()
+            u.name = user
+            u.permitList << User.PermitAdmin
+            String authToken = JWT.create()
+                    .withIssuer('dms')
+                    .withClaim('name', user)
+                    .withClaim('permitList', u.permitList.collect { it.toFormatString() })
+                    .withClaim('lastLoginTime', new Date())
+                    .sign(algorithm)
+            instance.setCookie(req, resp, authToken)
+            instance.remove(authToken)
+
+            Event.builder().type(Event.Type.user).reason('login').result(user).
+                    build().log(req.ip()).toDto().add()
+            resp.redirect('/admin/index.html')
+            return
+        } else {
+            resp.redirect('/admin/login.html?error=1')
+            return
         }
     }
 
@@ -78,6 +87,45 @@ h.post('/login') { req, resp ->
     Event.builder().type(Event.Type.user).reason('login').result(user).
             build().log(req.ip()).toDto().add()
     resp.redirect('/admin/index.html')
+}
+
+h.post('/setting/admin-password-reset') { req, resp ->
+    def map = req.bodyAs(HashMap)
+    String password = map.password
+    String newPassword = map.newPassword
+    assert password && newPassword
+
+    def passwordMd5 = DigestUtils.md5Hex(password)
+
+    boolean isPasswordMatch
+    // use db last set pass first
+    def one = new UserAdminPassDTO().noWhere().one()
+    if (one) {
+        isPasswordMatch = one.passwordMd5 == passwordMd5
+    } else {
+        def envPass = System.getenv('ADMIN_PASSWORD')
+        def adminPasswordMd5 = envPass ? DigestUtils.md5Hex(envPass) :
+                Conf.instance.get('adminPassword')
+
+        if (adminPasswordMd5) {
+            isPasswordMatch = Conf.instance.isDev() || passwordMd5 == adminPasswordMd5
+        } else {
+            isPasswordMatch = false
+        }
+    }
+
+    if (!isPasswordMatch) {
+        return [error: 'password not match']
+    }
+
+    def newPasswordMd5 = DigestUtils.md5Hex(newPassword)
+    if (one) {
+        new UserAdminPassDTO(id: one.id, passwordMd5: newPasswordMd5, updatedDate: new Date()).update()
+        return [message: 'update success']
+    } else {
+        new UserAdminPassDTO(passwordMd5: newPasswordMd5, updatedDate: new Date()).add()
+        return [message: 'update success']
+    }
 }
 
 h.get('/login/user') { req, resp ->

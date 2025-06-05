@@ -153,6 +153,13 @@ create table user_permit
 create index idx_user_permit_user_name on user_permit (user_name);
 create index idx_user_permit_permit_type_resource_id on user_permit (permit_type, resource_id);
 
+create table user_admin_pass
+(
+    id           int auto_increment primary key,
+    password_md5 varchar(50),
+    updated_date timestamp default current_timestamp
+);
+
 create table event
 (
     id           int auto_increment primary key,
@@ -276,8 +283,9 @@ create table rm_service
     updated_date         timestamp default current_timestamp
 );
 create unique index idx_rm_service_name on rm_service (name);
+create index idx_rm_service_config_template_id on rm_service (config_template_id);
 
-create table rm_service_config_template
+create table rm_config_template
 (
     id           int auto_increment primary key,
     name         varchar(50),
@@ -286,27 +294,29 @@ create table rm_service_config_template
     created_data timestamp,
     updated_date timestamp default current_timestamp
 );
-create unique index idx_rm_service_config_template_name on rm_service_config_template (name);
+create unique index idx_rm_config_template_name on rm_config_template (name);
 
 -- for redis sentinel mode
 create table rm_sentinel_service
 (
-    id           int auto_increment primary key,
-    name         varchar(50),
-    replicas     int, -- 3 or 5
-    config_items varchar(500),
-    app_id       int,
-    created_data timestamp,
-    updated_date timestamp default current_timestamp
+    id                 int auto_increment primary key,
+    name               varchar(50),
+    replicas           int, -- 3 or 5
+    config_template_id int,
+    app_id             int,
+    status             varchar(20),
+    created_data       timestamp,
+    updated_date       timestamp default current_timestamp
 );
+create index idx_rm_sentinel_service_config_template_id on rm_sentinel_service (config_template_id);
 
 -- for redis manager module
 create table rm_job
 (
     id           int auto_increment primary key,
     name         varchar(50),
-    des          varchar(200),
     service_id   int,
+    job_type     varchar(20), -- create/stop/delete/scale/backup/restore
     created_data timestamp,
     updated_date timestamp default current_timestamp
 );
