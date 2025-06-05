@@ -1,7 +1,6 @@
 package ctrl.redis
 
 import model.RmConfigTemplateDTO
-import model.RmSentinelServiceDTO
 import model.RmServiceDTO
 import model.json.ConfigItems
 import model.json.KVPair
@@ -82,11 +81,6 @@ h.group('/redis/config-template') {
         def serviceOne = new RmServiceDTO(configTemplateId: id).queryFields('name,status').one()
         if (serviceOne && serviceOne.status != RmServiceDTO.Status.deleted.name()) {
             resp.halt(500, "this config template is used by service: ${serviceOne.name}")
-        }
-
-        def sentinelServiceOne = new RmSentinelServiceDTO(configTemplateId: id).queryFields('name,status').one()
-        if (sentinelServiceOne && sentinelServiceOne.status != RmSentinelServiceDTO.Status.deleted.name()) {
-            resp.halt(500, "this config template is used by sentinel service: ${sentinelServiceOne.name}")
         }
 
         new RmConfigTemplateDTO(id: id).delete()

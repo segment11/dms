@@ -15,7 +15,5 @@ class RmConfigTemplateDTO extends BaseRecord<RmConfigTemplateDTO> {
 
     ConfigItems configItems
 
-    Date createdData
-
     Date updatedDate
 }

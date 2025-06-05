@@ -269,6 +269,7 @@ create table rm_service
     engine_type          varchar(20),   -- redis/valkey/engula/kvrocks/velo
     engine_version       varchar(20),   -- 5.0/6.2/7.2/8.1
     config_template_id   int,
+    sentinel_service_id  int,
     pass                 varchar(200),
     port                 int,
     shards               int,
@@ -279,7 +280,7 @@ create table rm_service
     app_ids              varchar(200),  -- one replica one application
     status               varchar(20),
     cluster_slots_detail varchar(4000), -- for cluster mode
-    created_data         timestamp,
+    created_date         timestamp,
     updated_date         timestamp default current_timestamp
 );
 create unique index idx_rm_service_name on rm_service (name);
@@ -291,7 +292,6 @@ create table rm_config_template
     name         varchar(50),
     des          varchar(200),
     config_items text,
-    created_data timestamp,
     updated_date timestamp default current_timestamp
 );
 create unique index idx_rm_config_template_name on rm_config_template (name);
@@ -299,25 +299,14 @@ create unique index idx_rm_config_template_name on rm_config_template (name);
 -- for redis sentinel mode
 create table rm_sentinel_service
 (
-    id                 int auto_increment primary key,
-    name               varchar(50),
-    replicas           int, -- 3 or 5
-    config_template_id int,
-    app_id             int,
-    status             varchar(20),
-    created_data       timestamp,
-    updated_date       timestamp default current_timestamp
+    id            int auto_increment primary key,
+    name          varchar(50),
+    replicas      int, -- 3 or 5
+    node_tags     varchar(100),
+    app_id        int,
+    status        varchar(20),
+    extend_params varchar(2000),
+    created_date  timestamp,
+    updated_date  timestamp default current_timestamp
 );
-create index idx_rm_sentinel_service_config_template_id on rm_sentinel_service (config_template_id);
-
--- for redis manager module
-create table rm_job
-(
-    id           int auto_increment primary key,
-    name         varchar(50),
-    service_id   int,
-    job_type     varchar(20), -- create/stop/delete/scale/backup/restore
-    created_data timestamp,
-    updated_date timestamp default current_timestamp
-);
-create unique index idx_rm_job_service_id on rm_job (service_id);
+create unique index idx_rm_sentinel_service_name on rm_sentinel_service (name);

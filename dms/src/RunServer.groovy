@@ -14,6 +14,7 @@ import org.segment.web.common.CachedGroovyClassLoader
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
 import plugin.PluginManager
+import rm.RmJobExecutor
 import server.AgentCaller
 import server.DBLeaderFlagHolder
 import server.InMemoryAllContainerManager
@@ -141,6 +142,7 @@ def stopCl = {
     leaderFlagHolder.stop()
     JedisPoolHolder.instance.close()
     AuthTokenCacheHolder.instance.cleanUp()
+    RmJobExecutor.instance.cleanUp()
     Ds.disconnectAll()
 }
 

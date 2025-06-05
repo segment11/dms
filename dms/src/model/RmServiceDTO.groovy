@@ -47,7 +47,7 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
     @CompileStatic
     static enum Status {
-        creating, running, stopped, deleted
+        creating, running, stopped, deleted, unhealthy
     }
 
     Integer id
@@ -63,6 +63,8 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
     String engineVersion
 
     Integer configTemplateId
+
+    Integer sentinelServiceId
 
     String pass
 
@@ -84,7 +86,7 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
     ClusterSlotsDetail clusterSlotsDetail
 
-    Date createdData
+    Date createdDate
 
     Date updatedDate
 }

@@ -1,0 +1,236 @@
+package ctrl.redis
+
+import com.segment.common.Utils
+import model.*
+import model.json.*
+import org.segment.web.handler.ChainHandler
+import org.slf4j.LoggerFactory
+import plugin.BasePlugin
+import rm.RedisManager
+import rm.RmJobExecutor
+import server.AgentCaller
+import server.InMemoryAllContainerManager
+import server.scheduler.processor.CreateProcessor
+
+def h = ChainHandler.instance
+
+def log = LoggerFactory.getLogger(this.getClass())
+
+final int clusterId = 1
+
+h.group('/redis/sentinel-service') {
+    h.get('/list') { req, resp ->
+        def p = req.param('pageNum')
+        int pageNum = p ? p as int : 1
+        final int pageSize = 10
+
+        def keyword = req.param('keyword')
+        def pager = new RmSentinelServiceDTO().
+                noWhere().
+                where(keyword as boolean, '(name like ?)', '%' + keyword + '%').
+                listPager(pageNum, pageSize)
+
+        def instance = InMemoryAllContainerManager.instance
+        if (pager.list) {
+            pager.list.each { one ->
+                if (one.status == RmSentinelServiceDTO.Status.running.name()) {
+                    def containerList = instance.getContainerList(clusterId, one.appId)
+                    def runningNumber = containerList.findAll { x ->
+                        x.running()
+                    }.size()
+
+                    if (one.replicas != runningNumber) {
+                        one.status = RmSentinelServiceDTO.Status.unhealthy.name()
+                    }
+                } else if (one.status == RmSentinelServiceDTO.Status.creating.name()) {
+                    def containerList = instance.getContainerList(clusterId, one.appId)
+                    def runningNumber = containerList.findAll { x ->
+                        x.running()
+                    }.size()
+
+                    if (one.replicas == runningNumber) {
+                        one.status = RmSentinelServiceDTO.Status.running.name()
+                    }
+                }
+            }
+        }
+
+        pager
+    }
+
+    h.post('/add') { req, resp ->
+        def one = req.bodyAs(RmSentinelServiceDTO)
+
+        // only support 1, 3 or 5
+        if (one.replicas != 1 && one.replicas != 3 && one.replicas != 5) {
+            resp.halt(500, 'only support 1, 3 or 5 replicas')
+        }
+
+        // check name
+        def existOne = new RmSentinelServiceDTO(name: one.name).queryFields('id').one()
+        if (existOne) {
+            resp.halt(500, 'name already exists')
+        }
+
+        def namespaceId = NamespaceDTO.createIfNotExist(clusterId, 'sentinel')
+
+        // check node ready
+        def instance = InMemoryAllContainerManager.instance
+        def hbOkNodeList = instance.hbOkNodeList(clusterId, 'ip,tags')
+        if (one.nodeTags) {
+            def anyTagList = one.nodeTags.split(',')
+            def matchNodeList = hbOkNodeList.findAll { node ->
+                node.tags.split(',').any { tag ->
+                    tag in anyTagList
+                }
+            }
+            if (matchNodeList.size() < one.replicas) {
+                resp.halt(500, 'not enough node ready, for tags: ' + one.nodeTags)
+            }
+        } else {
+            if (hbOkNodeList.size() < one.replicas) {
+                resp.halt(500, 'not enough node ready')
+            }
+        }
+
+        // create app
+        def app = new AppDTO()
+        app.clusterId = clusterId
+        app.namespaceId = namespaceId
+        app.name = 'rm_sentinel_' + one.name
+        app.status = AppDTO.Status.manual.val
+        app.updatedDate = new Date()
+
+        def conf = new AppConf()
+        conf.containerNumber = one.replicas
+        conf.registryId = BasePlugin.addRegistryIfNotExist('docker.1ms.run', 'https://docker.1ms.run')
+        conf.group = 'library'
+        conf.image = 'redis'
+        conf.tag = '7.2'
+
+        def extendParams = one.extendParams
+
+        // default docker container resource config values
+        conf.memMB = extendParams.getInt('memMB', 256)
+        conf.memReservationMB = conf.memMB
+        conf.cpuFixed = extendParams.getDouble('cpuFixed', 0.2d)
+
+        def port = extendParams.getInt('port', 26379)
+
+        conf.networkMode = 'host'
+        conf.portList << new PortMapping(privatePort: port, publicPort: port)
+
+        conf.targetNodeTagList = []
+        if (one.nodeTags) {
+            one.nodeTags.split(',').each {
+                conf.targetNodeTagList << it
+            }
+        }
+
+        final String dataDir = RedisManager.dataDir()
+        def sentinelDataDir = dataDir + '/sentinel_data_' + Utils.uuid()
+        def nodeVolumeId = new NodeVolumeDTO(imageName: 'library/redis', name: 'for sentinel ' + one.name, dir: sentinelDataDir,
+                clusterId: clusterId, des: 'data dir for sentinel').add()
+        def dirOne = new DirVolumeMount(
+                dir: sentinelDataDir, dist: '/data/sentinel', mode: 'rw',
+                nodeVolumeId: nodeVolumeId)
+        conf.dirVolumeList << dirOne
+
+        def tplOne = new ImageTplDTO(imageName: 'library/redis', name: 'sentinel.conf.tpl').one()
+        def mountOne = new FileVolumeMount(imageTplId: tplOne.id, content: tplOne.content, dist: sentinelDataDir + '/${appId}_${instanceIndex}.conf')
+        mountOne.isParentDirMount = true
+
+        mountOne.paramList << new KVPair<String>('isSingleNode', 'false')
+        mountOne.paramList << new KVPair<String>('port', '' + port)
+        mountOne.paramList << new KVPair<String>('dataDir', '/data/sentinel')
+        mountOne.paramList << new KVPair<String>('password', '')
+        mountOne.paramList << new KVPair<String>('downAfterMs', extendParams.getString('downAfterMs', '30000'))
+        mountOne.paramList << new KVPair<String>('failoverTimeout', extendParams.getString('failoverTimeout', '180000'))
+        conf.fileVolumeList << mountOne
+
+        app.conf = conf
+        def appId = app.add()
+        app.id = appId
+
+        // set app id to sentinel service
+        one.appId = appId
+        one.status = RmSentinelServiceDTO.Status.creating.name()
+        one.createdDate = new Date()
+
+        def id = one.add()
+
+        List<Integer> needRunInstanceIndexList = []
+        (0..<conf.containerNumber).each {
+            needRunInstanceIndexList << it
+        }
+
+        RmJobExecutor.instance.execute {
+            def job = new AppJobDTO(
+                    appId: app.id,
+                    failNum: 0,
+                    status: AppJobDTO.Status.created.val,
+                    jobType: AppJobDTO.JobType.create.val,
+                    createdDate: new Date(),
+                    updatedDate: new Date()).
+                    needRunInstanceIndexList(needRunInstanceIndexList)
+            int jobId = job.add()
+            job.id = jobId
+
+            log.warn('start application create job, job id: {}', jobId)
+            try {
+                new CreateProcessor().process(job, app, [])
+                new AppJobDTO(id: job.id, status: AppJobDTO.Status.done.val, updatedDate: new Date()).update()
+                log.warn('start application create job done, job id: {}', jobId)
+            } catch (Exception e) {
+                log.error('start application create job error', e)
+            }
+        }
+
+        [id: id]
+    }
+
+    h.delete('/delete') { req, resp ->
+        def idStr = req.param('id')
+        assert idStr
+        def id = idStr as int
+        assert id > 0
+
+        // check if exists
+        def one = new RmSentinelServiceDTO(id: id).queryFields('id,status,app_id').one()
+        if (!one) {
+            resp.halt(500, 'not exists')
+        }
+
+        if (one.status == RmSentinelServiceDTO.Status.deleted.name()) {
+            resp.halt(500, 'already deleted')
+        }
+
+        if (one.status == RmSentinelServiceDTO.Status.creating.name()) {
+            resp.halt(500, 'creating, please wait')
+        }
+
+        // check if is used
+        def serviceOne = new RmServiceDTO(sentinelServiceId: id).queryFields('name,status').one()
+        if (serviceOne && serviceOne.status != RmServiceDTO.Status.deleted.name()) {
+            resp.halt(500, "this sentinel service is used by service: ${serviceOne.name}")
+        }
+
+        def instance = InMemoryAllContainerManager.instance
+        def containerList = instance.getContainerList(clusterId, one.appId)
+        containerList.each { x ->
+            if (x.running()) {
+                log.warn('stop running container: {}', x.name())
+
+                def p = [id: x.id]
+                p.isRemoveAfterStop = '1'
+                p.readTimeout = 30 * 1000
+
+                def stopR = AgentCaller.instance.agentScriptExe(clusterId, x.nodeIp, 'container stop', p)
+                log.info 'done stop and remove container - {} - {}, result: {}', x.id, x.appId(), stopR
+            }
+        }
+
+        new RmSentinelServiceDTO(id: id, status: RmSentinelServiceDTO.Status.deleted.name(), updatedDate: new Date()).update()
+        [flag: true]
+    }
+}

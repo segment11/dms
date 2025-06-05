@@ -2,13 +2,14 @@ package model
 
 import groovy.transform.CompileStatic
 import groovy.transform.ToString
+import model.json.ExtendParams
 
 @CompileStatic
 @ToString(includeNames = true, includeSuper = false)
 class RmSentinelServiceDTO extends BaseRecord<RmSentinelServiceDTO> {
     @CompileStatic
     static enum Status {
-        creating, running, stopped, deleted
+        creating, running, stopped, deleted, unhealthy
     }
 
     Integer id
@@ -17,13 +18,15 @@ class RmSentinelServiceDTO extends BaseRecord<RmSentinelServiceDTO> {
 
     Integer replicas
 
-    Integer configTemplateId
+    String nodeTags
 
     Integer appId
 
     String status
 
-    Date createdData
+    ExtendParams extendParams
+
+    Date createdDate
 
     Date updatedDate
 }
