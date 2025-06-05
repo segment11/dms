@@ -101,6 +101,13 @@ $(function () {
             title: 'Setting', icon: 'icon-gears', list: [
                 {title: 'Admin Password', page: 'setting_admin-password-reset', icon: 'icon-lock'}
             ]
+        },
+        {
+            title: 'Redis', icon: 'icon-save', list: [
+                {title: 'Overview', page: 'redis_overview', icon: 'icon-dashboard'},
+                {title: 'Service List', page: 'redis_list', icon: 'icon-list'},
+                {title: 'Config Template', page: 'redis_config-template', icon: 'icon-edit'},
+            ]
         }
     ];
 

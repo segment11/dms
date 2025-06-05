@@ -12,7 +12,6 @@ import model.json.*
 import model.server.CreateContainerConf
 import plugin.BasePlugin
 import plugin.PluginManager
-import plugin.model.Menu
 import server.AgentCaller
 import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
@@ -684,6 +683,11 @@ class RedisPlugin extends BasePlugin {
     }
 
     @Override
+    String registry() {
+        'https://docker.1ms.run'
+    }
+
+    @Override
     String group() {
         'library'
     }
@@ -691,19 +695,5 @@ class RedisPlugin extends BasePlugin {
     @Override
     String image() {
         'redis'
-    }
-
-    @Override
-    List<Menu> menus() {
-        List<Menu> menus = []
-
-        menus << new Menu(title: 'Redis', icon: 'icon-save', children: [
-                new Menu(title: 'Overview', module: 'redis', page: 'overview', icon: 'icon-dashboard'),
-                new Menu(title: 'Singleton', module: 'redis', page: 'singleton', icon: 'icon-list'),
-                new Menu(title: 'Primary/Replica', module: 'redis', page: 'replica', icon: 'icon-list'),
-                new Menu(title: 'Cluster', module: 'redis', page: 'replica', icon: 'icon-cloud'),
-        ])
-
-        menus
     }
 }
