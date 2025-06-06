@@ -42,7 +42,7 @@ class VectorPlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/vector/vector.toml',
                     content: content,
                     isParentDirMount: false,

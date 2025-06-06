@@ -98,7 +98,7 @@ class PatroniPlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/patroni.yml',
                     content: content,
                     isParentDirMount: false,
@@ -109,7 +109,7 @@ class PatroniPlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName2,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/patroni.yml',
                     content: content2,
                     isParentDirMount: false,
@@ -120,7 +120,7 @@ class PatroniPlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName3,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/pgbackrest/pgbackrest.conf',
                     content: content3,
                     isParentDirMount: false,
@@ -186,7 +186,7 @@ class PatroniPlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/usr/local/etc/haproxy/haproxy.cfg',
                     content: content,
                     isParentDirMount: false,

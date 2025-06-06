@@ -104,7 +104,7 @@ class RedisPlugin extends BasePlugin {
         if (!one) {
             new ImageTplDTO(name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/redis/redis.conf',
                     content: content,
                     isParentDirMount: false,
@@ -115,7 +115,7 @@ class RedisPlugin extends BasePlugin {
         if (!one2) {
             new ImageTplDTO(name: tplName2,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/redis/redis.conf',
                     content: content2,
                     isParentDirMount: false,
@@ -126,7 +126,7 @@ class RedisPlugin extends BasePlugin {
         if (!one3) {
             new ImageTplDTO(name: tplName3,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/data/sentinel/${appId}_${instanceIndex}.conf',
                     content: content3,
                     isParentDirMount: true,

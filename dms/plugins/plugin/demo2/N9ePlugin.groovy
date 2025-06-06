@@ -52,7 +52,7 @@ class N9ePlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/app/etc/server.conf',
                     content: content,
                     isParentDirMount: false,
@@ -65,7 +65,7 @@ class N9ePlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName2,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/app/etc/agentd.conf',
                     content: content2,
                     isParentDirMount: false
@@ -111,7 +111,7 @@ class N9ePlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/app/etc/config.toml',
                     content: content,
                     isParentDirMount: false,
@@ -124,7 +124,7 @@ class N9ePlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName2,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/app/etc/edge/edge.toml',
                     content: content2,
                     isParentDirMount: false,

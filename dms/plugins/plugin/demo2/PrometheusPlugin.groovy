@@ -51,7 +51,7 @@ class PrometheusPlugin extends BasePlugin implements ConfigFileReloaded {
             new ImageTplDTO(
                     name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/prometheus/prometheus.yml',
                     content: content,
                     isParentDirMount: false,

@@ -81,7 +81,7 @@ class MySQLPlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/my.cnf',
                     content: content,
                     isParentDirMount: false,

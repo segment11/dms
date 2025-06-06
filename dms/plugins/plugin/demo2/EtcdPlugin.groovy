@@ -60,7 +60,7 @@ class EtcdPlugin extends BasePlugin implements Observer {
             new ImageTplDTO(
                     name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etcd/etcd.yml',
                     content: content,
                     isParentDirMount: false,
@@ -73,7 +73,7 @@ class EtcdPlugin extends BasePlugin implements Observer {
             new ImageTplDTO(
                     name: tplName2,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etcd/etcd.yml',
                     content: content2,
                     isParentDirMount: false,
