@@ -516,7 +516,7 @@ class CreateProcessor implements GuardianProcessor {
 
         // support dyn cmd using plugin expression
         def plugin = PluginManager.instance.pluginList.
-                find { it.group() == confCopy.group && it.image() == confCopy.image }
+                find { (it.group() == confCopy.group && it.image() == confCopy.image) || it.canUseTo(confCopy.group, confCopy.image) }
 
         if (confCopy.cmd?.contains('$')) {
             confCopy.cmd = evalUsingPluginExpression(plugin, createContainerConf, confCopy.cmd)

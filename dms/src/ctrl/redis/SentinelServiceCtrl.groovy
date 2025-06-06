@@ -1,5 +1,6 @@
 package ctrl.redis
 
+import com.segment.common.Conf
 import com.segment.common.Utils
 import model.*
 import model.json.*
@@ -8,9 +9,7 @@ import org.slf4j.LoggerFactory
 import plugin.BasePlugin
 import rm.RedisManager
 import rm.RmJobExecutor
-import server.AgentCaller
 import server.InMemoryAllContainerManager
-import server.scheduler.processor.CreateProcessor
 
 def h = ChainHandler.instance
 
@@ -19,6 +18,19 @@ def log = LoggerFactory.getLogger(this.getClass())
 final int clusterId = 1
 
 h.group('/redis/sentinel-service') {
+    h.get('/simple-list') { req, resp ->
+        def list = new RmSentinelServiceDTO(status: RmSentinelServiceDTO.Status.running).
+                queryFields('id,name').
+                list()
+
+        [list: list.collect {
+            return [
+                    id  : it.id,
+                    name: it.name,
+            ]
+        }]
+    }
+
     h.get('/list') { req, resp ->
         def p = req.param('pageNum')
         int pageNum = p ? p as int : 1
@@ -88,7 +100,7 @@ h.group('/redis/sentinel-service') {
                 resp.halt(500, 'not enough node ready, for tags: ' + one.nodeTags)
             }
         } else {
-            if (hbOkNodeList.size() < one.replicas) {
+            if (hbOkNodeList.size() < one.replicas && !Conf.instance.isOn('rm.isSingleNodeTest')) {
                 resp.halt(500, 'not enough node ready')
             }
         }
@@ -115,10 +127,8 @@ h.group('/redis/sentinel-service') {
         conf.memReservationMB = conf.memMB
         conf.cpuFixed = extendParams.getDouble('cpuFixed', 0.2d)
 
-        def port = extendParams.getInt('port', 26379)
-
         conf.networkMode = 'host'
-        conf.portList << new PortMapping(privatePort: port, publicPort: port)
+        conf.portList << new PortMapping(privatePort: one.port, publicPort: one.port)
 
         conf.targetNodeTagList = []
         if (one.nodeTags) {
@@ -136,14 +146,16 @@ h.group('/redis/sentinel-service') {
                 nodeVolumeId: nodeVolumeId)
         conf.dirVolumeList << dirOne
 
+        def c = Conf.instance
+
         def tplOne = new ImageTplDTO(imageName: 'library/redis', name: 'sentinel.conf.tpl').one()
         def mountOne = new FileVolumeMount(imageTplId: tplOne.id, content: tplOne.content, dist: sentinelDataDir + '/${appId}_${instanceIndex}.conf')
         mountOne.isParentDirMount = true
 
-        mountOne.paramList << new KVPair<String>('isSingleNode', 'false')
-        mountOne.paramList << new KVPair<String>('port', '' + port)
+        mountOne.paramList << new KVPair<String>('isSingleNode', c.isOn('rm.isSingleNodeTest').toString())
+        mountOne.paramList << new KVPair<String>('port', '' + one.port)
         mountOne.paramList << new KVPair<String>('dataDir', '/data/sentinel')
-        mountOne.paramList << new KVPair<String>('password', '')
+        mountOne.paramList << new KVPair<String>('password', one.pass ?: '')
         mountOne.paramList << new KVPair<String>('downAfterMs', extendParams.getString('downAfterMs', '30000'))
         mountOne.paramList << new KVPair<String>('failoverTimeout', extendParams.getString('failoverTimeout', '180000'))
         conf.fileVolumeList << mountOne
@@ -159,32 +171,7 @@ h.group('/redis/sentinel-service') {
 
         def id = one.add()
 
-        List<Integer> needRunInstanceIndexList = []
-        (0..<conf.containerNumber).each {
-            needRunInstanceIndexList << it
-        }
-
-        RmJobExecutor.instance.execute {
-            def job = new AppJobDTO(
-                    appId: app.id,
-                    failNum: 0,
-                    status: AppJobDTO.Status.created.val,
-                    jobType: AppJobDTO.JobType.create.val,
-                    createdDate: new Date(),
-                    updatedDate: new Date()).
-                    needRunInstanceIndexList(needRunInstanceIndexList)
-            int jobId = job.add()
-            job.id = jobId
-
-            log.warn('start application create job, job id: {}', jobId)
-            try {
-                new CreateProcessor().process(job, app, [])
-                new AppJobDTO(id: job.id, status: AppJobDTO.Status.done.val, updatedDate: new Date()).update()
-                log.warn('start application create job done, job id: {}', jobId)
-            } catch (Exception e) {
-                log.error('start application create job error', e)
-            }
-        }
+        RmJobExecutor.instance.runCreatingAppJob(app)
 
         [id: id]
     }
@@ -215,20 +202,7 @@ h.group('/redis/sentinel-service') {
             resp.halt(500, "this sentinel service is used by service: ${serviceOne.name}")
         }
 
-        def instance = InMemoryAllContainerManager.instance
-        def containerList = instance.getContainerList(clusterId, one.appId)
-        containerList.each { x ->
-            if (x.running()) {
-                log.warn('stop running container: {}', x.name())
-
-                def p = [id: x.id]
-                p.isRemoveAfterStop = '1'
-                p.readTimeout = 30 * 1000
-
-                def stopR = AgentCaller.instance.agentScriptExe(clusterId, x.nodeIp, 'container stop', p)
-                log.info 'done stop and remove container - {} - {}, result: {}', x.id, x.appId(), stopR
-            }
-        }
+        RedisManager.stopContainers(one.appId)
 
         new RmSentinelServiceDTO(id: id, status: RmSentinelServiceDTO.Status.deleted, updatedDate: new Date()).update()
         [flag: true]

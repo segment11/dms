@@ -10,6 +10,13 @@ import plugin.PluginManager
 def h = ChainHandler.instance
 
 h.group('/redis/config-template') {
+    h.get('/simple-list') { req, resp ->
+        def list = new RmConfigTemplateDTO().noWhere().queryFields('id,name').list()
+        [list: list.collect {
+            [id: it.id, name: it.name]
+        }]
+    }
+
     h.get('/list') { req, resp ->
         def one = new RmConfigTemplateDTO().noWhere().one()
         if (!one) {

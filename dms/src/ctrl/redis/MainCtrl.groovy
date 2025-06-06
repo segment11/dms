@@ -24,6 +24,6 @@ h.group('/redis') {
             }
         }
 
-        [tags: tags.unique()]
+        [list: tags.unique().collect { [tag: it] }]
     }
 }

@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import groovy.transform.ToString
 import model.json.BackupPolicy
 import model.json.ClusterSlotsDetail
+import model.json.ExtendParams
 import model.json.LogPolicy
 
 @CompileStatic
@@ -18,31 +19,6 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
     @CompileStatic
     static enum EngineType {
         redis, valkey, engula, kvrocks, velo
-    }
-
-    @CompileStatic
-    static enum EngineVersionForRedis {
-        v5_0, v6_2, v7_2, v8_1
-    }
-
-    @CompileStatic
-    static enum EngineVersionForValkey {
-        v7_2, v8_1
-    }
-
-    @CompileStatic
-    static enum EngineVersionForEngula {
-        v2_0
-    }
-
-    @CompileStatic
-    static enum EngineVersionForKvrocks {
-        v2_8
-    }
-
-    @CompileStatic
-    static enum EngineVersionForVelo {
-        v1_0
     }
 
     @CompileStatic
@@ -64,7 +40,10 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
     Integer configTemplateId
 
+    // for sentinel mode
     Integer sentinelServiceId
+
+    Integer appId
 
     String pass
 
@@ -74,16 +53,19 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
     Integer replicas
 
+    String[] nodeTags
+
     BackupPolicy backupPolicy
 
     LogPolicy logPolicy
 
     Boolean isTlsOn
 
-    String appIds
-
     Status status
 
+    ExtendParams extendParams
+
+    // for cluster mode
     ClusterSlotsDetail clusterSlotsDetail
 
     Date createdDate

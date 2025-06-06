@@ -277,8 +277,10 @@ create table rm_service
     backup_policy        varchar(500),
     log_policy           varchar(200),
     is_tls_on            bit,
-    app_ids              varchar(200),  -- one replica one application
+    node_tags            varchar(100),
+    app_id               int,
     status               varchar(20),
+    extend_params        varchar(2000),
     cluster_slots_detail varchar(4000), -- for cluster mode
     created_date         timestamp,
     updated_date         timestamp default current_timestamp
@@ -301,6 +303,8 @@ create table rm_sentinel_service
 (
     id            int auto_increment primary key,
     name          varchar(50),
+    pass          varchar(200),
+    port          int,
     replicas      int, -- 3 or 5
     node_tags     varchar(100),
     app_id        int,

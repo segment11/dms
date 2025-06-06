@@ -6,7 +6,7 @@
             <div class="widget-box">
                 <div class="widget-title">
                     <span class="icon"><i class="icon-info"></i></span>
-                    <h5>Sentinel List</h5>
+                    <h5>Sentinel Service List</h5>
                     <div class="actions">
                         <button class="btn" ng-click="doAdd()">Add One</button>
                     </div>
@@ -36,7 +36,9 @@
                             <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
                             <td class="opts">
                                 <div class="btn-line">
-                                    <button class="btn btn-red" ng-click="delete(one)">Delete</button>
+                                    <button class="btn btn-red" ng-click="delete(one)"
+                                            ng-show="one.status != 'deleted'">Delete
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -75,17 +77,29 @@
                 </td>
             </tr>
             <tr>
+                <td>Port</td>
+                <td><input type="text" ng-model="editOne.port"
+                           ui-valid="r int minval:int:26379 maxval:int:36379"
+                           style="width: 120px;"/></td>
+            </tr>
+            <tr>
+                <td>Password (Optional)</td>
+                <td><input type="password" ng-model="editOne.pass"
+                           style="width: 120px;"/></td>
+            </tr>
+            <tr>
+                <td>Target Node Tag (Optional)</td>
+                <td>
+                    <input type="text" ng-model="editOne.nodeTags" width="400px"
+                           ui-dropdown="{valueField: 'tag', labelField: 'tag', list: 'tmp.nodeTagList', multiple: true, blankLabel: '--/--', widthMultipleInput: 400}"/>
+                </td>
+            </tr>
+            <tr>
                 <td>Config Items</td>
                 <td>
                     <table>
                         <tr>
-                            <td width="30%"><label>Port</label></td>
-                            <td><input type="text" ng-model="editOne.extendParams.params.port"
-                                       ui-valid="r int minval:int:26379 maxval:int:36379"
-                                       style="width: 120px;"/></td>
-                        </tr>
-                        <tr>
-                            <td><label>Mem MB</label></td>
+                            <td width="30%"><label>Mem MB</label></td>
                             <td><input type="text" ng-model="editOne.extendParams.params.memMB"
                                        ui-valid="r int minval:int:128 maxval:int:512"
                                        style="width: 120px;"/></td>

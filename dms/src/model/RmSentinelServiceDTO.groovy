@@ -16,6 +16,10 @@ class RmSentinelServiceDTO extends BaseRecord<RmSentinelServiceDTO> {
 
     String name
 
+    String pass
+
+    Integer port
+
     Integer replicas
 
     String[] nodeTags

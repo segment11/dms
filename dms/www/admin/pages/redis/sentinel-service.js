@@ -4,6 +4,10 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     $scope.ctrl = {};
     $scope.editOne = {extendParams: {params: {}}};
 
+    $http.get('/dms/redis/node/tag/list').success(function (data) {
+        $scope.tmp.nodeTagList = data.list;
+    });
+
     $scope.queryLl = function (pageNum) {
         var p = {pageNum: pageNum || $scope.tmp.pageNum, keyword: $scope.tmp.keyword};
 
@@ -18,13 +22,12 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
 
     $scope.doAdd = function () {
         var params = {};
-        params.port = 26379;
         params.memMB = 256;
         params.cpuFixed = 0.2;
         params.downAfterMs = 30000;
         params.failoverTimeout = 60000;
 
-        $scope.editOne = {replicas: 3, extendParams: {params: params}};
+        $scope.editOne = {replicas: 3, port: 26379, extendParams: {params: params}};
         $scope.ctrl.isShowAdd = true;
     };
 

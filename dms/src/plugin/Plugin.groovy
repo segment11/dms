@@ -21,6 +21,10 @@ interface Plugin {
 
     String image()
 
+    default boolean canUseTo(String group, String image) {
+        false
+    }
+
     String tag()
 
     Map<String, String> expressions()

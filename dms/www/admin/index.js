@@ -105,7 +105,8 @@ $(function () {
         {
             title: 'Redis', icon: 'icon-save', list: [
                 {title: 'Overview', page: 'redis_overview', icon: 'icon-dashboard'},
-                {title: 'Service List', page: 'redis_list', icon: 'icon-list'},
+                {title: 'Redis Service', page: 'redis_service', icon: 'icon-list'},
+                {title: 'Sentinel Service', page: 'redis_sentinel-service', icon: 'icon-list'},
                 {title: 'Config Template', page: 'redis_config-template', icon: 'icon-edit'},
             ]
         }
