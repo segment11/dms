@@ -82,7 +82,7 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
     String appIds
 
-    String status
+    Status status
 
     ClusterSlotsDetail clusterSlotsDetail
 

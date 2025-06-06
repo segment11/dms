@@ -22,7 +22,7 @@ class RmSentinelServiceDTO extends BaseRecord<RmSentinelServiceDTO> {
 
     Integer appId
 
-    String status
+    Status status
 
     ExtendParams extendParams
 

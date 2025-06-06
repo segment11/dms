@@ -33,23 +33,24 @@ h.group('/redis/sentinel-service') {
         def instance = InMemoryAllContainerManager.instance
         if (pager.list) {
             pager.list.each { one ->
-                if (one.status == RmSentinelServiceDTO.Status.running.name()) {
+                if (one.status == RmSentinelServiceDTO.Status.running) {
                     def containerList = instance.getContainerList(clusterId, one.appId)
                     def runningNumber = containerList.findAll { x ->
                         x.running()
                     }.size()
 
                     if (one.replicas != runningNumber) {
-                        one.status = RmSentinelServiceDTO.Status.unhealthy.name()
+                        one.status = RmSentinelServiceDTO.Status.unhealthy
                     }
-                } else if (one.status == RmSentinelServiceDTO.Status.creating.name()) {
+                } else if (one.status == RmSentinelServiceDTO.Status.creating) {
                     def containerList = instance.getContainerList(clusterId, one.appId)
                     def runningNumber = containerList.findAll { x ->
                         x.running()
                     }.size()
 
                     if (one.replicas == runningNumber) {
-                        one.status = RmSentinelServiceDTO.Status.running.name()
+                        one.status = RmSentinelServiceDTO.Status.running
+                        new RmSentinelServiceDTO(id: one.id, status: RmSentinelServiceDTO.Status.running).update()
                     }
                 }
             }
@@ -154,7 +155,7 @@ h.group('/redis/sentinel-service') {
 
         // set app id to sentinel service
         one.appId = appId
-        one.status = RmSentinelServiceDTO.Status.creating.name()
+        one.status = RmSentinelServiceDTO.Status.creating
         one.createdDate = new Date()
 
         def id = one.add()
@@ -201,17 +202,17 @@ h.group('/redis/sentinel-service') {
             resp.halt(500, 'not exists')
         }
 
-        if (one.status == RmSentinelServiceDTO.Status.deleted.name()) {
+        if (one.status == RmSentinelServiceDTO.Status.deleted) {
             resp.halt(500, 'already deleted')
         }
 
-        if (one.status == RmSentinelServiceDTO.Status.creating.name()) {
+        if (one.status == RmSentinelServiceDTO.Status.creating) {
             resp.halt(500, 'creating, please wait')
         }
 
         // check if is used
         def serviceOne = new RmServiceDTO(sentinelServiceId: id).queryFields('name,status').one()
-        if (serviceOne && serviceOne.status != RmServiceDTO.Status.deleted.name()) {
+        if (serviceOne && serviceOne.status != RmServiceDTO.Status.deleted) {
             resp.halt(500, "this sentinel service is used by service: ${serviceOne.name}")
         }
 
@@ -230,7 +231,7 @@ h.group('/redis/sentinel-service') {
             }
         }
 
-        new RmSentinelServiceDTO(id: id, status: RmSentinelServiceDTO.Status.deleted.name(), updatedDate: new Date()).update()
+        new RmSentinelServiceDTO(id: id, status: RmSentinelServiceDTO.Status.deleted, updatedDate: new Date()).update()
         [flag: true]
     }
 }

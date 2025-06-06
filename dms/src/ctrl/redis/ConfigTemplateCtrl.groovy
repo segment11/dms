@@ -79,7 +79,7 @@ h.group('/redis/config-template') {
 
         // check if is used
         def serviceOne = new RmServiceDTO(configTemplateId: id).queryFields('name,status').one()
-        if (serviceOne && serviceOne.status != RmServiceDTO.Status.deleted.name()) {
+        if (serviceOne && serviceOne.status != RmServiceDTO.Status.deleted) {
             resp.halt(500, "this config template is used by service: ${serviceOne.name}")
         }
 
