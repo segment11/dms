@@ -65,13 +65,16 @@ class RedisPlugin extends BasePlugin {
         addPortIfNotExists('26379', 26379)
 
         final String tplName = 'redis.conf.tpl'
+        final String tplNameUseTemplate = 'redis.template.conf.tpl'
         final String tplName2 = 'redis.conf.single.node.tpl'
         final String tplName3 = 'sentinel.conf.tpl'
 
         String tplFilePath = PluginManager.pluginsResourceDirPath() + '/redis/RedisConfTpl.groovy'
+        String tplFilePathUseTemplate = PluginManager.pluginsResourceDirPath() + '/redis/RedisConfUseTemplateTpl.groovy'
         String tplFilePath2 = PluginManager.pluginsResourceDirPath() + '/redis/RedisConfSingleNodeTpl.groovy'
         String tplFilePath3 = PluginManager.pluginsResourceDirPath() + '/redis/SentinelConfTpl.groovy'
         String content = new File(tplFilePath).text
+        String contentUseTemplate = new File(tplFilePathUseTemplate).text
         String content2 = new File(tplFilePath2).text
         String content3 = new File(tplFilePath3).text
 
@@ -83,6 +86,15 @@ class RedisPlugin extends BasePlugin {
         tplParams.addParam('isMasterSlave', 'true', 'string')
         tplParams.addParam('sentinelAppName', 'sentinel', 'string')
         tplParams.addParam('customParameters', 'cluster-enabled no', 'string')
+
+        TplParamsConf tplParamsUseTemplate = new TplParamsConf()
+        tplParams.addParam('port', '6379', 'int')
+        tplParams.addParam('dataDir', '/data/redis', 'string')
+        tplParams.addParam('password', '123456', 'string')
+        tplParams.addParam('isSingleNode', 'false', 'string')
+        tplParams.addParam('isMasterSlave', 'true', 'string')
+        tplParams.addParam('sentinelAppName', 'sentinel', 'string')
+        tplParams.addParam('configTemplateId', '0', 'int')
 
         TplParamsConf tplParams2 = new TplParamsConf()
         tplParams2.addParam('port', '6379', 'int')
@@ -109,6 +121,17 @@ class RedisPlugin extends BasePlugin {
                     content: content,
                     isParentDirMount: false,
                     params: tplParams).add()
+        }
+
+        def oneUseTemplate = new ImageTplDTO(imageName: imageName, name: tplNameUseTemplate).queryFields('id').one()
+        if (!oneUseTemplate) {
+            new ImageTplDTO(name: tplNameUseTemplate,
+                    imageName: imageName,
+                    tplType: ImageTplDTO.TplType.mount,
+                    mountDist: '/etc/redis/redis.conf',
+                    content: contentUseTemplate,
+                    isParentDirMount: false,
+                    params: tplParamsUseTemplate).add()
         }
 
         def one2 = new ImageTplDTO(imageName: imageName, name: tplName2).queryFields('id').one()
@@ -622,6 +645,7 @@ class RedisPlugin extends BasePlugin {
                 conf.image = 'redis_exporter'
                 conf.tag = 'latest'
                 conf.memMB = 64
+                conf.memReservationMB = conf.memMB
                 conf.cpuFixed = 0.1
                 conf.user = '59000:59000'
 
@@ -697,5 +721,17 @@ class RedisPlugin extends BasePlugin {
     @Override
     String image() {
         'redis'
+    }
+
+    @Override
+    boolean canUseTo(String group, String image) {
+        if ('library' == group && 'valkey' == image) {
+            return true
+        }
+        if ('montplex' == group && 'engula' == image) {
+            return true
+        }
+
+        false
     }
 }
