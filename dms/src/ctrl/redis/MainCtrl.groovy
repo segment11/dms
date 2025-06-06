@@ -20,7 +20,7 @@ h.group('/redis') {
         def tags = []
         for (one in hbOkNodeList) {
             if (one.tags) {
-                tags.addAll(one.tags.split(','))
+                tags.addAll(one.tags)
             }
         }
 

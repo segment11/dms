@@ -30,9 +30,9 @@ h.group('/node') {
         }
 
         def id = req.param('id')
-        def tags = req.param('tags')
+        def tagsStr = req.param('tags')
         assert id
-        new NodeDTO(id: id as int, tags: tags ?: '').update()
+        new NodeDTO(id: id as int, tags: tagsStr ? tagsStr.split(',') : null).update()
         [flag: true]
     }.post('/key-pair/reset-root-pass') { req, resp ->
         User u = req.attr('user') as User
@@ -328,7 +328,7 @@ h.group('/node') {
              isOk             : info.isOk,
              isLiveCheckOk    : info.isLiveCheckOk,
              tags             : it.tags,
-             tagList          : it.tags ? it.tags.split(',') : [],
+             tagList          : it.tags ? it.tags : [],
              instances        : instance.getContainerListByNodeIp(it.ip)?.size(),
              fsUsageList      : info.fileUsageList.sort { a, b -> b.usePercent <=> a.usePercent },
              cpuVCore         : info.cpuPercList.size(),

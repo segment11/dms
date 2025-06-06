@@ -79,10 +79,9 @@ h.group('/redis/sentinel-service') {
         def instance = InMemoryAllContainerManager.instance
         def hbOkNodeList = instance.hbOkNodeList(clusterId, 'ip,tags')
         if (one.nodeTags) {
-            def anyTagList = one.nodeTags.split(',')
             def matchNodeList = hbOkNodeList.findAll { node ->
-                node.tags.split(',').any { tag ->
-                    tag in anyTagList
+                node.tags && node.tags.any { tag ->
+                    tag in one.nodeTags
                 }
             }
             if (matchNodeList.size() < one.replicas) {
@@ -123,7 +122,7 @@ h.group('/redis/sentinel-service') {
 
         conf.targetNodeTagList = []
         if (one.nodeTags) {
-            one.nodeTags.split(',').each {
+            one.nodeTags.each {
                 conf.targetNodeTagList << it
             }
         }

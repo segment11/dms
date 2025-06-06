@@ -53,7 +53,7 @@ h.get('/deploy/node-file/list') { req, resp ->
          user       : one.userName,
          sshPort    : one.sshPort,
          updatedDate: one.updatedDate,
-         tagList    : tags ? tags.split(',') : [],
+         tagList    : tags ?: [],
          isOk       : isOk]
     }
 

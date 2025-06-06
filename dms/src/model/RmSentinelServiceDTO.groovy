@@ -18,7 +18,7 @@ class RmSentinelServiceDTO extends BaseRecord<RmSentinelServiceDTO> {
 
     Integer replicas
 
-    String nodeTags
+    String[] nodeTags
 
     Integer appId
 

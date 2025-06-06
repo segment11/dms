@@ -149,7 +149,7 @@ class CreateProcessor implements GuardianProcessor {
                 if (!it.tags) {
                     return true
                 }
-                !it.tags.split(',').any { tag -> tag in excludeNodeTagList }
+                !it.tags.any { tag -> tag in excludeNodeTagList }
             }
         }
         if (targetNodeTagList) {
@@ -157,7 +157,7 @@ class CreateProcessor implements GuardianProcessor {
                 if (!it.tags) {
                     return false
                 }
-                it.tags.split(',').any { tag -> tag in targetNodeTagList }
+                it.tags.any { tag -> tag in targetNodeTagList }
             }
         }
         if (excludeNodeIpList) {

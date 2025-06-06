@@ -63,11 +63,8 @@ h.group('/app') {
 
             Set<String> nodeTagSet = []
             nodeList.each {
-                def tags = it.tags
-                if (tags) {
-                    tags.split(',').each { tag ->
-                        nodeTagSet << '' + it.clusterId + ',' + tag
-                    }
+                it.tags?.each { tag ->
+                    nodeTagSet << '' + it.clusterId + ',' + tag
                 }
             }
             def nodeTagList = nodeTagSet.collect {
