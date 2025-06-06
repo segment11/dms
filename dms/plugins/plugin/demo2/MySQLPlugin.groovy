@@ -453,6 +453,7 @@ start slave;
                 conf.image = 'mysqld-exporter'
                 conf.tag = 'latest'
                 conf.memMB = 64
+                conf.memReservationMB = conf.memMB
                 conf.cpuFixed = 0.1
 
                 // ${nodeIp} is a placeholder, will be replaced by real ip

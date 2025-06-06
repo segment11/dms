@@ -52,6 +52,7 @@ class GrafanaPlugin extends BasePlugin {
         conf.tag = 'latest'
 
         conf.memMB = 256
+        conf.memReservationMB = conf.memMB
         conf.cpuFixed = 0.2
 
         conf.dirVolumeList << new DirVolumeMount(

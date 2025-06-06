@@ -60,6 +60,7 @@ class OpenobservePlugin extends BasePlugin {
         conf.image = image()
 
         conf.memMB = 512
+        conf.memReservationMB = conf.memMB
         conf.cpuShares = 512
 
         conf.dirVolumeList << new DirVolumeMount(

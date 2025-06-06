@@ -471,6 +471,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 conf.image = 'postgres-exporter'
                 conf.tag = 'latest'
                 conf.memMB = 64
+                conf.memReservationMB = conf.memMB
                 conf.cpuFixed = 0.1
 
                 // check if single node
@@ -596,6 +597,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 conf.image = 'haproxy'
                 conf.tag = 'lts-alpine'
                 conf.memMB = 1024
+                conf.memReservationMB = conf.memMB
                 conf.cpuShares = 1024
 
                 conf.networkMode = 'host'
