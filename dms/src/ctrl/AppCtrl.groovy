@@ -88,7 +88,7 @@ h.group('/app') {
         }.get('/image/tpl/list') { req, resp ->
             def image = req.param('image')
             assert image
-            new ImageTplDTO(imageName: image, tplType: ImageTplDTO.TplType.mount.name()).list()
+            new ImageTplDTO(imageName: image, tplType: ImageTplDTO.TplType.mount).list()
         }.get('/image/volume/list') { req, resp ->
             def clusterId = req.param('clusterId')
             assert clusterId
