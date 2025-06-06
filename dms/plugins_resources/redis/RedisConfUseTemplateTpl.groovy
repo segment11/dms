@@ -9,6 +9,7 @@ def port = super.binding.getProperty('port') as int
 def dataDir = super.binding.getProperty('dataDir') as String
 def password = super.binding.getProperty('password') as String
 def isSingleNode = 'true' == (super.binding.getProperty('isSingleNode') as String)
+def isCluster = 'true' == (super.binding.getProperty('isCluster') as String)
 
 def dataDirFinal = isSingleNode ? dataDir + "/instance_${instanceIndex}" : dataDir
 
@@ -19,7 +20,7 @@ String customSegment = ''
 if (kvList) {
     // remove overwrite items
     kvList.removeAll {
-        it.key in ['bind', 'port', 'logfile', 'dir', 'requirepass', 'masterauth', 'pidfile']
+        it.key in ['bind', 'port', 'logfile', 'dir', 'requirepass', 'masterauth', 'pidfile', 'cluster-enabled']
     }
 
     if (kvList) {
@@ -37,4 +38,6 @@ ${password ? 'masterauth ' + password : ''}
 pidfile /var/run/redis_${port}.pid
 
 ${customSegment}
+
+${isCluster ? 'cluster-enabled yes' : ''}
 """

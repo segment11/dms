@@ -90,7 +90,7 @@ FirstClusterCreate.create()
 D.classTypeBySqlType[Types.TINYINT] = Integer
 D.classTypeBySqlType[Types.SMALLINT] = Integer
 
-DynConfigDTO.addServerLeaderLockRow()
+DynConfigDTO.addLockRow(Const.SERVER_LEADER_LOCK_KEY)
 log.info 'server leader lock row added'
 
 def leaderFlagHolder = DBLeaderFlagHolder.instance

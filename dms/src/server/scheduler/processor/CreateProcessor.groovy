@@ -500,7 +500,9 @@ class CreateProcessor implements GuardianProcessor {
                 otherAppMountVolumeDirList << it
             }
         }
-        def thisAppMountVolumeDirList = confCopy.dirVolumeList.collect { it.dir }.findAll { it !in skipVolumeDirSet }
+
+        // exclude dyn volume dirs, eg. **_${appId}_${instanceIndex}
+        def thisAppMountVolumeDirList = confCopy.dirVolumeList.collect { it.dir }.findAll { it !in skipVolumeDirSet && !it.contains('$') }
         if (thisAppMountVolumeDirList.any { it in otherAppMountVolumeDirList }) {
             throw new JobProcessException('node volume conflict check fail - ' + nodeIp + ' - ' + thisAppMountVolumeDirList)
         }

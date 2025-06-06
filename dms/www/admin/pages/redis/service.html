@@ -49,7 +49,11 @@
                                 <span ng-show="one.mode == 'cluster'"> / shards: {{one.shards}}</span>
                             </td>
                             <td><span
-                                    ng-class="{'bg-info': 'creating' == one.status, 'bg-success': 'running' == one.status, 'bg-danger': 'deleted' == one.status}">{{one.status}}</span>
+                                    ng-class="{'bg-info': 'creating' == one.status, 'bg-success': 'running' == one.status, 'bg-danger': 'deleted' == one.status, 'bg-tips': 'unhealthy' == one.status}">{{one.status}}</span>
+                                <hr/>
+                                <span class="bg-info">
+                                    {{one.extendParams.params.statusMessage}}
+                                </span>
                             </td>
                             <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
                             <td class="opts">

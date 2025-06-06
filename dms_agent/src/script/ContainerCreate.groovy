@@ -104,7 +104,7 @@ if (!isNetworkHost) {
         def publicPort = pm.publicPort == -1 ? common.Utils.getOnePortListenAvailable() : pm.publicPort
         def privatePort = pm.privatePort
         // for application use
-        envList << new KVPair(key: 'X_port_' + privatePort, value: '' + publicPort)
+        envList << new KVPair(key: ContainerInfo.ENV_KEY_PUBLIC_PORT + privatePort, value: '' + publicPort)
         def binding = new PortBinding(Ports.Binding.bindPort(publicPort),
                 pm.listenType.name() == 'udp' ? ExposedPort.udp(privatePort) : ExposedPort.tcp(privatePort))
         portBindings << binding
@@ -113,6 +113,11 @@ if (!isNetworkHost) {
 
     Agent.instance.addJobStep(createConf.jobId, createConf.instanceIndex,
             'create container port bind', [portBindings: portBindings])
+} else {
+    // only set env
+    conf.portList.eachWithIndex { PortMapping pm, int i ->
+        envList << new KVPair(key: ContainerInfo.ENV_KEY_PUBLIC_PORT + pm.privatePort, value: '' + pm.publicPort)
+    }
 }
 
 // dns *** ***

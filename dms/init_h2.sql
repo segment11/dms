@@ -314,3 +314,31 @@ create table rm_sentinel_service
     updated_date  timestamp default current_timestamp
 );
 create unique index idx_rm_sentinel_service_name on rm_sentinel_service (name);
+
+create table rm_job
+(
+    id           int auto_increment primary key,
+    app_id       int,
+    type         varchar(20),
+    status       varchar(20),
+    result       varchar(500),
+    content      text,
+    failed_num   int       default 0,
+    cost_ms      int       default 0,
+    created_date timestamp,
+    updated_date timestamp default current_timestamp
+);
+create index idx_rm_job_app_id on rm_job (app_id);
+
+create table rm_task_log
+(
+    id           int auto_increment primary key,
+    job_id       int,
+    step         varchar(50),
+    job_result   text,
+    cost_ms      int       default 0,
+    created_date timestamp,
+    updated_date timestamp default current_timestamp
+);
+create index idx_rm_task_log_job_id on rm_job_task (job_id);
+

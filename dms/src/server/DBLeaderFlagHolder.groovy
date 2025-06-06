@@ -2,6 +2,7 @@ package server
 
 import com.segment.common.Utils
 import com.segment.common.job.IntervalJob
+import common.Const
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.DynConfigDTO
@@ -22,7 +23,7 @@ class DBLeaderFlagHolder extends IntervalJob {
     @Override
     void doJob() {
         def isLeaderLastTime = isLeader
-        isLeader = DynConfigDTO.acquireLock(Utils.localIp(), ttl == 0 ? (int) interval * 3 : ttl)
+        isLeader = DynConfigDTO.acquireLock(Utils.localIp(), ttl == 0 ? (int) interval * 3 : ttl, Const.SERVER_LEADER_LOCK_KEY)
         if (isLeader != isLeaderLastTime) {
             log.info 'change leader, ip: {}, I am the leader: {}', Utils.localIp(), isLeader
         }

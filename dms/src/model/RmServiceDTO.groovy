@@ -2,10 +2,13 @@ package model
 
 import groovy.transform.CompileStatic
 import groovy.transform.ToString
+import ha.JedisPoolHolder
 import model.json.BackupPolicy
 import model.json.ClusterSlotsDetail
 import model.json.ExtendParams
 import model.json.LogPolicy
+import redis.clients.jedis.JedisPool
+import transfer.ContainerInfo
 
 @CompileStatic
 @ToString(includeNames = true, includeSuper = false)
@@ -71,4 +74,14 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
     Date createdDate
 
     Date updatedDate
+
+    int listenPort(ContainerInfo x) {
+        def shardIndex = clusterSlotsDetail.shards.find { it.appId == x.appId() }.shardIndex
+        def portForThisShard = port + shardIndex * 10
+        portForThisShard + x.instanceIndex()
+    }
+
+    JedisPool connect(ContainerInfo x) {
+        JedisPoolHolder.instance.create(x.nodeIp, listenPort(x), pass)
+    }
 }

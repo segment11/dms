@@ -2,13 +2,22 @@ package ctrl.redis
 
 import com.segment.common.Conf
 import com.segment.common.Utils
+import com.segment.common.job.chain.JobParams
+import com.segment.common.job.chain.JobStatus
 import model.*
 import model.json.*
+import org.apache.commons.beanutils.BeanUtils
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
 import plugin.BasePlugin
 import rm.RedisManager
 import rm.RmJobExecutor
+import rm.SlotBalancer
+import rm.job.RmJob
+import rm.job.RmJobTypes
+import rm.job.task.MeetNodesSetSlotsTask
+import rm.job.task.WaitClusterStateTask
+import rm.job.task.WaitInstancesRunningTask
 import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
 
@@ -73,7 +82,25 @@ h.group('/redis/service') {
                         }
                     }
                 } else {
-                    // cluster mode, todo
+                    // cluster mode
+                    def checkTask = new WaitClusterStateTask(new RmJob(rmService: one))
+                    def jobResult = checkTask.doTask()
+
+                    if (one.status == RmServiceDTO.Status.running) {
+                        if (!jobResult.isOk) {
+                            one.status = RmServiceDTO.Status.unhealthy
+                            one.extendParams.put('statusMessage', jobResult.message)
+                        } else {
+                            one.extendParams.put('statusMessage', 'check cluster state ok')
+                        }
+                    } else if (one.status == RmServiceDTO.Status.creating) {
+                        if (!jobResult.isOk) {
+                            one.extendParams.put('statusMessage', jobResult.message)
+                        } else {
+                            one.status = RmServiceDTO.Status.running
+                            one.extendParams.put('statusMessage', 'check cluster state ok')
+                        }
+                    }
                 }
             }
         }
@@ -105,7 +132,7 @@ h.group('/redis/service') {
             resp.halt(500, 'name already exists')
         }
 
-        def namespaceId = NamespaceDTO.createIfNotExist(clusterId, 'sentinel')
+        def namespaceId = NamespaceDTO.createIfNotExist(clusterId, 'redis')
 
         // check node ready
         def instance = InMemoryAllContainerManager.instance
@@ -126,6 +153,8 @@ h.group('/redis/service') {
         }
 
         boolean isSentinelMode = one.mode == RmServiceDTO.Mode.sentinel
+        def isClusterMode = one.mode == RmServiceDTO.Mode.cluster
+
         String sentinelAppName
         if (isSentinelMode) {
             def sentinelServiceOne = new RmSentinelServiceDTO(id: one.sentinelServiceId).one()
@@ -182,16 +211,17 @@ h.group('/redis/service') {
             }
         }
 
+        def c = Conf.instance
+        conf.isLimitNode = c.isOn('rm.isSingleNodeTest')
+
         final String dataDir = RedisManager.dataDir()
-        def serviceDataDir = dataDir + '/' + one.engineType + '_data_' + Utils.uuid()
+        def serviceDataDir = dataDir + '/' + one.engineType + '_data_' + Utils.uuid() + '_${appId}_${instanceIndex}'
         def nodeVolumeId = new NodeVolumeDTO(imageName: conf.imageName(), name: 'for service ' + one.name, dir: serviceDataDir,
                 clusterId: clusterId, des: 'data dir for service').add()
         def dirOne = new DirVolumeMount(
                 dir: serviceDataDir, dist: '/data/redis', mode: 'rw',
                 nodeVolumeId: nodeVolumeId)
         conf.dirVolumeList << dirOne
-
-        def c = Conf.instance
 
         // config tpl use redis template
         def tplOne = new ImageTplDTO(imageName: 'library/redis', name: 'redis.template.conf.tpl').one()
@@ -203,6 +233,7 @@ h.group('/redis/service') {
         mountOne.paramList << new KVPair<String>('dataDir', '/data/redis')
         mountOne.paramList << new KVPair<String>('password', one.pass ?: '')
         mountOne.paramList << new KVPair<String>('isMasterSlave', isSentinelMode ? 'true' : 'false')
+        mountOne.paramList << new KVPair<String>('isCluster', isClusterMode ? 'true' : 'false')
         if (sentinelAppName) {
             mountOne.paramList << new KVPair<String>('sentinelAppName', sentinelAppName)
         }
@@ -210,16 +241,86 @@ h.group('/redis/service') {
         conf.fileVolumeList << mountOne
 
         app.conf = conf
-        def appId = app.add()
-        app.id = appId
 
-        one.appId = appId
+        if (!isClusterMode) {
+            // only create one application
+            def appId = app.add()
+            app.id = appId
+
+            one.appId = appId
+            one.status = RmServiceDTO.Status.creating
+            one.createdDate = new Date()
+            one.updatedDate = new Date()
+
+            def id = one.add()
+
+            RmJobExecutor.instance.runCreatingAppJob(app)
+
+            return [id: id]
+        }
+
+        // cluster mode
+        List<AppDTO> appListByShard = []
+        one.clusterSlotsDetail = new ClusterSlotsDetail()
+        for (i in 0..<one.shards) {
+            def appShard = new AppDTO()
+            // shadow copy properties from app
+            BeanUtils.copyProperties(appShard, app)
+            // rename
+            appShard.name = app.name + '_shard_' + i
+
+            def portForThisShard = one.port + i * 10
+
+            appShard.conf.fileVolumeList.clear()
+            def copyOne = mountOne.copy()
+            copyOne.paramList.find { it.key == 'port' }.value = '' + portForThisShard
+            appShard.conf.fileVolumeList << copyOne
+
+            appShard.conf.portList.clear()
+            appShard.conf.portList << new PortMapping(privatePort: portForThisShard, publicPort: portForThisShard)
+
+            def appShardId = appShard.add()
+            appShard.id = appShardId
+            appListByShard << appShard
+
+            // calc slots range
+            def pager = SlotBalancer.splitAvg(one.shards, i + 1)
+            def shard = new ClusterSlotsDetail.Shard(shardIndex: i, appId: appShardId)
+            shard.multiSlotRange.addSingle(pager.start, pager.end - 1)
+
+            one.clusterSlotsDetail.shards << shard
+        }
+
         one.status = RmServiceDTO.Status.creating
         one.createdDate = new Date()
+        one.updatedDate = new Date()
 
         def id = one.add()
 
-        RmJobExecutor.instance.runCreatingAppJob(app)
+        appListByShard.each {
+            RmJobExecutor.instance.runCreatingAppJob(it)
+        }
+
+        def rmJob = new RmJob()
+        rmJob.rmService = one
+        rmJob.type = RmJobTypes.CLUSTER_CREATE
+        rmJob.status = JobStatus.created
+        rmJob.params = new JobParams()
+        rmJob.params.put('rmServiceId', id.toString())
+        // sub tasks
+        for (i in 0..<one.shards) {
+            rmJob.taskList << new WaitInstancesRunningTask(rmJob, i)
+        }
+        rmJob.taskList << new MeetNodesSetSlotsTask(rmJob)
+        rmJob.taskList << new WaitClusterStateTask(rmJob)
+
+        rmJob.createdDate = new Date()
+        rmJob.updatedDate = new Date()
+        rmJob.save()
+
+        RmJobExecutor.instance.execute {
+            rmJob.run()
+        }
 
         [id: id]
     }

@@ -46,6 +46,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         $http.post('/dms/redis/service/add', one).success(function (data) {
             if (data.id) {
                 uiTips.tips('Add Success');
+                Page.go('/page/redis_service', {});
             }
         });
     };

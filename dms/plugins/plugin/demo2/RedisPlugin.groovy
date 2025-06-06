@@ -94,6 +94,7 @@ class RedisPlugin extends BasePlugin {
         tplParams.addParam('isSingleNode', 'false', 'string')
         tplParams.addParam('isMasterSlave', 'true', 'string')
         tplParams.addParam('sentinelAppName', 'sentinel', 'string')
+        tplParams.addParam('isCluster', 'false', 'string')
         tplParams.addParam('configTemplateId', '0', 'int')
 
         TplParamsConf tplParams2 = new TplParamsConf()
@@ -189,7 +190,8 @@ class RedisPlugin extends BasePlugin {
                         if (otherConfOne) {
                             def otherPort = otherConfOne.paramValue('port') as int
                             if (otherPort == checkPort) {
-                                log.warn 'port {} is already used, app id: {}, app name: {}', checkPort, otherApp.id, otherApp.name
+                                log.warn 'port {} is already used, app id: {}, app name: {}, check app id: {}, check app name: {}',
+                                        checkPort, otherApp.id, otherApp.name, conf.app.id, conf.app.name
                                 return false
                             }
                         }
@@ -249,8 +251,15 @@ class RedisPlugin extends BasePlugin {
 
                 List<String> list = []
                 conf.conf.dirVolumeList.collect { it.dir }.each { nodeDir ->
+                    String nodeDirTmp
+                    if (nodeDir.contains('${appId}')) {
+                        nodeDirTmp = nodeDir.replace('${appId}', conf.appId.toString())
+                    } else {
+                        nodeDirTmp = nodeDir
+                    }
+
                     containerNumber.times { instanceIndex ->
-                        list << (nodeDir + '/instance_' + instanceIndex)
+                        list << (nodeDirTmp.replace('${instanceIndex}', instanceIndex.toString()) + '/instance_' + instanceIndex)
                     }
                 }
                 def dir = list.join(',')
@@ -351,7 +360,7 @@ class RedisPlugin extends BasePlugin {
 
                         def finalSentinelPort = sentinelPort + (isSentinelSingleNode ? x.instanceIndex() : 0)
                         def jedisPool = JedisPoolHolder.instance.create(x.nodeIp, finalSentinelPort, sentinelPassword)
-                        JedisPoolHolder.instance.useRedisPool(jedisPool) { jedis ->
+                        JedisPoolHolder.instance.exe(jedisPool) { jedis ->
                             def infoSentinel = jedis.info('sentinel')
                             if (infoSentinel.contains(masterName + ',')) {
                                 log.info 'sentinel monitor already added, instance index: {}, master name: {}', x.instanceIndex(), masterName
@@ -406,7 +415,7 @@ class RedisPlugin extends BasePlugin {
                 }
 
                 def jedisPool = JedisPoolHolder.instance.create(thisInstanceNodeIp, thisInstanceRedisPort, redisPassword)
-                def isOk = JedisPoolHolder.instance.useRedisPool(jedisPool) { jedis ->
+                def isOk = JedisPoolHolder.instance.exe(jedisPool) { jedis ->
                     def infoReplication = jedis.info('replication')
                     def lines = infoReplication.readLines()
                     if (lines.find { it.contains('role:slave') }) {
@@ -504,7 +513,7 @@ class RedisPlugin extends BasePlugin {
 
                         def finalSentinelPort = sentinelPort + (isSentinelSingleNode ? x.instanceIndex() : 0)
                         def jedisPool = JedisPoolHolder.instance.create(x.nodeIp, finalSentinelPort, sentinelPassword)
-                        def isMastersAllOk = JedisPoolHolder.instance.useRedisPool(jedisPool) { jedis ->
+                        def isMastersAllOk = JedisPoolHolder.instance.exe(jedisPool) { jedis ->
                             def infoSentinel = jedis.info('sentinel')
                             def lines = infoSentinel.readLines()
                             def masterLines = lines.findAll { it.contains('redis-app-') }
@@ -554,7 +563,7 @@ class RedisPlugin extends BasePlugin {
                     def finalPort = redisPort + (isSingleNode ? it.instanceIndex() : 0)
 
                     def jedisPool = JedisPoolHolder.instance.create(it.nodeIp, finalPort, redisPassword)
-                    JedisPoolHolder.instance.useRedisPool(jedisPool) { jedis ->
+                    JedisPoolHolder.instance.exe(jedisPool) { jedis ->
                         String role
                         def infoReplication = jedis.info('replication')
                         def lines = infoReplication.readLines()
@@ -648,6 +657,8 @@ class RedisPlugin extends BasePlugin {
                 conf.memReservationMB = conf.memMB
                 conf.cpuFixed = 0.1
                 conf.user = '59000:59000'
+
+                conf.isLimitNode = cc.conf.isLimitNode
 
                 String envValue
                 if (isSingleNode) {

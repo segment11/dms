@@ -7,7 +7,7 @@ import java.util.concurrent.CountDownLatch
 
 def ds = Ds.dbType(Ds.DBType.mysql).cacheAs('dms_server_ds')
         .connect('localhost', 3306, 'dms', 'root', 'test1234')
-DynConfigDTO.addServerLeaderLockRow()
+DynConfigDTO.addLockRow('test_lock')
 
 def threadNumber = 3
 def countDownLatch = new CountDownLatch(threadNumber)
@@ -19,7 +19,7 @@ threadNumber.times { t ->
             if ((t == 0 && i == 2) || (t == 1 && i == 4) || (t == 2 && i == 6)) {
                 Thread.sleep(4000)
             }
-            def isLeaderThisThread = DynConfigDTO.acquireLock(threadId.toString(), 3)
+            def isLeaderThisThread = DynConfigDTO.acquireLock(threadId.toString(), 3, 'test_lock')
             println "thread id: $threadId, I am the leader: $isLeaderThisThread"
             Thread.sleep(1000)
         }

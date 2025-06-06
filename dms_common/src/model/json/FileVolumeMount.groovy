@@ -22,6 +22,19 @@ class FileVolumeMount {
 
     boolean isReloadInterval
 
+    FileVolumeMount copy() {
+        def r = new FileVolumeMount()
+        r.imageTplId = imageTplId
+        r.isParentDirMount = isParentDirMount
+        for (param in paramList) {
+            r.paramList.add(new KVPair<String>(param.key, param.value))
+        }
+        r.dist = dist
+        r.content = content
+        r.isReloadInterval = isReloadInterval
+        return r
+    }
+
     @Override
     boolean equals(Object obj) {
         if (!(obj instanceof FileVolumeMount)) {

@@ -1,6 +1,5 @@
 package server
 
-
 import auth.User
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -16,7 +15,7 @@ import redis.clients.jedis.JedisPool
 import transfer.ContainerInfo
 import transfer.NodeInfo
 
-import static ha.JedisPoolHolder.useRedisPool as r
+import static ha.JedisPoolHolder.exe as r
 
 @CompileStatic
 @Slf4j
