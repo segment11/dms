@@ -15,7 +15,7 @@ class NodeKeyPairDTO extends BaseRecord<NodeKeyPairDTO> {
 
     Integer sshPort
 
-    String user
+    String userName
 
     String pass
 

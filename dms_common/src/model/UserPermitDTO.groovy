@@ -9,7 +9,7 @@ class UserPermitDTO extends BaseRecord<UserPermitDTO> {
 
     Integer id
 
-    String user
+    String userName
 
     String createdUser
 

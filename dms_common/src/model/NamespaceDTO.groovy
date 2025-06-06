@@ -16,4 +16,13 @@ class NamespaceDTO extends BaseRecord<NamespaceDTO> {
     String des
 
     Date updatedDate
+
+    static int createIfNotExist(int clusterId, String name) {
+        def ns = new NamespaceDTO(clusterId: clusterId, name: name).one()
+        if (ns) {
+            return ns.id
+        }
+
+        new NamespaceDTO(clusterId: clusterId, name: name).add()
+    }
 }

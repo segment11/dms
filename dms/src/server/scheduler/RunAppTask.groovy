@@ -40,7 +40,9 @@ class RunAppTask implements Runnable {
         lock.lockKey = '/app/guard/' + app.id
         lock.exe {
             def cluster = new ClusterDTO(id: app.clusterId).one()
-            List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, appId)
+
+            def instance = InMemoryAllContainerManager.instance
+            List<ContainerInfo> containerList = instance.getContainerList(app.clusterId, appId)
 
             def oneAppGuardian = new OneAppGuardian()
             oneAppGuardian.cluster = cluster

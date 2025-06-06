@@ -13,7 +13,7 @@ class NodeDTO extends BaseRecord<NodeDTO> {
 
     String ip
 
-    String tags
+    String[] tags
 
     String agentVersion
 

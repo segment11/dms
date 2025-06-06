@@ -123,7 +123,9 @@ class Guardian extends IntervalJob {
                 def oneAppGuardian = new OneAppGuardian()
                 oneAppGuardian.cluster = cluster
                 oneAppGuardian.app = app
-                oneAppGuardian.containerList = InMemoryAllContainerManager.instance.getContainerList(cluster.id, appId)
+
+                def instance = InMemoryAllContainerManager.instance
+                oneAppGuardian.containerList = instance.getContainerList(cluster.id, appId)
 
                 def old = appGuardianByAppId.putIfAbsent(appId, oneAppGuardian)
                 if (old == null) {

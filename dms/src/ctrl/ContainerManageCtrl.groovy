@@ -46,7 +46,9 @@ h.group('/container/manage') {
         def appId = req.param('appId')
         def nodeIp = req.param('nodeIp')
         User u = req.attr('user') as User
-        List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(clusterId as int,
+
+        def instance = InMemoryAllContainerManager.instance
+        List<ContainerInfo> containerList = instance.getContainerList(clusterId as int,
                 appId ? appId as int : 0, nodeIp, u) ?: []
         def simpleContainerList = containerList.collect { x ->
             x.simple()
@@ -99,7 +101,7 @@ h.group('/container/manage') {
             memRssUsedMapByNodeIp[nodeIpInner] = mapMemRssUsed
             memRequiredMapByNodeIp[nodeIpInner] = mapRequired
 
-            def nodeInfo = InMemoryAllContainerManager.instance.getNodeInfo(nodeIpInner)
+            def nodeInfo = instance.getNodeInfo(nodeIpInner)
             for (i in 0..<nodeInfo.cpuNumber()) {
                 List<Double> subList = []
                 map[i] = subList
@@ -154,12 +156,14 @@ h.group('/container/manage') {
     }.get('/bind/list') { req, resp ->
         def id = req.param('id')
         assert id
-        def nodeIp = InMemoryAllContainerManager.instance.getNodeIpByContainerId(id)
+
+        def instance = InMemoryAllContainerManager.instance
+        def nodeIp = instance.getNodeIpByContainerId(id)
         if (!nodeIp) {
             resp.halt(500, 'no node ip get')
         }
 
-        def appId = InMemoryAllContainerManager.instance.getAppIpByContainerId(id)
+        def appId = instance.getAppIpByContainerId(id)
         if (!appId) {
             resp.halt(500, 'no app get')
         }
@@ -206,12 +210,14 @@ h.group('/container/manage') {
     }.get('/bind/content') { req, resp ->
         def id = req.param('id')
         assert id
-        def nodeIp = InMemoryAllContainerManager.instance.getNodeIpByContainerId(id)
+
+        def instance = InMemoryAllContainerManager.instance
+        def nodeIp = instance.getNodeIpByContainerId(id)
         if (!nodeIp) {
             resp.halt(500, 'no node ip get')
         }
 
-        def appId = InMemoryAllContainerManager.instance.getAppIpByContainerId(id)
+        def appId = instance.getAppIpByContainerId(id)
         if (!appId) {
             resp.halt(500, 'no app get')
         }
@@ -239,12 +245,14 @@ h.group('/container/manage') {
     }.get('/port/bind') { req, resp ->
         def id = req.param('id')
         assert id
-        def nodeIp = InMemoryAllContainerManager.instance.getNodeIpByContainerId(id)
+
+        def instance = InMemoryAllContainerManager.instance
+        def nodeIp = instance.getNodeIpByContainerId(id)
         if (!nodeIp) {
             resp.halt(500, 'no node ip get')
         }
 
-        def appId = InMemoryAllContainerManager.instance.getAppIpByContainerId(id)
+        def appId = instance.getAppIpByContainerId(id)
         if (!appId) {
             resp.halt(500, 'no app get')
         }
@@ -263,7 +271,9 @@ h.group('/container/manage') {
 
 private static void checkIfAppJobNotDone(Req req, Resp resp) {
     def containerId = req.param('id')
-    def appId = InMemoryAllContainerManager.instance.getAppIpByContainerId(containerId)
+
+    def instance = InMemoryAllContainerManager.instance
+    def appId = instance.getAppIpByContainerId(containerId)
     if (!appId) {
         return
     }
@@ -277,12 +287,14 @@ private static void checkIfAppJobNotDone(Req req, Resp resp) {
 private static void callAgentScript(Req req, Resp resp, String scriptName) {
     def id = req.param('id')
     assert id
-    def nodeIp = InMemoryAllContainerManager.instance.getNodeIpByContainerId(id)
+
+    def instance = InMemoryAllContainerManager.instance
+    def nodeIp = instance.getNodeIpByContainerId(id)
     if (!nodeIp) {
         resp.halt(500, 'no node ip get')
     }
 
-    def appId = InMemoryAllContainerManager.instance.getAppIpByContainerId(id)
+    def appId = instance.getAppIpByContainerId(id)
     if (!appId) {
         resp.halt(500, 'no app get')
     }
@@ -408,8 +420,9 @@ h.group('/container') {
         assert app
 
         User u = req.attr('user') as User
-        List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.
-                getContainerList(app.clusterId, app.id, null, u) ?: []
+
+        def instance = InMemoryAllContainerManager.instance
+        List<ContainerInfo> containerList = instance.getContainerList(app.clusterId, app.id, null, u) ?: []
         def simpleContainerList = containerList.collect { x ->
             x.simple()
         }
@@ -417,12 +430,14 @@ h.group('/container') {
     }.get('/log') { req, resp ->
         def id = req.param('id')
         assert id
-        def nodeIp = InMemoryAllContainerManager.instance.getNodeIpByContainerId(id)
+
+        def instance = InMemoryAllContainerManager.instance
+        def nodeIp = instance.getNodeIpByContainerId(id)
         if (!nodeIp) {
             resp.halt(500, 'no node ip get')
         }
 
-        def appId = InMemoryAllContainerManager.instance.getAppIpByContainerId(id)
+        def appId = instance.getAppIpByContainerId(id)
         if (!appId) {
             resp.halt(500, 'no app get')
         }

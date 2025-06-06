@@ -65,13 +65,16 @@ class RedisPlugin extends BasePlugin {
         addPortIfNotExists('26379', 26379)
 
         final String tplName = 'redis.conf.tpl'
+        final String tplNameUseTemplate = 'redis.template.conf.tpl'
         final String tplName2 = 'redis.conf.single.node.tpl'
         final String tplName3 = 'sentinel.conf.tpl'
 
         String tplFilePath = PluginManager.pluginsResourceDirPath() + '/redis/RedisConfTpl.groovy'
+        String tplFilePathUseTemplate = PluginManager.pluginsResourceDirPath() + '/redis/RedisConfUseTemplateTpl.groovy'
         String tplFilePath2 = PluginManager.pluginsResourceDirPath() + '/redis/RedisConfSingleNodeTpl.groovy'
         String tplFilePath3 = PluginManager.pluginsResourceDirPath() + '/redis/SentinelConfTpl.groovy'
         String content = new File(tplFilePath).text
+        String contentUseTemplate = new File(tplFilePathUseTemplate).text
         String content2 = new File(tplFilePath2).text
         String content3 = new File(tplFilePath3).text
 
@@ -83,6 +86,15 @@ class RedisPlugin extends BasePlugin {
         tplParams.addParam('isMasterSlave', 'true', 'string')
         tplParams.addParam('sentinelAppName', 'sentinel', 'string')
         tplParams.addParam('customParameters', 'cluster-enabled no', 'string')
+
+        TplParamsConf tplParamsUseTemplate = new TplParamsConf()
+        tplParams.addParam('port', '6379', 'int')
+        tplParams.addParam('dataDir', '/data/redis', 'string')
+        tplParams.addParam('password', '123456', 'string')
+        tplParams.addParam('isSingleNode', 'false', 'string')
+        tplParams.addParam('isMasterSlave', 'true', 'string')
+        tplParams.addParam('sentinelAppName', 'sentinel', 'string')
+        tplParams.addParam('configTemplateId', '0', 'int')
 
         TplParamsConf tplParams2 = new TplParamsConf()
         tplParams2.addParam('port', '6379', 'int')
@@ -104,18 +116,29 @@ class RedisPlugin extends BasePlugin {
         if (!one) {
             new ImageTplDTO(name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/redis/redis.conf',
                     content: content,
                     isParentDirMount: false,
                     params: tplParams).add()
         }
 
+        def oneUseTemplate = new ImageTplDTO(imageName: imageName, name: tplNameUseTemplate).queryFields('id').one()
+        if (!oneUseTemplate) {
+            new ImageTplDTO(name: tplNameUseTemplate,
+                    imageName: imageName,
+                    tplType: ImageTplDTO.TplType.mount,
+                    mountDist: '/etc/redis/redis.conf',
+                    content: contentUseTemplate,
+                    isParentDirMount: false,
+                    params: tplParamsUseTemplate).add()
+        }
+
         def one2 = new ImageTplDTO(imageName: imageName, name: tplName2).queryFields('id').one()
         if (!one2) {
             new ImageTplDTO(name: tplName2,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/redis/redis.conf',
                     content: content2,
                     isParentDirMount: false,
@@ -126,7 +149,7 @@ class RedisPlugin extends BasePlugin {
         if (!one3) {
             new ImageTplDTO(name: tplName3,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/data/sentinel/${appId}_${instanceIndex}.conf',
                     content: content3,
                     isParentDirMount: true,
@@ -319,7 +342,8 @@ class RedisPlugin extends BasePlugin {
                     def isSentinelSingleNode = 'true' == sentinelConfOne.paramValue('isSingleNode')
 
                     // add to sentinel
-                    def containerList = InMemoryAllContainerManager.instance.getContainerList(0, sentinelAppOne.id)
+                    def instance = InMemoryAllContainerManager.instance
+                    def containerList = instance.getContainerList(0, sentinelAppOne.id)
                     for (x in containerList) {
                         if (!x.running()) {
                             continue
@@ -465,13 +489,14 @@ class RedisPlugin extends BasePlugin {
             @Override
             boolean check(AppDTO app) {
                 def sentinelConfOne = app.conf.fileVolumeList.find { it.dist.contains('/sentinel') }
+                def instance = InMemoryAllContainerManager.instance
                 if (sentinelConfOne) {
                     def isSentinelSingleNode = 'true' == sentinelConfOne.paramValue('isSingleNode')
                     def sentinelPort = sentinelConfOne.paramValue('port') as int
                     def sentinelPassword = sentinelConfOne.paramValue('password') as String
 
                     // check all master status
-                    def containerList = InMemoryAllContainerManager.instance.getContainerList(0, app.id)
+                    def containerList = instance.getContainerList(0, app.id)
                     for (x in containerList) {
                         if (!x.running()) {
                             continue
@@ -517,7 +542,7 @@ class RedisPlugin extends BasePlugin {
                     return true
                 }
 
-                def containerList = InMemoryAllContainerManager.instance.getContainerList(0, app.id)
+                def containerList = instance.getContainerList(0, app.id)
                 def roleList = containerList.collect {
                     if (!it.running()) {
                         return 'unknown'
@@ -620,6 +645,7 @@ class RedisPlugin extends BasePlugin {
                 conf.image = 'redis_exporter'
                 conf.tag = 'latest'
                 conf.memMB = 64
+                conf.memReservationMB = conf.memMB
                 conf.cpuFixed = 0.1
                 conf.user = '59000:59000'
 
@@ -656,7 +682,7 @@ class RedisPlugin extends BasePlugin {
                 monitorConf.httpRequestUri = '/metrics'
 
                 // add application to dms
-                int appId = app.add() as int
+                int appId = app.add()
                 app.id = appId
                 log.info 'done create related exporter application, app id: {}', appId
 
@@ -683,6 +709,11 @@ class RedisPlugin extends BasePlugin {
     }
 
     @Override
+    String registry() {
+        'https://docker.1ms.run'
+    }
+
+    @Override
     String group() {
         'library'
     }
@@ -690,5 +721,17 @@ class RedisPlugin extends BasePlugin {
     @Override
     String image() {
         'redis'
+    }
+
+    @Override
+    boolean canUseTo(String group, String image) {
+        if ('library' == group && 'valkey' == image) {
+            return true
+        }
+        if ('montplex' == group && 'engula' == image) {
+            return true
+        }
+
+        false
     }
 }

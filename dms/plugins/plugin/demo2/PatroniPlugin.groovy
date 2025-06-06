@@ -98,7 +98,7 @@ class PatroniPlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/patroni.yml',
                     content: content,
                     isParentDirMount: false,
@@ -109,7 +109,7 @@ class PatroniPlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName2,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/patroni.yml',
                     content: content2,
                     isParentDirMount: false,
@@ -120,7 +120,7 @@ class PatroniPlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName3,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/pgbackrest/pgbackrest.conf',
                     content: content3,
                     isParentDirMount: false,
@@ -186,7 +186,7 @@ class PatroniPlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/usr/local/etc/haproxy/haproxy.cfg',
                     content: content,
                     isParentDirMount: false,
@@ -471,6 +471,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 conf.image = 'postgres-exporter'
                 conf.tag = 'latest'
                 conf.memMB = 64
+                conf.memReservationMB = conf.memMB
                 conf.cpuFixed = 0.1
 
                 // check if single node
@@ -506,7 +507,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 monitorConf.httpRequestUri = '/metrics'
 
                 // add application to dms
-                int appId = app.add() as int
+                int appId = app.add()
                 app.id = appId
                 log.info 'done create related exporter application {}', appId
 
@@ -596,6 +597,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 conf.image = 'haproxy'
                 conf.tag = 'lts-alpine'
                 conf.memMB = 1024
+                conf.memReservationMB = conf.memMB
                 conf.cpuShares = 1024
 
                 conf.networkMode = 'host'
@@ -612,7 +614,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 conf.fileVolumeList << mountOne
 
                 // add application to dms
-                int appId = app.add() as int
+                int appId = app.add()
                 app.id = appId
                 log.info 'done create related haproxy application {}', appId
 

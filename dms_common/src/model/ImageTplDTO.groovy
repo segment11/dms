@@ -20,7 +20,7 @@ class ImageTplDTO extends BaseRecord<ImageTplDTO> {
 
     String des
 
-    String tplType
+    TplType tplType
 
     String mountDist
 

@@ -1,7 +1,7 @@
 var md = angular.module('module_cluster/list', ['base']);
 md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
-    $scope.ctrl = {};
     $scope.tmp = {};
+    $scope.ctrl = {};
     $scope.editOne = {globalEnvConf: {dnsInfo: {}}};
 
     $scope.queryLl = function () {

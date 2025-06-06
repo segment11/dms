@@ -8,7 +8,6 @@ import server.InMemoryAllContainerManager
 import transfer.ContainerInfo
 
 def intervalSecondsGlobal = super.binding.getProperty('intervalSecondsGlobal') as Integer
-def dmsServerHost = super.binding.getProperty('dmsServerHost') as String
 
 ContainerMountTplHelper applications = super.binding.getProperty('applications') as ContainerMountTplHelper
 ContainerMountTplHelper.OneApp n9eApp = applications.app('n9e')
@@ -19,7 +18,7 @@ def list = []
 list << """
   - job_name: dms_server
     static_configs:
-      - targets: ['${dmsServerHost ?: Utils.localIp()}:${Const.METRICS_HTTP_LISTEN_PORT}']
+      - targets: ['${Utils.localIp()}:${Const.METRICS_HTTP_LISTEN_PORT}']
 """
 
 if (n9eApp && n9eApp.running()) {
@@ -38,7 +37,8 @@ appMonitorList.each { app ->
         return
     }
 
-    List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id)
+    def instance = InMemoryAllContainerManager.instance
+    List<ContainerInfo> containerList = instance.getContainerList(app.clusterId, app.id)
 
     Set<String> set = []
     containerList.each { x ->
@@ -53,8 +53,12 @@ appMonitorList.each { app ->
 
     if (set) {
         String inner = set.join(',')
+
+        def isNodeExporter = app.conf.imageName() == 'prom/node-exporter'
+        def jobName = isNodeExporter ? 'node' : 'app_' + app.id
+
         list << """
-  - job_name: app_${app.id}
+  - job_name: ${jobName}
     metrics_path: ${monitorConf.httpRequestUri}
     scrape_interval: ${monitorConf.intervalSeconds}s
     static_configs:

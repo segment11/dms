@@ -96,6 +96,19 @@ $(function () {
             title: 'Plugin', icon: 'icon-cloud-upload', list: [
                 {title: 'Plugin List', page: 'plugin_list', icon: 'icon-cloud-upload'}
             ]
+        },
+        {
+            title: 'Setting', icon: 'icon-gears', list: [
+                {title: 'Admin Password', page: 'setting_admin-password-reset', icon: 'icon-lock'}
+            ]
+        },
+        {
+            title: 'Redis', icon: 'icon-save', list: [
+                {title: 'Overview', page: 'redis_overview', icon: 'icon-dashboard'},
+                {title: 'Redis Service', page: 'redis_service', icon: 'icon-list'},
+                {title: 'Sentinel Service', page: 'redis_sentinel-service', icon: 'icon-list'},
+                {title: 'Config Template', page: 'redis_config-template', icon: 'icon-edit'},
+            ]
         }
     ];
 

@@ -149,7 +149,7 @@ class CreateProcessor implements GuardianProcessor {
                 if (!it.tags) {
                     return true
                 }
-                !it.tags.split(',').any { tag -> tag in excludeNodeTagList }
+                !it.tags.any { tag -> tag in excludeNodeTagList }
             }
         }
         if (targetNodeTagList) {
@@ -157,7 +157,7 @@ class CreateProcessor implements GuardianProcessor {
                 if (!it.tags) {
                     return false
                 }
-                it.tags.split(',').any { tag -> tag in targetNodeTagList }
+                it.tags.any { tag -> tag in targetNodeTagList }
             }
         }
         if (excludeNodeIpList) {
@@ -176,7 +176,8 @@ class CreateProcessor implements GuardianProcessor {
                 conf.targetNodeTagList,
                 conf.isRunningUnbox)
 
-        List<ContainerInfo> containerList = InMemoryAllContainerManager.instance.getContainerList(clusterId)
+        def instance = InMemoryAllContainerManager.instance
+        List<ContainerInfo> containerList = instance.getContainerList(clusterId)
         Map<String, List<ContainerInfo>> groupByNodeIp = containerList.groupBy { x ->
             x.nodeIp
         }
@@ -515,7 +516,7 @@ class CreateProcessor implements GuardianProcessor {
 
         // support dyn cmd using plugin expression
         def plugin = PluginManager.instance.pluginList.
-                find { it.group() == confCopy.group && it.image() == confCopy.image }
+                find { (it.group() == confCopy.group && it.image() == confCopy.image) || it.canUseTo(confCopy.group, confCopy.image) }
 
         if (confCopy.cmd?.contains('$')) {
             confCopy.cmd = evalUsingPluginExpression(plugin, createContainerConf, confCopy.cmd)

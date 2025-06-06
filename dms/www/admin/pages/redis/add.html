@@ -1,0 +1,152 @@
+<div ng-controller="MainCtrl">
+
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Add One Redis Service</h5>
+                    <div class="actions">
+                        <button class="btn" ng-click="back()">Back</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <table class="table table-bordered table-striped m_top6" style="width: 800px;"
+                           ng-form="tmp.addForm">
+                        <tr>
+                            <td>Name</td>
+                            <td>
+                                <input type="text" ng-model="editOne.name" ui-valid="r"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Des</td>
+                            <td>
+                                <input type="text" ng-model="editOne.des"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Engine</td>
+                            <td>
+                                <input type="radio" value="redis" ng-model="editOne.engineType"/>&nbsp;Redis&nbsp;&nbsp;
+                                <input type="radio" value="valkey" ng-model="editOne.engineType"/>&nbsp;Valkey&nbsp;&nbsp;
+                                <input type="radio" value="engula" ng-model="editOne.engineType"/>&nbsp;Engula&nbsp;&nbsp;
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Engine Version</td>
+                            <td>
+                                <select ng-model="editOne.engineVersion" style="width: 80px;">
+                                    <option value="6.2">6.2</option>
+                                    <option value="7.2">7.2</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Mode</td>
+                            <td>
+                                <input type="radio" value="standalone" ng-model="editOne.mode"/>&nbsp;standalone&nbsp;&nbsp;
+                                <input type="radio" value="sentinel" ng-model="editOne.mode"/>&nbsp;sentinel&nbsp;&nbsp;
+                                <input type="radio" value="cluster" ng-model="editOne.mode"/>&nbsp;cluster&nbsp;&nbsp;
+                            </td>
+                        </tr>
+                        <tr ng-show="editOne.mode == 'cluster'">
+                            <td>Shards</td>
+                            <td>
+                                <select ng-model="editOne.shards" style="width: 80px;">
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                    <option value="9">9</option>
+                                    <option value="10">10</option>
+                                    <option value="11">11</option>
+                                    <option value="12">12</option>
+                                    <option value="13">13</option>
+                                    <option value="14">14</option>
+                                    <option value="15">15</option>
+                                    <option value="16">16</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr ng-show="editOne.mode == 'sentinel' || editOne.mode == 'cluster'">
+                            <td>Replicas</td>
+                            <td>
+                                <select ng-model="editOne.replicas" style="width: 80px;">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr ng-show="editOne.mode == 'sentinel'">
+                            <td>Sentinel Name</td>
+                            <td>
+                                <select ng-options="a.id as a.name for a in tmp.sentinelServiceList"
+                                        ng-model="editOne.sentinelServiceId"
+                                        ui-valid="{{editOne.mode == 'sentinel' ? 'r' : ''}}"
+                                        style="width: 80px;">
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Port</td>
+                            <td><input type="text" ng-model="editOne.port"
+                                       ui-valid="r int minval:int:6379 maxval:int:36379"
+                                       style="width: 120px;"/></td>
+                        </tr>
+                        <tr>
+                            <td>Password (Optional)</td>
+                            <td><input type="password" ng-model="editOne.pass"
+                                       style="width: 120px;"/></td>
+                        </tr>
+                        <tr>
+                            <td>Config Template</td>
+                            <td>
+                                <select ng-options="a.id as a.name for a in tmp.configTemplateList"
+                                        ng-model="editOne.configTemplateId"
+                                        ui-valid="r"
+                                        style="width: 120px;">
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Target Node Tag (Optional)</td>
+                            <td>
+                                <input type="text" ng-model="editOne.nodeTags" width="400px"
+                                       ui-dropdown="{valueField: 'tag', labelField: 'tag', list: 'tmp.nodeTagList', multiple: true, blankLabel: '--/--', widthMultipleInput: 400}"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Config Items</td>
+                            <td>
+                                <table>
+                                    <tr>
+                                        <td><label>Mem MB</label></td>
+                                        <td><input type="text" ng-model="editOne.extendParams.params.memMB"
+                                                   ui-valid="r int"
+                                                   style="width: 120px;"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Cpu Cores</td>
+                                        <td><input type="text" ng-model="editOne.extendParams.params.cpuFixed"
+                                                   ui-valid="r float minval:float:0.5 maxval:float:4.0"
+                                                   style="width: 120px;"/></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <button class="btn btn-blue" ng-click="add()">Add</button>
+                </div>
+            </div>
+
+        </div><!-- /.row-fluid -->
+
+    </div>
+
+</div>

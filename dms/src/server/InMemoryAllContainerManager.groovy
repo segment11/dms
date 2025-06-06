@@ -47,7 +47,6 @@ class InMemoryAllContainerManager extends IntervalJob implements AllContainerMan
             inner.addAuthToken(nodeIp, authToken)
             return
         }
-
         authTokenByNodeIp[nodeIp] = authToken
     }
 
@@ -92,6 +91,20 @@ class InMemoryAllContainerManager extends IntervalJob implements AllContainerMan
                 where('updated_date > ?', dat).list()
         r.sort { a, b -> Utils.compareIp(a.ip, b.ip) }
         r
+    }
+
+    List<NodeDTO> hbOkNodeList(int clusterId, String fields) {
+        def dto = new NodeDTO(clusterId: clusterId)
+        if (fields) {
+            dto.queryFields(fields)
+        }
+        def nodeList = dto.list()
+
+        def dat = Utils.getNodeAliveCheckLastDate(3)
+        nodeList.findAll { one ->
+            def hbData = getHeartBeatDate(one.ip)
+            hbData && hbData > dat
+        }
     }
 
     @Override

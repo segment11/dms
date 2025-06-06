@@ -81,7 +81,7 @@ class MySQLPlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/my.cnf',
                     content: content,
                     isParentDirMount: false,
@@ -453,6 +453,7 @@ start slave;
                 conf.image = 'mysqld-exporter'
                 conf.tag = 'latest'
                 conf.memMB = 64
+                conf.memReservationMB = conf.memMB
                 conf.cpuFixed = 0.1
 
                 // ${nodeIp} is a placeholder, will be replaced by real ip
@@ -473,7 +474,7 @@ start slave;
                 monitorConf.httpRequestUri = '/metrics'
 
                 // add application to dms
-                int appId = app.add() as int
+                int appId = app.add()
                 app.id = appId
                 log.info 'done create related exporter application {}', appId
 

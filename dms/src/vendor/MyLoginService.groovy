@@ -24,7 +24,7 @@ class MyLoginService implements LoginService {
             if (200 != req.code()) {
                 throw new HttpInvokeException('login fail ' + req.body())
             }
-            def list = new UserPermitDTO(user: user).list(10)
+            def list = new UserPermitDTO(userName: user).list(10)
             u.permitList.addAll(list.collect {
                 new Permit(PermitType.valueOf(it.permitType), it.resourceId)
             })

@@ -42,7 +42,7 @@ class VectorPlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/vector/vector.toml',
                     content: content,
                     isParentDirMount: false,
@@ -75,6 +75,7 @@ class VectorPlugin extends BasePlugin {
         conf.tag = 'latest-alpine'
 
         conf.memMB = 64
+        conf.memReservationMB = conf.memMB
         conf.cpuFixed = 0.1
 
         conf.dirVolumeList << new DirVolumeMount(

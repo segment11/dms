@@ -58,7 +58,7 @@ class ZookeeperPlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/zookeeper/conf/zoo.cfg',
                     content: content,
                     isParentDirMount: false,
@@ -71,7 +71,7 @@ class ZookeeperPlugin extends BasePlugin {
             new ImageTplDTO(
                     name: tplName2,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/zookeeper/conf/zoo.cfg',
                     content: content2,
                     isParentDirMount: false,

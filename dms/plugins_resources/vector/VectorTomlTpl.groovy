@@ -44,8 +44,9 @@ condition_pattern = '(?m)^[\\s|\\W].*\$|(?m)^(Caused|java|org|com|net).+\$|(?m)^
 Set<String> appSourceIds = []
 
 List<AppDTO> appLogList = super.binding.getProperty('appLogList') as List<AppDTO>
+def instance = InMemoryAllContainerManager.instance
 appLogList.each { app ->
-    def containerList = InMemoryAllContainerManager.instance.getContainerList(app.clusterId, app.id, nodeIp)
+    def containerList = instance.getContainerList(app.clusterId, app.id, nodeIp)
     // this node running a filebeat, but do not run the target application
     if (containerList.size() == 0) {
         return

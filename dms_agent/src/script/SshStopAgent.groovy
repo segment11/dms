@@ -16,7 +16,7 @@ String keyPrivate = params.keyPrivate as String
 def kp = new NodeKeyPairDTO()
 kp.ip = ip
 kp.sshPort = port
-kp.user = user
+kp.userName = user
 kp.rootPass = rootPass
 kp.keyPrivate = keyPrivate
 

@@ -99,7 +99,8 @@ h.group('/plugin') {
             namespaceId = namespace.id
         }
 
-        def nodeIpList = InMemoryAllContainerManager.instance.getAllNodeInfo(clusterId).collect {
+        def instance = InMemoryAllContainerManager.instance
+        def nodeIpList = instance.getAllNodeInfo(clusterId).collect {
             it.value.nodeIp
         }
         def app = plugin.demoApp(BasePlugin.tplApp(clusterId, namespaceId, nodeIpList))

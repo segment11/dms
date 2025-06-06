@@ -144,14 +144,21 @@ create index idx_app_job_log_created_date on app_job_log (created_date);
 create table user_permit
 (
     id           int auto_increment primary key,
-    user         varchar(50),
+    user_name    varchar(50),
     created_user varchar(50),
-    permit_type  varchar(50), -- clusterManager etc.
+    permit_type  varchar(50),
     resource_id  int,
     updated_date timestamp default current_timestamp
 );
-create index idx_user_permit_user on user_permit (user);
+create index idx_user_permit_user_name on user_permit (user_name);
 create index idx_user_permit_permit_type_resource_id on user_permit (permit_type, resource_id);
+
+create table user_admin_pass
+(
+    id           int auto_increment primary key,
+    password_md5 varchar(50),
+    updated_date timestamp default current_timestamp
+);
 
 create table event
 (
@@ -181,7 +188,6 @@ create table agent_script_pull_log
     created_date timestamp
 );
 
--- for traefik
 create table gw_cluster
 (
     id             int auto_increment primary key,
@@ -199,7 +205,7 @@ create index idx_gw_cluster_app_id on gw_cluster (app_id);
 create table gw_router
 (
     id           int auto_increment primary key,
-    cluster_id   int, -- fk -> gw_cluster.id
+    cluster_id   int,
     name         varchar(50),
     des          varchar(200),
     rule         varchar(200),
@@ -214,14 +220,13 @@ create table gw_router
 );
 create index idx_gw_router_cluster_id on gw_router (cluster_id);
 
--- run process ssh support
 create table node_key_pair
 (
     id           int auto_increment primary key,
     cluster_id   int,
     ip           varchar(20),
     ssh_port     int,
-    user         varchar(20),
+    user_name    varchar(20),
     pass         varchar(20),
     root_pass    varchar(20),
     key_name     varchar(100),
@@ -233,7 +238,6 @@ create table node_key_pair
 create index idx_node_key_pair_cluster_id on node_key_pair (cluster_id);
 create unique index idx_node_key_pair_ip on node_key_pair (ip);
 
--- run process ssh copy support
 create table deploy_file
 (
     id           int auto_increment primary key,
@@ -250,7 +254,63 @@ create table dyn_config
 (
     id           int auto_increment primary key,
     name         varchar(50),
-    value        varchar(500),
+    vv           varchar(500),
     updated_date timestamp default current_timestamp
 );
 create unique index idx_dyn_config_name on dyn_config (name);
+
+-- for redis manager module
+create table rm_service
+(
+    id                   int auto_increment primary key,
+    name                 varchar(50),
+    des                  varchar(200),
+    mode                 varchar(20),   -- standalone/sentinel/cluster
+    engine_type          varchar(20),   -- redis/valkey/engula/kvrocks/velo
+    engine_version       varchar(20),   -- 5.0/6.2/7.2/8.1
+    config_template_id   int,
+    sentinel_service_id  int,
+    pass                 varchar(200),
+    port                 int,
+    shards               int,
+    replicas             int,
+    backup_policy        varchar(500),
+    log_policy           varchar(200),
+    is_tls_on            bit,
+    node_tags            varchar(100),
+    app_id               int,
+    status               varchar(20),
+    extend_params        varchar(2000),
+    cluster_slots_detail varchar(4000), -- for cluster mode
+    created_date         timestamp,
+    updated_date         timestamp default current_timestamp
+);
+create unique index idx_rm_service_name on rm_service (name);
+create index idx_rm_service_config_template_id on rm_service (config_template_id);
+
+create table rm_config_template
+(
+    id           int auto_increment primary key,
+    name         varchar(50),
+    des          varchar(200),
+    config_items text,
+    updated_date timestamp default current_timestamp
+);
+create unique index idx_rm_config_template_name on rm_config_template (name);
+
+-- for redis sentinel mode
+create table rm_sentinel_service
+(
+    id            int auto_increment primary key,
+    name          varchar(50),
+    pass          varchar(200),
+    port          int,
+    replicas      int, -- 3 or 5
+    node_tags     varchar(100),
+    app_id        int,
+    status        varchar(20),
+    extend_params varchar(2000),
+    created_date  timestamp,
+    updated_date  timestamp default current_timestamp
+);
+create unique index idx_rm_sentinel_service_name on rm_sentinel_service (name);

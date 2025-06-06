@@ -1,6 +1,5 @@
 import auth.User
 import com.segment.common.Conf
-import com.segment.common.Utils
 import common.Const
 import ha.JedisPoolHolder
 import io.prometheus.client.exporter.HTTPServer
@@ -15,6 +14,7 @@ import org.segment.web.common.CachedGroovyClassLoader
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
 import plugin.PluginManager
+import rm.RmJobExecutor
 import server.AgentCaller
 import server.DBLeaderFlagHolder
 import server.InMemoryAllContainerManager
@@ -73,8 +73,9 @@ if (!tableNameList.contains('CLUSTER')) {
         }
         try {
             d.exe(ddl)
+            log.info 'done execute ddl: \n {}', ddl
         } catch (Exception e) {
-            log.error 'execute ddl error, ddl: ' + ddl, e
+            log.error 'execute ddl error, ddl: {}\n', ddl, e
         }
     }
 }
@@ -117,19 +118,18 @@ cacheSupport.start()
 
 AuthTokenCacheHolder.instance.init()
 
-def localIp = Utils.localIp()
-
 // create jetty server, load route define interval using cached groovy class loader
 def server = RouteServer.instance
 server.loader = RouteRefreshLoader.create(loader.gcl).addClasspath(srcDirPath).addClasspath(resourceDirPath).
         addDir(c.projectPath('/src/ctrl')).jarLoad(c.isOn('server.runtime.jar'))
 server.webRoot = c.projectPath('/www')
-server.start(Const.SERVER_HTTP_LISTEN_PORT, localIp)
+server.start(Const.SERVER_HTTP_LISTEN_PORT, '0.0.0.0')
+log.info 'server started - http://localhost:{}/admin/', Const.SERVER_HTTP_LISTEN_PORT
 
 // prometheus metrics
 DefaultExports.initialize()
-def metricsServer = new HTTPServer(localIp, Const.METRICS_HTTP_LISTEN_PORT, true)
-log.info 'metrics server started - {}', Const.METRICS_HTTP_LISTEN_PORT
+def metricsServer = new HTTPServer('0.0.0.0', Const.METRICS_HTTP_LISTEN_PORT, true)
+log.info 'metrics server started - http://localhost:{}', Const.METRICS_HTTP_LISTEN_PORT
 
 def stopCl = {
     metricsServer.close()
@@ -142,6 +142,7 @@ def stopCl = {
     leaderFlagHolder.stop()
     JedisPoolHolder.instance.close()
     AuthTokenCacheHolder.instance.cleanUp()
+    RmJobExecutor.instance.cleanUp()
     Ds.disconnectAll()
 }
 

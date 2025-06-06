@@ -52,7 +52,7 @@ class TraefikPlugin extends BasePlugin implements Observer {
             new ImageTplDTO(
                     name: tplName,
                     imageName: imageName,
-                    tplType: ImageTplDTO.TplType.mount.name(),
+                    tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/etc/traefik/traefik.yml',
                     content: content,
                     isParentDirMount: false,

@@ -1,0 +1,76 @@
+<div ng-controller="MainCtrl">
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Redis Service List</h5>
+                    <div class="actions">
+                        <button class="btn" ng-click="goAddOne()">Add One</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <div class="form-group">
+                        <label>Mode: </label>
+                        <select ng-model="tmp.mode" style="width: 80px;">
+                            <option value="" selected>--/--</option>
+                            <option value="standalone">standalone</option>
+                            <option value="sentinel">sentinel</option>
+                            <option value="cluster">cluster</option>
+                        </select>
+                        <label>Keyword Filter: </label>
+                        <input type="text" ng-model="tmp.keyword" placeholder="Input Keyword"/>
+                        <button class="btn" ng-click="queryLl()">Query</button>
+                    </div>
+                    <table class="table table-bordered table-striped">
+                        <tr>
+                            <th width="15%">name</th>
+                            <th width="15%">engine</th>
+                            <th width="15%">mode</th>
+                            <th width="15%">shards/replicas</th>
+                            <th width="15%">status</th>
+                            <th width="15%">updated date</th>
+                            <th></th>
+                        </tr>
+                        <tr ng-repeat="one in ll">
+                            <td title="{{one.des}}">
+                                {{one.name}}
+                            </td>
+                            <td>
+                                {{one.engineType}}
+                                <br/>
+                                {{one.engineVersion}}
+                            </td>
+                            <td>{{one.mode}}</td>
+                            <td>
+                                {{one.replicas}}
+                                <span ng-show="one.mode == 'cluster'"> / shards: {{one.shards}}</span>
+                            </td>
+                            <td><span
+                                    ng-class="{'bg-info': 'creating' == one.status, 'bg-success': 'running' == one.status, 'bg-danger': 'deleted' == one.status}">{{one.status}}</span>
+                            </td>
+                            <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
+                            <td class="opts">
+                                <div class="btn-line">
+                                    <button class="btn" ng-click="goServiceOne(one)"
+                                            ng-show="one.status != 'deleted'">Detail
+                                    </button>
+                                </div>
+                                <div class="btn-line">
+                                    <button class="btn btn-red" ng-click="delete(one)"
+                                            ng-show="one.status != 'deleted'">Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 6px;" ui-pagi="" pager="pager" on-change-page="queryLl(cp, event)"></div>
+                </div>
+            </div>
+
+
+        </div><!-- /.row-fluid -->
+    </div>
+</div>

@@ -30,9 +30,9 @@ h.group('/node') {
         }
 
         def id = req.param('id')
-        def tags = req.param('tags')
+        def tagsStr = req.param('tags')
         assert id
-        new NodeDTO(id: id as int, tags: tags ?: '').update()
+        new NodeDTO(id: id as int, tags: tagsStr ? tagsStr.split(',') : null).update()
         [flag: true]
     }.post('/key-pair/reset-root-pass') { req, resp ->
         User u = req.attr('user') as User
@@ -105,7 +105,7 @@ h.group('/node') {
         if (!kp) {
             String message
             kp = new NodeKeyPairDTO(clusterId: clusterId, ip: ip, sshPort: 22,
-                    user: user, pass: pass, rootPass: rootPass)
+                    userName: user, pass: pass, rootPass: rootPass)
             if (!keyPrivate) {
                 DeploySupport.instance.initPrivateKey(kp)
                 message = 'Generate primary key'
@@ -116,10 +116,10 @@ h.group('/node') {
             kp.add()
             [flag: true, message: message]
         } else {
-            boolean isForceUpdatePass = user != kp.user
+            boolean isForceUpdatePass = user != kp.userName
             if (isForceUpdatePass) {
                 String message
-                kp.user = user
+                kp.userName = user
                 kp.pass = pass
                 if (!keyPrivate) {
                     DeploySupport.instance.initPrivateKey(kp)
@@ -132,7 +132,7 @@ h.group('/node') {
                 [flag: true, message: message]
             } else {
                 String message
-                kp.user = user
+                kp.userName = user
                 kp.pass = pass
                 kp.rootPass = rootPass
                 if (keyPrivate && !kp.keyPrivate) {
@@ -328,7 +328,7 @@ h.group('/node') {
              isOk             : info.isOk,
              isLiveCheckOk    : info.isLiveCheckOk,
              tags             : it.tags,
-             tagList          : it.tags ? it.tags.split(',') : [],
+             tagList          : it.tags ? it.tags : [],
              instances        : instance.getContainerListByNodeIp(it.ip)?.size(),
              fsUsageList      : info.fileUsageList.sort { a, b -> b.usePercent <=> a.usePercent },
              cpuVCore         : info.cpuPercList.size(),
@@ -371,7 +371,8 @@ h.group('/node') {
 
         def p = [type: type, queueType: queueType, containerId: containerId, gaugeName: gaugeName]
         if (containerId) {
-            def appId = InMemoryAllContainerManager.instance.getAppIpByContainerId(containerId)
+            def instance = InMemoryAllContainerManager.instance
+            def appId = instance.getAppIpByContainerId(containerId)
             p.appId = appId
             if ('container' == queueType) {
                 def appOne = new AppDTO(id: appId).queryFields('monitor_conf').one()
@@ -388,7 +389,8 @@ h.group('/node') {
         def containerId = req.param('containerId')
         assert nodeIp && containerId
 
-        def appId = InMemoryAllContainerManager.instance.getAppIpByContainerId(containerId)
+        def instance = InMemoryAllContainerManager.instance
+        def appId = instance.getAppIpByContainerId(containerId)
 
         def p = [:]
         p.appId = appId
@@ -410,8 +412,9 @@ h.group('/api') {
             info.hbTime = new Date()
             def nodeIp = info.nodeIp
 
-            InMemoryAllContainerManager.instance.addAuthToken(nodeIp, authToken)
-            InMemoryAllContainerManager.instance.addNodeInfo(nodeIp, info)
+            def instance = InMemoryAllContainerManager.instance
+            instance.addAuthToken(nodeIp, authToken)
+            instance.addNodeInfo(nodeIp, info)
             def old = new NodeDTO(ip: nodeIp).queryFields('id').one()
             if (old) {
                 old.updatedDate = info.hbTime
@@ -426,7 +429,9 @@ h.group('/api') {
             [envList: clusterOne.globalEnvConf.envList, dnsInfo: clusterOne.globalEnvConf.dnsInfo]
         }.post('/container') { req, resp ->
             X nodeX = req.bodyAs(X)
-            InMemoryAllContainerManager.instance.addContainers(nodeX.clusterId, nodeX.nodeIp, nodeX.containers)
+
+            def instance = InMemoryAllContainerManager.instance
+            instance.addContainers(nodeX.clusterId, nodeX.nodeIp, nodeX.containers)
 
             for (plugin in PluginManager.instance.pluginList) {
                 if (plugin instanceof LiveCheckResultHandler) {

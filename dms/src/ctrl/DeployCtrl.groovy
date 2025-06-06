@@ -50,10 +50,10 @@ h.get('/deploy/node-file/list') { req, resp ->
         def tags = nodeList?.find { node -> node.ip == one.ip }?.tags
         [id         : one.id,
          ip         : one.ip,
-         user       : one.user,
+         user       : one.userName,
          sshPort    : one.sshPort,
          updatedDate: one.updatedDate,
-         tagList    : tags ? tags.split(',') : [],
+         tagList    : tags ?: [],
          isOk       : isOk]
     }
 
