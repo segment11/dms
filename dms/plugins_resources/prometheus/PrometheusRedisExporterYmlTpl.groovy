@@ -81,7 +81,7 @@ for (i in 0..<groups) {
   - job_name: 'redis_exporter${i}_targets'
     static_configs:
       - targets:
-${subList.join("\\r\\n")}
+${subList.join("\r\n")}
     metrics_path: /scrape
     relabel_configs:
       - source_labels: [__address__]
