@@ -6,6 +6,7 @@ import com.segment.common.job.chain.JobStatus
 import com.segment.common.job.chain.JobStep
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import model.RmSentinelServiceDTO
 import model.RmServiceDTO
 import model.job.RmJobDTO
 import org.segment.d.json.DefaultJsonTransformer
@@ -18,15 +19,17 @@ class RmJob extends Job implements Serializable {
 
     RmServiceDTO rmService
 
+    RmSentinelServiceDTO rmSentinelService
+
     @Override
     int appId() {
-        rmService.id
+        rmService?.id ?: rmSentinelService.id
     }
 
     @Override
     void save() {
         def dto = new RmJobDTO()
-        dto.rmServiceId = rmService.id
+        dto.busiId = rmService?.id ?: rmSentinelService.id
         dto.type = type.name
         dto.status = status.name()
         dto.content = json.json(toMap())

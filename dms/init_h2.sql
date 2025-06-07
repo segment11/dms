@@ -318,7 +318,7 @@ create unique index idx_rm_sentinel_service_name on rm_sentinel_service (name);
 create table rm_job
 (
     id           int auto_increment primary key,
-    app_id       int,
+    busi_id      int,
     type         varchar(20),
     status       varchar(20),
     result       varchar(500),

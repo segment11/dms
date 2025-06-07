@@ -52,7 +52,7 @@
                             <td><span
                                     ng-class="{'bg-info': 'creating' == one.status, 'bg-success': 'running' == one.status, 'bg-danger': 'deleted' == one.status, 'bg-tips': 'unhealthy' == one.status}">{{one.status}}</span>
                                 <hr/>
-                                <span class="bg-info">
+                                <span class="bg-info" ng-show="one.extendParams.params.statusMessage">
                                     {{one.extendParams.params.statusMessage}}
                                 </span>
                             </td>
@@ -61,6 +61,10 @@
                                 <div class="btn-line">
                                     <button class="btn" ng-click="goServiceOne(one)"
                                             ng-show="one.status != 'deleted'">Detail
+                                    </button>
+                                </div>
+                                <div class="btn-line">
+                                    <button class="btn" ng-click="goServiceJobs(one)">Jobs
                                     </button>
                                 </div>
                                 <div class="btn-line">

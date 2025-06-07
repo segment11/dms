@@ -9,7 +9,7 @@ import model.BaseRecord
 class RmJobDTO extends BaseRecord<RmJobDTO> {
     Integer id
 
-    Integer rmServiceId
+    Integer busiId
 
     String type
 

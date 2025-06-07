@@ -2,13 +2,17 @@ package ctrl.redis
 
 import com.segment.common.Conf
 import com.segment.common.Utils
+import com.segment.common.job.chain.JobParams
+import com.segment.common.job.chain.JobStatus
 import model.*
 import model.json.*
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
-import plugin.BasePlugin
 import rm.RedisManager
 import rm.RmJobExecutor
+import rm.job.RmJob
+import rm.job.RmJobTypes
+import rm.job.task.RunCreatingAppJobTask
 import server.InMemoryAllContainerManager
 
 def h = ChainHandler.instance
@@ -172,8 +176,24 @@ h.group('/redis/sentinel-service') {
         one.createdDate = new Date()
 
         def id = one.add()
+        one.id = id
 
-        RmJobExecutor.instance.runCreatingAppJob(app)
+        def rmJob = new RmJob()
+        rmJob.rmSentinelService = one
+        rmJob.type = RmJobTypes.SENTINEL_CREATE
+        rmJob.status = JobStatus.created
+        rmJob.params = new JobParams()
+        rmJob.params.put('rmSentinelServiceId', id.toString())
+        // only one task
+        rmJob.taskList << new RunCreatingAppJobTask(rmJob, 0, app)
+
+        rmJob.createdDate = new Date()
+        rmJob.updatedDate = new Date()
+        rmJob.save()
+
+        RmJobExecutor.instance.execute {
+            rmJob.run()
+        }
 
         [id: id]
     }

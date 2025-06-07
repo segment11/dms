@@ -18,6 +18,7 @@ import rm.SlotBalancer
 import rm.job.RmJob
 import rm.job.RmJobTypes
 import rm.job.task.MeetNodesSetSlotsTask
+import rm.job.task.RunCreatingAppJobTask
 import rm.job.task.WaitClusterStateTask
 import rm.job.task.WaitInstancesRunningTask
 import server.InMemoryAllContainerManager
@@ -257,8 +258,24 @@ h.group('/redis/service') {
             one.updatedDate = new Date()
 
             def id = one.add()
+            one.id = id
 
-            RmJobExecutor.instance.runCreatingAppJob(app)
+            def rmJob = new RmJob()
+            rmJob.rmService = one
+            rmJob.type = RmJobTypes.BASE_CREATE
+            rmJob.status = JobStatus.created
+            rmJob.params = new JobParams()
+            rmJob.params.put('rmServiceId', id.toString())
+            // only one task
+            rmJob.taskList << new RunCreatingAppJobTask(rmJob, 0, app)
+
+            rmJob.createdDate = new Date()
+            rmJob.updatedDate = new Date()
+            rmJob.save()
+
+            RmJobExecutor.instance.execute {
+                rmJob.run()
+            }
 
             return [id: id]
         }
@@ -300,10 +317,7 @@ h.group('/redis/service') {
         one.updatedDate = new Date()
 
         def id = one.add()
-
-        appListByShard.each {
-            RmJobExecutor.instance.runCreatingAppJob(it)
-        }
+        one.id = id
 
         def rmJob = new RmJob()
         rmJob.rmService = one
@@ -313,6 +327,7 @@ h.group('/redis/service') {
         rmJob.params.put('rmServiceId', id.toString())
         // sub tasks
         for (i in 0..<one.shards) {
+            rmJob.taskList << new RunCreatingAppJobTask(rmJob, i, appListByShard[i])
             rmJob.taskList << new WaitInstancesRunningTask(rmJob, i)
         }
         rmJob.taskList << new MeetNodesSetSlotsTask(rmJob)
@@ -400,7 +415,12 @@ h.group('/redis/service') {
 
         // redis exporter application
         def app = new AppDTO()
+        app.clusterId = clusterId
+        app.namespaceId = namespaceIdMetric
         app.name = 'redis_exporter'
+        // not auto first
+        app.status = AppDTO.Status.manual.val
+        app.updatedDate = new Date()
 
         // check if database name duplicated
         def existsOne = new AppDTO(clusterId: clusterId, name: app.name).one()
@@ -408,11 +428,6 @@ h.group('/redis/service') {
             log.warn('redis exporter already exists {}', app.name)
             resp.halt(500, 'redis exporter already exists')
         }
-
-        app.clusterId = clusterId
-        app.namespaceId = namespaceIdMetric
-        // not auto first
-        app.status = AppDTO.Status.manual.val
 
         def conf = new AppConf()
         app.conf = conf
