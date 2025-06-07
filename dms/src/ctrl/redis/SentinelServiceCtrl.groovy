@@ -137,6 +137,10 @@ h.group('/redis/sentinel-service') {
             }
         }
 
+        def c = Conf.instance
+        def isSingleNode = c.isOn('rm.isSingleNodeTest')
+        conf.isLimitNode = isSingleNode
+
         final String dataDir = RedisManager.dataDir()
         def sentinelDataDir = dataDir + '/sentinel_data_' + Utils.uuid()
         def nodeVolumeId = new NodeVolumeDTO(imageName: 'library/redis', name: 'for sentinel ' + one.name, dir: sentinelDataDir,
@@ -146,13 +150,11 @@ h.group('/redis/sentinel-service') {
                 nodeVolumeId: nodeVolumeId)
         conf.dirVolumeList << dirOne
 
-        def c = Conf.instance
-
         def tplOne = new ImageTplDTO(imageName: 'library/redis', name: 'sentinel.conf.tpl').one()
         def mountOne = new FileVolumeMount(imageTplId: tplOne.id, content: tplOne.content, dist: sentinelDataDir + '/${appId}_${instanceIndex}.conf')
         mountOne.isParentDirMount = true
 
-        mountOne.paramList << new KVPair<String>('isSingleNode', c.isOn('rm.isSingleNodeTest').toString())
+        mountOne.paramList << new KVPair<String>('isSingleNode', isSingleNode.toString())
         mountOne.paramList << new KVPair<String>('port', '' + one.port)
         mountOne.paramList << new KVPair<String>('dataDir', '/data/sentinel')
         mountOne.paramList << new KVPair<String>('password', one.pass ?: '')

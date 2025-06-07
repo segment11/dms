@@ -212,7 +212,8 @@ h.group('/redis/service') {
         }
 
         def c = Conf.instance
-        conf.isLimitNode = c.isOn('rm.isSingleNodeTest')
+        def isSingleNode = c.isOn('rm.isSingleNodeTest')
+        conf.isLimitNode = isSingleNode
 
         final String dataDir = RedisManager.dataDir()
         def serviceDataDir = dataDir + '/' + one.engineType + '_data_' + Utils.uuid() + '_${appId}_${instanceIndex}'
@@ -228,7 +229,7 @@ h.group('/redis/service') {
         def mountOne = new FileVolumeMount(imageTplId: tplOne.id, content: tplOne.content, dist: '/etc/redis/redis.conf')
         mountOne.isParentDirMount = false
 
-        mountOne.paramList << new KVPair<String>('isSingleNode', c.isOn('rm.isSingleNodeTest').toString())
+        mountOne.paramList << new KVPair<String>('isSingleNode', isSingleNode.toString())
         mountOne.paramList << new KVPair<String>('port', '' + one.port)
         mountOne.paramList << new KVPair<String>('dataDir', '/data/redis')
         mountOne.paramList << new KVPair<String>('password', one.pass ?: '')
