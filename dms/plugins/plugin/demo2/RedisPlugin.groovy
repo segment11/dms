@@ -8,7 +8,7 @@ import model.AppDTO
 import model.ImageEnvDTO
 import model.ImagePortDTO
 import model.ImageTplDTO
-import model.json.*
+import model.json.TplParamsConf
 import model.server.CreateContainerConf
 import plugin.BasePlugin
 import plugin.PluginManager
@@ -20,7 +20,6 @@ import server.scheduler.checker.CheckerHolder
 import server.scheduler.checker.HealthChecker
 import server.scheduler.checker.HealthCheckerHolder
 import server.scheduler.processor.JobStepKeeper
-import transfer.ContainerInfo
 
 @CompileStatic
 @Slf4j
@@ -41,7 +40,6 @@ class RedisPlugin extends BasePlugin {
 
         initImageConfig()
         initChecker()
-        initExporter()
     }
 
     private void initImageConfig() {
@@ -595,126 +593,6 @@ class RedisPlugin extends BasePlugin {
                 }
 
                 return true
-            }
-        }
-    }
-
-    private void initExporter() {
-        CheckerHolder.instance.add new Checker() {
-            @Override
-            boolean check(CreateContainerConf cc, JobStepKeeper keeper) {
-                def sentinelConfThisOne = cc.conf.fileVolumeList.find { it.dist.contains('/sentinel') }
-                def isSentinel = sentinelConfThisOne != null
-                if (isSentinel) {
-                    log.info 'it is redis sentinel, skip init exporter'
-                    return true
-                }
-
-                // only last container create exporter application
-                if (cc.instanceIndex != cc.conf.containerNumber - 1) {
-                    return
-                }
-
-                def confOne = cc.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
-                def redisPort = confOne.paramValue('port') as int
-                def redisPassword = confOne.paramValue('password') as String
-                def isSingleNode = confOne.paramValue('isSingleNode') == 'true'
-
-                def app = new AppDTO()
-                app.name = cc.appId + '_' + cc.app.name + '_exporter'
-
-                // check if database name duplicated
-                def existsOne = new AppDTO(name: app.name).one()
-                if (existsOne) {
-                    log.warn('this exporter application name already exists {}', app.name)
-                    if (existsOne.conf.containerNumber != cc.conf.containerNumber) {
-                        existsOne.conf.containerNumber = cc.conf.containerNumber
-                        existsOne.conf.targetNodeIpList = cc.conf.targetNodeIpList
-
-                        new AppDTO(id: existsOne.id, conf: existsOne.conf).update()
-                        log.info 'update exporter application container number - {}', existsOne.id
-                    }
-                    return true
-                }
-
-                app.clusterId = cc.app.clusterId
-                app.namespaceId = cc.app.namespaceId
-                // not auto first
-                app.status = AppDTO.Status.manual.val
-
-                def conf = new AppConf()
-                app.conf = conf
-
-                def rawConf = cc.app.conf
-                // one redis instance -> one redis_exporter application
-                conf.containerNumber = cc.conf.containerNumber
-                conf.targetNodeIpList = cc.conf.targetNodeIpList
-                conf.registryId = rawConf.registryId
-                conf.group = 'oliver006'
-                conf.image = 'redis_exporter'
-                conf.tag = 'latest'
-                conf.memMB = 64
-                conf.memReservationMB = conf.memMB
-                conf.cpuFixed = 0.1
-                conf.user = '59000:59000'
-
-                conf.isLimitNode = cc.conf.isLimitNode
-
-                String envValue
-                if (isSingleNode) {
-                    // ${nodeIp} is a placeholder, will be replaced by real ip
-                    envValue = "redis://\${nodeIp}:\${${redisPort} + instanceIndex}".toString()
-                } else {
-                    envValue = "redis://\${nodeIp}:${redisPort}".toString()
-                }
-
-                conf.envList << new KVPair<String>('REDIS_ADDR', envValue)
-                conf.envList << new KVPair<String>('REDIS_PASSWORD', redisPassword)
-
-                final int exporterPort = 9121
-                def exporterPublicPort = exporterPort + (redisPort - 6379)
-
-                if (isSingleNode) {
-                    conf.envList << new KVPair<String>('REDIS_EXPORTER_WEB_LISTEN_ADDRESS', '0.0.0.0:${' + exporterPublicPort + '+instanceIndex}')
-                    conf.envList << new KVPair<String>(ContainerInfo.ENV_KEY_PUBLIC_PORT + exporterPort, '${' + exporterPublicPort + '+instanceIndex}')
-                } else {
-                    conf.envList << new KVPair<String>('REDIS_EXPORTER_WEB_LISTEN_ADDRESS', "0.0.0.0:${exporterPublicPort}".toString())
-                    conf.envList << new KVPair<String>(ContainerInfo.ENV_KEY_PUBLIC_PORT + exporterPort, exporterPublicPort.toString())
-                }
-
-                conf.networkMode = 'host'
-                conf.portList << new PortMapping(privatePort: exporterPort, publicPort: exporterPublicPort)
-
-                // monitor
-                def monitorConf = new MonitorConf()
-                app.monitorConf = monitorConf
-                monitorConf.port = exporterPort
-                monitorConf.isHttpRequest = true
-                monitorConf.httpRequestUri = '/metrics'
-
-                // add application to dms
-                int appId = app.add()
-                app.id = appId
-                log.info 'done create related exporter application, app id: {}', appId
-
-                // create dms job
-                createAppCreateJob(appId, conf)
-                true
-            }
-
-            @Override
-            Checker.Type type() {
-                Checker.Type.after
-            }
-
-            @Override
-            String name() {
-                'redis create exporter application'
-            }
-
-            @Override
-            String imageName() {
-                RedisPlugin.this.imageName()
             }
         }
     }

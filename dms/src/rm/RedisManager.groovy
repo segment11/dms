@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AppDTO
 import model.DynConfigDTO
+import plugin.BasePlugin
 import server.AgentCaller
 import server.InMemoryAllContainerManager
 
@@ -16,6 +17,10 @@ class RedisManager {
     static String dataDir() {
         def one = new DynConfigDTO(name: 'rm.data.dir').one()
         return one?.vv ?: DEFAULT_DATA_DIR
+    }
+
+    static int preferRegistryId() {
+        BasePlugin.addRegistryIfNotExist('docker.1ms.run', 'https://docker.1ms.run')
     }
 
     static void updateDataDir(String dataDir) {

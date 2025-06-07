@@ -32,12 +32,12 @@ class PrometheusPlugin extends BasePlugin implements ConfigFileReloaded {
         initChecker()
     }
 
+    final String tplName = 'prometheus.yml.tpl'
+    final String tplNameRedisExporter = 'prometheus.redis.exporter.yml.tpl'
+
     private void initImageConfig() {
         addEnvIfNotExists('DATA_DIR', 'DATA_DIR', '--storage.tsdb.path, default /prometheus')
         addPortIfNotExists('9090', 9090)
-
-        final String tplName = 'prometheus.yml.tpl'
-        final String tplNameRedisExporter = 'prometheus.rm.yml.tpl'
 
         String tplFilePath = PluginManager.pluginsResourceDirPath() + '/prometheus/PrometheusYmlTpl.groovy'
         String content = new File(tplFilePath).text
@@ -47,10 +47,10 @@ class PrometheusPlugin extends BasePlugin implements ConfigFileReloaded {
 
         TplParamsConf tplParams = new TplParamsConf()
         tplParams.addParam('intervalSecondsGlobal', '15', 'int')
-        tplParams.addParam('dmsServerHost', '127.0.0.1', 'string')
 
         TplParamsConf tplParams2 = new TplParamsConf()
         tplParams2.addParam('intervalSecondsGlobal', '15', 'int')
+        tplParams2.addParam('eachContainerChargeRedisServerCount', '100', 'int')
 
         def imageName = imageName()
 
@@ -130,6 +130,8 @@ class PrometheusPlugin extends BasePlugin implements ConfigFileReloaded {
         'prometheus'
     }
 
+    String configTplName = tplName
+
     @Override
     AppDTO demoApp(AppDTO app) {
         app.name = image()
@@ -147,7 +149,11 @@ class PrometheusPlugin extends BasePlugin implements ConfigFileReloaded {
                 isReloadInterval: true,
                 paramList: [new KVPair<String>('intervalSecondsGlobal', '15')],
                 dist: '/etc/prometheus/prometheus.yml',
-                imageTplId: getImageTplIdByName('prometheus.yml.tpl'))
+                imageTplId: getImageTplIdByName(configTplName))
+
+        if (configTplName == tplNameRedisExporter) {
+            conf.fileVolumeList[0].paramList << new KVPair<String>('eachContainerChargeRedisServerCount', '100')
+        }
 
         conf.portList << new PortMapping(privatePort: 9090, publicPort: 9090)
 

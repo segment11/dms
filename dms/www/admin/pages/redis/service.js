@@ -36,4 +36,23 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     $scope.goAddOne = function () {
         Page.go('/page/redis_add', {});
     };
+
+    $scope.initExporters = function () {
+        uiTips.prompt('Choose one node ip to create prometheus application', function (val) {
+            if (!val) {
+                uiTips.alert('Please input a node ip');
+                return;
+            }
+
+            $http.get('/dms/redis/service/init-exporters', {
+                params: {
+                    targetNodeIp: val
+                }
+            }).success(function (data) {
+                if (data.flag) {
+                    uiTips.alert('Init redis exporters success');
+                }
+            });
+        }, '127.0.0.1');
+    };
 });

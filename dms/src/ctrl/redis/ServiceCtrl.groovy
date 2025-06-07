@@ -10,6 +10,8 @@ import org.apache.commons.beanutils.BeanUtils
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
 import plugin.BasePlugin
+import plugin.demo2.InitToolPlugin
+import plugin.demo2.PrometheusPlugin
 import rm.RedisManager
 import rm.RmJobExecutor
 import rm.SlotBalancer
@@ -20,6 +22,7 @@ import rm.job.task.WaitClusterStateTask
 import rm.job.task.WaitInstancesRunningTask
 import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
+import transfer.ContainerInfo
 
 def h = ChainHandler.instance
 
@@ -178,7 +181,7 @@ h.group('/redis/service') {
 
         def conf = new AppConf()
         conf.containerNumber = one.replicas
-        conf.registryId = BasePlugin.addRegistryIfNotExist('docker.1ms.run', 'https://docker.1ms.run')
+        conf.registryId = RedisManager.preferRegistryId()
 
         if (one.engineType == RmServiceDTO.EngineType.redis) {
             conf.group = 'library'
@@ -357,5 +360,103 @@ h.group('/redis/service') {
         new RmServiceDTO(id: id, status: RmServiceDTO.Status.deleted, updatedDate: new Date()).update()
 
         [flag: true]
+    }
+
+    h.get('/init-exporters') { req, resp ->
+        def targetNodeIp = req.param('targetNodeIp')
+        assert targetNodeIp
+
+        def instance = InMemoryAllContainerManager.instance
+        def nodeInfo = instance.getNodeInfo(targetNodeIp)
+        if (!nodeInfo) {
+            resp.halt(500, 'node not exists')
+        }
+        nodeInfo.checkIfOk(new Date())
+        if (!nodeInfo.isOk) {
+            resp.halt(500, 'node heart beat not ok')
+        }
+
+        // prometheus application
+        def namespaceIdMetric = NamespaceDTO.createIfNotExist(clusterId, 'metric')
+
+        List<String> targetNodeIpList = [targetNodeIp]
+        def prometheusApp = BasePlugin.tplApp(clusterId, namespaceIdMetric, targetNodeIpList) { conf ->
+            conf.memMB = 512
+            conf.cpuFixed = 1.0d
+
+            conf.registryId = RedisManager.preferRegistryId()
+
+            // 9090 conflict, use 19090, for local test
+            conf.networkMode = 'bridge'
+            conf.portList.clear()
+            conf.portList << new PortMapping(privatePort: 9090, publicPort: 19090)
+        }
+
+        def prometheusPlugin = new PrometheusPlugin()
+        prometheusPlugin.configTplName = prometheusPlugin.tplNameRedisExporter
+        def appPrometheus = prometheusPlugin.demoApp(prometheusApp)
+        def prometheusAppId = InitToolPlugin.addAppIfNotExists(appPrometheus)
+        log.warn 'created prometheus app for redis exporter {}', prometheusAppId
+
+        // redis exporter application
+        def app = new AppDTO()
+        app.name = 'redis_exporter'
+
+        // check if database name duplicated
+        def existsOne = new AppDTO(clusterId: clusterId, name: app.name).one()
+        if (existsOne) {
+            log.warn('redis exporter already exists {}', app.name)
+            resp.halt(500, 'redis exporter already exists')
+        }
+
+        app.clusterId = clusterId
+        app.namespaceId = namespaceIdMetric
+        // not auto first
+        app.status = AppDTO.Status.manual.val
+
+        def conf = new AppConf()
+        app.conf = conf
+
+        conf.containerNumber = 1
+        conf.registryId = RedisManager.preferRegistryId()
+        conf.group = 'oliver006'
+        conf.image = 'redis_exporter'
+        conf.tag = 'latest'
+        conf.memMB = 128
+        conf.memReservationMB = conf.memMB
+        conf.cpuFixed = 0.1
+        conf.user = '59000:59000'
+
+        def c = Conf.instance
+        def isSingleNode = c.isOn('rm.isSingleNodeTest')
+
+        conf.isLimitNode = isSingleNode
+
+        def envValue = "redis://127.0.0.1:6379".toString()
+
+        conf.envList << new KVPair<String>('REDIS_ADDR', envValue)
+
+        final int exporterPort = 9121
+
+        if (isSingleNode) {
+            conf.envList << new KVPair<String>('REDIS_EXPORTER_WEB_LISTEN_ADDRESS', '0.0.0.0:${' + exporterPort + '+instanceIndex}')
+            conf.envList << new KVPair<String>(ContainerInfo.ENV_KEY_PUBLIC_PORT + exporterPort, '${' + exporterPort + '+instanceIndex}')
+        } else {
+            conf.envList << new KVPair<String>('REDIS_EXPORTER_WEB_LISTEN_ADDRESS', "0.0.0.0:${exporterPort}".toString())
+            conf.envList << new KVPair<String>(ContainerInfo.ENV_KEY_PUBLIC_PORT + exporterPort, exporterPort.toString())
+        }
+
+        conf.networkMode = 'host'
+        conf.portList << new PortMapping(privatePort: exporterPort, publicPort: exporterPort)
+
+        // add application to dms
+        int appId = app.add()
+        app.id = appId
+        log.info 'done create redis exporter application, app id: {}', appId
+
+        // create dms job
+        def jobId = BasePlugin.delayRunCreatingAppJob(app)
+
+        [flag: true, jobId: jobId]
     }
 }

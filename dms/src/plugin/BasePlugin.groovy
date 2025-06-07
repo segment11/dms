@@ -9,6 +9,8 @@ import org.apache.commons.io.FileUtils
 import org.segment.web.common.CachedGroovyClassLoader
 import plugin.model.Menu
 
+import java.util.function.Consumer
+
 @CompileStatic
 @Slf4j
 abstract class BasePlugin implements Plugin {
@@ -45,7 +47,7 @@ abstract class BasePlugin implements Plugin {
         }
     }
 
-    static AppDTO tplApp(int clusterId, int namespaceId, List<String> targetNodeIpList) {
+    static AppDTO tplApp(int clusterId, int namespaceId, List<String> targetNodeIpList, Consumer<AppConf> confUpdater = null) {
         def app = new AppDTO()
         app.clusterId = clusterId
         app.namespaceId = namespaceId
@@ -67,6 +69,10 @@ abstract class BasePlugin implements Plugin {
         conf.isLimitNode = targetNodeIpList.size() < 3
 
         conf.networkMode = 'host'
+
+        if (confUpdater) {
+            confUpdater.accept(conf)
+        }
 
         app.conf = conf
         app

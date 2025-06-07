@@ -115,7 +115,7 @@ h.group('/redis/sentinel-service') {
 
         def conf = new AppConf()
         conf.containerNumber = one.replicas
-        conf.registryId = BasePlugin.addRegistryIfNotExist('docker.1ms.run', 'https://docker.1ms.run')
+        conf.registryId = RedisManager.preferRegistryId()
         conf.group = 'library'
         conf.image = 'redis'
         conf.tag = '7.2'
