@@ -37,12 +37,20 @@ class PrometheusPlugin extends BasePlugin implements ConfigFileReloaded {
         addPortIfNotExists('9090', 9090)
 
         final String tplName = 'prometheus.yml.tpl'
+        final String tplNameRedisExporter = 'prometheus.rm.yml.tpl'
 
         String tplFilePath = PluginManager.pluginsResourceDirPath() + '/prometheus/PrometheusYmlTpl.groovy'
         String content = new File(tplFilePath).text
 
+        String tplFilePathRedisExporter = PluginManager.pluginsResourceDirPath() + '/prometheus/PrometheusRedisExporterYmlTpl.groovy'
+        String contentRedisExporter = new File(tplFilePathRedisExporter).text
+
         TplParamsConf tplParams = new TplParamsConf()
         tplParams.addParam('intervalSecondsGlobal', '15', 'int')
+        tplParams.addParam('dmsServerHost', '127.0.0.1', 'string')
+
+        TplParamsConf tplParams2 = new TplParamsConf()
+        tplParams2.addParam('intervalSecondsGlobal', '15', 'int')
 
         def imageName = imageName()
 
@@ -56,6 +64,19 @@ class PrometheusPlugin extends BasePlugin implements ConfigFileReloaded {
                     content: content,
                     isParentDirMount: false,
                     params: tplParams
+            ).add()
+        }
+
+        def two = new ImageTplDTO(imageName: imageName, name: tplNameRedisExporter).queryFields('id').one()
+        if (!two) {
+            new ImageTplDTO(
+                    name: tplNameRedisExporter,
+                    imageName: imageName,
+                    tplType: ImageTplDTO.TplType.mount,
+                    mountDist: '/etc/prometheus/prometheus.yml',
+                    content: contentRedisExporter,
+                    isParentDirMount: false,
+                    params: tplParams2
             ).add()
         }
 

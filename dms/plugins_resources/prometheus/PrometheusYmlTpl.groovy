@@ -67,6 +67,21 @@ appMonitorList.each { app ->
     }
 }
 
+/*
+list << """
+  - job_name: velo
+    metrics_path: '/?metrics'
+    static_configs:
+      - targets: ['127.0.0.1:7379', '127.0.0.1:7380']
+"""
+
+list << """
+  - job_name: velo_slots
+    metrics_path: '/?manage&slot&0&view-metrics'
+    static_configs:
+      - targets: ['127.0.0.1:7379', '127.0.0.1:7380']
+"""
+ */
 
 """
 global:
