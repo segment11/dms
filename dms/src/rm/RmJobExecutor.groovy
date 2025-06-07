@@ -5,6 +5,7 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.AppDTO
 import model.AppJobDTO
+import plugin.BasePlugin
 import server.scheduler.processor.CreateProcessor
 
 import java.util.concurrent.ExecutorService
@@ -21,28 +22,14 @@ class RmJobExecutor {
     }
 
     void runCreatingAppJob(AppDTO app) {
-        List<Integer> needRunInstanceIndexList = []
-        (0..<app.conf.containerNumber).each {
-            needRunInstanceIndexList << it
-        }
+        def job = BasePlugin.creatingAppJob(app)
 
-        def job = new AppJobDTO(
-                appId: app.id,
-                failNum: 0,
-                status: AppJobDTO.Status.created.val,
-                jobType: AppJobDTO.JobType.create.val,
-                createdDate: new Date(),
-                updatedDate: new Date()).
-                needRunInstanceIndexList(needRunInstanceIndexList)
-        int jobId = job.add()
-        job.id = jobId
-
-        log.warn('start application create job, job id: {}', jobId)
+        log.warn('start application create job, job id: {}', job.id)
         execute {
             try {
                 new CreateProcessor().process(job, app, [])
                 new AppJobDTO(id: job.id, status: AppJobDTO.Status.done.val, updatedDate: new Date()).update()
-                log.warn('start application create job done, job id: {}', jobId)
+                log.warn('start application create job done, job id: {}', job.id)
             } catch (Exception e) {
                 log.error('start application create job error', e)
             }

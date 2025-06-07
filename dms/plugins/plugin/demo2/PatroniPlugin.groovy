@@ -433,8 +433,9 @@ chown postgres:postgres /var/lib/pgbackrest
             boolean check(CreateContainerConf createContainerConf, JobStepKeeper keeper) {
                 // only last container create exporter application
                 if (createContainerConf.instanceIndex != createContainerConf.conf.containerNumber - 1) {
-                    return
+                    return true
                 }
+
                 def publicPort = getPublicPort(createContainerConf.conf)
 
                 def app = new AppDTO()
@@ -512,23 +513,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 log.info 'done create related exporter application {}', appId
 
                 // create dms job
-                List<Integer> needRunInstanceIndexList = []
-                (0..<conf.containerNumber).each {
-                    needRunInstanceIndexList << it
-                }
-                def job = new AppJobDTO(
-                        appId: appId,
-                        failNum: 0,
-                        status: AppJobDTO.Status.created.val,
-                        jobType: AppJobDTO.JobType.create.val,
-                        createdDate: new Date(),
-                        updatedDate: new Date()).
-                        needRunInstanceIndexList(needRunInstanceIndexList)
-                int jobId = job.add()
-                job.id = jobId
-
-                // set auto so dms can handle this job
-                new AppDTO(id: appId, status: AppDTO.Status.auto.val).update()
+                def jobId = delayRunCreatingAppJob(app)
                 log.info 'done create related exporter application start job {}', jobId
                 true
             }
@@ -556,7 +541,7 @@ chown postgres:postgres /var/lib/pgbackrest
             boolean check(CreateContainerConf createContainerConf, JobStepKeeper keeper) {
                 // only last container create haproxy application
                 if (createContainerConf.instanceIndex != createContainerConf.conf.containerNumber - 1) {
-                    return
+                    return true
                 }
 
                 // 1 haproxy instance, scale if u need
@@ -619,23 +604,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 log.info 'done create related haproxy application {}', appId
 
                 // create dms job
-                List<Integer> needRunInstanceIndexList = []
-                (0..<conf.containerNumber).each {
-                    needRunInstanceIndexList << it
-                }
-                def job = new AppJobDTO(
-                        appId: appId,
-                        failNum: 0,
-                        status: AppJobDTO.Status.created.val,
-                        jobType: AppJobDTO.JobType.create.val,
-                        createdDate: new Date(),
-                        updatedDate: new Date()).
-                        needRunInstanceIndexList(needRunInstanceIndexList)
-                int jobId = job.add()
-                job.id = jobId
-
-                // set auto so dms can handle this job
-                new AppDTO(id: appId, status: AppDTO.Status.auto.val).update()
+                def jobId = delayRunCreatingAppJob(app)
                 log.info 'done create related haproxy application start job {}', jobId
                 true
             }
