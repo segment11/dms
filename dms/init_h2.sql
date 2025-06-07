@@ -340,5 +340,5 @@ create table rm_task_log
     created_date timestamp,
     updated_date timestamp default current_timestamp
 );
-create index idx_rm_task_log_job_id on rm_job_task (job_id);
+create index idx_rm_task_log_job_id on rm_task_log (job_id);
 
