@@ -92,6 +92,7 @@ if (ooApp && ooApp.containerList) {
     appSourceIds << 'local_docker_logs'
     appSourceIds << 'dms_server'
     appSourceIds << 'dms_agent'
+    appSourceIds << 'redis_instances'
 
     list << """
 [sources.local_docker_logs]
