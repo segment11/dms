@@ -10,21 +10,35 @@ def eachContainerChargeRedisServerCount = super.binding.getProperty('eachContain
 ContainerMountTplHelper applications = super.binding.getProperty('applications') as ContainerMountTplHelper
 ContainerMountTplHelper.OneApp redisExporterApp = applications.app('redis_exporter')
 
-def redisExporterAddrList = []
+ContainerMountTplHelper.OneApp nodeExporterApp = applications.app('node-exporter')
+def nodeExporterAddrList = []
+if (nodeExporterApp && nodeExporterApp.running()) {
+    redisExporterApp.containerList.each { x ->
+        nodeExporterAddrList << (x.nodeIp + ':' + x.publicPort(9100))
+    }
+}
 
+def redisExporterAddrList = []
 if (redisExporterApp && redisExporterApp.running()) {
     redisExporterApp.containerList.each { x ->
         redisExporterAddrList << (x.nodeIp + ':' + x.publicPort(9121))
     }
 }
 
-if (!redisExporterAddrList) {
+if (!nodeExporterAddrList && !redisExporterAddrList) {
     return """
 global:
   scrape_interval:     ${intervalSecondsGlobal}s
   evaluation_interval: 15s
 """
 }
+
+def nodeExporterJobConf = nodeExporterAddrList ? """
+  - job_name: node
+    metrics_path: /metrics
+    static_configs:
+      - targets: [${nodeExporterAddrList.collect { "'" + it + "'" }.join(',')}]
+""" : ""
 
 def instance = InMemoryAllContainerManager.instance
 def appList = InMemoryCacheSupport.instance.appList
@@ -90,7 +104,7 @@ ${subList.join("\r\n")}
         target_label: instance
       - target_label: __address__
         replacement: ${redisExporterAddr}
-"""
+""".toString()
 }
 
 """
@@ -100,5 +114,8 @@ global:
 
 scrape_configs:
   ## config for the multiple Redis targets that the exporter will scrape
+
+${nodeExporterJobConf}  
+  
 ${targetsConfigList.join("\\r\\n")}      
 """
