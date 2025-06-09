@@ -32,6 +32,10 @@ class RedisManager {
         }
     }
 
+    static final int ONE_SHARD_MAX_REPLICAS = 10
+
+    static final int ONE_CLUSTER_MAX_SHARDS = 128
+
     // containers management
     static void stopContainers(int appId) {
         def appOne = new AppDTO(id: appId).queryFields('id,status').one()

@@ -89,6 +89,7 @@ class RedisPlugin extends BasePlugin {
         tplParams.addParam('port', '6379', 'int')
         tplParams.addParam('dataDir', '/data/redis', 'string')
         tplParams.addParam('password', '123456', 'string')
+        tplParams.addParam('maxmemoryMB', '1024', 'int')
         tplParams.addParam('isSingleNode', 'false', 'string')
         tplParams.addParam('isMasterSlave', 'true', 'string')
         tplParams.addParam('sentinelAppName', 'sentinel', 'string')

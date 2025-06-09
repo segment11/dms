@@ -8,6 +8,7 @@ import model.json.ClusterSlotsDetail
 import model.json.ExtendParams
 import model.json.LogPolicy
 import redis.clients.jedis.JedisPool
+import rm.RedisManager
 import transfer.ContainerInfo
 
 @CompileStatic
@@ -50,10 +51,13 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
     String pass
 
+    Integer maxmemoryMB
+
     Integer port
 
     Integer shards
 
+    // include primary node
     Integer replicas
 
     String[] nodeTags
@@ -77,7 +81,7 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
     int listenPort(ContainerInfo x) {
         def shardIndex = clusterSlotsDetail.shards.find { it.appId == x.appId() }.shardIndex
-        def portForThisShard = port + shardIndex * 10
+        def portForThisShard = port + shardIndex * RedisManager.ONE_SHARD_MAX_REPLICAS
         portForThisShard + x.instanceIndex()
     }
 

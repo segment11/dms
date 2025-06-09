@@ -271,6 +271,7 @@ create table rm_service
     config_template_id   int,
     sentinel_service_id  int,
     pass                 varchar(200),
+    maxmemory_mb         int,
     port                 int,
     shards               int,
     replicas             int,
@@ -287,6 +288,7 @@ create table rm_service
 );
 create unique index idx_rm_service_name on rm_service (name);
 create index idx_rm_service_config_template_id on rm_service (config_template_id);
+create index idx_rm_service_status on rm_service (status);
 
 create table rm_config_template
 (

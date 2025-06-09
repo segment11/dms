@@ -30,7 +30,7 @@
                             <th width="15%">name</th>
                             <th width="15%">engine</th>
                             <th width="15%">mode</th>
-                            <th width="15%">shards/replicas</th>
+                            <th width="15%">replicas</th>
                             <th width="15%">status</th>
                             <th width="15%">updated date</th>
                             <th></th>
@@ -46,8 +46,9 @@
                             </td>
                             <td>{{one.mode}}</td>
                             <td>
-                                {{one.replicas}}
-                                <span ng-show="one.mode == 'cluster'"> / shards: {{one.shards}}</span>
+                                <span class="bg-success">{{one.replicas}}</span>&nbsp;Replicas&nbsp;
+                                <span class="bg-success" ng-show="one.mode == 'cluster'">{{one.shards}}</span>&nbsp;Shards&nbsp;
+                                <span class="bg-info">{{one.maxmemoryMB}}</span>&nbsp;Mexmemory&nbsp;(MB)
                             </td>
                             <td><span
                                     ng-class="{'bg-info': 'creating' == one.status, 'bg-success': 'running' == one.status, 'bg-danger': 'deleted' == one.status, 'bg-tips': 'unhealthy' == one.status}">{{one.status}}</span>

@@ -89,8 +89,6 @@ h.group('/redis/sentinel-service') {
             resp.halt(500, 'name already exists')
         }
 
-        def namespaceId = NamespaceDTO.createIfNotExist(clusterId, 'sentinel')
-
         // check node ready
         def instance = InMemoryAllContainerManager.instance
         def hbOkNodeList = instance.hbOkNodeList(clusterId, 'ip,tags')
@@ -110,6 +108,8 @@ h.group('/redis/sentinel-service') {
         }
 
         // create app
+        def namespaceId = NamespaceDTO.createIfNotExist(clusterId, 'sentinel')
+
         def app = new AppDTO()
         app.clusterId = clusterId
         app.namespaceId = namespaceId

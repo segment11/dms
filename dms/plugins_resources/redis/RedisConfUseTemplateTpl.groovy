@@ -6,6 +6,7 @@ def nodeIp = super.binding.getProperty('nodeIp') as String
 def instanceIndex = super.binding.getProperty('instanceIndex') as int
 
 def port = super.binding.getProperty('port') as int
+def maxmemoryMB = super.binding.getProperty('maxmemoryMB') as int
 def dataDir = super.binding.getProperty('dataDir') as String
 def password = super.binding.getProperty('password') as String
 def isSingleNode = 'true' == (super.binding.getProperty('isSingleNode') as String)
@@ -36,6 +37,8 @@ dir ${dataDirFinal}
 ${password ? 'requirepass ' + password : ''}
 ${password ? 'masterauth ' + password : ''}
 pidfile /var/run/redis_${port}.pid
+
+maxmemory ${maxmemoryMB}mb
 
 ${customSegment}
 

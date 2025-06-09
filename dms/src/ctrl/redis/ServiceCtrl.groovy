@@ -136,8 +136,6 @@ h.group('/redis/service') {
             resp.halt(500, 'name already exists')
         }
 
-        def namespaceId = NamespaceDTO.createIfNotExist(clusterId, 'redis')
-
         // check node ready
         def instance = InMemoryAllContainerManager.instance
         def hbOkNodeList = instance.hbOkNodeList(clusterId, 'ip,tags')
@@ -153,6 +151,30 @@ h.group('/redis/service') {
         } else {
             if (hbOkNodeList.size() < one.replicas && !Conf.instance.isOn('rm.isSingleNodeTest')) {
                 resp.halt(500, 'not enough node ready')
+            }
+        }
+
+        // check max shards / replicas
+        if (one.shards > RedisManager.ONE_CLUSTER_MAX_SHARDS) {
+            resp.halt(500, 'max shards is ' + RedisManager.ONE_CLUSTER_MAX_SHARDS)
+        }
+        if (one.replicas > RedisManager.ONE_SHARD_MAX_REPLICAS) {
+            resp.halt(500, 'max replicas is ' + RedisManager.ONE_SHARD_MAX_REPLICAS)
+        }
+
+        // check port range conflict
+        def runningServiceList = new RmServiceDTO(status: RmServiceDTO.Status.running).queryFields('id,name,mode,shards,replicas,port').list()
+        def alreadyUsingPortRangeList = runningServiceList.collect {
+            if (it.mode == RmServiceDTO.Mode.standalone || it.mode == RmServiceDTO.Mode.sentinel) {
+                return [it.port, it.port + RedisManager.ONE_SHARD_MAX_REPLICAS, it.name]
+            } else {
+                return [it.port, it.port + RedisManager.ONE_CLUSTER_MAX_SHARDS * RedisManager.ONE_SHARD_MAX_REPLICAS, it.name]
+            }
+        }
+        for (range in alreadyUsingPortRangeList) {
+            if (one.port >= (range[0] as int) && one.port < (range[1] as int)) {
+                resp.halt(500, 'port conflict, as another service is using it, service: ' +
+                        range[2] + ' port: ' + range[0] + '-' + range[1])
             }
         }
 
@@ -173,6 +195,8 @@ h.group('/redis/service') {
         }
 
         // create app
+        def namespaceId = NamespaceDTO.createIfNotExist(clusterId, 'redis')
+
         def app = new AppDTO()
         app.clusterId = clusterId
         app.namespaceId = namespaceId
@@ -201,9 +225,13 @@ h.group('/redis/service') {
         def extendParams = one.extendParams
 
         // default docker container resource config values
-        conf.memMB = extendParams.getInt('memMB', 1024)
-        conf.memReservationMB = conf.memMB
+        conf.memReservationMB = extendParams.getInt('memMB', 1024)
+        // change here
+        conf.memMB = (conf.memReservationMB * 1.2).intValue()
         conf.cpuFixed = extendParams.getDouble('cpuFixed', 1)
+
+        // set maxmemory the same as container required
+        one.maxmemoryMB = conf.memReservationMB
 
         conf.networkMode = 'host'
         conf.portList << new PortMapping(privatePort: one.port, publicPort: one.port)
@@ -237,6 +265,7 @@ h.group('/redis/service') {
         mountOne.paramList << new KVPair<String>('port', '' + one.port)
         mountOne.paramList << new KVPair<String>('dataDir', '/data/redis')
         mountOne.paramList << new KVPair<String>('password', one.pass ?: '')
+        mountOne.paramList << new KVPair<String>('maxmemoryMB', one.maxmemoryMB.toString())
         mountOne.paramList << new KVPair<String>('isMasterSlave', isSentinelMode ? 'true' : 'false')
         mountOne.paramList << new KVPair<String>('isCluster', isClusterMode ? 'true' : 'false')
         if (sentinelAppName) {
@@ -290,7 +319,7 @@ h.group('/redis/service') {
             // rename
             appShard.name = app.name + '_shard_' + i
 
-            def portForThisShard = one.port + i * 10
+            def portForThisShard = one.port + i * RedisManager.ONE_SHARD_MAX_REPLICAS
 
             appShard.conf.fileVolumeList.clear()
             def copyOne = mountOne.copy()
