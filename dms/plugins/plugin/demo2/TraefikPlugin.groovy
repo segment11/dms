@@ -85,11 +85,9 @@ class TraefikPlugin extends BasePlugin implements Observer {
 
     @Override
     AppDTO demoApp(AppDTO app) {
-        app.name = image()
+        initAppBase(app)
 
         def conf = app.conf
-        conf.group = group()
-        conf.image = image()
         conf.tag = 'v3.0'
 
         conf.dirVolumeList << new DirVolumeMount(

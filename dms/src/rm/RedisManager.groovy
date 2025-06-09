@@ -11,11 +11,13 @@ import server.InMemoryAllContainerManager
 @CompileStatic
 @Slf4j
 class RedisManager {
+    static final int CLUSTER_ID = 1
+
     // settings
-    static final String DEFAULT_DATA_DIR = '/data/rm'
+    static final String DEFAULT_DATA_DIR = '/data/redis_manager'
 
     static String dataDir() {
-        def one = new DynConfigDTO(name: 'rm.data.dir').one()
+        def one = new DynConfigDTO(name: 'redis_manager.data.dir').one()
         return one?.vv ?: DEFAULT_DATA_DIR
     }
 
@@ -24,11 +26,11 @@ class RedisManager {
     }
 
     static void updateDataDir(String dataDir) {
-        def one = new DynConfigDTO(name: 'rm.data.dir').one()
+        def one = new DynConfigDTO(name: 'redis_manager.data.dir').one()
         if (one) {
             new DynConfigDTO(id: one.id, vv: dataDir, updatedDate: new Date()).update()
         } else {
-            new DynConfigDTO(name: 'rm.data.dir', vv: dataDir, updatedDate: new Date()).add()
+            new DynConfigDTO(name: 'redis_manager.data.dir', vv: dataDir, updatedDate: new Date()).add()
         }
     }
 

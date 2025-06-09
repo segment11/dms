@@ -33,6 +33,7 @@ class InitToolPlugin extends BasePlugin {
             return one.id
         } else {
             def id = app.add()
+            app.id = id
             log.info 'add app success, app name: {}', app.name
             return id
         }

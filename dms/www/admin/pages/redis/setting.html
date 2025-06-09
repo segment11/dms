@@ -1,0 +1,31 @@
+<div ng-controller="MainCtrl">
+
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Redis Service Module Settings</h5>
+                </div>
+                <div class="widget-content">
+                    <table class="table table-bordered table-striped m_top6" style="width: 800px;">
+                        <tr>
+                            <td width="20%">Node Mount Data Directory</td>
+                            <td width="60%">
+                                {{tmp.dataDir}}
+                            </td>
+                            <td>
+                                <button class="btn btn-gray" ng-click="changeDataDir()">Change</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+        </div><!-- /.row-fluid -->
+
+    </div>
+
+</div>

@@ -19,8 +19,6 @@ def h = ChainHandler.instance
 
 def log = LoggerFactory.getLogger(this.getClass())
 
-final int clusterId = 1
-
 h.group('/redis/sentinel-service') {
     h.get('/simple-list') { req, resp ->
         def list = new RmSentinelServiceDTO(status: RmSentinelServiceDTO.Status.running).
@@ -50,7 +48,7 @@ h.group('/redis/sentinel-service') {
         if (pager.list) {
             pager.list.each { one ->
                 if (one.status == RmSentinelServiceDTO.Status.running) {
-                    def containerList = instance.getContainerList(clusterId, one.appId)
+                    def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, one.appId)
                     def runningNumber = containerList.findAll { x ->
                         x.running()
                     }.size()
@@ -59,7 +57,7 @@ h.group('/redis/sentinel-service') {
                         one.status = RmSentinelServiceDTO.Status.unhealthy
                     }
                 } else if (one.status == RmSentinelServiceDTO.Status.creating) {
-                    def containerList = instance.getContainerList(clusterId, one.appId)
+                    def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, one.appId)
                     def runningNumber = containerList.findAll { x ->
                         x.running()
                     }.size()
@@ -91,7 +89,7 @@ h.group('/redis/sentinel-service') {
 
         // check node ready
         def instance = InMemoryAllContainerManager.instance
-        def hbOkNodeList = instance.hbOkNodeList(clusterId, 'ip,tags')
+        def hbOkNodeList = instance.hbOkNodeList(RedisManager.CLUSTER_ID, 'ip,tags')
         if (one.nodeTags) {
             def matchNodeList = hbOkNodeList.findAll { node ->
                 node.tags && node.tags.any { tag ->
@@ -108,10 +106,10 @@ h.group('/redis/sentinel-service') {
         }
 
         // create app
-        def namespaceId = NamespaceDTO.createIfNotExist(clusterId, 'sentinel')
+        def namespaceId = NamespaceDTO.createIfNotExist(RedisManager.CLUSTER_ID, 'sentinel')
 
         def app = new AppDTO()
-        app.clusterId = clusterId
+        app.clusterId = RedisManager.CLUSTER_ID
         app.namespaceId = namespaceId
         app.name = 'rm_sentinel_' + one.name
         app.status = AppDTO.Status.manual.val
@@ -148,7 +146,7 @@ h.group('/redis/sentinel-service') {
         final String dataDir = RedisManager.dataDir()
         def sentinelDataDir = dataDir + '/sentinel_data_' + Utils.uuid()
         def nodeVolumeId = new NodeVolumeDTO(imageName: 'library/redis', name: 'for sentinel ' + one.name, dir: sentinelDataDir,
-                clusterId: clusterId, des: 'data dir for sentinel').add()
+                clusterId: RedisManager.CLUSTER_ID, des: 'data dir for sentinel').add()
         def dirOne = new DirVolumeMount(
                 dir: sentinelDataDir, dist: '/data/sentinel', mode: 'rw',
                 nodeVolumeId: nodeVolumeId)

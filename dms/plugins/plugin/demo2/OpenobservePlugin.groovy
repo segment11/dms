@@ -25,14 +25,14 @@ class OpenobservePlugin extends BasePlugin {
 
     private void initImageConfig() {
         addEnvIfNotExists('TZ', 'TZ', 'eg. Asia/Shanghai')
-        addEnvIfNotExists('ZO_DATA_DIR', 'ZO_DATA_DIR', 'default, /data')
+        addEnvIfNotExists('ZO_DATA_DIR', 'ZO_DATA_DIR', 'default, /data/openobserve')
         addEnvIfNotExists('ZO_ROOT_USER_EMAIL', 'ZO_ROOT_USER_EMAIL')
         addEnvIfNotExists('ZO_ROOT_USER_PASSWORD', 'ZO_ROOT_USER_PASSWORD')
 
         addPortIfNotExists('5080', 5080)
 
         addNodeVolumeForUpdate('data-dir', '/data/openobserve',
-                'need mount to /data same value as env ZO_DATA_DIR')
+                'need mount to /data/openobserve same value as env ZO_DATA_DIR')
     }
 
     @Override
@@ -50,22 +50,27 @@ class OpenobservePlugin extends BasePlugin {
         'openobserve'
     }
 
+    String nodeDir
+
     @Override
     AppDTO demoApp(AppDTO app) {
-        app.name = image()
+        initAppBase(app)
 
         def conf = app.conf
-        conf.registryId = getRegistryIdByUrl(registry())
-        conf.group = group()
-        conf.image = image()
+        if (conf.memMB == 0) {
+            // set default
+            conf.memMB = 512
+            conf.memReservationMB = conf.memMB
+            conf.cpuShares = 512
+        }
 
-        conf.memMB = 512
-        conf.memReservationMB = conf.memMB
-        conf.cpuShares = 512
+        if (!nodeDir) {
+            nodeDir = '/data/openobserve'
+        }
 
         conf.dirVolumeList << new DirVolumeMount(
-                dir: '/data/openobserve', dist: '/data', mode: 'rw',
-                nodeVolumeId: getNodeVolumeIdByDir('/data/openobserve'))
+                dir: nodeDir, dist: '/data/openobserve', mode: 'rw',
+                nodeVolumeId: getNodeVolumeIdByDir(nodeDir))
 
         conf.portList << new PortMapping(privatePort: 5080, publicPort: 5080)
 

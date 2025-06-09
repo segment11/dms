@@ -22,6 +22,8 @@ interface AllContainerManager {
 
     Map<String, NodeInfo> getAllNodeInfo(Integer clusterId)
 
+    List<NodeInfo> getHbOkNodeInfoList(Integer clusterId)
+
     void addContainers(Integer clusterId, String nodeIp, List<ContainerInfo> containers)
 
     List<ContainerInfo> getContainerListByNodeIp(String nodeIp)

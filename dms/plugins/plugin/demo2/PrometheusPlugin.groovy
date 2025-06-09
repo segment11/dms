@@ -131,18 +131,28 @@ class PrometheusPlugin extends BasePlugin implements ConfigFileReloaded {
     }
 
     String configTplName = tplName
+    String nodeDir
 
     @Override
     AppDTO demoApp(AppDTO app) {
-        app.name = image()
+        initAppBase(app)
 
         def conf = app.conf
-        conf.group = group()
-        conf.image = image()
         conf.tag = 'v2.25.0'
 
+        if (conf.memMB == 0) {
+            // set default
+            conf.memMB = 512
+            conf.memReservationMB = conf.memMB
+            conf.cpuShares = 512
+        }
+
+        if (!nodeDir) {
+            nodeDir = '/data/openobserve'
+        }
+
         conf.dirVolumeList << new DirVolumeMount(
-                dir: '/prometheus', dist: '/prometheus', mode: 'rw',
+                dir: nodeDir, dist: '/prometheus', mode: 'rw',
                 nodeVolumeId: getNodeVolumeIdByDir('/prometheus'))
 
         conf.fileVolumeList << new FileVolumeMount(
@@ -155,7 +165,9 @@ class PrometheusPlugin extends BasePlugin implements ConfigFileReloaded {
             conf.fileVolumeList[0].paramList << new KVPair<String>('eachContainerChargeRedisServerCount', '100')
         }
 
-        conf.portList << new PortMapping(privatePort: 9090, publicPort: 9090)
+        if (!conf.portList) {
+            conf.portList << new PortMapping(privatePort: 9090, publicPort: 9090)
+        }
 
         app
     }

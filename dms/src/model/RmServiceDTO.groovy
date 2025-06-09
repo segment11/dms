@@ -51,7 +51,7 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
     String pass
 
-    Integer maxmemoryMB
+    Integer maxmemoryMb
 
     Integer port
 

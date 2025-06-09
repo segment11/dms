@@ -50,7 +50,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
                 return;
             }
 
-            $http.get('/dms/redis/service/init-exporters', {
+            $http.get('/dms/redis/metric/init-exporters', {
                 params: {
                     targetNodeIp: val
                 }
@@ -60,5 +60,32 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
                 }
             });
         }, '127.0.0.1');
+    };
+
+    $scope.initLogCollectors = function () {
+        uiTips.prompt('Choose one node ip to create openobserve application', function (val) {
+            if (!val) {
+                uiTips.alert('Please input a node ip');
+                return;
+            }
+
+            $http.get('/dms/redis/metric/init-log-collectors', {
+                params: {
+                    targetNodeIp: val
+                }
+            }).success(function (data) {
+                if (data.flag) {
+                    uiTips.alert('Init redis log collectors success');
+                }
+            })
+        }, '127.0.0.1');
+    };
+
+    $scope.initNodeExporters = function () {
+        $http.get('/dms/redis/metric/init-node-exporters', {params: {}}).success(function (data) {
+            if (data.flag) {
+                uiTips.alert('Init node exporters success');
+            }
+        })
     };
 });

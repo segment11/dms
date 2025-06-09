@@ -81,12 +81,9 @@ class NodeExporterPlugin extends BasePlugin {
 
     @Override
     AppDTO demoApp(AppDTO app) {
-        app.name = image()
+        initAppBase(app)
 
         def conf = app.conf
-        conf.group = group()
-        conf.image = image()
-
         conf.cmd = '--path.rootfs=/host'
 
         conf.memMB = 128

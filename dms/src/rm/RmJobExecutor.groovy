@@ -21,7 +21,7 @@ class RmJobExecutor {
         executor.execute(runnable)
     }
 
-    void runCreatingAppJob(AppDTO app) {
+    int runCreatingAppJob(AppDTO app) {
         def job = BasePlugin.creatingAppJob(app)
 
         log.warn('start application create job, job id: {}', job.id)
@@ -34,6 +34,8 @@ class RmJobExecutor {
                 log.error('start application create job error', e)
             }
         }
+
+        job.id
     }
 
     void cleanUp() {

@@ -3,6 +3,7 @@ package vector
 import model.AppDTO
 import model.json.LogConf
 import model.server.ContainerMountTplHelper
+import rm.RedisManager
 import server.InMemoryAllContainerManager
 
 def appId = super.binding.getProperty('appId') as int
@@ -39,6 +40,10 @@ mode = "continue_through"
 timeout_ms = 1000
 start_pattern = '^[^\\s]'
 condition_pattern = '(?m)^[\\s|\\W].*\$|(?m)^(Caused|java|org|com|net).+\$|(?m)^\\}.*\$'
+
+[sources.redis_instances]
+type = "file"
+include = [ "${RedisManager.dataDir()}/**/redis.log" ]
 """
 
 Set<String> appSourceIds = []
@@ -93,7 +98,7 @@ if (ooApp && ooApp.containerList) {
 type = "docker_logs"
 exclude_containers = [ "app_${appId}_${instanceIndex}", "dms" ]
 
-[sinks.oo]
+[sinks.openobserve]
 type = "http"
 inputs = [${appSourceIds.collect { '"' + it + '"' }.join(',')}]
 uri = "http://${ooNodeIp}:${ooPort}/api/default/default/_json"

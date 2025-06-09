@@ -131,11 +131,9 @@ class ZookeeperPlugin extends BasePlugin {
 
     @Override
     AppDTO demoApp(AppDTO app) {
-        app.name = image()
+        initAppBase(app)
 
         def conf = app.conf
-        conf.group = group()
-        conf.image = image()
         conf.tag = '3.6.4'
 
         conf.containerNumber = 3

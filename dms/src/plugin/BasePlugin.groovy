@@ -30,7 +30,7 @@ abstract class BasePlugin implements Plugin {
         }
     }
 
-    protected void addNodeVolumeForUpdate(String name, String dir, String des = null) {
+    void addNodeVolumeForUpdate(String name, String dir, String des = null) {
         def imageName = imageName()
         def one = new NodeVolumeDTO(imageName: imageName, dir: dir).one()
         if (!one) {
@@ -76,6 +76,19 @@ abstract class BasePlugin implements Plugin {
 
         app.conf = conf
         app
+    }
+
+    protected void initAppBase(AppDTO app){
+        if (!app.name) {
+            app.name = image()
+        }
+
+        def conf = app.conf
+        if (conf.registryId == 0) {
+            conf.registryId = getRegistryIdByUrl(registry())
+        }
+        conf.group = group()
+        conf.image = image()
     }
 
     static int getRegistryIdByUrl(String url) {

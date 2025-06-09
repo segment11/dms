@@ -116,6 +116,21 @@ class InMemoryAllContainerManager extends IntervalJob implements AllContainerMan
     }
 
     @Override
+    List<NodeInfo> getHbOkNodeInfoList(Integer clusterId) {
+        if (isUseRedis) {
+            return inner.getHbOkNodeInfoList(clusterId)
+        }
+        List<NodeInfo> list = []
+        nodeInfoByNodeIp.values().each {
+            it.checkIfOk(getHeartBeatDate(it.nodeIp))
+            if (it.isOk) {
+                list << it
+            }
+        }
+        list
+    }
+
+    @Override
     void addContainers(Integer clusterId, String nodeIp, List<ContainerInfo> containers) {
         if (isUseRedis) {
             inner.addContainers(clusterId, nodeIp, containers)

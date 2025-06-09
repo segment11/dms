@@ -108,6 +108,7 @@ $(function () {
                 {title: 'Redis Service', page: 'redis_service', icon: 'icon-list'},
                 {title: 'Sentinel Service', page: 'redis_sentinel-service', icon: 'icon-list'},
                 {title: 'Config Template', page: 'redis_config-template', icon: 'icon-edit'},
+                {title: 'Module Setting', page: 'redis_setting', icon: 'icon-gears'},
             ]
         }
     ];

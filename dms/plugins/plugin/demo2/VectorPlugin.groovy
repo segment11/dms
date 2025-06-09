@@ -50,6 +50,7 @@ class VectorPlugin extends BasePlugin {
             ).add()
         }
 
+        addNodeVolumeForUpdate('redis-manager-data-dir', '/data/redis_manager', 'host redis manager data dir, eg. /data/redis_manager')
         addNodeVolumeForUpdate('var-log-dir', '/var/log', 'host log dir, eg. /var/log')
         addNodeVolumeForUpdate('opt-log-dir', '/opt/log', 'host log dir, eg. /opt/log')
         addNodeVolumeForUpdate('docker-sock', '/var/run/docker.sock', '/var/run/docker.sock')
@@ -67,17 +68,18 @@ class VectorPlugin extends BasePlugin {
 
     @Override
     AppDTO demoApp(AppDTO app) {
-        app.name = image()
+        initAppBase(app)
 
         def conf = app.conf
-        conf.group = group()
-        conf.image = image()
         conf.tag = 'latest-alpine'
 
         conf.memMB = 64
         conf.memReservationMB = conf.memMB
         conf.cpuFixed = 0.1
 
+        conf.dirVolumeList << new DirVolumeMount(
+                dir: '/data/redis_manager', dist: '/data/redis_manager', mode: 'ro',
+                nodeVolumeId: getNodeVolumeIdByDir('/data/redis_manager'))
         conf.dirVolumeList << new DirVolumeMount(
                 dir: '/opt/log', dist: '/opt/log', mode: 'ro',
                 nodeVolumeId: getNodeVolumeIdByDir('/opt/log'))
@@ -89,6 +91,7 @@ class VectorPlugin extends BasePlugin {
                 nodeVolumeId: getNodeVolumeIdByDir('/var/run/docker.sock'))
 
         conf.fileVolumeList << new FileVolumeMount(
+                isReloadInterval: true,
                 paramList: [new KVPair<String>('openobserveAppName', 'openobserve')],
                 dist: '/etc/vector/vector.toml',
                 imageTplId: getImageTplIdByName('vector.toml.tpl'))
