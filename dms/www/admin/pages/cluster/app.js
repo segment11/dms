@@ -181,6 +181,9 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
         if (!one.conf.targetNodeTagList) {
             one.conf.targetNodeTagList = [];
         }
+        if (!one.conf.targetNodeTagListByInstanceIndex) {
+            one.conf.targetNodeTagListByInstanceIndex = [];
+        }
         if (!one.conf.targetNodeIpList) {
             one.conf.targetNodeIpList = [];
         }
@@ -205,6 +208,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
         one.conf.dirVolumeList = [];
         one.conf.fileVolumeList = [];
         one.conf.targetNodeTagList = [];
+        one.conf.targetNodeTagListByInstanceIndex = [];
         one.conf.targetNodeIpList = [];
         one.conf.excludeNodeTagList = [];
         $scope.editOne = one;

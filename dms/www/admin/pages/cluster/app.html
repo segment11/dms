@@ -628,6 +628,13 @@
                         </td>
                     </tr>
                     <tr>
+                        <td>Target Node Tag By Instance Index (Optional)</td>
+                        <td>
+                            <input type="text" ng-model="editOne.conf.targetNodeTagListByInstanceIndex" width="400px"
+                                   ui-dropdown="{valueField: 'tag', labelField: 'tag', list: 'tmp.nodeTagList', multiple: true, blankLabel: '--/--', widthMultipleInput: 400}"/>
+                        </td>
+                    </tr>
+                    <tr>
                         <td>Target Node Ip (Optional)</td>
                         <td>
                             <input type="text" ng-model="editOne.conf.targetNodeIpList" width="400px"

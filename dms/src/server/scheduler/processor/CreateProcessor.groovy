@@ -29,58 +29,40 @@ import transfer.ContainerConfigInfo
 import transfer.ContainerInfo
 import transfer.ContainerInspectInfo
 
-import java.util.concurrent.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 @CompileStatic
 @Slf4j
 class CreateProcessor implements GuardianProcessor {
     protected JsonTransformer json = new DefaultJsonTransformer()
 
-    static ExecutorService executorService = new ThreadPoolExecutor(
-            Runtime.runtime.availableProcessors(), Runtime.runtime.availableProcessors(),
-            0, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
-            new NamedThreadFactory('create-processor-thread-pool'))
+    static ExecutorService executor = Executors.newFixedThreadPool(
+            Runtime.runtime.availableProcessors(),
+            new NamedThreadFactory('create-processor-thread-pool-'))
 
     @Override
     void process(AppJobDTO job, AppDTO app, List<ContainerInfo> containerList) {
-        def conf = app.conf
-        int containerNumber = conf.containerNumber
-        List<Integer> needRunInstanceIndexList = job.runInstanceIndexList()
-        List<Integer> instanceIndexList = []
-        if (needRunInstanceIndexList != null) {
-            instanceIndexList.addAll(needRunInstanceIndexList)
-        } else {
-            (0..<containerNumber).each { Integer i ->
-                instanceIndexList << i
-            }
-        }
+        def nodeIpList = chooseNodeIpList(app, containerList)
 
-        def runNumber = instanceIndexList.max { it } + 1
-        List<String> nodeIpList = []
-        def targetNodeIpList = conf.targetNodeIpList
-        if (targetNodeIpList) {
-            if (targetNodeIpList.size() < runNumber) {
-                if (!app.conf.isLimitNode) {
-                    throw new JobProcessException('node not ok - ' + runNumber +
-                            ' but available node number - ' + targetNodeIpList.size())
-                } else {
-                    (runNumber - targetNodeIpList.size()).times { i ->
-                        targetNodeIpList << targetNodeIpList[i]
-                    }
-                }
-            }
-            instanceIndexList.each { i ->
-                nodeIpList << targetNodeIpList[i]
-            }
+        def conf = app.conf
+        List<Integer> instanceIndexList
+        List<Integer> needRunInstanceIndexList = job.runInstanceIndexList()
+        if (needRunInstanceIndexList) {
+            instanceIndexList = needRunInstanceIndexList
         } else {
-            nodeIpList.addAll(chooseNodeList(app.clusterId, app.id, runNumber, conf))
+            instanceIndexList = []
+            (0..<conf.containerNumber).each { instanceIndex ->
+                instanceIndexList << instanceIndex
+            }
         }
-        log.info 'choose node - {} for app {}, {}', nodeIpList, app.id, instanceIndexList
-        def nodeIpListCopy = targetNodeIpList ?: nodeIpList
 
         if (!conf.isParallel) {
-            nodeIpList.eachWithIndex { String nodeIp, int i ->
-                def instanceIndex = instanceIndexList[i]
+            instanceIndexList.each { instanceIndex ->
+                def targetNodeIp = nodeIpList[instanceIndex]
+
                 def confCopy = conf.copy()
                 def abConf = app.abConf
                 if (abConf) {
@@ -89,16 +71,18 @@ class CreateProcessor implements GuardianProcessor {
                         confCopy.tag = abConf.tag
                     }
                 }
+                def nodeIpListCopy = new ArrayList<String>(nodeIpList)
 
-                startOneContainer(app, job.id, instanceIndex, nodeIpListCopy, nodeIp, confCopy)
+                startOneContainer(app, job.id, instanceIndex, nodeIpListCopy, targetNodeIp, confCopy)
             }
             return
         }
 
         ConcurrentHashMap<Integer, Exception> exceptionByInstanceIndex = new ConcurrentHashMap<>()
         def latch = new CountDownLatch(nodeIpList.size())
-        nodeIpList.eachWithIndex { String nodeIp, int i ->
-            Integer instanceIndex = instanceIndexList[i]
+        instanceIndexList.each { instanceIndex ->
+            def targetNodeIp = nodeIpList[instanceIndex]
+
             AppConf confCopy = conf.copy()
             def abConf = app.abConf
             if (abConf) {
@@ -107,12 +91,13 @@ class CreateProcessor implements GuardianProcessor {
                     confCopy.tag = abConf.tag
                 }
             }
+            def nodeIpListCopy = new ArrayList<String>(nodeIpList)
 
-            executorService.execute {
+            executor.execute {
                 try {
-                    startOneContainer(app, job.id, instanceIndex, nodeIpListCopy, nodeIp, confCopy)
+                    startOneContainer(app, job.id, instanceIndex, nodeIpListCopy, targetNodeIp, confCopy)
                 } catch (Exception e) {
-                    log.error 'start one container error - ' + confCopy.image + ' - ' + instanceIndex + ' - ' + nodeIp, e
+                    log.error 'start one container error - ' + confCopy.image + ' - ' + instanceIndex + ' - ' + targetNodeIp, e
                     exceptionByInstanceIndex[instanceIndex] = e
                 } finally {
                     latch.countDown()
@@ -128,8 +113,82 @@ class CreateProcessor implements GuardianProcessor {
         }
     }
 
-    protected static List<NodeDTO> filterNodeList(int clusterId, List<String> excludeNodeTagList,
-                                                  List<String> excludeNodeIpList, List<String> targetNodeTagList,
+    protected static List<String> chooseNodeIpList(AppDTO app, List<ContainerInfo> containerList) {
+        List<String> nodeIpList = []
+        Map<String, List<String>> alreadyChoosedNodeIpByNodeTagMap = [:]
+
+        def conf = app.conf
+        (0..<conf.containerNumber).each { instanceIndex ->
+            def runningContainer = containerList.find { x ->
+                x.instanceIndex() == instanceIndex
+            }
+            if (runningContainer) {
+                nodeIpList << runningContainer.nodeIp
+                return
+            }
+
+            if (conf.targetNodeTagListByInstanceIndex) {
+                if (instanceIndex >= conf.targetNodeTagListByInstanceIndex.size()) {
+                    throw new IllegalArgumentException('target node tag list size less than container number')
+                }
+
+                def targetNodeTag = conf.targetNodeTagListByInstanceIndex[instanceIndex]
+                List<String> excludeNodeIpList = []
+                if (!conf.isLimitNode) {
+                    if (alreadyChoosedNodeIpByNodeTagMap[targetNodeTag]) {
+                        excludeNodeIpList.addAll(alreadyChoosedNodeIpByNodeTagMap[targetNodeTag])
+                    }
+                }
+
+                def choosedNodeIp = chooseOneNode(app.clusterId, app.id, targetNodeTag, excludeNodeIpList, conf)
+                if (!choosedNodeIp) {
+                    throw new IllegalArgumentException('no node can be choosed for target node tag ' + targetNodeTag)
+                }
+                nodeIpList << choosedNodeIp
+
+                List<String> xxxList = alreadyChoosedNodeIpByNodeTagMap[targetNodeTag]
+                if (xxxList == null) {
+                    xxxList = []
+                    alreadyChoosedNodeIpByNodeTagMap[targetNodeTag] = xxxList
+                }
+                xxxList << choosedNodeIp
+            } else if (conf.targetNodeIpList) {
+                if (instanceIndex >= conf.targetNodeIpList.size()) {
+                    throw new IllegalArgumentException('target node ip list size less than container number')
+                }
+
+                nodeIpList << conf.targetNodeIpList[instanceIndex]
+            } else {
+                List<String> excludeNodeIpList
+                if (!conf.isLimitNode) {
+                    excludeNodeIpList = new ArrayList<>(nodeIpList)
+                } else {
+                    excludeNodeIpList = null
+                }
+
+                def canBeUsedNodeList = filterNodeList(app.clusterId,
+                        conf.excludeNodeTagList,
+                        excludeNodeIpList,
+                        conf.targetNodeTagList,
+                        conf.isRunningUnbox)
+                if (!canBeUsedNodeList) {
+                    throw new JobProcessException('no node can be choosed')
+                }
+
+                def sortedNodeIpList = sortNodeByResourceAndReturnIpList(app.clusterId, app.id, canBeUsedNodeList, conf, 1)
+                def choosedNodeIp = sortedNodeIpList[0]
+                nodeIpList << choosedNodeIp
+            }
+        }
+
+        log.info 'choose node - {} for app {}', nodeIpList, app.id
+        nodeIpList
+    }
+
+    protected static List<NodeDTO> filterNodeList(int clusterId,
+                                                  List<String> excludeNodeTagList,
+                                                  List<String> excludeNodeIpList,
+                                                  List<String> targetNodeTagList,
                                                   boolean isRunningUnbox) {
         def instance = InMemoryAllContainerManager.instance
         def nodeList = instance.getHeartBeatOkNodeList(clusterId)
@@ -168,14 +227,16 @@ class CreateProcessor implements GuardianProcessor {
         list
     }
 
-    protected static List<String> chooseNodeList(int clusterId, int appId, int runNumber, AppConf conf,
-                                                 List<String> excludeNodeIpList = null) {
-        def nodeIpListAfterFilter = filterNodeList(clusterId,
-                conf.excludeNodeTagList,
-                excludeNodeIpList,
-                conf.targetNodeTagList,
-                conf.isRunningUnbox)
+    private static String chooseOneNode(int clusterId, int appId, String targetNodeTag, List<String> excludeNodeIpList, AppConf conf) {
+        def nodeIpListThisTag = filterNodeList(clusterId, null, excludeNodeIpList, [targetNodeTag], conf.isRunningUnbox)
+        if (!nodeIpListThisTag) {
+            return null
+        }
 
+        sortNodeByResourceAndReturnIpList(clusterId, appId, nodeIpListThisTag, conf, 1)[0]
+    }
+
+    private static List<String> sortNodeByResourceAndReturnIpList(int clusterId, int appId, List<NodeDTO> nodeListAfterFilter, AppConf conf, int runNumber) {
         def instance = InMemoryAllContainerManager.instance
         List<ContainerInfo> containerList = instance.getContainerList(clusterId)
         Map<String, List<ContainerInfo>> groupByNodeIp = containerList.groupBy { x ->
@@ -183,7 +244,7 @@ class CreateProcessor implements GuardianProcessor {
         }
 
         // exclude node that has this app's running container
-        def list = nodeIpListAfterFilter.findAll {
+        def list = nodeListAfterFilter.findAll {
             def subList = groupByNodeIp[it.ip]
             if (!subList) {
                 return true
@@ -419,9 +480,13 @@ class CreateProcessor implements GuardianProcessor {
         }
     }
 
-    ContainerRunResult startOneContainer(AppDTO app, int jobId, int instanceIndex,
-                                         List<String> nodeIpList, String nodeIp,
-                                         AppConf confCopy, JobStepKeeper passedKeeper = null) {
+    ContainerRunResult startOneContainer(AppDTO app,
+                                         int jobId,
+                                         int instanceIndex,
+                                         List<String> nodeIpList,
+                                         String nodeIp,
+                                         AppConf confCopy,
+                                         JobStepKeeper passedKeeper = null) {
         checkDependApp(confCopy, app.clusterId)
 
         // check if already created

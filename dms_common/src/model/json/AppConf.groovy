@@ -58,6 +58,8 @@ class AppConf implements JSONFiled {
 
     List<String> targetNodeTagList = []
 
+    List<String> targetNodeTagListByInstanceIndex = []
+
     List<String> targetNodeIpList = []
 
     List<String> excludeNodeTagList = []

@@ -136,7 +136,7 @@ def stopCl = {
     server.stop()
     cacheSupport.stop()
     guardian.stop()
-    CreateProcessor.executorService.shutdown()
+    CreateProcessor.executor.shutdown()
     curatorClientHolder.close()
     containerManager.stop()
     leaderFlagHolder.stop()
