@@ -2,8 +2,8 @@ package spi
 
 import auth.DefaultLoginService
 import auth.LoginService
+import com.segment.common.job.lock.OneLock
 import groovy.transform.CompileStatic
-import server.lock.OneLock
 import server.hpa.DefaultScaleStrategy
 import server.hpa.ScaleStrategy
 import server.scheduler.Guardian

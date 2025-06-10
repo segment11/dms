@@ -11,6 +11,7 @@ import model.RmServiceDTO
 import model.job.RmJobDTO
 import org.segment.d.json.DefaultJsonTransformer
 import org.segment.d.json.JsonTransformer
+import spi.SpiSupport
 
 @CompileStatic
 @Slf4j
@@ -59,22 +60,16 @@ class RmJob extends Job implements Serializable {
 
     @Override
     void lockExecute(Closure<Void> cl) {
-        cl.call()
+        def key = "redis_service_job_${rmService.id}".toString()
 
-//        def key = "lock_execute_${rmService.id}".toString()
-//        DynConfigDTO.addLockRow(key)
-//
-//        def isAcquireLock = DynConfigDTO.acquireLock(Utils.localIp(), 3600, 'key')
-//        if (!isAcquireLock) {
-//            log.warn("acquire lock failed: {}", key)
-//            return
-//        }
-//
-//        try {
-//            cl.call()
-//        } finally {
-//            DynConfigDTO.releaseLock(Utils.localIp(), key)
-//        }
+        def lock = SpiSupport.createLock()
+        lock.lockKey = key
+        boolean isDone = lock.exe {
+            cl.call()
+        }
+        if (!isDone) {
+            log.info 'get redis service job lock fail - {}', rmSentinelService.name
+        }
     }
 
     @Override
