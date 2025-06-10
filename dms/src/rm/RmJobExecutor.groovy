@@ -15,7 +15,9 @@ import java.util.concurrent.Executors
 @Singleton
 @Slf4j
 class RmJobExecutor {
-    private final ExecutorService executor = Executors.newFixedThreadPool(10, new NamedThreadFactory('rm-job-'))
+    private final ExecutorService executor = Executors.newFixedThreadPool(
+            Runtime.runtime.availableProcessors(),
+            new NamedThreadFactory('rm-job-'))
 
     void execute(Runnable runnable) {
         executor.execute(runnable)
