@@ -1,14 +1,17 @@
 package model
 
+import com.segment.common.job.chain.JobResult
 import groovy.transform.CompileStatic
 import groovy.transform.ToString
 import ha.JedisPoolHolder
+import model.cluster.ClusterNode
 import model.json.BackupPolicy
 import model.json.ClusterSlotsDetail
 import model.json.ExtendParams
 import model.json.LogPolicy
 import redis.clients.jedis.JedisPool
 import rm.RedisManager
+import server.InMemoryAllContainerManager
 import transfer.ContainerInfo
 
 @CompileStatic
@@ -87,5 +90,99 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
     JedisPool connect(ContainerInfo x) {
         JedisPoolHolder.instance.create(x.nodeIp, listenPort(x), pass)
+    }
+
+    List<ContainerInfo> runningContainerList() {
+        List<ContainerInfo> allContainerList = []
+        def instance = InMemoryAllContainerManager.instance
+
+        if (mode == Mode.cluster) {
+            assert clusterSlotsDetail && clusterSlotsDetail.shards
+            for (shard in clusterSlotsDetail.shards) {
+                def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, shard.appId)
+                allContainerList.addAll(containerList.findAll { x -> x.running() })
+            }
+
+        } else {
+            assert appId
+
+            def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, appId)
+            allContainerList.addAll(containerList.findAll { x -> x.running() })
+        }
+
+        allContainerList
+    }
+
+    JobResult checkClusterNodesAndSlots() {
+        assert mode == Mode.cluster
+        assert clusterSlotsDetail && clusterSlotsDetail.shards
+
+        if (!clusterSlotsDetail.shards.every { it.nodes.size() == replicas }) {
+            return JobResult.fail('nodes number not equal to replicas')
+        }
+
+        def nodesCount = clusterSlotsDetail.shards.sum { it.nodes.size() } as int
+        for (shard in clusterSlotsDetail.shards) {
+            for (node in shard.nodes) {
+                def cn = new ClusterNode(node.ip, node.port)
+                cn.read()
+
+                if ('ok' != cn.clusterState()) {
+                    return JobResult.fail('cluster state not ok')
+                }
+
+                if (nodesCount != cn.clusterInfoValue('cluster_known_nodes') as int) {
+                    return JobResult.fail('cluster known nodes not equal to nodes count')
+                }
+
+                for (one in cn.allClusterNodeList) {
+                    def localNode = clusterSlotsDetail.findNodeByIpPort(one.ip, one.port)
+                    if (!localNode) {
+                        return JobResult.fail('cluster node not found in local shard in db: ' + one.uuid())
+                    }
+
+                    // check role
+                    if (localNode.isPrimary != one.isPrimary) {
+                        return JobResult.fail('cluster node role not match, expect: ' +
+                                (localNode.isPrimary ? 'master' : 'slave') + ', ip/port: ' + one.uuid())
+                    }
+
+                    def localShard = clusterSlotsDetail.findShardByIpPort(one.ip, one.port)
+                    // check slave follow
+                    if (!localNode.isPrimary) {
+                        def primary = localShard.primary()
+                        if (primary.ip != one.followNodeIp || primary.port != one.followNodePort) {
+                            return JobResult.fail('cluster node slave follow ip/port not match, expect: ' + primary.uuid() + ', but: ' +
+                                    one.followNodeIp + ':' + one.followNodePort)
+                        }
+                    }
+
+                    // check primary node id
+                    def localNodeId = localNode.nodeId()
+                    if (localNodeId != one.nodeId) {
+                        return JobResult.fail('cluster node id not match, expect: ' + localNodeId + ', but: ' + one.nodeId)
+                    }
+                }
+
+                // check slot range
+                if (cn.isPrimary) {
+                    def localShard = clusterSlotsDetail.findShardByIpPort(node.ip, node.port)
+                    def multiSlotRange = shard.multiSlotRange
+                    if (!cn.multiSlotRange?.list) {
+                        // not null
+                        if (multiSlotRange && multiSlotRange.list) {
+                            return JobResult.fail('cluster node slot range not match, expect: null, but: ' + multiSlotRange.toString())
+                        }
+                    } else {
+                        if (multiSlotRange.toString() != cn.multiSlotRange.toString()) {
+                            return JobResult.fail('cluster node slot range not match, expect: ' + multiSlotRange.toString() + ', but: ' +
+                                    cn.multiSlotRange.toString())
+                        }
+                    }
+                }
+            }
+        }
+
+        JobResult.ok('cluster nodes and slots check ok')
     }
 }

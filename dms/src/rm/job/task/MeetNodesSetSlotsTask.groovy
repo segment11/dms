@@ -6,6 +6,7 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import ha.JedisPoolHolder
 import model.RmServiceDTO
+import rm.RedisManager
 import rm.job.RmJob
 import rm.job.RmJobTask
 import server.InMemoryAllContainerManager
@@ -33,7 +34,7 @@ class MeetNodesSetSlotsTask extends RmJobTask {
         for (shard in rmService.clusterSlotsDetail.shards) {
             def appId = shard.appId
 
-            def containerList = instance.getContainerList(1, appId)
+            def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, appId)
 
             def runningNumber = containerList.findAll { x -> x.running() }.size()
             if (runningNumber != rmService.replicas) {

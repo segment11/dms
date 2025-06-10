@@ -20,4 +20,9 @@ class KVPair<E> {
         def one = (KVPair) obj
         key == one.key && value == one.value
     }
+
+    @Override
+    String toString() {
+        "${key}=${value}".toString()
+    }
 }

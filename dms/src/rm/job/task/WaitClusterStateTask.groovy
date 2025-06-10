@@ -6,6 +6,8 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import ha.JedisPoolHolder
 import model.RmServiceDTO
+import model.json.ClusterSlotsDetail
+import rm.RedisManager
 import rm.job.RmJob
 import rm.job.RmJobTask
 import server.InMemoryAllContainerManager
@@ -33,7 +35,7 @@ class WaitClusterStateTask extends RmJobTask {
         def instance = InMemoryAllContainerManager.instance
 
         for (shard in rmService.clusterSlotsDetail.shards) {
-            def containerList = instance.getContainerList(1, shard.appId)
+            def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, shard.appId)
 
             def runningNumber = containerList.findAll { x -> x.running() }.size()
             if (runningNumber != rmService.replicas) {
@@ -41,7 +43,26 @@ class WaitClusterStateTask extends RmJobTask {
             }
 
             allContainerList.addAll(containerList)
+
+            containerList.each { x ->
+                def node = new ClusterSlotsDetail.Node()
+                node.ip = x.nodeIp
+                node.port = rmService.listenPort(x)
+                node.shardIndex = shard.shardIndex
+
+                if (x.instanceIndex() == 0) {
+                    // primary node
+                    node.isPrimary = true
+                } else {
+                    node.replicaIndex = x.instanceIndex() - 1
+                }
+
+                shard.nodes << node
+            }
         }
+
+        // update after nodes updated
+        new RmServiceDTO(id: rmService.id, clusterSlotsDetail: rmService.clusterSlotsDetail, updatedDate: new Date()).update()
 
         for (x in allContainerList) {
             def jedisPool = rmService.connect(x)

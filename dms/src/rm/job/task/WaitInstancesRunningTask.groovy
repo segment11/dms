@@ -5,6 +5,7 @@ import com.segment.common.job.chain.JobStep
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.RmServiceDTO
+import rm.RedisManager
 import rm.job.RmJob
 import rm.job.RmJobTask
 import server.InMemoryAllContainerManager
@@ -33,7 +34,7 @@ class WaitInstancesRunningTask extends RmJobTask {
         def targetShardAppId = rmService.clusterSlotsDetail.shards.find { it.shardIndex == shardIndex }.appId
 
         def instance = InMemoryAllContainerManager.instance
-        def containerList = instance.getContainerList(1, targetShardAppId)
+        def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, targetShardAppId)
         if (!containerList) {
             Thread.sleep(10 * 1000)
             tryCount++
