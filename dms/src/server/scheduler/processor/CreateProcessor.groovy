@@ -113,17 +113,17 @@ class CreateProcessor implements GuardianProcessor {
         }
     }
 
-    protected static List<String> chooseNodeIpList(AppDTO app, List<ContainerInfo> containerList) {
+    static List<String> chooseNodeIpList(AppDTO app, List<ContainerInfo> containerList) {
         List<String> nodeIpList = []
         Map<String, List<String>> alreadyChoosedNodeIpByNodeTagMap = [:]
 
         def conf = app.conf
         (0..<conf.containerNumber).each { instanceIndex ->
-            def runningContainer = containerList.find { x ->
+            def runningOne = containerList.find { x ->
                 x.instanceIndex() == instanceIndex
             }
-            if (runningContainer) {
-                nodeIpList << runningContainer.nodeIp
+            if (runningOne) {
+                nodeIpList << runningOne.nodeIp
                 return
             }
 
