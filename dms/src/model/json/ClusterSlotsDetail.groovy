@@ -7,11 +7,11 @@ import model.cluster.MultiSlotRange
 import org.segment.d.json.JSONFiled
 
 @CompileStatic
-@ToString(includeNames = true)
+@ToString(includeNames = true, includePackage = false)
 class ClusterSlotsDetail implements JSONFiled {
     // one shard, one application
     @CompileStatic
-    @ToString(includeNames = true, includePackage = false, excludes = ['nodes'])
+    @ToString(includeNames = true, includePackage = false)
     static class Shard {
         Integer shardIndex
         Integer appId

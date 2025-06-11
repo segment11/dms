@@ -6,10 +6,7 @@ import groovy.transform.ToString
 import ha.JedisCallback
 import ha.JedisPoolHolder
 import model.cluster.ClusterNode
-import model.json.BackupPolicy
-import model.json.ClusterSlotsDetail
-import model.json.ExtendParams
-import model.json.LogPolicy
+import model.json.*
 import redis.clients.jedis.JedisPool
 import rm.RedisManager
 import server.InMemoryAllContainerManager
@@ -66,6 +63,8 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
     String[] nodeTags
 
+    String[] nodeTagsByReplicaIndex
+
     BackupPolicy backupPolicy
 
     LogPolicy logPolicy
@@ -79,14 +78,21 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
     // for cluster mode
     ClusterSlotsDetail clusterSlotsDetail
 
+    // for sentinel mode or standalone mode
+    PrimaryReplicasDetail primaryReplicasDetail
+
     Date createdDate
 
     Date updatedDate
 
     int listenPort(ContainerInfo x) {
-        def shardIndex = clusterSlotsDetail.shards.find { it.appId == x.appId() }.shardIndex
-        def portForThisShard = port + shardIndex * RedisManager.ONE_SHARD_MAX_REPLICAS
-        portForThisShard + x.instanceIndex()
+        if (mode == Mode.cluster) {
+            def shardIndex = clusterSlotsDetail.shards.find { it.appId == x.appId() }.shardIndex
+            def portForThisShard = port + shardIndex * RedisManager.ONE_SHARD_MAX_REPLICAS
+            return portForThisShard + x.instanceIndex()
+        } else {
+            return port + x.instanceIndex()
+        }
     }
 
     private JedisPool connect(ContainerInfo x) {
@@ -125,8 +131,8 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
         } else if (mode == Mode.cluster) {
             return checkClusterNodesAndSlots()
         } else {
-            def containerList = runningContainerList()
-            if (containerList.size() != 1) {
+            def runningContainerList = this.runningContainerList()
+            if (runningContainerList.size() != 1) {
                 return JobResult.fail('no running container')
             } else {
                 return JobResult.ok('running container ok')
@@ -135,7 +141,7 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
     }
 
     @CompileStatic
-    static record RoleResult(String nodeIp, int port, List<Object> roleList) {
+    static record RoleResult(String nodeIp, int nodePort, List<Object> roleList) {
         String role() {
             roleList[0].toString()
         }
@@ -144,14 +150,34 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
     JobResult checkPrimaryReplicaNodes() {
         assert mode == Mode.sentinel
         assert replicas > 1
+        assert primaryReplicasDetail
 
-        def containerList = runningContainerList()
+        def runningContainerList = this.runningContainerList()
+        if (!primaryReplicasDetail.nodes) {
+            runningContainerList.each { x ->
+                def node = new PrimaryReplicasDetail.Node()
+                node.ip = x.nodeIp
+                node.port = x.publicPort(port)
+                node.replicaIndex = x.instanceIndex()
+                // when first created, the first replica is primary
+                node.isPrimary = node.replicaIndex == 0
+                primaryReplicasDetail.nodes << node
+            }
 
-        String primaryNodeIp
-        int primaryPort = 0
+            new RmServiceDTO(id: id, primaryReplicasDetail: primaryReplicasDetail, updatedDate: new Date()).update()
+        } else {
+            if (primaryReplicasDetail.nodes.size() != runningContainerList.size()) {
+                return JobResult.fail('running container size not equal, ' + primaryReplicasDetail.nodes.size() + ', ' + runningContainerList.size())
+            }
+        }
+
+        def primaryNode = primaryReplicasDetail.nodes.find { it.isPrimary }
+        assert primaryNode
+        def primaryNodeIp = primaryNode.ip
+        int primaryNodePort = primaryNode.port
 
         List<RoleResult> roleResultList = []
-        for (x in containerList) {
+        for (x in runningContainerList) {
             List<Object> roleList = connectAndExe(x) { jedis ->
                 jedis.role()
             }
@@ -166,24 +192,17 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
         for (roleResult in sortedList) {
             if (roleResult.role() == 'master') {
-                // already set
-                if (primaryNodeIp != null) {
-                    return JobResult.fail('more than one primary node, ' + primaryNodeIp + ':' + primaryPort + ', ' + roleResult.nodeIp + ':' + roleResult.port)
+                if (primaryNodeIp != roleResult.nodeIp || primaryNodePort != roleResult.nodePort) {
+                    return JobResult.fail('primary node ip not equal to master node ip, ' + roleResult.roleList[1].toString() + ':' + roleResult.roleList[2].toString() + ', ' + primaryNodeIp + ':' + primaryNodePort)
                 }
-
-                primaryNodeIp = roleResult.nodeIp
-                primaryPort = roleResult.port
             } else {
                 assert roleResult.role() == 'slave'
-                if (primaryNodeIp == null) {
-                    return JobResult.fail('slave node ip not equal to primary node ip, ' + roleResult.roleList[1].toString() + ':' + roleResult.roleList[2].toString() + ', primary node ip not set yet')
-                }
 
                 if (roleResult.roleList[1].toString() != primaryNodeIp) {
-                    return JobResult.fail('slave node ip not equal to primary node ip, ' + roleResult.roleList[1].toString() + ':' + roleResult.roleList[2].toString() + ', ' + primaryNodeIp + ':' + primaryPort)
+                    return JobResult.fail('slave node ip not equal to primary node ip, ' + roleResult.roleList[1].toString() + ':' + roleResult.roleList[2].toString() + ', ' + primaryNodeIp + ':' + primaryNodePort)
                 }
-                if (roleResult.roleList[2].toString() != primaryPort.toString()) {
-                    return JobResult.fail('slave node port not equal to primary node port, ' + roleResult.roleList[1].toString() + ':' + roleResult.roleList[2].toString() + ', ' + primaryNodeIp + ':' + primaryPort)
+                if (roleResult.roleList[2].toString() != primaryNodePort.toString()) {
+                    return JobResult.fail('slave node port not equal to primary node port, ' + roleResult.roleList[1].toString() + ':' + roleResult.roleList[2].toString() + ', ' + primaryNodeIp + ':' + primaryNodePort)
                 }
             }
         }

@@ -262,29 +262,31 @@ create unique index idx_dyn_config_name on dyn_config (name);
 -- for redis manager module
 create table rm_service
 (
-    id                   int auto_increment primary key,
-    name                 varchar(50),
-    des                  varchar(200),
-    mode                 varchar(20),   -- standalone/sentinel/cluster
-    engine_type          varchar(20),   -- redis/valkey/engula/kvrocks/velo
-    engine_version       varchar(20),   -- 5.0/6.2/7.2/8.1
-    config_template_id   int,
-    sentinel_service_id  int,
-    pass                 varchar(200),
-    maxmemory_mb         int,
-    port                 int,
-    shards               int,
-    replicas             int,
-    backup_policy        varchar(500),
-    log_policy           varchar(200),
-    is_tls_on            bit,
-    node_tags            varchar(100),
-    app_id               int,
-    status               varchar(20),
-    extend_params        varchar(2000),
-    cluster_slots_detail varchar(4000), -- for cluster mode
-    created_date         timestamp,
-    updated_date         timestamp default current_timestamp
+    id                         int auto_increment primary key,
+    name                       varchar(50),
+    des                        varchar(200),
+    mode                       varchar(20),   -- standalone/sentinel/cluster
+    engine_type                varchar(20),   -- redis/valkey/engula/kvrocks/velo
+    engine_version             varchar(20),   -- 5.0/6.2/7.2/8.1
+    config_template_id         int,
+    sentinel_service_id        int,
+    pass                       varchar(200),
+    maxmemory_mb               int,
+    port                       int,
+    shards                     int,
+    replicas                   int,
+    backup_policy              varchar(500),
+    log_policy                 varchar(200),
+    is_tls_on                  bit,
+    node_tags                  varchar(100),
+    node_tags_by_replica_index varchar(100),
+    app_id                     int,
+    status                     varchar(20),
+    extend_params              varchar(2000),
+    cluster_slots_detail       varchar(4000), -- for cluster mode
+    primary_replicas_detail    varchar(4000), -- for sentinel mode
+    created_date               timestamp,
+    updated_date               timestamp default current_timestamp
 );
 create unique index idx_rm_service_name on rm_service (name);
 create index idx_rm_service_config_template_id on rm_service (config_template_id);

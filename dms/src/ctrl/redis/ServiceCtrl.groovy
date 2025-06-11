@@ -14,11 +14,7 @@ import rm.RmJobExecutor
 import rm.SlotBalancer
 import rm.job.RmJob
 import rm.job.RmJobTypes
-import rm.job.task.MeetNodesSetSlotsTask
-import rm.job.task.RunCreatingAppJobTask
-import rm.job.task.WaitClusterStateTask
-import rm.job.task.WaitInstancesRunningTask
-import rm.job.task.WaitPrimaryReplicasStateTask
+import rm.job.task.*
 import server.InMemoryAllContainerManager
 
 def h = ChainHandler.instance
@@ -84,8 +80,57 @@ h.group('/redis/service') {
             resp.halt(500, 'service not found')
         }
 
-        // todo
-        [one: one]
+        def r = [:]
+        r.one = one
+
+        if (one.status == RmServiceDTO.Status.running) {
+            r.checkResult = one.checkNodes()
+        }
+
+        def configTemplateOne = new RmConfigTemplateDTO(id: one.configTemplateId).queryFields('name').one()
+        assert configTemplateOne
+        r.configTemplateName = configTemplateOne.name
+
+        List nodes = []
+        r.nodes = nodes
+
+        if (one.mode == RmServiceDTO.Mode.standalone) {
+            def instance = InMemoryAllContainerManager.instance
+            def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, one.appId)
+            containerList.each { x ->
+                nodes << [shardIndex: 0, replicaIndex: x.instanceIndex(), ip: x.nodeIp, port: x.publicPort(one.port), isPrimary: true, running: x.running()]
+            }
+        } else if (one.mode == RmServiceDTO.Mode.sentinel) {
+            assert one.primaryReplicasDetail && one.primaryReplicasDetail.nodes
+
+            def instance = InMemoryAllContainerManager.instance
+            def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, one.appId)
+
+            for (n in one.primaryReplicasDetail.nodes) {
+                def x = containerList.find { x ->
+                    x.nodeIp == n.ip && x.publicPort(one.port) == n.port && x.instanceIndex() == n.replicaIndex
+                }
+                def running = x && x.running()
+                nodes << [shardIndex: 0, replicaIndex: n.replicaIndex, ip: n.ip, port: n.port, isPrimary: n.isPrimary, running: running]
+            }
+        } else {
+            assert one.clusterSlotsDetail && one.clusterSlotsDetail.shards
+
+            def instance = InMemoryAllContainerManager.instance
+            def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, one.appId)
+
+            for (shard in one.clusterSlotsDetail.shards) {
+                for (n in shard.nodes) {
+                    def x = containerList.find { x ->
+                        x.nodeIp == n.ip && one.listenPort(x) == n.port && x.instanceIndex() == n.replicaIndex
+                    }
+                    def running = x && x.running()
+                    nodes << [shardIndex: shard.shardIndex, replicaIndex: n.replicaIndex, ip: n.ip, port: n.port, isPrimary: n.isPrimary, running: running]
+                }
+            }
+        }
+
+        r
     }
 
     h.post('/add') { req, resp ->
@@ -189,11 +234,14 @@ h.group('/redis/service') {
         // default docker container resource config values
         conf.memReservationMB = extendParams.getInt('memMB', 1024)
         // change here
-        conf.memMB = (conf.memReservationMB * 1.2).intValue()
+        conf.memMB = (conf.memReservationMB * 2).intValue()
         conf.cpuFixed = extendParams.getDouble('cpuFixed', 1)
 
         // set maxmemory the same as container required
         one.maxmemoryMb = conf.memReservationMB
+        if (one.maxmemoryMb > RedisManager.ONE_INSTANCE_MAX_MEMORY_MB) {
+            resp.halt(500, 'maxmemory MB need less than ' + RedisManager.ONE_INSTANCE_MAX_MEMORY_MB + 'MB')
+        }
 
         conf.networkMode = 'host'
         conf.portList << new PortMapping(privatePort: one.port, publicPort: one.port)
@@ -202,6 +250,12 @@ h.group('/redis/service') {
         if (one.nodeTags) {
             one.nodeTags.each {
                 conf.targetNodeTagList << it
+            }
+        }
+        conf.targetNodeTagListByInstanceIndex = []
+        if (one.nodeTagsByReplicaIndex) {
+            one.nodeTagsByReplicaIndex.each {
+                conf.targetNodeTagListByInstanceIndex << it
             }
         }
 
@@ -251,6 +305,10 @@ h.group('/redis/service') {
             one.createdDate = new Date()
             one.updatedDate = new Date()
 
+            if (one.mode == RmServiceDTO.Mode.sentinel) {
+                one.primaryReplicasDetail = new PrimaryReplicasDetail()
+            }
+
             def id = one.add()
             one.id = id
 
@@ -263,7 +321,9 @@ h.group('/redis/service') {
             // add tasks
             rmJob.taskList << new RunCreatingAppJobTask(rmJob, 0, app)
             rmJob.taskList << new WaitInstancesRunningTask(rmJob, 0)
-            rmJob.taskList << new WaitPrimaryReplicasStateTask(rmJob)
+            if (one.mode == RmServiceDTO.Mode.sentinel) {
+                rmJob.taskList << new WaitPrimaryReplicasStateTask(rmJob)
+            }
 
             rmJob.createdDate = new Date()
             rmJob.updatedDate = new Date()

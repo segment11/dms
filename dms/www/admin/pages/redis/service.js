@@ -29,7 +29,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
 
     $scope.goServiceOne = function (one) {
         Page.go('/page/redis_one', {
-            id: one.id, name: one.name, des: one.des
+            id: one.id
         });
     };
 

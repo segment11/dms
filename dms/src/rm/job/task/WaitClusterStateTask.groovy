@@ -48,14 +48,9 @@ class WaitClusterStateTask extends RmJobTask {
                 node.ip = x.nodeIp
                 node.port = rmService.listenPort(x)
                 node.shardIndex = shard.shardIndex
-
-                if (x.instanceIndex() == 0) {
-                    // primary node
-                    node.isPrimary = true
-                } else {
-                    node.replicaIndex = x.instanceIndex() - 1
-                }
-
+                node.replicaIndex = x.instanceIndex()
+                // when first created, the first replica is primary
+                node.isPrimary = node.replicaIndex == 0
                 shard.nodes << node
             }
         }

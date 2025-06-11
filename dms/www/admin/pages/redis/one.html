@@ -7,12 +7,111 @@
             <div class="widget-box">
                 <div class="widget-title">
                     <span class="icon"><i class="icon-info"></i></span>
-                    <h5>Redis Service - {{params.name}}</h5>
+                    <h5>Redis Service - {{one.name}}</h5>
                     <div class="actions">
+                        <button class="btn" ng-click="refresh()">Refresh</button>
                         <button class="btn" ng-click="back()">Back</button>
                     </div>
                 </div>
                 <div class="widget-content">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <span>Description</span>
+                            <span class="pull-right">{{one.des}}</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span>Mode</span>
+                            <span class="pull-right">{{one.mode}}</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span>Created Time</span>
+                            <span class="pull-right">{{one.createdDate | date:'yyyy/MM/dd HH:mm:ss'}}</span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <span>Engine Type</span>
+                            <span class="pull-right">{{one.engineType}}</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span>Engine Version</span>
+                            <span class="pull-right">{{one.engineVersion}}</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span>Config Template Name</span>
+                            <span class="pull-right">{{ext.configTemplateOne}}</span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <span>Each Instance Max Memory</span>
+                            <span class="pull-right">{{one.maxmemoryMb}} MB</span>
+                            <button class="btn" ng-click="updateMaxmemory(one)">Update</button>
+                        </div>
+                        <div class="col-md-4">
+                            <span>Shards</span>
+                            <span class="pull-right">{{one.shards}}</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span>Replicas</span>
+                            <span class="pull-right">{{ext.replicas}}</span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <span>First Instance Port</span>
+                            <span class="pull-right">{{one.port}}</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span>Node Tags</span>
+                            <span class="pull-right">{{one.nodeTags}}</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span>Node Tags By Replica Index</span>
+                            <span class="pull-right">{{ext.nodeTagsByReplicaIndex}}</span>
+                        </div>
+                    </div>
+
+                    <hr/>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <span>Status: {{one.status}}</span>
+                        </div>
+                        <div class="col-md-8" ng-show="!checkResult.isOk">
+                            <span>Check Result Message</span>
+                            <span class="bg-danger pull-right">{{checkResult.message}}</span>
+                        </div>
+                    </div>
+
+                    <hr/>
+
+                    <table class="table table-bordered table-striped m_top6" style="width: 1200px;">
+                        <tr>
+                            <th width="15%">Shard Index</th>
+                            <th width="15%">Replica Index</th>
+                            <th width="10%">Is Primary</th>
+                            <th width="20%">Node Ip / Port</th>
+                            <th width="10%">Status</th>
+                            <th></th>
+                        </tr>
+                        <tr ng-repeat="node in nodes">
+                            <td>{{node.shardIndex}}</td>
+                            <td>{{node.replicaIndex}}</td>
+                            <td>
+                                <span ng-class="{'bg-info': !node.isPrimary, 'bg-success': node.isPrimary}">{{node.isPrimary}}</span>
+                            </td>
+                            <td>{{node.ip}}:{{node.port}}</td>
+                            <td>
+                                <span ng-class="{'bg-danger': !node.running, 'bg-success': node.running}">{{node.running ? 'running' : 'unhealthy'}}</span>
+                            </td>
+                            <td></td>
+                        </tr>
+                    </table>
+
                 </div>
             </div>
 

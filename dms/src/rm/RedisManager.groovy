@@ -34,9 +34,11 @@ class RedisManager {
         }
     }
 
-    static final int ONE_SHARD_MAX_REPLICAS = 10
+    static final int ONE_INSTANCE_MAX_MEMORY_MB = 64 * 1024
 
-    static final int ONE_CLUSTER_MAX_SHARDS = 128
+    static final int ONE_SHARD_MAX_REPLICAS = 4
+
+    static final int ONE_CLUSTER_MAX_SHARDS = 32
 
     // containers management
     static void stopContainers(int appId) {
@@ -51,7 +53,7 @@ class RedisManager {
         }
 
         def instance = InMemoryAllContainerManager.instance
-        def containerList = instance.getContainerList(appOne.clusterId, appId)
+        def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, appId)
         containerList.each { x ->
             if (x.running()) {
                 log.warn('stop running container: {}', x.name())
@@ -60,7 +62,7 @@ class RedisManager {
                 p.isRemoveAfterStop = '1'
                 p.readTimeout = 30 * 1000
 
-                def stopR = AgentCaller.instance.agentScriptExe(appOne.clusterId, x.nodeIp, 'container stop', p)
+                def stopR = AgentCaller.instance.agentScriptExe(CLUSTER_ID, x.nodeIp, 'container stop', p)
                 log.info 'done stop and remove container - {} - {}, result: {}', x.id, x.appId(), stopR
             }
         }
