@@ -18,8 +18,8 @@ import rm.job.task.MeetNodesSetSlotsTask
 import rm.job.task.RunCreatingAppJobTask
 import rm.job.task.WaitClusterStateTask
 import rm.job.task.WaitInstancesRunningTask
+import rm.job.task.WaitPrimaryReplicasStateTask
 import server.InMemoryAllContainerManager
-import server.InMemoryCacheSupport
 
 def h = ChainHandler.instance
 
@@ -54,50 +54,18 @@ h.group('/redis/service') {
 
         def pager = dto.listPager(pageNum, pageSize)
 
-        def instance = InMemoryAllContainerManager.instance
-        def cached = InMemoryCacheSupport.instance
         if (pager.list) {
             pager.list.each { one ->
-                if (one.mode == RmServiceDTO.Mode.standalone || one.mode == RmServiceDTO.Mode.sentinel) {
-                    def appOne = cached.oneApp(one.appId)
-                    if (!appOne) {
-                        return
-                    }
-
-                    def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, one.appId)
-                    def runningNumber = containerList.findAll { x ->
-                        x.running()
-                    }.size()
-
-                    if (one.status == RmServiceDTO.Status.running) {
-                        if (one.replicas != runningNumber) {
-                            one.status = RmServiceDTO.Status.unhealthy
-                        }
-                    } else if (one.status == RmServiceDTO.Status.creating) {
-                        if (one.replicas == runningNumber) {
-                            one.status = RmServiceDTO.Status.running
-                            new RmServiceDTO(id: one.id, status: RmServiceDTO.Status.running).update()
-                        }
+                def runningContainerList = one.runningContainerList()
+                if (runningContainerList.size() == one.shards * one.replicas) {
+                    if (one.status == RmServiceDTO.Status.creating) {
+                        one.status = RmServiceDTO.Status.running
+                        new RmServiceDTO(id: one.id, status: RmServiceDTO.Status.running).update()
                     }
                 } else {
-                    // cluster mode
-                    def checkTask = new WaitClusterStateTask(new RmJob(rmService: one))
-                    def jobResult = checkTask.doTask()
-
                     if (one.status == RmServiceDTO.Status.running) {
-                        if (!jobResult.isOk) {
-                            one.status = RmServiceDTO.Status.unhealthy
-                            one.extendParams.put('statusMessage', jobResult.message)
-                        } else {
-                            one.extendParams.put('statusMessage', 'check cluster state ok')
-                        }
-                    } else if (one.status == RmServiceDTO.Status.creating) {
-                        if (!jobResult.isOk) {
-                            one.extendParams.put('statusMessage', jobResult.message)
-                        } else {
-                            one.status = RmServiceDTO.Status.running
-                            one.extendParams.put('statusMessage', 'check cluster state ok')
-                        }
+                        one.status = RmServiceDTO.Status.unhealthy
+                        one.extendParams.put('statusMessage', 'running instances not ready')
                     }
                 }
             }
@@ -292,8 +260,10 @@ h.group('/redis/service') {
             rmJob.status = JobStatus.created
             rmJob.params = new JobParams()
             rmJob.params.put('rmServiceId', id.toString())
-            // only one task
+            // add tasks
             rmJob.taskList << new RunCreatingAppJobTask(rmJob, 0, app)
+            rmJob.taskList << new WaitInstancesRunningTask(rmJob, 0)
+            rmJob.taskList << new WaitPrimaryReplicasStateTask(rmJob)
 
             rmJob.createdDate = new Date()
             rmJob.updatedDate = new Date()

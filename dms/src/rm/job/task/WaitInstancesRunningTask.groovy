@@ -31,7 +31,9 @@ class WaitInstancesRunningTask extends RmJobTask {
     JobResult doTask() {
         assert rmService
 
-        def targetShardAppId = rmService.clusterSlotsDetail.shards.find { it.shardIndex == shardIndex }.appId
+        def targetShardAppId = rmService.mode == RmServiceDTO.Mode.cluster ?
+                rmService.clusterSlotsDetail.shards.find { it.shardIndex == shardIndex }.appId :
+                rmService.appId
 
         def instance = InMemoryAllContainerManager.instance
         def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, targetShardAppId)

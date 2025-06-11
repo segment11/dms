@@ -3,6 +3,7 @@ package model
 import com.segment.common.job.chain.JobResult
 import groovy.transform.CompileStatic
 import groovy.transform.ToString
+import ha.JedisCallback
 import ha.JedisPoolHolder
 import model.cluster.ClusterNode
 import model.json.BackupPolicy
@@ -88,8 +89,13 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
         portForThisShard + x.instanceIndex()
     }
 
-    JedisPool connect(ContainerInfo x) {
+    private JedisPool connect(ContainerInfo x) {
         JedisPoolHolder.instance.create(x.nodeIp, listenPort(x), pass)
+    }
+
+    <R> R connectAndExe(ContainerInfo x, JedisCallback<R> callback) {
+        def jedisPool = connect(x)
+        JedisPoolHolder.exe(jedisPool, callback)
     }
 
     List<ContainerInfo> runningContainerList() {
@@ -111,6 +117,78 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
         }
 
         allContainerList
+    }
+
+    JobResult checkNodes() {
+        if (mode == Mode.sentinel) {
+            return checkPrimaryReplicaNodes()
+        } else if (mode == Mode.cluster) {
+            return checkClusterNodesAndSlots()
+        } else {
+            def containerList = runningContainerList()
+            if (containerList.size() != 1) {
+                return JobResult.fail('no running container')
+            } else {
+                return JobResult.ok('running container ok')
+            }
+        }
+    }
+
+    @CompileStatic
+    static record RoleResult(String nodeIp, int port, List<Object> roleList) {
+        String role() {
+            roleList[0].toString()
+        }
+    }
+
+    JobResult checkPrimaryReplicaNodes() {
+        assert mode == Mode.sentinel
+        assert replicas > 1
+
+        def containerList = runningContainerList()
+
+        String primaryNodeIp
+        int primaryPort = 0
+
+        List<RoleResult> roleResultList = []
+        for (x in containerList) {
+            List<Object> roleList = connectAndExe(x) { jedis ->
+                jedis.role()
+            }
+            assert roleList.size() >= 3
+            roleResultList << new RoleResult(x.nodeIp, x.publicPort(port), roleList)
+        }
+
+        // master first
+        def sortedList = roleResultList.sort { roleResult ->
+            roleResult.role() == 'master' ? 0 : 1
+        }
+
+        for (roleResult in sortedList) {
+            if (roleResult.role() == 'master') {
+                // already set
+                if (primaryNodeIp != null) {
+                    return JobResult.fail('more than one primary node, ' + primaryNodeIp + ':' + primaryPort + ', ' + roleResult.nodeIp + ':' + roleResult.port)
+                }
+
+                primaryNodeIp = roleResult.nodeIp
+                primaryPort = roleResult.port
+            } else {
+                assert roleResult.role() == 'slave'
+                if (primaryNodeIp == null) {
+                    return JobResult.fail('slave node ip not equal to primary node ip, ' + roleResult.roleList[1].toString() + ':' + roleResult.roleList[2].toString() + ', primary node ip not set yet')
+                }
+
+                if (roleResult.roleList[1].toString() != primaryNodeIp) {
+                    return JobResult.fail('slave node ip not equal to primary node ip, ' + roleResult.roleList[1].toString() + ':' + roleResult.roleList[2].toString() + ', ' + primaryNodeIp + ':' + primaryPort)
+                }
+                if (roleResult.roleList[2].toString() != primaryPort.toString()) {
+                    return JobResult.fail('slave node port not equal to primary node port, ' + roleResult.roleList[1].toString() + ':' + roleResult.roleList[2].toString() + ', ' + primaryNodeIp + ':' + primaryPort)
+                }
+            }
+        }
+
+        JobResult.ok('primary and replica nodes role ok')
     }
 
     JobResult checkClusterNodesAndSlots() {

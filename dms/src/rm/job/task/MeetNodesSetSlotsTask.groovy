@@ -4,7 +4,6 @@ import com.segment.common.job.chain.JobResult
 import com.segment.common.job.chain.JobStep
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import ha.JedisPoolHolder
 import model.RmServiceDTO
 import rm.RedisManager
 import rm.job.RmJob
@@ -45,8 +44,7 @@ class MeetNodesSetSlotsTask extends RmJobTask {
         }
 
         for (x in allContainerList) {
-            def jedisPool = rmService.connect(x)
-            JedisPoolHolder.exe(jedisPool) { jedis ->
+            rmService.connectAndExe(x) { jedis ->
                 for (x2 in allContainerList) {
                     if (x != x2) {
                         def listenPort2 = rmService.listenPort(x2)
@@ -77,8 +75,7 @@ class MeetNodesSetSlotsTask extends RmJobTask {
                 slots[i] = slotsBegin + i
             }
 
-            def jedisPool = rmService.connect(x)
-            JedisPoolHolder.exe(jedisPool) { jedis ->
+            rmService.connectAndExe(x) { jedis ->
                 def r = jedis.clusterAddSlots(slots)
                 log.warn('add slots: {}-{}, host: {}, port: {}, result: {}', slotsBegin, slotsEnd, x.nodeIp, rmService.listenPort(x), r)
             }
@@ -98,13 +95,11 @@ class MeetNodesSetSlotsTask extends RmJobTask {
                 it.appId() == x.appId() && it.instanceIndex() == 0
             }
 
-            def jedisPoolPrimary = rmService.connect(xPrimary)
-            String nodeId = JedisPoolHolder.exe(jedisPoolPrimary) { jedis ->
+            String nodeId = rmService.connectAndExe(xPrimary) { jedis ->
                 jedis.clusterMyId()
             }
 
-            def jedisPool = rmService.connect(x)
-            JedisPoolHolder.exe(jedisPool) { jedis ->
+            rmService.connectAndExe(x) { jedis ->
                 def r = jedis.clusterReplicate(nodeId)
                 log.warn('replicate node: {}, host: {}, port: {}, result: {}', nodeId, x.nodeIp, rmService.listenPort(x), r)
             }

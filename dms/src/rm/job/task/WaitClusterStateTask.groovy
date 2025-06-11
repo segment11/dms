@@ -4,7 +4,6 @@ import com.segment.common.job.chain.JobResult
 import com.segment.common.job.chain.JobStep
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
-import ha.JedisPoolHolder
 import model.RmServiceDTO
 import model.json.ClusterSlotsDetail
 import rm.RedisManager
@@ -65,8 +64,7 @@ class WaitClusterStateTask extends RmJobTask {
         new RmServiceDTO(id: rmService.id, clusterSlotsDetail: rmService.clusterSlotsDetail, updatedDate: new Date()).update()
 
         for (x in allContainerList) {
-            def jedisPool = rmService.connect(x)
-            def lines = JedisPoolHolder.exe(jedisPool) { jedis ->
+            def lines = rmService.connectAndExe(x) { jedis ->
                 jedis.clusterInfo()
             }
             if (!lines || !lines.contains('cluster_state:ok')) {
