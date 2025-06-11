@@ -14,6 +14,9 @@ class ClusterNode {
     String ip
     Integer port
 
+    ClusterNode() {
+    }
+
     ClusterNode(String ip, Integer port) {
         this.ip = ip
         this.port = port

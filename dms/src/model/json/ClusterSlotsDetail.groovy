@@ -37,11 +37,16 @@ class ClusterSlotsDetail implements JSONFiled {
             ip + ':' + port
         }
 
+        String nodeIdCached
+
         String nodeId() {
-            def jedisPool = JedisPoolHolder.instance.create(ip, port)
-            JedisPoolHolder.exe(jedisPool) { jedis ->
-                return jedis.clusterMyId()
+            if (!nodeIdCached) {
+                def jedisPool = JedisPoolHolder.instance.create(ip, port)
+                nodeIdCached = JedisPoolHolder.exe(jedisPool) { jedis ->
+                    return jedis.clusterMyId()
+                }
             }
+            nodeIdCached
         }
     }
 
