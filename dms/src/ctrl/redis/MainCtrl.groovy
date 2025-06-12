@@ -1,9 +1,11 @@
 package ctrl.redis
 
+import model.RmServiceDTO
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
 import rm.RedisManager
 import server.InMemoryAllContainerManager
+import transfer.NodeInfo
 
 def h = ChainHandler.instance
 
@@ -11,7 +13,45 @@ def log = LoggerFactory.getLogger(this.getClass())
 
 h.group('/redis') {
     h.get('/overview') { req, resp ->
-        [:]
+        def list = new RmServiceDTO(status: RmServiceDTO.Status.running).queryFields('app_id,maxmemory_mb,cluster_slots_detail').list()
+
+        def instance = InMemoryAllContainerManager.instance
+        def containerList = instance.getContainerList(RedisManager.CLUSTER_ID)
+        def runningContainerList = containerList.findAll { x -> x.running() }
+
+        Map<String, NodeInfo> r = instance.getAllNodeInfo(RedisManager.CLUSTER_ID)
+
+        List<Map> nodeStatsList = []
+        runningContainerList.groupBy { x ->
+            x.nodeIp
+        } each { nodeIp, subList ->
+            int maxmemoryTotalMB = 0
+            subList.each { x ->
+                def one = list.find { service ->
+                    service.checkIfAppBelongToThis(x.appId())
+                }
+                if (!one) {
+                    return
+                }
+
+                maxmemoryTotalMB += (one.maxmemoryMb ?: 0)
+            }
+
+            def info = r[nodeIp]
+
+            nodeStatsList << [
+                    nodeIp           : nodeIp,
+                    maxmemoryTotalMB : maxmemoryTotalMB,
+                    instanceNumber   : subList.size(),
+                    cpuUsedPercent   : (info.cpuUsedPercent() * 100).round(4),
+                    memoryTotalMB    : info.mem.total,
+                    memoryFreeMB     : info.mem.actualFree,
+                    memoryUsedMB     : info.mem.actualUsed,
+                    memoryUsedPercent: info.mem.usedPercent,
+            ]
+        }
+
+        [nodeStatsList: nodeStatsList.sort { 0 - (it.memoryUsedPercent as double) }]
     }
 
     // options

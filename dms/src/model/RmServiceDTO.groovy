@@ -282,4 +282,16 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
         JobResult.ok('cluster nodes and slots check ok')
     }
+
+    boolean checkIfAppBelongToThis(int appId) {
+        if (this.appId == appId) {
+            return true
+        }
+
+        if (!clusterSlotsDetail) {
+            return false
+        }
+
+        clusterSlotsDetail.shards.any { it.appId == appId }
+    }
 }

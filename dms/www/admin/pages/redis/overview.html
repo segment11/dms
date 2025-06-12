@@ -7,9 +7,36 @@
             <div class="widget-box">
                 <div class="widget-title">
                     <span class="icon"><i class="icon-info"></i></span>
-                    <h5>Redis Overview</h5>
+                    <h5>Redis Service Overview</h5>
+                    <div class="actions">
+                        <button class="btn" ng-click="refresh()">Refresh</button>
+                    </div>
                 </div>
                 <div class="widget-content">
+                    <div class="form-group">
+                        <label>Node Ip Filter: </label>
+                        <input type="text" ng-model="tmp.nodeIpPrefix" placeholder="Input Node Ip Prefix"/>
+                    </div>
+                    <table class="table table-bordered table-striped">
+                        <tr>
+                            <th width="15%">node ip</th>
+                            <th width="15%">memory usage percent (%)</th>
+                            <th width="15%">memory total (MB)</th>
+                            <th width="15%">used memory total (MB)</th>
+                            <th width="15%">redis maxmemory total (MB)</th>
+                            <th width="15%">cpu usage percent (%)</th>
+                            <th width="10%">instance number</th>
+                        </tr>
+                        <tr ng-repeat="one in nodeStatsList | filter:nodeIpFilter">
+                            <td><span class="bg-info">{{one.nodeIp}}</span></td>
+                            <td>{{one.memoryUsedPercent}}</td>
+                            <td>{{one.memoryTotalMB | toThousands}}</td>
+                            <td>{{one.memoryUsedMB | toThousands}}</td>
+                            <td>{{one.maxmemoryTotalMB | toThousands}}</td>
+                            <td>{{one.cpuUsedPercent}}</td>
+                            <td>{{one.instanceNumber}}</td>
+                        </tr>
+                    </table>
                 </div>
             </div>
 
