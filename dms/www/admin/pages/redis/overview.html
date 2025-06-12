@@ -29,11 +29,11 @@
                         </tr>
                         <tr ng-repeat="one in nodeStatsList | filter:nodeIpFilter">
                             <td><span class="bg-info">{{one.nodeIp}}</span></td>
-                            <td>{{one.memoryUsedPercent}}</td>
+                            <td><span ng-class="{'bg-success': one.memoryUsedPercent < 70, 'bg-danger': one.memoryUsedPercent >= 70}">{{one.memoryUsedPercent}}</span></td>
                             <td>{{one.memoryTotalMB | toThousands}}</td>
                             <td>{{one.memoryUsedMB | toThousands}}</td>
                             <td>{{one.maxmemoryTotalMB | toThousands}}</td>
-                            <td>{{one.cpuUsedPercent}}</td>
+                            <td><span ng-class="{'bg-success': one.cpuUsedPercent < 50, 'bg-danger': one.cpuUsedPercent >= 50}">{{one.cpuUsedPercent}}</span></td>
                             <td>{{one.instanceNumber}}</td>
                         </tr>
                     </table>
