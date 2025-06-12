@@ -2,7 +2,6 @@ var md = angular.module('module_redis/one', ['base']);
 md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     $scope.tmp = {};
     $scope.ctrl = {};
-    $scope.ext = {};
 
     var Page = window.Page;
     var params = Page.params();
@@ -26,12 +25,28 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         $http.get('/dms/redis/service/one', {params: {id: id}}).success(function (data) {
             $scope.one = data.one;
             $scope.checkResult = data.checkResult;
-            $scope.ext.configTemplateOne = data.configTemplateOne;
+            $scope.ext = data.ext;
             $scope.nodes = data.nodes;
         });
     };
 
     $scope.refresh();
+
+    $scope.goServiceJobs = function () {
+        var one = $scope.one;
+        Page.go('/page/redis_jobs', {
+            id: one.id, name: one.name, des: one.des
+        });
+    };
+
+    $scope.goAppDetail = function (appId, appName, appDes) {
+        Page.go('/page/cluster_container', {
+            appId: appId, appName: appName, appDes: appDes,
+            clusterId: $scope.ext.clusterId,
+            namespaceId: $scope.ext.namespaceId,
+            targetIndex: 0
+        });
+    };
 
     $scope.back = function () {
         Page.go('/page/redis_service', {});
@@ -70,8 +85,95 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
             }).success(function (data) {
                 if (data.flag) {
                     uiTips.alert('Update maxmemory success');
+                    one.maxmemoryMb = valInt;
                 }
             });
         }, one.maxmemoryMb);
+    };
+
+    $scope.doScale = function (one) {
+        uiTips.prompt('Update redis cluster shards to: ', function (val) {
+            if (!val) {
+                uiTips.alert('Please input to shards');
+                return;
+            }
+
+            var isNumber = /\d/.test(val);
+            if (!isNumber) {
+                uiTips.alert('Please input to shards as a number');
+                return;
+            }
+
+            var valInt = parseInt(val);
+            if (valInt < 2) {
+                uiTips.alert('Please input to shards as a number >= 2, yours: ' + valInt);
+                return;
+            }
+            if (valInt > 32) {
+                uiTips.alert('Please input to shards as a number <= 32, yours: ' + valInt);
+                return;
+            }
+            if (valInt != one.shards * 2 && valInt != one.shards / 2) {
+                uiTips.alert('Please input to shards as a number = old shards * 2 or old shards / 2, yours: ' + valInt);
+                return;
+            }
+
+            var isScaleUp = valInt == one.shards * 2;
+            if (isScaleUp) {
+                $http.post('/dms/redis/service/cluster-scale-up', {
+                    id: one.id,
+                    toShards: valInt
+                }).success(function (data) {
+                    if (data.id) {
+                        uiTips.alert('Update shards ok, view jobs for detail');
+                        one.shards = valInt;
+                    }
+                });
+            } else {
+                $http.post('/dms/redis/service/cluster-scale-down', {
+                    id: one.id,
+                    toShards: valInt
+                }).success(function (data) {
+                    if (data.id) {
+                        uiTips.alert('Update shards ok, view jobs for detail');
+                        one.shards = valInt;
+                    }
+                });
+            }
+        }, one.shards);
+    };
+
+    $scope.doUpdateReplicas = function (one) {
+        uiTips.prompt('Update redis cluster shards to: ', function (val) {
+            if (!val) {
+                uiTips.alert('Please input to replicas');
+                return;
+            }
+
+            var isNumber = /\d/.test(val);
+            if (!isNumber) {
+                uiTips.alert('Please input to replicas as a number');
+                return;
+            }
+
+            var valInt = parseInt(val);
+            if (valInt < 1) {
+                uiTips.alert('Please input to replicas as a number >= 1, yours: ' + valInt);
+                return;
+            }
+            if (valInt > 4) {
+                uiTips.alert('Please input to replicas as a number <= 4, yours: ' + valInt);
+                return;
+            }
+            $http.post('/dms/redis/service/update-replicas', {
+                id: one.id,
+                toReplicas: valInt
+            }).success(function (data) {
+                if (data.id) {
+                    uiTips.alert('Update replicas ok, view jobs for detail');
+                    one.replicas = valInt;
+                }
+            });
+        }, one.replicas);
     };
 });

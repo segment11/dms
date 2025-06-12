@@ -37,7 +37,7 @@ class ClusterSlotsDetail implements JSONFiled {
             ip + ':' + port
         }
 
-        String nodeIdCached
+        private String nodeIdCached
 
         String nodeId() {
             if (!nodeIdCached) {

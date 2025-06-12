@@ -10,6 +10,10 @@
                     <h5>Redis Service - {{one.name}}</h5>
                     <div class="actions">
                         <button class="btn" ng-click="refresh()">Refresh</button>
+                        <button class="btn" ng-click="goServiceJobs()">Jobs</button>
+                        <button class="btn btn-gray" ng-click="goAppDetail(ext.appId, ext.appName, ext.appDes)"
+                                ng-show="one.mode == 'standalone' || one.mode == 'sentinel'">Go To Target DMS App
+                        </button>
                         <button class="btn" ng-click="back()">Back</button>
                     </div>
                 </div>
@@ -40,7 +44,7 @@
                         </div>
                         <div class="col-md-4">
                             <span>Config Template Name</span>
-                            <span class="pull-right">{{ext.configTemplateOne}}</span>
+                            <span class="pull-right">{{ext.configTemplateName}}</span>
                         </div>
                     </div>
 
@@ -53,10 +57,12 @@
                         <div class="col-md-4">
                             <span>Shards</span>
                             <span class="pull-right">{{one.shards}}</span>
+                            <button class="btn" ng-click="doScale(one)" ng-show="'cluster' == one.mode">Scale</button>
                         </div>
                         <div class="col-md-4">
                             <span>Replicas</span>
-                            <span class="pull-right">{{ext.replicas}}</span>
+                            <span class="pull-right">{{one.replicas}}</span>
+                            <button class="btn" ng-click="doUpdateReplicas(one)">Change Replicas</button>
                         </div>
                     </div>
 
@@ -71,17 +77,21 @@
                         </div>
                         <div class="col-md-4">
                             <span>Node Tags By Replica Index</span>
-                            <span class="pull-right">{{ext.nodeTagsByReplicaIndex}}</span>
+                            <span class="pull-right">{{one.nodeTagsByReplicaIndex}}</span>
                         </div>
                     </div>
 
                     <hr/>
 
                     <div class="row">
-                        <div class="col-md-4">
-                            <span>Status: {{one.status}}</span>
+                        <h5>Status</h5>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-2">
+                            <span class="bg-info">{{one.status}}</span>
                         </div>
-                        <div class="col-md-8" ng-show="!checkResult.isOk">
+                        <div class="col-md-10" ng-show="!checkResult.isOk">
                             <span>Check Result Message</span>
                             <span class="bg-danger pull-right">{{checkResult.message}}</span>
                         </div>
@@ -89,28 +99,35 @@
 
                     <hr/>
 
-                    <table class="table table-bordered table-striped m_top6" style="width: 1200px;">
-                        <tr>
-                            <th width="15%">Shard Index</th>
-                            <th width="15%">Replica Index</th>
-                            <th width="10%">Is Primary</th>
-                            <th width="20%">Node Ip / Port</th>
-                            <th width="10%">Status</th>
-                            <th></th>
-                        </tr>
-                        <tr ng-repeat="node in nodes">
-                            <td>{{node.shardIndex}}</td>
-                            <td>{{node.replicaIndex}}</td>
-                            <td>
-                                <span ng-class="{'bg-info': !node.isPrimary, 'bg-success': node.isPrimary}">{{node.isPrimary}}</span>
-                            </td>
-                            <td>{{node.ip}}:{{node.port}}</td>
-                            <td>
-                                <span ng-class="{'bg-danger': !node.running, 'bg-success': node.running}">{{node.running ? 'running' : 'unhealthy'}}</span>
-                            </td>
-                            <td></td>
-                        </tr>
-                    </table>
+                    <div class="row">
+                        <h5>Nodes</h5>
+                        <table class="table table-bordered table-striped m_top6">
+                            <tr>
+                                <th width="15%">Shard Index</th>
+                                <th width="15%">Replica Index</th>
+                                <th width="10%">Is Primary</th>
+                                <th width="20%">Node Ip / Port</th>
+                                <th width="10%">Status</th>
+                                <th></th>
+                            </tr>
+                            <tr ng-repeat="node in nodes">
+                                <td>{{node.shardIndex}}</td>
+                                <td>{{node.replicaIndex}}</td>
+                                <td>
+                                    <span ng-class="{'bg-info': !node.isPrimary, 'bg-success': node.isPrimary}">{{node.isPrimary}}</span>
+                                </td>
+                                <td>{{node.ip}}:{{node.port}}</td>
+                                <td>
+                                    <span ng-class="{'bg-danger': !node.running, 'bg-success': node.running}">{{node.running ? 'running' : 'unhealthy'}}</span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-gray" ng-click="goAppDetail(node.appId, node.appName)" ng-show="one.mode == 'cluster'">
+                                        Go To Target DMS App
+                                    </button>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
 
                 </div>
             </div>

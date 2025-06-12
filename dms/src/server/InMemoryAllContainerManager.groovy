@@ -181,6 +181,10 @@ class InMemoryAllContainerManager extends IntervalJob implements AllContainerMan
         null
     }
 
+    List<ContainerInfo> getRunningContainerList(int clusterId, int appId) {
+        getContainerList(clusterId, appId).findAll { x -> x.running() }
+    }
+
     @Override
     List<ContainerInfo> getContainerList(int clusterId, int appId = 0,
                                          String nodeIp = null, User user = null) {

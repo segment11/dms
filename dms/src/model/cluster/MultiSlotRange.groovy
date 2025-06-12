@@ -241,4 +241,14 @@ class MultiSlotRange implements Comparable<MultiSlotRange> {
         }
         argsList
     }
+
+    static MultiSlotRange fromClusterSlots(List clusterSlots, String nodeId) {
+        def slotNodeList = MessageReader.fromClusterSlots(clusterSlots).findAll { it.nodeId == nodeId }
+
+        def r = new MultiSlotRange()
+        for (slotNode in slotNodeList) {
+            r.addSingle(slotNode.beginSlot, slotNode.endSlot)
+        }
+        r
+    }
 }

@@ -8,4 +8,7 @@ class RmJobTypes {
     static final JobType BASE_CREATE = new JobType('base_create')
     static final JobType SENTINEL_CREATE = new JobType('sentinel_create')
     static final JobType CLUSTER_CREATE = new JobType('cluster_create')
+
+    static final JobType CLUSTER_SCALE = new JobType('cluster_scale')
+    static final JobType REPLICAS_SCALE = new JobType('replicas_scale')
 }

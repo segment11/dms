@@ -45,7 +45,7 @@ class WaitPrimaryReplicasStateTask extends RmJobTask {
             runningContainerList.each { x ->
                 def node = new PrimaryReplicasDetail.Node()
                 node.ip = x.nodeIp
-                node.port = x.publicPort(rmService.port)
+                node.port = rmService.listenPort(x)
                 node.replicaIndex = x.instanceIndex()
                 // when first created, the first replica is primary
                 node.isPrimary = node.replicaIndex == 0

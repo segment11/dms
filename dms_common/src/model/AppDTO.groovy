@@ -1,11 +1,9 @@
 package model
 
 import groovy.transform.CompileStatic
-import groovy.transform.ToString
 import model.json.*
 
 @CompileStatic
-@ToString(includeNames = true, includeSuper = false)
 class AppDTO extends BaseRecord<AppDTO> {
     @CompileStatic
     static enum Status {
@@ -16,6 +14,11 @@ class AppDTO extends BaseRecord<AppDTO> {
         Status(int val) {
             this.val = val
         }
+    }
+
+    @Override
+    String toString() {
+        "app: " + name + ", id: " + id + ", status:" + Status.values().find { it.val == status }.name()
     }
 
     Integer id

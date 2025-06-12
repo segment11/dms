@@ -17,5 +17,9 @@ class PrimaryReplicasDetail implements JSONFiled {
         String ip
         int port
         int replicaIndex
+
+        String uuid() {
+            ip + ':' + port
+        }
     }
 }

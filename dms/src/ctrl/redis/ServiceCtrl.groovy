@@ -5,6 +5,7 @@ import com.segment.common.Utils
 import com.segment.common.job.chain.JobParams
 import com.segment.common.job.chain.JobStatus
 import model.*
+import model.cluster.SlotRange
 import model.json.*
 import org.apache.commons.beanutils.BeanUtils
 import org.segment.web.handler.ChainHandler
@@ -16,6 +17,7 @@ import rm.job.RmJob
 import rm.job.RmJobTypes
 import rm.job.task.*
 import server.InMemoryAllContainerManager
+import server.InMemoryCacheSupport
 
 def h = ChainHandler.instance
 
@@ -35,7 +37,7 @@ h.group('/redis/service') {
         def mode = req.param('mode')
         if (mode) {
             if (!(mode in ['standalone', 'sentinel', 'cluster'])) {
-                resp.halt(500, 'mode must be standalone, sentinel or cluster')
+                resp.halt(409, 'mode must be standalone, sentinel or cluster')
             }
             dto.where('mode = ?', mode)
         }
@@ -43,7 +45,7 @@ h.group('/redis/service') {
         def status = req.param('status')
         if (status) {
             if (!(status in ['creating', 'running', 'deleted', 'unhealthy'])) {
-                resp.halt(500, 'status must be creating, running, deleted or unhealthy')
+                resp.halt(409, 'status must be creating, running, deleted or unhealthy')
             }
             dto.where('status = ?', status)
         }
@@ -54,7 +56,7 @@ h.group('/redis/service') {
             pager.list.each { one ->
                 def runningContainerList = one.runningContainerList()
                 if (runningContainerList.size() == one.shards * one.replicas) {
-                    if (one.status == RmServiceDTO.Status.creating) {
+                    if (one.status.canChangeToRunningWhenInstancesRunningOk()) {
                         one.status = RmServiceDTO.Status.running
                         new RmServiceDTO(id: one.id, status: RmServiceDTO.Status.running).update()
                     }
@@ -77,10 +79,16 @@ h.group('/redis/service') {
 
         def one = new RmServiceDTO(id: id).one()
         if (!one) {
-            resp.halt(500, 'service not found')
+            resp.halt(404, 'service not found')
         }
 
         def r = [:]
+        def ext = [:]
+        r.ext = ext
+
+        ext.clusterId = RedisManager.CLUSTER_ID
+        ext.namespaceId = NamespaceDTO.createIfNotExist(RedisManager.CLUSTER_ID, 'redis')
+
         r.one = one
 
         if (one.status == RmServiceDTO.Status.running) {
@@ -89,16 +97,21 @@ h.group('/redis/service') {
 
         def configTemplateOne = new RmConfigTemplateDTO(id: one.configTemplateId).queryFields('name').one()
         assert configTemplateOne
-        r.configTemplateName = configTemplateOne.name
+        ext.configTemplateName = configTemplateOne.name
 
         List nodes = []
         r.nodes = nodes
 
         if (one.mode == RmServiceDTO.Mode.standalone) {
+            def appOne = InMemoryCacheSupport.instance.oneApp(one.appId)
+            ext.appId = appOne.id
+            ext.appName = appOne.name
+            ext.appDes = appOne.des
+
             def instance = InMemoryAllContainerManager.instance
             def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, one.appId)
             containerList.each { x ->
-                nodes << [shardIndex: 0, replicaIndex: x.instanceIndex(), ip: x.nodeIp, port: x.publicPort(one.port), isPrimary: true, running: x.running()]
+                nodes << [shardIndex: 0, replicaIndex: x.instanceIndex(), ip: x.nodeIp, port: one.listenPort(x), isPrimary: true, running: x.running()]
             }
         } else if (one.mode == RmServiceDTO.Mode.sentinel) {
             assert one.primaryReplicasDetail && one.primaryReplicasDetail.nodes
@@ -108,7 +121,7 @@ h.group('/redis/service') {
 
             for (n in one.primaryReplicasDetail.nodes) {
                 def x = containerList.find { x ->
-                    x.nodeIp == n.ip && x.publicPort(one.port) == n.port && x.instanceIndex() == n.replicaIndex
+                    x.nodeIp == n.ip && one.listenPort(x) == n.port && x.instanceIndex() == n.replicaIndex
                 }
                 def running = x && x.running()
                 nodes << [shardIndex: 0, replicaIndex: n.replicaIndex, ip: n.ip, port: n.port, isPrimary: n.isPrimary, running: running]
@@ -120,12 +133,14 @@ h.group('/redis/service') {
             def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, one.appId)
 
             for (shard in one.clusterSlotsDetail.shards) {
+                def appOne = InMemoryCacheSupport.instance.oneApp(shard.appId)
                 for (n in shard.nodes) {
                     def x = containerList.find { x ->
                         x.nodeIp == n.ip && one.listenPort(x) == n.port && x.instanceIndex() == n.replicaIndex
                     }
                     def running = x && x.running()
-                    nodes << [shardIndex: shard.shardIndex, replicaIndex: n.replicaIndex, ip: n.ip, port: n.port, isPrimary: n.isPrimary, running: running]
+                    nodes << [shardIndex: shard.shardIndex, replicaIndex: n.replicaIndex, ip: n.ip, port: n.port, isPrimary: n.isPrimary, running: running,
+                              appId     : appOne.id, appName: appOne.name, appDes: appOne.des]
                 }
             }
         }
@@ -140,7 +155,7 @@ h.group('/redis/service') {
         // check name
         def existOne = new RmServiceDTO(name: one.name).queryFields('id').one()
         if (existOne) {
-            resp.halt(500, 'name already exists')
+            resp.halt(409, 'name already exists')
         }
 
         // check node ready
@@ -153,20 +168,20 @@ h.group('/redis/service') {
                 }
             }
             if (matchNodeList.size() < one.shards * one.replicas) {
-                resp.halt(500, 'not enough node ready, for tags: ' + one.nodeTags)
+                resp.halt(409, 'not enough node ready, for tags: ' + one.nodeTags)
             }
         } else {
             if (hbOkNodeList.size() < one.replicas && !Conf.instance.isOn('rm.isSingleNodeTest')) {
-                resp.halt(500, 'not enough node ready')
+                resp.halt(409, 'not enough node ready')
             }
         }
 
         // check max shards / replicas
         if (one.shards > RedisManager.ONE_CLUSTER_MAX_SHARDS) {
-            resp.halt(500, 'max shards is ' + RedisManager.ONE_CLUSTER_MAX_SHARDS)
+            resp.halt(409, 'max shards is ' + RedisManager.ONE_CLUSTER_MAX_SHARDS)
         }
         if (one.replicas > RedisManager.ONE_SHARD_MAX_REPLICAS) {
-            resp.halt(500, 'max replicas is ' + RedisManager.ONE_SHARD_MAX_REPLICAS)
+            resp.halt(409, 'max replicas is ' + RedisManager.ONE_SHARD_MAX_REPLICAS)
         }
 
         // check port range conflict
@@ -180,7 +195,7 @@ h.group('/redis/service') {
         }
         for (range in alreadyUsingPortRangeList) {
             if (one.port >= (range[0] as int) && one.port < (range[1] as int)) {
-                resp.halt(500, 'port conflict, as another service is using it, service: ' +
+                resp.halt(409, 'port conflict, as another service is using it, service: ' +
                         range[2] + ' port: ' + range[0] + '-' + range[1])
             }
         }
@@ -192,10 +207,10 @@ h.group('/redis/service') {
         if (isSentinelMode) {
             def sentinelServiceOne = new RmSentinelServiceDTO(id: one.sentinelServiceId).one()
             if (!sentinelServiceOne) {
-                resp.halt(500, 'sentinel service not found')
+                resp.halt(404, 'sentinel service not found')
             }
             if (sentinelServiceOne.status != RmSentinelServiceDTO.Status.running) {
-                resp.halt(500, 'sentinel service not running')
+                resp.halt(409, 'sentinel service not running')
             }
 
             sentinelAppName = 'rm_sentinel_' + sentinelServiceOne.name
@@ -240,7 +255,7 @@ h.group('/redis/service') {
         // set maxmemory the same as container required
         one.maxmemoryMb = conf.memReservationMB
         if (one.maxmemoryMb > RedisManager.ONE_INSTANCE_MAX_MEMORY_MB) {
-            resp.halt(500, 'maxmemory MB need less than ' + RedisManager.ONE_INSTANCE_MAX_MEMORY_MB + 'MB')
+            resp.halt(409, 'maxmemory MB need less than ' + RedisManager.ONE_INSTANCE_MAX_MEMORY_MB + 'MB')
         }
 
         conf.networkMode = 'host'
@@ -344,7 +359,7 @@ h.group('/redis/service') {
             // shadow copy properties from app
             BeanUtils.copyProperties(appShard, app)
             // rename
-            appShard.name = app.name + '_shard_' + i
+            appShard.name = 'rm_' + one.name + '_shard_' + i
 
             def portForThisShard = one.port + i * RedisManager.ONE_SHARD_MAX_REPLICAS
 
@@ -400,6 +415,271 @@ h.group('/redis/service') {
         [id: id]
     }
 
+    h.post('/cluster-scale-up') { req, resp ->
+        def map = req.bodyAs(HashMap)
+        def id = map.id as int
+        def toShards = map.toShards as int
+
+        def one = new RmServiceDTO(id: id).one()
+        if (!one) {
+            resp.halt(404, 'service not exists')
+        }
+
+        if (one.mode != RmServiceDTO.Mode.cluster) {
+            resp.halt(409, 'only support cluster mode')
+        }
+
+        def oldShards = one.shards
+        if (toShards != oldShards * 2) {
+            resp.halt(409, 'new shards must be old shards * 2')
+        }
+
+        if (toShards > RedisManager.ONE_CLUSTER_MAX_SHARDS) {
+            resp.halt(409, 'max shards is ' + RedisManager.ONE_CLUSTER_MAX_SHARDS)
+        }
+
+        if (one.status != RmServiceDTO.Status.running) {
+            resp.halt(409, 'service must be running')
+        }
+
+        def checkResult = one.checkClusterNodesAndSlots()
+        if (!checkResult.isOk) {
+            resp.halt(409, checkResult.message)
+        }
+
+        def firstShard = one.clusterSlotsDetail.shards[0]
+        def app = new AppDTO(id: firstShard.appId).one()
+        if (!app) {
+            resp.halt(409, 'first shard app not exists')
+        }
+
+        List<ClusterSlotsDetail.Shard> newShardList = []
+        for (i in one.shards..<toShards) {
+            def shard = new ClusterSlotsDetail.Shard(shardIndex: i)
+            newShardList << shard
+        }
+
+        def mountOne = app.conf.fileVolumeList[0]
+        List<AppDTO> appListByShard = []
+        for (shard in newShardList) {
+            def i = shard.shardIndex
+
+            def appShard = new AppDTO()
+            // shadow copy properties from app
+            BeanUtils.copyProperties(appShard, app)
+            // rename
+            appShard.name = 'rm_' + one.name + '_shard_' + i
+
+            def portForThisShard = one.port + i * RedisManager.ONE_SHARD_MAX_REPLICAS
+
+            appShard.conf.fileVolumeList.clear()
+            def copyOne = mountOne.copy()
+            copyOne.paramList.find { it.key == 'port' }.value = '' + portForThisShard
+            appShard.conf.fileVolumeList << copyOne
+
+            appShard.conf.portList.clear()
+            appShard.conf.portList << new PortMapping(privatePort: portForThisShard, publicPort: portForThisShard)
+
+            def appShardId = appShard.add()
+            appShard.id = appShardId
+            appListByShard << appShard
+
+            shard.appId = appShardId
+            one.clusterSlotsDetail.shards << shard
+        }
+
+        new RmServiceDTO(id: id, clusterSlotsDetail: one.clusterSlotsDetail, shards: toShards,
+                status: RmServiceDTO.Status.scaling_up, updatedDate: new Date()).update()
+        log.warn 'scale up service, name: {}, old shards: {}, new shards: {}', one.name, oldShards, toShards
+
+        def rmJob = new RmJob()
+        rmJob.rmService = one
+        rmJob.type = RmJobTypes.CLUSTER_SCALE
+        rmJob.status = JobStatus.created
+        rmJob.params = new JobParams()
+        rmJob.params.put('rmServiceId', id.toString())
+        // sub tasks
+        for (shard in newShardList) {
+            rmJob.taskList << new RunCreatingAppJobTask(rmJob, shard.shardIndex, appListByShard[shard.shardIndex - oldShards])
+            rmJob.taskList << new WaitInstancesRunningTask(rmJob, shard.shardIndex)
+        }
+        rmJob.taskList << new MeetNodesWhenScaleTask(rmJob, newShardList)
+        for (newShard in newShardList) {
+            def migrateSlotsFromShard = one.clusterSlotsDetail.shards.find { it.shardIndex == newShard.shardIndex - oldShards }
+            migrateSlotsFromShard.multiSlotRange.list.each { slotRange ->
+                // skip only one slot
+                if (slotRange.totalNumber() == 1) {
+                    return
+                }
+
+                def halfSlotNumber = (slotRange.totalNumber() / 2).intValue()
+
+                def halfSlotRange = new SlotRange()
+                halfSlotRange.begin = slotRange.begin + halfSlotNumber
+                halfSlotRange.end = slotRange.end
+
+                def migrateSlotsTask = new MigrateSlotsTask(rmJob, migrateSlotsFromShard, newShard, halfSlotRange)
+                rmJob.taskList << migrateSlotsTask
+            }
+        }
+        rmJob.taskList << new WaitClusterStateAfterScaleTask(rmJob)
+
+        rmJob.createdDate = new Date()
+        rmJob.updatedDate = new Date()
+        rmJob.save()
+
+        RmJobExecutor.instance.execute {
+            rmJob.run()
+        }
+
+        [id: id]
+    }
+
+    h.post('/cluster-scale-down') { req, resp ->
+        def map = req.bodyAs(HashMap)
+        def id = map.id as int
+        def toShards = map.toShards as int
+
+        def one = new RmServiceDTO(id: id).one()
+        if (!one) {
+            resp.halt(404, 'service not exists')
+        }
+
+        if (one.mode != RmServiceDTO.Mode.cluster) {
+            resp.halt(409, 'only support cluster mode')
+        }
+
+        def oldShards = one.shards
+        if (oldShards == 2) {
+            resp.halt(409, 'min shards is 2')
+        }
+
+        if (toShards != (oldShards / 2).intValue()) {
+            resp.halt(409, 'new shards must be old shards / 2')
+        }
+
+        if (one.status != RmServiceDTO.Status.running) {
+            resp.halt(409, 'service must be running')
+        }
+
+        def checkResult = one.checkClusterNodesAndSlots()
+        if (!checkResult.isOk) {
+            resp.halt(409, checkResult.message)
+        }
+
+        def firstShard = one.clusterSlotsDetail.shards[0]
+        def app = new AppDTO(id: firstShard.appId).one()
+        if (!app) {
+            resp.halt(409, 'first shard app not exists')
+        }
+
+        List<ClusterSlotsDetail.Shard> toRemoveShardList = one.clusterSlotsDetail.shards.findAll { shard ->
+            shard.shardIndex >= toShards
+        }
+
+        new RmServiceDTO(id: id, shards: toShards,
+                status: RmServiceDTO.Status.scaling_down, updatedDate: new Date()).update()
+        log.warn 'scale down service, name: {}, old shards: {}, new shards: {}', one.name, oldShards, toShards
+
+        one.shards = toShards
+
+        def rmJob = new RmJob()
+        rmJob.rmService = one
+        rmJob.type = RmJobTypes.CLUSTER_SCALE
+        rmJob.status = JobStatus.created
+        rmJob.params = new JobParams()
+        rmJob.params.put('rmServiceId', id.toString())
+        // sub tasks
+        for (oldShard in toRemoveShardList) {
+            def migrateSlotsToShard = one.clusterSlotsDetail.shards.find { it.shardIndex == oldShard.shardIndex - toShards }
+
+            oldShard.multiSlotRange.list.each { slotRange ->
+                def migrateSlotsTask = new MigrateSlotsTask(rmJob, oldShard, migrateSlotsToShard, slotRange)
+                rmJob.taskList << migrateSlotsTask
+            }
+
+            List<Integer> replicaIndexList = []
+            for (i in 0..<one.replicas) {
+                replicaIndexList << i
+            }
+            rmJob.taskList << new ForgetNodeTask(rmJob, oldShard, replicaIndexList, false)
+        }
+        rmJob.taskList << new WaitClusterStateAfterScaleTask(rmJob)
+
+        rmJob.createdDate = new Date()
+        rmJob.updatedDate = new Date()
+        rmJob.save()
+
+        RmJobExecutor.instance.execute {
+            rmJob.run()
+        }
+
+        [id: id]
+    }
+
+    h.post('/update-replicas') { req, resp ->
+        def map = req.bodyAs(HashMap)
+        def id = map.id as int
+        def toReplicas = map.toReplicas as int
+
+        def one = new RmServiceDTO(id: id).one()
+        if (!one) {
+            resp.halt(404, 'service not exists')
+        }
+
+        def oldReplicas = one.replicas
+        if (oldReplicas == toReplicas) {
+            resp.halt(409, 'old replicas is same')
+        }
+
+        if (one.status != RmServiceDTO.Status.running) {
+            resp.halt(409, 'service must be running')
+        }
+
+        def checkResult = one.checkNodes()
+        if (!checkResult.isOk) {
+            resp.halt(409, checkResult.message)
+        }
+
+        new RmServiceDTO(id: id, replicas: toReplicas,
+                status: RmServiceDTO.Status.updating_replicas, updatedDate: new Date()).update()
+        log.warn 'update service replicas, name: {}, old replicas: {}, new replicas: {}', one.name, oldReplicas, toReplicas
+
+        one.replicas = toReplicas
+
+        def rmJob = new RmJob()
+        rmJob.rmService = one
+        rmJob.type = RmJobTypes.REPLICAS_SCALE
+        rmJob.status = JobStatus.created
+        rmJob.params = new JobParams()
+        rmJob.params.put('rmServiceId', id.toString())
+
+        if (toReplicas > oldReplicas) {
+            List<Integer> replicaIndexList = []
+            for (i in oldReplicas..<toReplicas) {
+                replicaIndexList << i
+            }
+            rmJob.taskList << new AddReplicasTask(rmJob, replicaIndexList)
+        } else {
+            List<Integer> replicaIndexList = []
+            for (i in toReplicas..<oldReplicas) {
+                replicaIndexList << i
+            }
+            rmJob.taskList << new RemoveReplicasTask(rmJob, replicaIndexList)
+        }
+        rmJob.taskList << new WaitServiceCheckNodesOkTask(rmJob)
+
+        rmJob.createdDate = new Date()
+        rmJob.updatedDate = new Date()
+        rmJob.save()
+
+        RmJobExecutor.instance.execute {
+            rmJob.run()
+        }
+
+        [id: id]
+    }
+
     h.delete('/delete') { req, resp ->
         def idStr = req.param('id')
         assert idStr
@@ -409,15 +689,15 @@ h.group('/redis/service') {
         // check if exists
         def one = new RmServiceDTO(id: id).one()
         if (!one) {
-            resp.halt(500, 'not exists')
+            resp.halt(404, 'service not exists')
         }
 
         if (one.status == RmServiceDTO.Status.deleted) {
-            resp.halt(500, 'already deleted')
+            resp.halt(409, 'already deleted')
         }
 
         if (one.status == RmServiceDTO.Status.creating) {
-            resp.halt(500, 'creating, please wait')
+            resp.halt(409, 'creating, please wait')
         }
 
         if (one.mode == RmServiceDTO.Mode.standalone || one.mode == RmServiceDTO.Mode.sentinel) {

@@ -34,16 +34,16 @@ class WaitClusterStateTask extends RmJobTask {
         def instance = InMemoryAllContainerManager.instance
 
         for (shard in rmService.clusterSlotsDetail.shards) {
-            def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, shard.appId)
+            def runningContainerList = instance.getRunningContainerList(RedisManager.CLUSTER_ID, shard.appId)
 
-            def runningNumber = containerList.findAll { x -> x.running() }.size()
+            def runningNumber = runningContainerList.size()
             if (runningNumber != rmService.replicas) {
                 return JobResult.fail('running containers number: ' + runningNumber + ', expect: ' + rmService.replicas)
             }
 
-            allContainerList.addAll(containerList)
+            allContainerList.addAll(runningContainerList)
 
-            containerList.each { x ->
+            runningContainerList.each { x ->
                 def node = new ClusterSlotsDetail.Node()
                 node.ip = x.nodeIp
                 node.port = rmService.listenPort(x)
@@ -57,6 +57,7 @@ class WaitClusterStateTask extends RmJobTask {
 
         // update after nodes updated
         new RmServiceDTO(id: rmService.id, clusterSlotsDetail: rmService.clusterSlotsDetail, updatedDate: new Date()).update()
+        log.warn 'update cluster slots detail ok'
 
         for (x in allContainerList) {
             def lines = rmService.connectAndExe(x) { jedis ->

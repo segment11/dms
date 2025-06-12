@@ -285,6 +285,7 @@ create table rm_service
     extend_params              varchar(2000),
     cluster_slots_detail       varchar(4000), -- for cluster mode
     primary_replicas_detail    varchar(4000), -- for sentinel mode
+    last_updated_message       varchar(200),
     created_date               timestamp,
     updated_date               timestamp default current_timestamp
 );
@@ -338,7 +339,7 @@ create table rm_task_log
 (
     id           int auto_increment primary key,
     job_id       int,
-    step         varchar(50),
+    step         varchar(100),
     job_result   text,
     cost_ms      int       default 0,
     created_date timestamp,

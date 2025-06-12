@@ -36,8 +36,8 @@ class WaitInstancesRunningTask extends RmJobTask {
                 rmService.appId
 
         def instance = InMemoryAllContainerManager.instance
-        def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, targetShardAppId)
-        if (!containerList) {
+        def runningContainerList = instance.getRunningContainerList(RedisManager.CLUSTER_ID, targetShardAppId)
+        if (!runningContainerList) {
             Thread.sleep(10 * 1000)
             tryCount++
 
@@ -48,7 +48,7 @@ class WaitInstancesRunningTask extends RmJobTask {
             }
         }
 
-        def runningNumber = containerList.findAll { x -> x.running() }.size()
+        def runningNumber = runningContainerList.size()
         log.info 'running containers number: {}, app id: {}', runningNumber, targetShardAppId
         if (runningNumber == rmService.replicas) {
             return JobResult.ok('running containers number: ' + runningNumber)

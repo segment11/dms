@@ -33,14 +33,14 @@ class MeetNodesSetSlotsTask extends RmJobTask {
         for (shard in rmService.clusterSlotsDetail.shards) {
             def appId = shard.appId
 
-            def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, appId)
+            def runningContainerList = instance.getRunningContainerList(RedisManager.CLUSTER_ID, appId)
 
-            def runningNumber = containerList.findAll { x -> x.running() }.size()
+            def runningNumber = runningContainerList.size()
             if (runningNumber != rmService.replicas) {
                 return JobResult.fail('running containers number: ' + runningNumber + ', expect: ' + rmService.replicas)
             }
 
-            allContainerList.addAll(containerList)
+            allContainerList.addAll(runningContainerList)
         }
 
         for (x in allContainerList) {
@@ -49,7 +49,10 @@ class MeetNodesSetSlotsTask extends RmJobTask {
                     if (x != x2) {
                         def listenPort2 = rmService.listenPort(x2)
                         def r = jedis.clusterMeet(x2.nodeIp, listenPort2)
-                        log.warn('meet node: ' + x2.nodeIp + ':' + listenPort2 + ', result: ' + r)
+                        log.warn 'meet node, new node: {}, old node: {}, result: {}',
+                                x2.nodeIp + ':' + listenPort2,
+                                x.nodeIp + ':' + rmService.listenPort(x),
+                                r
                     }
                 }
             }
@@ -95,7 +98,7 @@ class MeetNodesSetSlotsTask extends RmJobTask {
                 it.appId() == x.appId() && it.instanceIndex() == 0
             }
 
-            String nodeId = rmService.connectAndExe(xPrimary) { jedis ->
+            def nodeId = rmService.connectAndExe(xPrimary) { jedis ->
                 jedis.clusterMyId()
             }
 
