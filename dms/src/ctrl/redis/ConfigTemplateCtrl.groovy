@@ -62,7 +62,7 @@ h.group('/redis/config-template') {
             // check name
             def existOne = new RmConfigTemplateDTO(name: one.name).queryFields('id').one()
             if (existOne) {
-                resp.halt(500, 'name already exists')
+                resp.halt(409, 'name already exists')
             }
             id = one.add()
         } else {
@@ -81,13 +81,13 @@ h.group('/redis/config-template') {
         // check if exists
         def one = new RmConfigTemplateDTO(id: id).queryFields('id').one()
         if (!one) {
-            resp.halt(500, 'not exists')
+            resp.halt(404, 'config template not exists')
         }
 
         // check if is used
         def serviceOne = new RmServiceDTO(configTemplateId: id).queryFields('name,status').one()
         if (serviceOne && serviceOne.status != RmServiceDTO.Status.deleted) {
-            resp.halt(500, "this config template is used by service: ${serviceOne.name}")
+            resp.halt(409, "this config template is used by service: ${serviceOne.name}")
         }
 
         new RmConfigTemplateDTO(id: id).delete()

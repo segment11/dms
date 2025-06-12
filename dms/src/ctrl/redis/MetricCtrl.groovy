@@ -27,11 +27,11 @@ h.group('/redis/metric') {
         def instance = InMemoryAllContainerManager.instance
         def nodeInfo = instance.getNodeInfo(targetNodeIp)
         if (!nodeInfo) {
-            resp.halt(500, 'node not exists')
+            resp.halt(404, 'node not exists')
         }
         nodeInfo.checkIfOk(new Date())
         if (!nodeInfo.isOk) {
-            resp.halt(500, 'node heart beat not ok')
+            resp.halt(409, 'node heart beat not ok')
         }
 
         def namespaceIdMetric = NamespaceDTO.createIfNotExist(RedisManager.CLUSTER_ID, 'metric')
@@ -42,7 +42,7 @@ h.group('/redis/metric') {
         def existsOne = new AppDTO(clusterId: RedisManager.CLUSTER_ID, name: prometheusAppName).one()
         if (existsOne) {
             log.warn('prometheus already exists {}', prometheusAppName)
-            resp.halt(500, 'prometheus already exists')
+            resp.halt(409, 'prometheus already exists')
         }
 
         List<String> targetNodeIpList = [targetNodeIp]
@@ -76,7 +76,7 @@ h.group('/redis/metric') {
         def existsOne2 = new AppDTO(clusterId: RedisManager.CLUSTER_ID, name: redisExporterAppName).one()
         if (existsOne2) {
             log.warn('redis exporter already exists {}', redisExporterAppName)
-            resp.halt(500, 'redis exporter already exists')
+            resp.halt(409, 'redis exporter already exists')
         }
 
         def app = new AppDTO()
@@ -140,11 +140,11 @@ h.group('/redis/metric') {
         def instance = InMemoryAllContainerManager.instance
         def nodeInfo = instance.getNodeInfo(targetNodeIp)
         if (!nodeInfo) {
-            resp.halt(500, 'node not exists')
+            resp.halt(404, 'node not exists')
         }
         nodeInfo.checkIfOk(new Date())
         if (!nodeInfo.isOk) {
-            resp.halt(500, 'node heart beat not ok')
+            resp.halt(409, 'node heart beat not ok')
         }
 
         def namespaceIdMetric = NamespaceDTO.createIfNotExist(RedisManager.CLUSTER_ID, 'metric')
@@ -154,7 +154,7 @@ h.group('/redis/metric') {
         def existsOne = new AppDTO(clusterId: RedisManager.CLUSTER_ID, name: openobserveAppName).one()
         if (existsOne) {
             log.warn('openobserve already exists {}', openobserveAppName)
-            resp.halt(500, 'openobserve already exists')
+            resp.halt(409, 'openobserve already exists')
         }
 
         List<String> targetNodeIpList = [targetNodeIp]
@@ -190,10 +190,10 @@ h.group('/redis/metric') {
                 log.warn 'vector application container need scale up from {} to {}', existsOne.conf.containerNumber, hbOkNodeInfList.size()
                 existsOne.conf.containerNumber = hbOkNodeInfList.size()
                 new AppDTO(id: existsOne.id, conf: existsOne.conf, updatedDate: new Date()).update()
-                resp.halt(500, 'vector application container need scale up, please wait')
+                resp.halt(409, 'vector application container need scale up, please wait')
             }
 
-            resp.halt(500, 'vector already exists')
+            resp.halt(409, 'vector already exists')
         }
 
         def vectorApp = BasePlugin.tplApp(RedisManager.CLUSTER_ID, namespaceIdMetric, []) { conf ->
@@ -228,10 +228,10 @@ h.group('/redis/metric') {
                 log.warn 'node exporter application container need scale up from {} to {}', existsOne.conf.containerNumber, hbOkNodeInfList.size()
                 existsOne.conf.containerNumber = hbOkNodeInfList.size()
                 new AppDTO(id: existsOne.id, conf: existsOne.conf, updatedDate: new Date()).update()
-                resp.halt(500, 'node exporter application container need scale up, please wait')
+                resp.halt(409, 'node exporter application container need scale up, please wait')
             }
 
-            resp.halt(500, 'node exporter already exists')
+            resp.halt(409, 'node exporter already exists')
         }
 
         def namespaceIdMetric = NamespaceDTO.createIfNotExist(RedisManager.CLUSTER_ID, 'metric')

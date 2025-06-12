@@ -1,6 +1,8 @@
 package ctrl.redis
 
+import model.RmServiceDTO
 import model.job.RmJobDTO
+import model.json.PrimaryReplicasDetail
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
 
@@ -22,5 +24,48 @@ h.group('/redis/job') {
         def pager = dto.listPager(pageNum, pageSize)
 
         pager
+    }
+
+    h.get('/service/status/update') { req, resp ->
+        def idStr = req.param('id')
+        def status = req.param('status')
+        assert idStr && status
+        def id = idStr as int
+
+        def s = RmServiceDTO.Status.valueOf(status)
+
+        def one = new RmServiceDTO(id: id).one()
+        assert one
+
+        new RmServiceDTO(id: id, status: s).update()
+        [flag: true]
+    }
+
+    h.get('/service/primary-replicas-detail/update') { req, resp ->
+        def idStr = req.param('id')
+        assert idStr
+        def id = idStr as int
+
+        def one = new RmServiceDTO(id: id).one()
+        assert one
+
+        assert one.mode == RmServiceDTO.Mode.sentinel
+
+        def runningContainerList = one.runningContainerList()
+        one.primaryReplicasDetail.nodes.clear()
+        runningContainerList.each { x ->
+            def node = new PrimaryReplicasDetail.Node()
+            node.ip = x.nodeIp
+            node.port = one.listenPort(x)
+            node.replicaIndex = x.instanceIndex()
+            node.isPrimary = 'master' == one.connectAndExe(x) { jedis ->
+                jedis.role()[0] as String
+            }
+
+            one.primaryReplicasDetail.nodes << node
+        }
+
+        new RmServiceDTO(id: id, primaryReplicasDetail: one.primaryReplicasDetail).update()
+        [flag: true]
     }
 }

@@ -78,13 +78,13 @@ h.group('/redis/sentinel-service') {
 
         // only support 1, 3 or 5
         if (one.replicas != 1 && one.replicas != 3 && one.replicas != 5) {
-            resp.halt(500, 'only support 1, 3 or 5 replicas')
+            resp.halt(409, 'only support 1, 3 or 5 replicas')
         }
 
         // check name
         def existOne = new RmSentinelServiceDTO(name: one.name).queryFields('id').one()
         if (existOne) {
-            resp.halt(500, 'name already exists')
+            resp.halt(409, 'name already exists')
         }
 
         // check node ready
@@ -97,11 +97,11 @@ h.group('/redis/sentinel-service') {
                 }
             }
             if (matchNodeList.size() < one.replicas) {
-                resp.halt(500, 'not enough node ready, for tags: ' + one.nodeTags)
+                resp.halt(409, 'not enough node ready, for tags: ' + one.nodeTags)
             }
         } else {
             if (hbOkNodeList.size() < one.replicas && !Conf.instance.isOn('rm.isSingleNodeTest')) {
-                resp.halt(500, 'not enough node ready')
+                resp.halt(409, 'not enough node ready')
             }
         }
 
@@ -205,21 +205,21 @@ h.group('/redis/sentinel-service') {
         // check if exists
         def one = new RmSentinelServiceDTO(id: id).queryFields('id,status,app_id').one()
         if (!one) {
-            resp.halt(500, 'not exists')
+            resp.halt(404, 'sentinel service not exists')
         }
 
         if (one.status == RmSentinelServiceDTO.Status.deleted) {
-            resp.halt(500, 'already deleted')
+            resp.halt(409, 'already deleted')
         }
 
         if (one.status == RmSentinelServiceDTO.Status.creating) {
-            resp.halt(500, 'creating, please wait')
+            resp.halt(409, 'creating, please wait')
         }
 
         // check if is used
         def serviceOne = new RmServiceDTO(sentinelServiceId: id).queryFields('name,status').one()
         if (serviceOne && serviceOne.status != RmServiceDTO.Status.deleted) {
-            resp.halt(500, "this sentinel service is used by service: ${serviceOne.name}")
+            resp.halt(409, "this sentinel service is used by service: ${serviceOne.name}")
         }
 
         RedisManager.stopContainers(one.appId)
