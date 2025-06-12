@@ -117,7 +117,7 @@ $(function () {
         url: '/dms/plugin/menu/list',
         async: false,
         success: function (data) {
-            if(data.menus) {
+            if (data.menus) {
                 _.each(data.menus, function (menu) {
                     menus.push(menu);
                 });
@@ -438,7 +438,7 @@ $(function () {
                     setTimeout(function () {
                         document.location.href = '/admin/login.html'
                     }, 500);
-                } else if (500 == response.status || 400 == response.status) {
+                } else if (response.status >= 400 && response.status <= 500) {
                     uiTips.alert(response.data);
                 }
                 return $q.reject(response);
