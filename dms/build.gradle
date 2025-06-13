@@ -37,8 +37,8 @@ sourceSets {
     }
 }
 
-sourceCompatibility = 17
-targetCompatibility = 17
+sourceCompatibility = 21
+targetCompatibility = 21
 
 compileGroovy {
     groovyOptions.configurationScript = file("config.groovy")

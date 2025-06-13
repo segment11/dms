@@ -38,8 +38,8 @@ sourceSets {
     }
 }
 
-sourceCompatibility = 17
-targetCompatibility = 17
+sourceCompatibility = 21
+targetCompatibility = 21
 
 compileGroovy {
     groovyOptions.configurationScript = file("config.groovy")
@@ -63,8 +63,8 @@ dependencies {
 
     implementation group: 'io.prometheus', name: 'simpleclient', version: '0.15.0'
 
-    implementation group: 'io.github.segment11', name: 'segmentd', version: '1.2-SNAPSHOT'
-    implementation group: 'io.github.segment11', name: 'segment_common', version: '1.2-SNAPSHOT'
+    implementation project(':segment_common')
+    implementation project(':segmentd')
 
     testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.3-groovy-4.0'
     testImplementation group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.20.0'
