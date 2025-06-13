@@ -49,6 +49,13 @@ class WaitPrimaryReplicasStateTask extends RmJobTask {
                 node.replicaIndex = x.instanceIndex()
                 // when first created, the first replica is primary
                 node.isPrimary = node.replicaIndex == 0
+
+                def find = primaryReplicasDetail.nodes.find { n -> n.replicaIndex == node.replicaIndex }
+                if (find != null) {
+                    log.warn "node ${node.replicaIndex} already exists, {}:{}", find.ip, find.port
+                    primaryReplicasDetail.nodes.remove(find)
+                }
+
                 primaryReplicasDetail.nodes << node
             }
 

@@ -51,6 +51,13 @@ class WaitClusterStateTask extends RmJobTask {
                 node.replicaIndex = x.instanceIndex()
                 // when first created, the first replica is primary
                 node.isPrimary = node.replicaIndex == 0
+
+                def find = shard.nodes.find { n -> n.replicaIndex == node.replicaIndex }
+                if (find != null) {
+                    log.warn "node ${node.replicaIndex} already exists, {}:{}", find.ip, find.port
+                    shard.nodes.remove(find)
+                }
+
                 shard.nodes << node
             }
         }
