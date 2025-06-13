@@ -81,12 +81,34 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Connect</h5>
+                </div>
                 <div class="widget-content">
                     <div class="row">
-                        <h5>Status</h5>
+                        <div class="col-md-4">
+                            <span>Password</span>
+                            <span class="pull-right">{{one.pass ? '***' : 'Anonymous'}}</span>
+                            <button class="btn" ng-click="viewPass(one)" ng-show="one.pass">View Password</button>
+                        </div>
+                        <div class="col-md-8">
+                            <span>Connection String</span>
+                            <span class="pull-right">{{ext.connectionString}}</span>
+                        </div>
                     </div>
+                </div>
+            </div>
 
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Status</h5>
+                </div>
+                <div class="widget-content">
                     <div class="row">
                         <div class="col-md-2">
                             <span class="bg-info">{{one.status}}</span>
@@ -96,9 +118,15 @@
                             <span class="bg-danger pull-right">{{checkResult.message}}</span>
                         </div>
                     </div>
-
                 </div>
 
+            </div>
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-list"></i></span>
+                    <h5>Instances</h5>
+                </div>
                 <div class="widget-content">
                     <div class="row">
                         <h5>Nodes</h5>
