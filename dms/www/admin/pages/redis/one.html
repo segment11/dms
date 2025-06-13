@@ -80,9 +80,9 @@
                             <span class="pull-right">{{one.nodeTagsByReplicaIndex}}</span>
                         </div>
                     </div>
+                </div>
 
-                    <hr/>
-
+                <div class="widget-content">
                     <div class="row">
                         <h5>Status</h5>
                     </div>
@@ -97,8 +97,9 @@
                         </div>
                     </div>
 
-                    <hr/>
+                </div>
 
+                <div class="widget-content">
                     <div class="row">
                         <h5>Nodes</h5>
                         <table class="table table-bordered table-striped m_top6">
@@ -108,10 +109,17 @@
                                 <th width="10%">Is Primary</th>
                                 <th width="20%">Node Ip / Port</th>
                                 <th width="10%">Status</th>
-                                <th></th>
+                                <th>{{one.mode == 'cluster' ? 'Slots Range' : ''}}</th>
                             </tr>
                             <tr ng-repeat="node in nodes">
-                                <td>{{node.shardIndex}}</td>
+                                <td>
+                                    {{node.shardIndex}}
+                                    <ul ng-show="one.mode == 'cluster' && node.isPrimary">
+                                        <li ng-repeat="slotRange in node.slotsRangeList">
+                                            {{slotRange.begin}}-{{slotRange.end}}
+                                        </li>
+                                    </ul>
+                                </td>
                                 <td>{{node.replicaIndex}}</td>
                                 <td>
                                     <span ng-class="{'bg-info': !node.isPrimary, 'bg-success': node.isPrimary}">{{node.isPrimary}}</span>
@@ -121,7 +129,8 @@
                                     <span ng-class="{'bg-danger': !node.running, 'bg-success': node.running}">{{node.running ? 'running' : 'unhealthy'}}</span>
                                 </td>
                                 <td>
-                                    <button class="btn btn-gray" ng-click="goAppDetail(node.appId, node.appName)" ng-show="one.mode == 'cluster'">
+                                    <button class="btn btn-gray" ng-click="goAppDetail(node.appId, node.appName)"
+                                            ng-show="one.mode == 'cluster'">
                                         Go To Target DMS App
                                     </button>
                                 </td>
