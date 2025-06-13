@@ -18,7 +18,7 @@ class AppDTO extends BaseRecord<AppDTO> {
 
     @Override
     String toString() {
-        "app: " + name + ", id: " + id + ", status:" + Status.values().find { it.val == status }.name()
+        "app: " + name + ", id: " + id + ", status:" + Status.values().find { it.val == status }?.name()
     }
 
     Integer id
