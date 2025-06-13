@@ -270,6 +270,7 @@ create table rm_service
     engine_version             varchar(20),   -- 5.0/6.2/7.2/8.1
     config_template_id         int,
     sentinel_service_id        int,
+    sentinel_app_id            int,
     pass                       varchar(200),
     maxmemory_mb               int,
     port                       int,

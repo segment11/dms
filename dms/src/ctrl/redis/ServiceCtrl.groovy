@@ -139,8 +139,9 @@ h.group('/redis/service') {
                         x.nodeIp == n.ip && one.listenPort(x) == n.port && x.instanceIndex() == n.replicaIndex
                     }
                     def running = x && x.running()
-                    nodes << [shardIndex: shard.shardIndex, replicaIndex: n.replicaIndex, ip: n.ip, port: n.port, isPrimary: n.isPrimary, running: running,
-                              appId     : appOne.id, appName: appOne.name, appDes: appOne.des]
+                    nodes << [shardIndex   : shard.shardIndex, replicaIndex: n.replicaIndex, ip: n.ip, port: n.port, isPrimary: n.isPrimary, running: running,
+                              slotRangeList: shard.multiSlotRange.list,
+                              appId        : appOne.id, appName: appOne.name, appDes: appOne.des]
                 }
             }
         }
@@ -200,6 +201,10 @@ h.group('/redis/service') {
             }
         }
 
+        if (one.pass) {
+            one.pass = RedisManager.encode(one.pass)
+        }
+
         boolean isSentinelMode = one.mode == RmServiceDTO.Mode.sentinel
         def isClusterMode = one.mode == RmServiceDTO.Mode.cluster
 
@@ -214,6 +219,7 @@ h.group('/redis/service') {
             }
 
             sentinelAppName = 'rm_sentinel_' + sentinelServiceOne.name
+            one.sentinelAppId = sentinelServiceOne.appId
         }
 
         // create app
@@ -641,6 +647,17 @@ h.group('/redis/service') {
             resp.halt(409, checkResult.message)
         }
 
+        // check sentinel application state
+        if (one.mode == RmServiceDTO.Mode.sentinel) {
+            def sentinelAppOne = InMemoryCacheSupport.instance.oneApp(one.sentinelAppId)
+
+            def instance = InMemoryAllContainerManager.instance
+            def runningContainerList = instance.getRunningContainerList(RedisManager.CLUSTER_ID, one.sentinelAppId)
+            if (runningContainerList.size() != sentinelAppOne.conf.containerNumber) {
+                resp.halt(409, 'sentinel application container number is not enough')
+            }
+        }
+
         new RmServiceDTO(id: id, replicas: toReplicas,
                 status: RmServiceDTO.Status.updating_replicas, updatedDate: new Date()).update()
         log.warn 'update service replicas, name: {}, old replicas: {}, new replicas: {}', one.name, oldReplicas, toReplicas
@@ -678,6 +695,22 @@ h.group('/redis/service') {
         }
 
         [id: id]
+    }
+
+    h.post('/view-pass') { req, resp ->
+        def map = req.bodyAs(HashMap)
+        def id = map.id as int
+
+        def one = new RmServiceDTO(id: id).queryFields('pass').one()
+        if (!one) {
+            resp.halt(404, 'service not exists')
+        }
+
+        if (!one.pass) {
+            resp.halt(404, 'service password is not set')
+        }
+
+        [pass: RedisManager.decode(one.pass)]
     }
 
     h.delete('/delete') { req, resp ->

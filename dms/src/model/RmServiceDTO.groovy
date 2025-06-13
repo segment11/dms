@@ -52,8 +52,11 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
     // for sentinel mode
     Integer sentinelServiceId
 
+    Integer sentinelAppId
+
     Integer appId
 
+    // encoded
     String pass
 
     Integer maxmemoryMb

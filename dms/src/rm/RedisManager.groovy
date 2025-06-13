@@ -34,6 +34,27 @@ class RedisManager {
         }
     }
 
+    // for password encode/decode
+    static String decode(String content) {
+        char[] chars = content.toCharArray()
+        char[] x = new char[chars.length]
+        chars.eachWithIndex { char c, int i ->
+            def diff = i % 2 == 0 ? 1 : 2
+            x[i] = (c - diff) as char
+        }
+        new String(x)
+    }
+
+    static String encode(String content) {
+        char[] chars = content.toCharArray()
+        char[] x = new char[chars.length]
+        chars.eachWithIndex { char c, int i ->
+            def diff = i % 2 == 0 ? 1 : 2
+            x[i] = (c + diff) as char
+        }
+        new String(x)
+    }
+
     static final int ONE_INSTANCE_MAX_MEMORY_MB = 64 * 1024
 
     static final int ONE_SHARD_MAX_REPLICAS = 4
