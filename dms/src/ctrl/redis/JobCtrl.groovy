@@ -2,6 +2,7 @@ package ctrl.redis
 
 import model.RmServiceDTO
 import model.job.RmJobDTO
+import model.json.ClusterSlotsDetail
 import model.json.PrimaryReplicasDetail
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
@@ -66,6 +67,37 @@ h.group('/redis/job') {
         }
 
         new RmServiceDTO(id: id, primaryReplicasDetail: one.primaryReplicasDetail).update()
+        [flag: true]
+    }
+
+    h.get('/service/cluster-slots-detail/update') { req, resp ->
+        def idStr = req.param('id')
+        assert idStr
+        def id = idStr as int
+
+        def one = new RmServiceDTO(id: id).one()
+        assert one
+
+        assert one.mode == RmServiceDTO.Mode.cluster
+
+        def runningContainerList = one.runningContainerList()
+        one.clusterSlotsDetail.shards.each { shard -> shard.nodes.clear() }
+        runningContainerList.each { x ->
+            def appId = x.appId()
+            def shard = one.clusterSlotsDetail.shards.find { shard -> shard.appId == appId }
+
+            def node = new ClusterSlotsDetail.Node()
+            node.ip = x.nodeIp
+            node.port = one.listenPort(x)
+            node.replicaIndex = x.instanceIndex()
+            node.isPrimary = 'master' == one.connectAndExe(x) { jedis ->
+                jedis.role()[0] as String
+            }
+
+            shard.nodes << node
+        }
+
+        new RmServiceDTO(id: id, clusterSlotsDetail: one.clusterSlotsDetail).update()
         [flag: true]
     }
 }
