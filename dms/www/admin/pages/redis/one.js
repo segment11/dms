@@ -52,6 +52,14 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         Page.go('/page/redis_service', {});
     };
 
+    $scope.viewPass = function (one) {
+        $http.get('/dms/redis/service/view-pass', {params: {id: one.id}}).success(function (data) {
+            if (data.pass) {
+                uiTips.alert(data.pass);
+            }
+        });
+    };
+
     $scope.updateMaxmemory = function (one) {
         uiTips.prompt('Update redis server maxmemory: ', function (val) {
             if (!val) {
