@@ -55,7 +55,8 @@
                         <tr ng-show="editOne.mode == 'cluster'">
                             <td>Shards</td>
                             <td>
-                                <select ng-model="editOne.shards" style="width: 80px;">
+                                <select ng-model="editOne.shards" style="width: 80px;"
+                                        ui-valid="{{editOne.mode == 'cluster' ? 'r' : ''}}">
                                     <option value="2">2</option>
                                     <option value="4">4</option>
                                     <option value="8">8</option>
@@ -67,7 +68,8 @@
                         <tr ng-show="editOne.mode == 'sentinel' || editOne.mode == 'cluster'">
                             <td>Replicas</td>
                             <td>
-                                <select ng-model="editOne.replicas" style="width: 80px;">
+                                <select ng-model="editOne.replicas" style="width: 80px;"
+                                        ui-valid="{{editOne.mode == 'sentinel' || editOne.mode == 'cluster' ? 'r' : ''}}">
                                     <option value="1">1</option>
                                     <option value="2">2</option>
                                     <option value="3">3</option>

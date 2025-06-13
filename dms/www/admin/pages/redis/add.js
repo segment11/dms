@@ -11,6 +11,8 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         mode: 'standalone',
         engineType: 'redis',
         engineVersion: '7.2',
+        shards: 1,
+        replicas: 1,
         extendParams: {params: params}
     };
 
@@ -29,6 +31,25 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     $scope.back = function () {
         Page.go('/page/redis_service', {});
     };
+
+    $scope.$watch('editOne.mode', function (val) {
+        if (val == 'cluster') {
+            if (!$scope.editOne.shards || $scope.editOne.shards == 1) {
+                $scope.editOne.shards = 2;
+            }
+            if (!$scope.editOne.replicas) {
+                $scope.editOne.replicas = 2;
+            }
+        } else if (val == 'standalone') {
+            $scope.editOne.shards = 1;
+            $scope.editOne.replicas = 1;
+        } else {
+            $scope.editOne.shards = 1;
+            if (!$scope.editOne.replicas) {
+                $scope.editOne.replicas = 2;
+            }
+        }
+    }, true);
 
     $scope.add = function () {
         if (!uiValid.checkForm($scope.tmp.addForm) || !$scope.tmp.addForm.$valid) {
