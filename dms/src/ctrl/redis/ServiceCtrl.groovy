@@ -10,6 +10,7 @@ import model.json.*
 import org.apache.commons.beanutils.BeanUtils
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
+import redis.clients.jedis.HostAndPort
 import rm.RedisManager
 import rm.RmJobExecutor
 import rm.SlotBalancer
@@ -99,20 +100,28 @@ h.group('/redis/service') {
         assert configTemplateOne
         ext.configTemplateName = configTemplateOne.name
 
-        List nodes = []
+        List<Map> nodes = []
         r.nodes = nodes
 
-        if (one.mode == RmServiceDTO.Mode.standalone) {
+        if (one.mode == RmServiceDTO.Mode.standalone || one.mode == RmServiceDTO.Mode.sentinel) {
             def appOne = InMemoryCacheSupport.instance.oneApp(one.appId)
             ext.appId = appOne.id
             ext.appName = appOne.name
             ext.appDes = appOne.des
+        }
 
+        if (one.mode == RmServiceDTO.Mode.standalone) {
             def instance = InMemoryAllContainerManager.instance
             def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, one.appId)
             containerList.each { x ->
                 nodes << [shardIndex: 0, replicaIndex: x.instanceIndex(), ip: x.nodeIp, port: one.listenPort(x), isPrimary: true, running: x.running()]
             }
+
+            if (nodes) {
+                def node = nodes[0]
+                ext.connectionString = one.pass ? 'redis://****@' + node.ip + ':' + node.port : "redis://" + node.ip + ':' + node.port
+            }
+
         } else if (one.mode == RmServiceDTO.Mode.sentinel) {
             assert one.primaryReplicasDetail && one.primaryReplicasDetail.nodes
 
@@ -126,14 +135,34 @@ h.group('/redis/service') {
                 def running = x && x.running()
                 nodes << [shardIndex: 0, replicaIndex: n.replicaIndex, ip: n.ip, port: n.port, isPrimary: n.isPrimary, running: running]
             }
+
+            // fix
+            if (!one.sentinelAppId) {
+                def sentinelServiceOne = new RmSentinelServiceDTO(id: one.sentinelServiceId).one()
+                new RmServiceDTO(id: one.id, sentinelAppId: sentinelServiceOne.appId).update()
+                one.sentinelAppId = sentinelServiceOne.appId
+            }
+
+            def sentinelAppOne = InMemoryCacheSupport.instance.oneApp(one.sentinelAppId)
+            def sentinelConfOne = sentinelAppOne.conf.fileVolumeList.find { it.dist.contains('/sentinel') }
+            def isSentinelSetPass = sentinelConfOne.paramValue('password') as Boolean
+            def masterName = 'redis-app-' + one.appId
+
+            def sentinelContainerList = instance.getContainerList(RedisManager.CLUSTER_ID, one.sentinelAppId)
+            if (sentinelContainerList) {
+                def inner = sentinelContainerList.collect { x -> x.nodeIp + ':' + one.listenPort(x) }.join(',')
+                ext.connectionString = isSentinelSetPass ? 'redis-sentinel://****@' + inner + '/' + masterName : 'redis-sentinel://' + inner + '/' + masterName
+            }
         } else {
             assert one.clusterSlotsDetail && one.clusterSlotsDetail.shards
 
-            def instance = InMemoryAllContainerManager.instance
-            def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, one.appId)
+            List<HostAndPort> hostAndPortList = []
 
+            def instance = InMemoryAllContainerManager.instance
             for (shard in one.clusterSlotsDetail.shards) {
                 def appOne = InMemoryCacheSupport.instance.oneApp(shard.appId)
+
+                def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, shard.appId)
                 for (n in shard.nodes) {
                     def x = containerList.find { x ->
                         x.nodeIp == n.ip && one.listenPort(x) == n.port && x.instanceIndex() == n.replicaIndex
@@ -142,7 +171,15 @@ h.group('/redis/service') {
                     nodes << [shardIndex   : shard.shardIndex, replicaIndex: n.replicaIndex, ip: n.ip, port: n.port, isPrimary: n.isPrimary, running: running,
                               slotRangeList: shard.multiSlotRange.list,
                               appId        : appOne.id, appName: appOne.name, appDes: appOne.des]
+
+                    if (n.isPrimary) {
+                        hostAndPortList << new HostAndPort(n.ip, n.port)
+                    }
                 }
+            }
+
+            if (hostAndPortList) {
+                ext.connectionString = one.pass ? 'redis-cluster://****@' + hostAndPortList.join(',') : 'redis-cluster://' + hostAndPortList.join(',')
             }
         }
 

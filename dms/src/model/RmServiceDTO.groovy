@@ -145,7 +145,6 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
             for (shard in clusterSlotsDetail.shards) {
                 allContainerList.addAll instance.getRunningContainerList(RedisManager.CLUSTER_ID, shard.appId)
             }
-
         } else {
             assert appId
             allContainerList.addAll instance.getRunningContainerList(RedisManager.CLUSTER_ID, appId)
