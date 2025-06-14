@@ -100,7 +100,7 @@ h.group('/redis/sentinel-service') {
                 resp.halt(409, 'not enough node ready, for tags: ' + one.nodeTags)
             }
         } else {
-            if (hbOkNodeList.size() < one.replicas && !Conf.instance.isOn('rm.isSingleNodeTest')) {
+            if (hbOkNodeList.size() < one.replicas && !RedisManager.isOnlyOneNodeForTest()) {
                 resp.halt(409, 'not enough node ready')
             }
         }
@@ -139,8 +139,7 @@ h.group('/redis/sentinel-service') {
             }
         }
 
-        def c = Conf.instance
-        def isSingleNode = c.isOn('rm.isSingleNodeTest')
+        def isSingleNode = RedisManager.isOnlyOneNodeForTest()
         conf.isLimitNode = isSingleNode
 
         final String dataDir = RedisManager.dataDir()

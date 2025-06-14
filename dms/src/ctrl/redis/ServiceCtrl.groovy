@@ -1,6 +1,5 @@
 package ctrl.redis
 
-import com.segment.common.Conf
 import com.segment.common.Utils
 import com.segment.common.job.chain.JobParams
 import com.segment.common.job.chain.JobStatus
@@ -209,7 +208,7 @@ h.group('/redis/service') {
                 resp.halt(409, 'not enough node ready, for tags: ' + one.nodeTags)
             }
         } else {
-            if (hbOkNodeList.size() < one.replicas && !Conf.instance.isOn('rm.isSingleNodeTest')) {
+            if (hbOkNodeList.size() < one.replicas && !RedisManager.isOnlyOneNodeForTest()) {
                 resp.halt(409, 'not enough node ready')
             }
         }
@@ -317,8 +316,7 @@ h.group('/redis/service') {
             }
         }
 
-        def c = Conf.instance
-        def isSingleNode = c.isOn('rm.isSingleNodeTest')
+        def isSingleNode = RedisManager.isOnlyOneNodeForTest()
         conf.isLimitNode = isSingleNode
 
         final String dataDir = RedisManager.dataDir()

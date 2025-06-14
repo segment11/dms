@@ -21,10 +21,6 @@ class RedisManager {
         return one?.vv ?: DEFAULT_DATA_DIR
     }
 
-    static int preferRegistryId() {
-        BasePlugin.addRegistryIfNotExist('docker.1ms.run', 'https://docker.1ms.run')
-    }
-
     static void updateDataDir(String dataDir) {
         def one = new DynConfigDTO(name: 'redis_manager.data.dir').one()
         if (one) {
@@ -32,6 +28,24 @@ class RedisManager {
         } else {
             new DynConfigDTO(name: 'redis_manager.data.dir', vv: dataDir, updatedDate: new Date()).add()
         }
+    }
+
+    static void changeOneNodeForTestFlag() {
+        def one = new DynConfigDTO(name: 'redis_manager.one.node.for.test').one()
+        if (one) {
+            new DynConfigDTO(id: one.id, vv: one.vv == 'false' ? 'true' : 'false', updatedDate: new Date()).update()
+        } else {
+            new DynConfigDTO(name: 'redis_manager.one.node.for.test', vv: 'false', updatedDate: new Date()).add()
+        }
+    }
+
+    static boolean isOnlyOneNodeForTest() {
+        def one = new DynConfigDTO(name: 'redis_manager.one.node.for.test').one()
+        one && one.vv == 'true'
+    }
+
+    static int preferRegistryId() {
+        BasePlugin.addRegistryIfNotExist('docker.1ms.run', 'https://docker.1ms.run')
     }
 
     // for password encode/decode

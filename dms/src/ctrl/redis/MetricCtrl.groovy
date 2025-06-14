@@ -1,6 +1,5 @@
 package ctrl.redis
 
-import com.segment.common.Conf
 import model.AppDTO
 import model.NamespaceDTO
 import model.json.AppConf
@@ -100,8 +99,7 @@ h.group('/redis/metric') {
         conf.cpuFixed = 0.1
         conf.user = '59000:59000'
 
-        def c = Conf.instance
-        def isSingleNode = c.isOn('rm.isSingleNodeTest')
+        def isSingleNode = RedisManager.isOnlyOneNodeForTest()
 
         conf.isLimitNode = isSingleNode
 

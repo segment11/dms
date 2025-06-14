@@ -10,14 +10,23 @@
                     <h5>Redis Service Module Settings</h5>
                 </div>
                 <div class="widget-content">
-                    <table class="table table-bordered table-striped m_top6" style="width: 800px;">
+                    <table class="table table-bordered table-striped m_top6" style="width: 1200px;">
                         <tr>
-                            <td width="20%">Node Mount Data Directory</td>
+                            <td width="30%" style="color: blue;">Node Mount Data Directory</td>
                             <td width="60%">
                                 {{tmp.dataDir}}
                             </td>
                             <td>
                                 <button class="btn btn-gray" ng-click="changeDataDir()">Change</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="color: blue;">Is Only One Node For Test</td>
+                            <td width="60%">
+                                {{tmp.isOnlyOneNodeForTest}}
+                            </td>
+                            <td>
+                                <button class="btn btn-gray" ng-click="changeOneNodeForTestFlag()">Change</button>
                             </td>
                         </tr>
                     </table>

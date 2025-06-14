@@ -5,6 +5,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
 
     $http.get('/dms/redis/setting', {params: {}}).success(function (data) {
         $scope.tmp.dataDir = data.dataDir;
+        $scope.tmp.isOnlyOneNodeForTest = data.isOnlyOneNodeForTest;
     });
 
     $scope.changeDataDir = function () {
@@ -22,5 +23,11 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
                 }
             });
         }, $scope.tmp.dataDir);
+    };
+
+    $scope.changeOneNodeForTestFlag = function () {
+        $http.post('/dms/redis/setting/change-one-node-for-test-flag', {}).success(function (data) {
+            $scope.tmp.isOnlyOneNodeForTest = data.isOnlyOneNodeForTest;
+        });
     };
 });

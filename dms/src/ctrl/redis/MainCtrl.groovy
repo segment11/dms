@@ -71,8 +71,9 @@ h.group('/redis') {
 
     h.get('/setting') { req, resp ->
         def dataDir = RedisManager.dataDir()
+        def isOnlyOneNodeForTest = RedisManager.isOnlyOneNodeForTest()
 
-        [dataDir: dataDir]
+        [dataDir: dataDir, isOnlyOneNodeForTest: isOnlyOneNodeForTest]
     }
 
     h.post('/setting/data-dir') { req, resp ->
@@ -83,5 +84,11 @@ h.group('/redis') {
         RedisManager.updateDataDir(dataDir)
         log.warn "update data dir to {}", dataDir
         [flag: true]
+    }
+
+    h.post('/setting/change-one-node-for-test-flag') { req, resp ->
+        RedisManager.changeOneNodeForTestFlag()
+
+        [isOnlyOneNodeForTest: RedisManager.isOnlyOneNodeForTest()]
     }
 }
