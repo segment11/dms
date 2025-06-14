@@ -2,6 +2,7 @@ package rm.job.task
 
 import com.segment.common.job.chain.JobResult
 import com.segment.common.job.chain.JobStep
+import ex.JobProcessException
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import model.RmServiceDTO
@@ -35,33 +36,39 @@ class MeetNodesWhenScaleUpTask extends RmJobTask {
         List<ContainerInfo> allContainerList = []
         def instance = InMemoryAllContainerManager.instance
 
-        List<Integer> oldShardAppIdList = []
-
         for (shard in rmService.clusterSlotsDetail.shards) {
             def appId = shard.appId
-
             def runningContainerList = instance.getRunningContainerList(RedisManager.CLUSTER_ID, appId)
 
             def runningNumber = runningContainerList.size()
             if (runningNumber != rmService.replicas) {
-                return JobResult.fail('running containers number: ' + runningNumber + ', expect: ' + rmService.replicas)
+                // wait again
+                Thread.sleep(1000 * 10)
+                runningContainerList = instance.getRunningContainerList(RedisManager.CLUSTER_ID, appId)
+                runningNumber = runningContainerList.size()
+                if (runningNumber != rmService.replicas) {
+                    throw new JobProcessException('running replicas container list size not match, app id: '
+                            + appId + ', replicas: ' + runningNumber + ', expect: ' + rmService.replicas)
+                }
             }
 
             allContainerList.addAll(runningContainerList)
-
-            if (shard !in newShardList) {
-                oldShardAppIdList << appId
-            }
         }
+
+        def newCreatedContainerList = allContainerList.findAll { x -> x.appId() in newShardList.collect { it.appId } }
 
         // only cluster meet from primary node, only one is ok, but all primary nodes meet new node be better
         for (shard in rmService.clusterSlotsDetail.shards) {
+            if (shard in newShardList) {
+                continue
+            }
+
             def appId = shard.appId
             def containerList = allContainerList.findAll { x -> x.appId() == appId }
 
             def primaryX = containerList.find { x -> x.instanceIndex() == shard.primary().replicaIndex }
             rmService.connectAndExe(primaryX) { jedis ->
-                for (x2 in allContainerList.findAll { xx -> xx.appId() !in oldShardAppIdList && xx.instanceIndex() == 0 }) {
+                for (x2 in newCreatedContainerList) {
                     def listenPort2 = rmService.listenPort(x2)
                     def r = jedis.clusterMeet(x2.nodeIp, listenPort2)
                     log.warn 'meet node, new node: {}, old node: {}, shard index:{}, app id: {}, result: {}',

@@ -11,23 +11,17 @@ import rm.job.RmJobTask
 
 @CompileStatic
 @Slf4j
-class ForgetNodeTask extends RmJobTask {
+class ForgetNodeAfterScaleDownTask extends RmJobTask {
     final RmServiceDTO rmService
 
     final ClusterSlotsDetail.Shard oldShard
 
-    final List<Integer> replicaIndexList
-
-    final boolean isReplicasUpdate
-
-    ForgetNodeTask(RmJob rmJob, ClusterSlotsDetail.Shard oldShard, List<Integer> replicaIndexList, boolean isReplicasUpdate) {
+    ForgetNodeAfterScaleDownTask(RmJob rmJob, ClusterSlotsDetail.Shard oldShard) {
         this.rmService = rmJob.rmService
         this.oldShard = oldShard
-        this.replicaIndexList = replicaIndexList
-        this.isReplicasUpdate = isReplicasUpdate
 
         this.job = rmJob
-        this.step = new JobStep('forget_node', 0)
+        this.step = new JobStep('forget_node_after_scale_down', 0)
     }
 
     @Override
@@ -38,25 +32,12 @@ class ForgetNodeTask extends RmJobTask {
         def primaryNode = firstShard.primary()
         rmService.connectAndExe(primaryNode) { jedis ->
             for (node in oldShard.nodes) {
-                if (node.replicaIndex !in replicaIndexList) {
-                    log.warn 'skip forget node: {}, as replica index not in list: {}', node.nodeId(), replicaIndexList
-                    return
-                }
-
                 def r = jedis.clusterForget(node.nodeId())
                 log.warn 'forget node: {}, result: {}', node.nodeId(), r
             }
         }
 
-        if (isReplicasUpdate) {
-            // is replicas remove
-            rmService.clusterSlotsDetail.shards.nodes.removeIf { node ->
-                replicaIndexList.contains(node.replicaIndex)
-            }
-        } else {
-            // is shards remove
-            rmService.clusterSlotsDetail.shards.remove(oldShard)
-        }
+        rmService.clusterSlotsDetail.shards.remove(oldShard)
 
         new RmServiceDTO(id: rmService.id, clusterSlotsDetail: rmService.clusterSlotsDetail, updatedDate: new Date()).update()
         log.warn 'update cluster nodes ok'

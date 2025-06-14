@@ -1,12 +1,12 @@
 package ctrl.redis
 
+import com.alibaba.fastjson.JSON
 import com.segment.common.Utils
 import com.segment.common.job.chain.JobParams
 import com.segment.common.job.chain.JobStatus
 import model.*
 import model.cluster.SlotRange
 import model.json.*
-import org.apache.commons.beanutils.BeanUtils
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
 import redis.clients.jedis.HostAndPort
@@ -395,19 +395,13 @@ h.group('/redis/service') {
         // cluster mode
         List<AppDTO> appListByShard = []
         one.clusterSlotsDetail = new ClusterSlotsDetail()
-        for (i in 0..<one.shards) {
-            def appShard = new AppDTO()
-            // shadow copy properties from app
-            BeanUtils.copyProperties(appShard, app)
+        for (shardIndex in 0..<one.shards) {
+            def appShard = JSON.parseObject(JSON.toJSONString(app), AppDTO)
             // rename
-            appShard.name = 'rm_' + one.name + '_shard_' + i
+            appShard.name = 'rm_' + one.name + '_shard_' + shardIndex
 
-            def portForThisShard = one.port + i * RedisManager.ONE_SHARD_MAX_REPLICAS
-
-            appShard.conf.fileVolumeList.clear()
-            def copyOne = mountOne.copy()
-            copyOne.paramList.find { it.key == 'port' }.value = '' + portForThisShard
-            appShard.conf.fileVolumeList << copyOne
+            def portForThisShard = one.port + shardIndex * RedisManager.ONE_SHARD_MAX_REPLICAS
+            appShard.conf.fileVolumeList[0].paramList.find { it.key == 'port' }.value = '' + portForThisShard
 
             appShard.conf.portList.clear()
             appShard.conf.portList << new PortMapping(privatePort: portForThisShard, publicPort: portForThisShard)
@@ -417,8 +411,8 @@ h.group('/redis/service') {
             appListByShard << appShard
 
             // calc slots range
-            def pager = SlotBalancer.splitAvg(one.shards, i + 1)
-            def shard = new ClusterSlotsDetail.Shard(shardIndex: i, appId: appShardId)
+            def pager = SlotBalancer.splitAvg(one.shards, shardIndex + 1)
+            def shard = new ClusterSlotsDetail.Shard(shardIndex: shardIndex, appId: appShardId)
             shard.multiSlotRange.addSingle(pager.start, pager.end - 1)
 
             one.clusterSlotsDetail.shards << shard
@@ -500,23 +494,17 @@ h.group('/redis/service') {
             newShardList << shard
         }
 
-        def mountOne = app.conf.fileVolumeList[0]
         List<AppDTO> appListByShard = []
         for (shard in newShardList) {
-            def i = shard.shardIndex
+            def shardIndex = shard.shardIndex
 
-            def appShard = new AppDTO()
-            // shadow copy properties from app
-            BeanUtils.copyProperties(appShard, app)
+            def appShard = JSON.parseObject(JSON.toJSONString(app), AppDTO)
+            appShard.id = null
             // rename
-            appShard.name = 'rm_' + one.name + '_shard_' + i
+            appShard.name = 'rm_' + one.name + '_shard_' + shardIndex
 
-            def portForThisShard = one.port + i * RedisManager.ONE_SHARD_MAX_REPLICAS
-
-            appShard.conf.fileVolumeList.clear()
-            def copyOne = mountOne.copy()
-            copyOne.paramList.find { it.key == 'port' }.value = '' + portForThisShard
-            appShard.conf.fileVolumeList << copyOne
+            def portForThisShard = one.port + shardIndex * RedisManager.ONE_SHARD_MAX_REPLICAS
+            appShard.conf.fileVolumeList[0].paramList.find { it.key == 'port' }.value = '' + portForThisShard
 
             appShard.conf.portList.clear()
             appShard.conf.portList << new PortMapping(privatePort: portForThisShard, publicPort: portForThisShard)
@@ -639,11 +627,7 @@ h.group('/redis/service') {
                 rmJob.taskList << migrateSlotsTask
             }
 
-            List<Integer> replicaIndexList = []
-            for (i in 0..<one.replicas) {
-                replicaIndexList << i
-            }
-            rmJob.taskList << new ForgetNodeTask(rmJob, oldShard, replicaIndexList, false)
+            rmJob.taskList << new ForgetNodeAfterScaleDownTask(rmJob, oldShard)
         }
         rmJob.taskList << new WaitClusterStateAfterScaleTask(rmJob)
 

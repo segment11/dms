@@ -86,8 +86,13 @@ class MigrateSlotsTask extends RmJobTask {
 
                     def resultSetSlotFrom = jedis.clusterSetSlotNode(slot, toNodeId)
                     log.debug 'migrate slot: {}, from node result: {}', slot, resultSetSlotFrom
-//                    def resultSetSlotTo = jedisTo.clusterSetSlotNode(slot, toNodeId)
-//                    log.debug 'migrate slot: {}, to node result: {}', slot, resultSetSlotTo
+                    def resultSetSlotTo = jedisTo.clusterSetSlotNode(slot, toNodeId)
+                    log.debug 'migrate slot: {}, to node result: {}', slot, resultSetSlotTo
+
+                    if (slot % 100 == 0) {
+                        log.info 'done migrate slot: {}, from node: {}, to node: {}',
+                                slot, fromUuid, toPrimaryNode.ip + ':' + toPrimaryNode.port
+                    }
                 }
             } catch (Exception e) {
                 log.error 'migrate slot fail', e
@@ -103,6 +108,19 @@ class MigrateSlotsTask extends RmJobTask {
 
         new RmServiceDTO(id: rmService.id, clusterSlotsDetail: rmService.clusterSlotsDetail, updatedDate: new Date()).update()
         log.info 'update cluster slots ok'
+
+        // broadcast to other shards
+        for (shard in rmService.clusterSlotsDetail.shards) {
+            if (shard.shardIndex != fromShard.shardIndex && shard.shardIndex != toShard.shardIndex) {
+                def node = shard.primary()
+                rmService.connectAndExe(node) { jedis ->
+                    for (slot in slotRange.begin..slotRange.end) {
+                        jedis.clusterSetSlotNode(slot, toNodeId)
+                    }
+                }
+                log.info 'done broadcast to shard: {}', shard.shardIndex
+            }
+        }
 
         JobResult.ok('migrate slot ok, slots: ' + slotRange)
     }
@@ -138,6 +156,9 @@ class MigrateSlotsTask extends RmJobTask {
         }
         log.debug 'done migrate slot: {}, key number: {}, from node: {}, to node: {}',
                 slot, count, fromUuid, toIp + ':' + toPort
-        log.info 'done migrate slot: {}', slot
+        log.debug 'done migrate slot: {}', slot
+        if (slot % 100 == 0) {
+            log.info 'done migrate slot: {}', slot
+        }
     }
 }
