@@ -157,8 +157,5 @@ class MigrateSlotsTask extends RmJobTask {
         log.debug 'done migrate slot: {}, key number: {}, from node: {}, to node: {}',
                 slot, count, fromUuid, toIp + ':' + toPort
         log.debug 'done migrate slot: {}', slot
-        if (slot % 100 == 0) {
-            log.info 'done migrate slot: {}', slot
-        }
     }
 }

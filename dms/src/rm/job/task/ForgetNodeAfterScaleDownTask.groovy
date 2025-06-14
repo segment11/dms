@@ -21,7 +21,7 @@ class ForgetNodeAfterScaleDownTask extends RmJobTask {
         this.oldShard = oldShard
 
         this.job = rmJob
-        this.step = new JobStep('forget_node_after_scale_down', 0)
+        this.step = new JobStep('forget_node_after_scale_down_shard_' + oldShard.shardIndex, 0)
     }
 
     @Override
@@ -42,6 +42,6 @@ class ForgetNodeAfterScaleDownTask extends RmJobTask {
         new RmServiceDTO(id: rmService.id, clusterSlotsDetail: rmService.clusterSlotsDetail, updatedDate: new Date()).update()
         log.warn 'update cluster nodes ok'
 
-        JobResult.ok('forget node ok')
+        JobResult.ok('forget node after scale down ok')
     }
 }
