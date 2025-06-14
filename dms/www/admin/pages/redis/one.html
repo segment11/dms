@@ -132,21 +132,17 @@
                         <h5>Nodes</h5>
                         <table class="table table-bordered table-striped m_top6">
                             <tr>
-                                <th width="15%">Shard Index</th>
-                                <th width="15%">Replica Index</th>
+                                <th width="10%">Shard Index</th>
+                                <th width="10%">Replica Index</th>
                                 <th width="10%">Is Primary</th>
                                 <th width="20%">Node Ip / Port</th>
                                 <th width="10%">Status</th>
-                                <th>{{one.mode == 'cluster' ? 'Slots Range' : ''}}</th>
+                                <th width="20%">{{one.mode == 'cluster' ? 'Slot Range' : 'Other'}}</th>
+                                <th></th>
                             </tr>
                             <tr ng-repeat="node in nodes">
                                 <td>
                                     {{node.shardIndex}}
-                                    <ul ng-show="one.mode == 'cluster' && node.isPrimary">
-                                        <li ng-repeat="slotRange in node.slotsRangeList">
-                                            {{slotRange.begin}}-{{slotRange.end}}
-                                        </li>
-                                    </ul>
                                 </td>
                                 <td>{{node.replicaIndex}}</td>
                                 <td>
@@ -157,8 +153,15 @@
                                     <span ng-class="{'bg-danger': !node.running, 'bg-success': node.running}">{{node.running ? 'running' : 'unhealthy'}}</span>
                                 </td>
                                 <td>
+                                    <ul ng-show="one.mode == 'cluster' && node.isPrimary">
+                                        <li ng-repeat="slotRange in node.slotRangeList">
+                                            {{slotRange.begin}}-{{slotRange.end}}
+                                        </li>
+                                    </ul>
+                                </td>
+                                <td>
                                     <button class="btn btn-gray" ng-click="goAppDetail(node.appId, node.appName)"
-                                            ng-show="one.mode == 'cluster'">
+                                            ng-show="one.mode == 'cluster' && node.isPrimary">
                                         Go To Target DMS App
                                     </button>
                                 </td>
