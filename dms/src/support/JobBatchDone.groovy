@@ -9,11 +9,11 @@ import model.AppJobDTO
 class JobBatchDone {
     static void doneJobWhenFirstStart() {
         def undoneAppJobList = new AppJobDTO().queryFields('id,status').
-                where('status != ?', AppJobDTO.Status.done.val).list()
+                where('status != ?', AppJobDTO.Status.done).list()
         if (undoneAppJobList) {
             for (job in undoneAppJobList) {
                 def oldStatus = job.status
-                job.status = AppJobDTO.Status.done.val
+                job.status = AppJobDTO.Status.done
                 job.update()
                 log.warn 'job id {} done - before {}', job.id, oldStatus
             }

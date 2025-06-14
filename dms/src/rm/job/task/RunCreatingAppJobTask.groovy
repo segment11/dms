@@ -35,7 +35,7 @@ class RunCreatingAppJobTask extends RmJobTask {
         log.warn('start application create job, job id: {}', job.id)
         try {
             new CreateProcessor().process(job, app, [])
-            new AppJobDTO(id: job.id, status: AppJobDTO.Status.done.val, updatedDate: new Date()).update()
+            new AppJobDTO(id: job.id, status: AppJobDTO.Status.done, updatedDate: new Date()).update()
             log.warn('start application create job done, job id: {}', job.id)
             return JobResult.ok('start application done')
         } catch (Exception e) {

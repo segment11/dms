@@ -46,8 +46,8 @@ class AddReplicasTask extends RmJobTask {
         def appJob = new AppJobDTO(
                 appId: app.id,
                 failNum: 0,
-                status: AppJobDTO.Status.created.val,
-                jobType: AppJobDTO.JobType.create.val,
+                status: AppJobDTO.Status.created,
+                jobType: AppJobDTO.JobType.create,
                 createdDate: new Date(),
                 updatedDate: new Date()).
                 needRunInstanceIndexList(needRunInstanceIndexList)
@@ -56,7 +56,7 @@ class AddReplicasTask extends RmJobTask {
 
         try {
             new CreateProcessor().process(appJob, app, [])
-            new AppJobDTO(id: appJobId, status: AppJobDTO.Status.done.val, updatedDate: new Date()).update()
+            new AppJobDTO(id: appJobId, status: AppJobDTO.Status.done, updatedDate: new Date()).update()
             log.warn('start application create job done, job id: {}', job.id)
         } catch (Exception e) {
             log.error('start application create job error', e)

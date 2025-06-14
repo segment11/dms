@@ -38,12 +38,12 @@ class OneAppGuardian {
 
     private JsonTransformer json = new DefaultJsonTransformer()
 
-    private static Map<Integer, GuardianProcessor> processors = [:]
+    private static Map<AppJobDTO.JobType, GuardianProcessor> processors = [:]
 
     static {
-        processors[AppJobDTO.JobType.create.val] = new CreateProcessor()
-        processors[AppJobDTO.JobType.remove.val] = new RemoveProcessor()
-        processors[AppJobDTO.JobType.scroll.val] = new ScrollProcessor()
+        processors[AppJobDTO.JobType.create] = new CreateProcessor()
+        processors[AppJobDTO.JobType.remove] = new RemoveProcessor()
+        processors[AppJobDTO.JobType.scroll] = new ScrollProcessor()
     }
 
     ThreadPoolExecutor executor
@@ -92,12 +92,12 @@ class OneAppGuardian {
         if (jobList) {
             def uniqueJobList = jobList.unique { it.status }
             def todoJob = uniqueJobList.find {
-                it.status != AppJobDTO.Status.failed.val && it.status != AppJobDTO.Status.done.val
+                it.status != AppJobDTO.Status.failed && it.status != AppJobDTO.Status.done
             }
             if (todoJob) {
                 job = todoJob
             } else {
-                def failJob = uniqueJobList.find { it.status == AppJobDTO.Status.failed.val }
+                def failJob = uniqueJobList.find { it.status == AppJobDTO.Status.failed }
                 if (failJob) {
                     if (failJob.failNum != null && failJob.failNum >= appJobMaxFailTimes) {
                         // go on check
@@ -122,7 +122,7 @@ class OneAppGuardian {
             } else {
                 // clear old fail job
                 int num = new AppJobDTO().where('app_id=?', app.id).
-                        where('status=?', AppJobDTO.Status.failed.val).
+                        where('status=?', AppJobDTO.Status.failed).
                         where('fail_num>=?', appJobMaxFailTimes).deleteAll()
                 if (num) {
                     Event.builder().type(Event.Type.app).reason('delete failed job').
@@ -142,7 +142,7 @@ class OneAppGuardian {
         def timer = Guardian.instance.jobProcessTimeSummary.
                 labels(job.appId.toString(), job.jobType.toString()).startTimer()
         try {
-            new AppJobDTO(id: job.id, status: AppJobDTO.Status.processing.val, updatedDate: new Date()).update()
+            new AppJobDTO(id: job.id, status: AppJobDTO.Status.processing, updatedDate: new Date()).update()
             Event.builder().type(Event.Type.app).reason('process job').
                     result(job.appId).build().log('update job status to processing').toDto().add()
 
@@ -159,13 +159,13 @@ class OneAppGuardian {
             def processor = processors[job.jobType]
             processor.process(job, app, containerList)
 
-            new AppJobDTO(id: job.id, status: AppJobDTO.Status.done.val, message: '', updatedDate: new Date()).update()
+            new AppJobDTO(id: job.id, status: AppJobDTO.Status.done, message: '', updatedDate: new Date()).update()
             Event.builder().type(Event.Type.app).reason('process job').
                     result(job.appId).build().log('update job status to done').toDto().add()
             return true
         } catch (Exception e) {
             log.error 'process app job error - ' + job.appId, e
-            new AppJobDTO(id: job.id, status: AppJobDTO.Status.failed.val, message: e.message,
+            new AppJobDTO(id: job.id, status: AppJobDTO.Status.failed, message: e.message,
                     failNum: job.failNum + 1, updatedDate: new Date()).update()
             Event.builder().type(Event.Type.app).reason('process job').
                     result(job.appId).build().log('update job status to failed').toDto().add()
@@ -223,8 +223,8 @@ class OneAppGuardian {
                 log.warn 'app running not match {} but - {} for app - {}', containerNumber,
                         runningContainerList.collect { x -> x.state }, app.name
                 if (containerNumber < runningContainerList.size()) {
-                    new AppJobDTO(appId: app.id, failNum: 0, status: AppJobDTO.Status.created.val,
-                            jobType: AppJobDTO.JobType.remove.val, createdDate: new Date(), updatedDate: new Date()).
+                    new AppJobDTO(appId: app.id, failNum: 0, status: AppJobDTO.Status.created,
+                            jobType: AppJobDTO.JobType.remove, createdDate: new Date(), updatedDate: new Date()).
                             addParam('toContainerNumber', containerNumber).add()
                 } else if (containerNumber > runningContainerList.size()) {
                     List<Integer> needRunInstanceIndexList = []
@@ -235,8 +235,8 @@ class OneAppGuardian {
                         }
                     }
 
-                    new AppJobDTO(appId: app.id, failNum: 0, status: AppJobDTO.Status.created.val,
-                            jobType: AppJobDTO.JobType.create.val, createdDate: new Date(), updatedDate: new Date()).
+                    new AppJobDTO(appId: app.id, failNum: 0, status: AppJobDTO.Status.created,
+                            jobType: AppJobDTO.JobType.create, createdDate: new Date(), updatedDate: new Date()).
                             needRunInstanceIndexList(needRunInstanceIndexList).add()
                 }
                 Event.builder().type(Event.Type.app).reason('change container number').

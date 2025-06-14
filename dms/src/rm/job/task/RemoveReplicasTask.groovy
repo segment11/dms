@@ -38,8 +38,8 @@ class RemoveReplicasTask extends RmJobTask {
         def appJob = new AppJobDTO(
                 appId: app.id,
                 failNum: 0,
-                status: AppJobDTO.Status.created.val,
-                jobType: AppJobDTO.JobType.remove.val,
+                status: AppJobDTO.Status.created,
+                jobType: AppJobDTO.JobType.remove,
                 createdDate: new Date(),
                 updatedDate: new Date()).
                 addParam('toContainerNumber', rmService.replicas)
@@ -51,7 +51,7 @@ class RemoveReplicasTask extends RmJobTask {
 
         try {
             new RemoveProcessor().process(appJob, app, runningContainerList)
-            new AppJobDTO(id: appJobId, status: AppJobDTO.Status.done.val, updatedDate: new Date()).update()
+            new AppJobDTO(id: appJobId, status: AppJobDTO.Status.done, updatedDate: new Date()).update()
             log.warn('start application remove job done, job id: {}', job.id)
         } catch (Exception e) {
             log.error('start application remove job error', e)

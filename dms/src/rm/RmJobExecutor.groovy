@@ -30,7 +30,7 @@ class RmJobExecutor {
         execute {
             try {
                 new CreateProcessor().process(job, app, [])
-                new AppJobDTO(id: job.id, status: AppJobDTO.Status.done.val, updatedDate: new Date()).update()
+                new AppJobDTO(id: job.id, status: AppJobDTO.Status.done, updatedDate: new Date()).update()
                 log.warn('start application create job done, job id: {}', job.id)
             } catch (Exception e) {
                 log.error('start application create job error', e)

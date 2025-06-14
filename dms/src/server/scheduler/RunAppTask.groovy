@@ -53,7 +53,7 @@ class RunAppTask implements Runnable {
             if (!isOk) {
                 // guard method create job already
                 def job = new AppJobDTO(appId: appId).orderBy('created_date desc').one()
-                if (job && job.status == AppJobDTO.Status.created.val) {
+                if (job && job.status == AppJobDTO.Status.created) {
                     oneAppGuardian.process(job, false)
                 }
             }

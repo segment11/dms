@@ -277,7 +277,7 @@ private static void checkIfAppJobNotDone(Req req, Resp resp) {
     if (!appId) {
         return
     }
-    def one = new AppJobDTO().where('status != ?', AppJobDTO.Status.done.val).
+    def one = new AppJobDTO().where('status != ?', AppJobDTO.Status.done).
             where('app_id = ?', appId).queryFields('id').one()
     if (one != null) {
         resp.halt(500, 'there is a job not done, wait until it is done or delete it')

@@ -142,8 +142,8 @@ abstract class BasePlugin implements Plugin {
         def job = new AppJobDTO(
                 appId: app.id,
                 failNum: 0,
-                status: AppJobDTO.Status.created.val,
-                jobType: AppJobDTO.JobType.create.val,
+                status: AppJobDTO.Status.created,
+                jobType: AppJobDTO.JobType.create,
                 createdDate: new Date(),
                 updatedDate: new Date()).
                 needRunInstanceIndexList(needRunInstanceIndexList)

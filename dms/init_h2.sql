@@ -117,9 +117,9 @@ create table app_job
 (
     id           int auto_increment primary key,
     app_id       int,
-    status       int,
+    status       varchar(20),
     fail_num     int,
-    job_type     int,
+    job_type     varchar(20),
     message      text,
     params       varchar(1000),
     created_date timestamp,

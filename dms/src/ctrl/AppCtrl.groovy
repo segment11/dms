@@ -278,8 +278,8 @@ h.group('/app') {
                     List<ContainerInfo> containerList = instance.getContainerList(one.clusterId, one.id)
                     if (containerList.size() == oldConf.containerNumber) {
                         def jobId = new AppJobDTO(appId: one.id, failNum: 0,
-                                status: AppJobDTO.Status.created.val,
-                                jobType: AppJobDTO.JobType.scroll.val,
+                                status: AppJobDTO.Status.created,
+                                jobType: AppJobDTO.JobType.scroll,
                                 createdDate: new Date(), updatedDate: new Date()).add()
                         return oldOne.autoManage() ? [id: one.id, jobId: jobId] : [id: one.id]
                     } else {
@@ -317,7 +317,7 @@ h.group('/app') {
 
                 log.info 'scale from {} to {}', oldConf.containerNumber, conf.containerNumber
                 def jobType = isAdd ? AppJobDTO.JobType.create : AppJobDTO.JobType.remove
-                def jobId = new AppJobDTO(appId: one.id, failNum: 0, jobType: jobType.val,
+                def jobId = new AppJobDTO(appId: one.id, failNum: 0, jobType: jobType,
                         createdDate: new Date(), updatedDate: new Date(), params: new ExtendParams(params)).add()
                 return [id: one.id, jobId: jobId]
             }
@@ -332,7 +332,7 @@ h.group('/app') {
             one.id = id
             cacheSupport.appUpdated(one)
 
-            def jobId = new AppJobDTO(appId: one.id, failNum: 0, jobType: AppJobDTO.JobType.create.val,
+            def jobId = new AppJobDTO(appId: one.id, failNum: 0, jobType: AppJobDTO.JobType.create,
                     createdDate: new Date(), updatedDate: new Date()).add()
             return [id: id, jobId: jobId]
         }
