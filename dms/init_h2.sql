@@ -105,7 +105,7 @@ create table app
     ab_conf         varchar(2000),
     job_conf        varchar(2000),
     live_check_conf varchar(2000),
-    status          int,
+    status          varchar(20),
     extend_params   varchar(2000),
     updated_date    timestamp default current_timestamp
 );

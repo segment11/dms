@@ -327,7 +327,7 @@ h.group('/app') {
                 resp.halt(500, 'not this namespace manager')
             }
 
-            one.status = AppDTO.Status.auto.val
+            one.status = AppDTO.Status.auto
             def id = one.add()
             one.id = id
             cacheSupport.appUpdated(one)
@@ -341,7 +341,7 @@ h.group('/app') {
         assert id
         def one = new AppDTO(id: id as int).queryFields('id,status').one()
 
-        one.status = one.status == AppDTO.Status.auto.val ? AppDTO.Status.manual.val : AppDTO.Status.auto.val
+        one.status = one.status == AppDTO.Status.auto ? AppDTO.Status.manual : AppDTO.Status.auto
         one.update()
         [status: one.status]
     }

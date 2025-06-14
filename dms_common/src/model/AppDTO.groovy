@@ -7,18 +7,12 @@ import model.json.*
 class AppDTO extends BaseRecord<AppDTO> {
     @CompileStatic
     static enum Status {
-        auto(0), manual(1)
-
-        int val
-
-        Status(int val) {
-            this.val = val
-        }
+        auto, manual
     }
 
     @Override
     String toString() {
-        "app: " + name + ", id: " + id + ", status:" + Status.values().find { it.val == status }?.name()
+        "app: " + name + ", id: " + id + ", status:" + status
     }
 
     Integer id
@@ -45,13 +39,13 @@ class AppDTO extends BaseRecord<AppDTO> {
 
     GatewayConf gatewayConf
 
-    Integer status
+    Status status
 
     Date updatedDate
 
     ExtendParams extendParams
 
     boolean autoManage() {
-        status == Status.auto.val
+        status == Status.auto
     }
 }

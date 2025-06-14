@@ -398,12 +398,12 @@ h.post('/api/container/create/tpl') { req, resp ->
     // all, maybe too many jobs, only one cluster may be ok
     def instance = InMemoryCacheSupport.instance
     List<AppDTO> appMonitorList = instance.appList.findAll {
-        it.status == AppDTO.Status.auto.val && it.monitorConf != null && it.monitorConf
+        it.status == AppDTO.Status.auto && it.monitorConf != null && it.monitorConf
     }
     map.appMonitorList = appMonitorList
 
     List<AppDTO> appLogList = instance.appList.findAll {
-        it.status == AppDTO.Status.auto.val && it.logConf != null && it.logConf
+        it.status == AppDTO.Status.auto && it.logConf != null && it.logConf
     }
     map.appLogList = appLogList
 

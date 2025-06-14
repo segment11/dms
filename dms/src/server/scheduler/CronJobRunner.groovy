@@ -29,7 +29,7 @@ class CronJobRunner {
 
     synchronized boolean refresh() {
         def appList = new AppDTO().queryFields('id,status,job_conf').
-                where('status = ?', AppDTO.Status.auto.val).
+                where('status = ?', AppDTO.Status.auto).
                 where('job_conf is not null').list()
         Map<Integer, String> item = [:]
         for (one in appList) {

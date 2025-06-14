@@ -51,7 +51,7 @@ abstract class BasePlugin implements Plugin {
         def app = new AppDTO()
         app.clusterId = clusterId
         app.namespaceId = namespaceId
-        app.status = AppDTO.Status.auto.val
+        app.status = AppDTO.Status.auto
         app.updatedDate = new Date()
 
         def conf = new AppConf()
@@ -157,7 +157,7 @@ abstract class BasePlugin implements Plugin {
         def job = creatingAppJob(app)
 
         // set auto so dms can handle this job
-        new AppDTO(id: app.id, status: AppDTO.Status.auto.val).update()
+        new AppDTO(id: app.id, status: AppDTO.Status.auto).update()
         log.info 'done create related application job, job id: {}', job.id
         job.id
     }

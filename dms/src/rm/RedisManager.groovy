@@ -67,10 +67,10 @@ class RedisManager {
         if (!appOne) {
             return
         }
-        if (appOne.status == AppDTO.Status.auto.val) {
+        if (appOne.status == AppDTO.Status.auto) {
             // update to manual
             log.warn('update app status to manual, app id: {}', appOne.id)
-            new AppDTO(id: appOne.id, status: AppDTO.Status.manual.val, updatedDate: new Date()).update()
+            new AppDTO(id: appOne.id, status: AppDTO.Status.manual, updatedDate: new Date()).update()
         }
 
         def instance = InMemoryAllContainerManager.instance

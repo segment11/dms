@@ -112,7 +112,7 @@ h.group('/redis/sentinel-service') {
         app.clusterId = RedisManager.CLUSTER_ID
         app.namespaceId = namespaceId
         app.name = 'rm_sentinel_' + one.name
-        app.status = AppDTO.Status.manual.val
+        app.status = AppDTO.Status.manual
         app.updatedDate = new Date()
 
         def conf = new AppConf()

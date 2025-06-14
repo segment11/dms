@@ -64,7 +64,7 @@ h.group('/redis/metric') {
         prometheusPlugin.demoApp(prometheusApp)
         prometheusApp.name = prometheusAppName
         // config file need reload
-        prometheusApp.status = AppDTO.Status.auto.val
+        prometheusApp.status = AppDTO.Status.auto
         def prometheusAppId = InitToolPlugin.addAppIfNotExists(prometheusApp)
         log.warn 'created prometheus app {}', prometheusAppId
         def prometheusJobId = RmJobExecutor.instance.runCreatingAppJob(prometheusApp)
@@ -84,7 +84,7 @@ h.group('/redis/metric') {
         app.namespaceId = namespaceIdMetric
         app.name = redisExporterAppName
         // not auto first
-        app.status = AppDTO.Status.manual.val
+        app.status = AppDTO.Status.manual
         app.updatedDate = new Date()
 
         def conf = new AppConf()
@@ -172,7 +172,7 @@ h.group('/redis/metric') {
                 'need mount to /data/openobserve same value as env ZO_DATA_DIR')
         ooPlugin.demoApp(ooApp)
         ooApp.name = openobserveAppName
-        ooApp.status = AppDTO.Status.manual.val
+        ooApp.status = AppDTO.Status.manual
         def ooAppId = InitToolPlugin.addAppIfNotExists(ooApp)
         log.warn 'created openobserve app {}', ooAppId
         def ooJobId = RmJobExecutor.instance.runCreatingAppJob(ooApp)
@@ -206,7 +206,7 @@ h.group('/redis/metric') {
         def vectorPlugin = new VectorPlugin()
         vectorPlugin.demoApp(vectorApp)
         vectorApp.name = vectorAppName
-        vectorApp.status = AppDTO.Status.manual.val
+        vectorApp.status = AppDTO.Status.manual
         def vectorAppId = InitToolPlugin.addAppIfNotExists(vectorApp)
         log.warn 'created vector app {}', vectorAppId
         def vectorJobId = RmJobExecutor.instance.runCreatingAppJob(vectorApp)
@@ -241,7 +241,7 @@ h.group('/redis/metric') {
         def nodeExporterPlugin = new NodeExporterPlugin()
         nodeExporterPlugin.demoApp(nodeExporterApp)
         nodeExporterApp.name = nodeExporterAppName
-        nodeExporterApp.status = AppDTO.Status.manual.val
+        nodeExporterApp.status = AppDTO.Status.manual
         def nodeExporterAppId = InitToolPlugin.addAppIfNotExists(nodeExporterApp)
         log.warn 'created node exporter app {}', nodeExporterAppId
         def nodeExporterJobId = RmJobExecutor.instance.runCreatingAppJob(nodeExporterApp)

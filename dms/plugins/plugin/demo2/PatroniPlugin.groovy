@@ -458,7 +458,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 app.clusterId = createContainerConf.app.clusterId
                 app.namespaceId = createContainerConf.app.namespaceId
                 // not auto first
-                app.status = AppDTO.Status.manual.val
+                app.status = AppDTO.Status.manual
 
                 def conf = new AppConf()
                 app.conf = conf
@@ -567,7 +567,7 @@ chown postgres:postgres /var/lib/pgbackrest
                 app.clusterId = createContainerConf.app.clusterId
                 app.namespaceId = createContainerConf.app.namespaceId
                 // not auto first
-                app.status = AppDTO.Status.manual.val
+                app.status = AppDTO.Status.manual
 
                 def conf = new AppConf()
                 app.conf = conf
