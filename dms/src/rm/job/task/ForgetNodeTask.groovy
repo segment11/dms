@@ -59,7 +59,7 @@ class ForgetNodeTask extends RmJobTask {
         }
 
         new RmServiceDTO(id: rmService.id, clusterSlotsDetail: rmService.clusterSlotsDetail, updatedDate: new Date()).update()
-        log.warn 'update cluster slots detail ok'
+        log.warn 'update cluster nodes ok'
 
         JobResult.ok('forget node ok')
     }

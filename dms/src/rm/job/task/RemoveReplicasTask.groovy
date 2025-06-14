@@ -26,12 +26,13 @@ class RemoveReplicasTask extends RmJobTask {
         this.replicaIndexList = replicaIndexList
 
         this.job = rmJob
-        this.step = new JobStep('add_replicas', 0)
+        this.step = new JobStep('remove_replicas', 0)
     }
 
     private void runRemoveAppJob(AppDTO app) {
         // replicas already updated
         if (app.conf.containerNumber <= rmService.replicas) {
+            log.warn 'app conf container number {} already <= expect replicas {}, skip', app.conf.containerNumber, rmService.replicas
             return
         }
 
@@ -96,7 +97,8 @@ class RemoveReplicasTask extends RmJobTask {
 
                 def needRemoveReplicasContainerList = runningContainerList.findAll { x -> x.instanceIndex() in replicaIndexList }
                 if (needRemoveReplicasContainerList.size() != replicaIndexList.size()) {
-                    return JobResult.fail('running need remove replicas container list size not match')
+                    log.warn 'running need remove replicas container list size not match'
+//                    return JobResult.fail('running need remove replicas container list size not match')
                 }
 
                 rmService.connectAndExe(primaryX) { jedis ->

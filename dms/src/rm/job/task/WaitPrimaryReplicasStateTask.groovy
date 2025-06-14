@@ -39,8 +39,6 @@ class WaitPrimaryReplicasStateTask extends RmJobTask {
             }
         } else {
             // update after nodes updated
-            def primaryReplicasDetail = rmService.primaryReplicasDetail
-
             def runningContainerList = rmService.runningContainerList()
             runningContainerList.each { x ->
                 def node = new PrimaryReplicasDetail.Node()
@@ -50,16 +48,16 @@ class WaitPrimaryReplicasStateTask extends RmJobTask {
                 // when first created, the first replica is primary
                 node.isPrimary = node.replicaIndex == 0
 
-                def find = primaryReplicasDetail.nodes.find { n -> n.replicaIndex == node.replicaIndex }
+                def find = rmService.primaryReplicasDetail.nodes.find { n -> n.replicaIndex == node.replicaIndex }
                 if (find != null) {
                     log.warn "node ${node.replicaIndex} already exists, {}:{}", find.ip, find.port
-                    primaryReplicasDetail.nodes.remove(find)
+                    rmService.primaryReplicasDetail.nodes.remove(find)
                 }
 
-                primaryReplicasDetail.nodes << node
+                rmService.primaryReplicasDetail.nodes << node
             }
 
-            new RmServiceDTO(id: rmService.id, primaryReplicasDetail: primaryReplicasDetail, updatedDate: new Date()).update()
+            new RmServiceDTO(id: rmService.id, primaryReplicasDetail: rmService.primaryReplicasDetail, updatedDate: new Date()).update()
             log.warn 'update primary replicas detail ok'
         }
 

@@ -34,6 +34,7 @@ class AddReplicasTask extends RmJobTask {
     private void runCreateAppJob(AppDTO app) {
         // replicas already updated
         if (app.conf.containerNumber >= rmService.replicas) {
+            log.warn 'app conf container number {} already >= expect replicas {}, skip', app.conf.containerNumber, rmService.replicas
             return
         }
         app.conf.containerNumber = rmService.replicas
@@ -78,7 +79,13 @@ class AddReplicasTask extends RmJobTask {
 
             def newReplicasContainerList = runningContainerList.findAll { x -> x.instanceIndex() in replicaIndexList }
             if (newReplicasContainerList.size() != replicaIndexList.size()) {
-                throw new JobProcessException('new replicas container list size not match')
+                // wait again
+                Thread.sleep(1000 * 10)
+                runningContainerList = rmService.runningContainerList()
+                newReplicasContainerList = runningContainerList.findAll { x -> x.instanceIndex() in replicaIndexList }
+                if (newReplicasContainerList.size() != replicaIndexList.size()) {
+                    throw new JobProcessException('new replicas container list size not match')
+                }
             }
 
             def primaryNodeIp = primaryX.nodeIp
@@ -91,25 +98,61 @@ class AddReplicasTask extends RmJobTask {
                 }
             }
         } else {
-            def runningContainerList = rmService.runningContainerList()
+            def instance = InMemoryAllContainerManager.instance
+            def runningContainerList = instance.getRunningContainerList(RedisManager.CLUSTER_ID, app.id)
 
             def newReplicasContainerList = runningContainerList.findAll { x -> x.instanceIndex() in replicaIndexList }
             if (newReplicasContainerList.size() != replicaIndexList.size()) {
-                throw new JobProcessException('new replicas container list size not match')
+                // wait again
+                Thread.sleep(1000 * 10)
+                runningContainerList = instance.getRunningContainerList(RedisManager.CLUSTER_ID, app.id)
+                newReplicasContainerList = runningContainerList.findAll { x -> x.instanceIndex() in replicaIndexList }
+                if (newReplicasContainerList.size() != replicaIndexList.size()) {
+                    throw new JobProcessException('new replicas container list size not match')
+                }
             }
 
             newReplicasContainerList.each { x ->
-                def node = new PrimaryReplicasDetail.Node()
-                node.ip = x.nodeIp
-                node.port = rmService.listenPort(x)
-                node.replicaIndex = x.instanceIndex()
-                node.isPrimary = false
-                rmService.primaryReplicasDetail.nodes << node
+                if (rmService.mode == RmServiceDTO.Mode.cluster) {
+                    def node = new ClusterSlotsDetail.Node()
+                    node.ip = x.nodeIp
+                    node.port = rmService.listenPort(x)
+                    node.replicaIndex = x.instanceIndex()
+                    node.isPrimary = false
+
+                    def shard = rmService.clusterSlotsDetail.shards.find { shard -> shard.appId == app.id }
+                    def find = shard.nodes.find { n -> n.replicaIndex == node.replicaIndex }
+                    if (find != null) {
+                        log.warn "node ${node.replicaIndex} already exists, {}:{}", find.ip, find.port
+                        shard.nodes.remove(find)
+                    }
+
+                    shard.nodes << node
+                } else {
+                    def node = new PrimaryReplicasDetail.Node()
+                    node.ip = x.nodeIp
+                    node.port = rmService.listenPort(x)
+                    node.replicaIndex = x.instanceIndex()
+                    node.isPrimary = false
+
+                    def find = rmService.primaryReplicasDetail.nodes.find { n -> n.replicaIndex == node.replicaIndex }
+                    if (find != null) {
+                        log.warn "node ${node.replicaIndex} already exists, {}:{}", find.ip, find.port
+                        rmService.primaryReplicasDetail.nodes.remove(find)
+                    }
+
+                    rmService.primaryReplicasDetail.nodes << node
+                }
             }
 
             // update after nodes updated
-            new RmServiceDTO(id: rmService.id, primaryReplicasDetail: rmService.primaryReplicasDetail, updatedDate: new Date()).update()
-            log.warn 'update primary replicas nodes ok'
+            if (rmService.mode == RmServiceDTO.Mode.cluster) {
+                new RmServiceDTO(id: rmService.id, clusterSlotsDetail: rmService.clusterSlotsDetail, updatedDate: new Date()).update()
+                log.warn 'update cluster nodes ok'
+            } else {
+                new RmServiceDTO(id: rmService.id, primaryReplicasDetail: rmService.primaryReplicasDetail, updatedDate: new Date()).update()
+                log.warn 'update primary replicas nodes ok'
+            }
         }
 
         new AppDTO(id: app.id, conf: app.conf).update()
@@ -119,7 +162,6 @@ class AddReplicasTask extends RmJobTask {
     JobResult doTask() {
         assert rmService
 
-        // todo
         if (rmService.mode == RmServiceDTO.Mode.standalone || rmService.mode == RmServiceDTO.Mode.sentinel) {
             def app = new AppDTO(id: rmService.appId).one()
             assert app
@@ -146,16 +188,6 @@ class AddReplicasTask extends RmJobTask {
                     return JobResult.fail('running new replicas container list size not match')
                 }
 
-                newReplicasContainerList.each { x ->
-                    def node = new ClusterSlotsDetail.Node()
-                    node.ip = x.nodeIp
-                    node.port = rmService.listenPort(x)
-                    node.shardIndex = shard.shardIndex
-                    node.replicaIndex = x.instanceIndex()
-                    node.isPrimary = false
-                    shard.nodes << node
-                }
-
                 rmService.connectAndExe(primaryX) { jedis ->
                     for (x in newReplicasContainerList) {
                         def listenPort2 = rmService.listenPort(x)
@@ -170,14 +202,10 @@ class AddReplicasTask extends RmJobTask {
                 }
             }
 
-            log.warn('meet nodes when scale done, wait 5 seconds')
+            log.warn('meet nodes when add replicas done, wait 5 seconds')
             Thread.sleep(1000 * 5)
 
-            // update after nodes updated
-            new RmServiceDTO(id: rmService.id, clusterSlotsDetail: rmService.clusterSlotsDetail, updatedDate: new Date()).update()
-            log.warn 'update cluster nodes ok'
-
-            // replica of
+            // replica of for new created replicas
             for (shard in rmService.clusterSlotsDetail.shards) {
                 def appId = shard.appId
 
@@ -188,7 +216,7 @@ class AddReplicasTask extends RmJobTask {
                 runningContainerList.findAll { xx -> xx.instanceIndex() in replicaIndexList }.each { x ->
                     rmService.connectAndExe(x) { jedis ->
                         def r = jedis.clusterReplicas(primaryNodeId)
-                        log.warn 'replicaof of {} to {}:{}, result: {}', x.name(), primaryNode.ip, primaryNode.port, r
+                        log.warn('replicate node: {}, host: {}, port: {}, result: {}', primaryNodeId, x.nodeIp, rmService.listenPort(x), r)
                     }
                 }
             }

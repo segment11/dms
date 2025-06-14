@@ -102,7 +102,7 @@ class MigrateSlotsTask extends RmJobTask {
         toShard.multiSlotRange.addMerge(slotRange.begin, slotRange.end)
 
         new RmServiceDTO(id: rmService.id, clusterSlotsDetail: rmService.clusterSlotsDetail, updatedDate: new Date()).update()
-        log.info 'update cluster slots detail ok'
+        log.info 'update cluster slots ok'
 
         JobResult.ok('migrate slot ok, slots: ' + slotRange)
     }

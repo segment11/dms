@@ -97,14 +97,13 @@ class MeetNodesSetSlotsTask extends RmJobTask {
             def xPrimary = allContainerList.find {
                 it.appId() == x.appId() && it.instanceIndex() == 0
             }
-
-            def nodeId = rmService.connectAndExe(xPrimary) { jedis ->
+            def primaryNodeId = rmService.connectAndExe(xPrimary) { jedis ->
                 jedis.clusterMyId()
             }
 
             rmService.connectAndExe(x) { jedis ->
-                def r = jedis.clusterReplicate(nodeId)
-                log.warn('replicate node: {}, host: {}, port: {}, result: {}', nodeId, x.nodeIp, rmService.listenPort(x), r)
+                def r = jedis.clusterReplicate(primaryNodeId)
+                log.warn('replicate node: {}, host: {}, port: {}, result: {}', primaryNodeId, x.nodeIp, rmService.listenPort(x), r)
             }
         }
 

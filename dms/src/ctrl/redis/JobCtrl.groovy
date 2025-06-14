@@ -66,7 +66,9 @@ h.group('/redis/job') {
             one.primaryReplicasDetail.nodes << node
         }
 
-        new RmServiceDTO(id: id, primaryReplicasDetail: one.primaryReplicasDetail).update()
+        new RmServiceDTO(id: id, primaryReplicasDetail: one.primaryReplicasDetail,
+                replicas: runningContainerList.size(),
+                status: RmServiceDTO.Status.running).update()
         [flag: true]
     }
 
@@ -97,7 +99,10 @@ h.group('/redis/job') {
             shard.nodes << node
         }
 
-        new RmServiceDTO(id: id, clusterSlotsDetail: one.clusterSlotsDetail).update()
+        new RmServiceDTO(id: id, clusterSlotsDetail: one.clusterSlotsDetail,
+                shards: one.clusterSlotsDetail.shards.size(),
+                replicas: (runningContainerList.size() / one.clusterSlotsDetail.shards.size()).intValue(),
+                status: RmServiceDTO.Status.running).update()
         [flag: true]
     }
 }

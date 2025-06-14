@@ -64,7 +64,7 @@ class WaitClusterStateTask extends RmJobTask {
 
         // update after nodes updated
         new RmServiceDTO(id: rmService.id, clusterSlotsDetail: rmService.clusterSlotsDetail, updatedDate: new Date()).update()
-        log.warn 'update cluster slots detail ok'
+        log.warn 'update cluster nodes ok'
 
         for (x in allContainerList) {
             def lines = rmService.connectAndExe(x) { jedis ->

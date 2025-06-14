@@ -1,5 +1,5 @@
 var md = angular.module('module_redis/one', ['base']);
-md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
+md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog) {
     $scope.tmp = {};
     $scope.ctrl = {};
 
@@ -19,14 +19,21 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     } else {
         store.set('redis_service_one_id', id);
     }
+    console.log('id - ' + id);
+
+    var isReg = Page.registerIntervalFunc(document.location.hash, 'refresh');
+    if (isReg) {
+        uiLog.i('begin refresh interval');
+    }
 
     $scope.refresh = function () {
-        uiTips.loading();
         $http.get('/dms/redis/service/one', {params: {id: id}}).success(function (data) {
             $scope.one = data.one;
             $scope.checkResult = data.checkResult;
             $scope.ext = data.ext;
             $scope.nodes = data.nodes;
+
+            $scope.tmp.refreshTime = new Date();
         });
     };
 

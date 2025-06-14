@@ -14,17 +14,18 @@ import transfer.ContainerInfo
 
 @CompileStatic
 @Slf4j
-class MeetNodesWhenScaleTask extends RmJobTask {
+class MeetNodesWhenScaleUpTask extends RmJobTask {
     final RmServiceDTO rmService
 
+    // already add to service one cluster slots detail's shards
     final List<ClusterSlotsDetail.Shard> newShardList
 
-    MeetNodesWhenScaleTask(RmJob rmJob, List<ClusterSlotsDetail.Shard> newShardList) {
+    MeetNodesWhenScaleUpTask(RmJob rmJob, List<ClusterSlotsDetail.Shard> newShardList) {
         this.rmService = rmJob.rmService
         this.newShardList = newShardList
 
         this.job = rmJob
-        this.step = new JobStep('meet_nodes_when_scale', 0)
+        this.step = new JobStep('meet_nodes_when_scale_up', 0)
     }
 
     @Override
@@ -56,10 +57,9 @@ class MeetNodesWhenScaleTask extends RmJobTask {
         // only cluster meet from primary node, only one is ok, but all primary nodes meet new node be better
         for (shard in rmService.clusterSlotsDetail.shards) {
             def appId = shard.appId
+            def containerList = allContainerList.findAll { x -> x.appId() == appId }
 
-            def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, appId)
             def primaryX = containerList.find { x -> x.instanceIndex() == shard.primary().replicaIndex }
-
             rmService.connectAndExe(primaryX) { jedis ->
                 for (x2 in allContainerList.findAll { xx -> xx.appId() !in oldShardAppIdList && xx.instanceIndex() == 0 }) {
                     def listenPort2 = rmService.listenPort(x2)
@@ -74,32 +74,28 @@ class MeetNodesWhenScaleTask extends RmJobTask {
             }
         }
 
-        log.warn('meet nodes when scale done, wait 5 seconds')
+        log.warn('meet nodes when scale up done, wait 5 seconds')
         Thread.sleep(1000 * 5)
 
-        // replica of
+        // replica of for new created shards
         for (newShard in newShardList) {
             def appId = newShard.appId
             def containerList = allContainerList.findAll { x -> x.appId() == appId }
 
             for (x in containerList) {
-                def instanceIndex = x.instanceIndex()
                 // skip primary
-                if (instanceIndex == 0) {
+                if (x.instanceIndex() == 0) {
                     continue
                 }
 
-                def xPrimary = allContainerList.find {
-                    it.appId() == x.appId() && it.instanceIndex() == 0
-                }
-
-                def nodeId = rmService.connectAndExe(xPrimary) { jedis ->
+                def xPrimary = containerList.find { xx -> xx.instanceIndex() == 0 }
+                def primaryNodeId = rmService.connectAndExe(xPrimary) { jedis ->
                     jedis.clusterMyId()
                 }
 
                 rmService.connectAndExe(x) { jedis ->
-                    def r = jedis.clusterReplicate(nodeId)
-                    log.warn('replicate node: {}, host: {}, port: {}, result: {}', nodeId, x.nodeIp, rmService.listenPort(x), r)
+                    def r = jedis.clusterReplicate(primaryNodeId)
+                    log.warn('replicate node: {}, host: {}, port: {}, result: {}', primaryNodeId, x.nodeIp, rmService.listenPort(x), r)
                 }
             }
 
@@ -117,12 +113,10 @@ class MeetNodesWhenScaleTask extends RmJobTask {
 
         // update after nodes updated
         new RmServiceDTO(id: rmService.id, clusterSlotsDetail: rmService.clusterSlotsDetail, updatedDate: new Date()).update()
-        log.warn 'update cluster slots detail ok'
+        log.warn 'update cluster nodes ok'
 
         log.warn('replica of done')
 
-        // check cluster nodes, todo
-
-        return JobResult.ok('meet nodes when scale ok')
+        return JobResult.ok('meet nodes when scale up ok')
     }
 }

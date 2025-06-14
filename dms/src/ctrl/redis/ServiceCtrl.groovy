@@ -544,7 +544,7 @@ h.group('/redis/service') {
             rmJob.taskList << new RunCreatingAppJobTask(rmJob, shard.shardIndex, appListByShard[shard.shardIndex - oldShards])
             rmJob.taskList << new WaitInstancesRunningTask(rmJob, shard.shardIndex)
         }
-        rmJob.taskList << new MeetNodesWhenScaleTask(rmJob, newShardList)
+        rmJob.taskList << new MeetNodesWhenScaleUpTask(rmJob, newShardList)
         for (newShard in newShardList) {
             def migrateSlotsFromShard = one.clusterSlotsDetail.shards.find { it.shardIndex == newShard.shardIndex - oldShards }
             migrateSlotsFromShard.multiSlotRange.list.each { slotRange ->
