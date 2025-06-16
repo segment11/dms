@@ -5,7 +5,7 @@ import groovy.transform.ToString
 import org.segment.d.json.JSONFiled
 
 @CompileStatic
-@ToString(includeNames = true)
+@ToString(includeNames = true, includePackage = false)
 class BackupPolicy implements JSONFiled {
     Boolean isAutomaticBackup
 
