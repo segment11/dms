@@ -372,7 +372,7 @@ class RedisPlugin extends BasePlugin {
                 def isSentinel = sentinelConfThisOne != null
                 if (isSentinel) {
                     def redisAppList = InMemoryCacheSupport.instance.appList.findAll {
-                        it.conf.imageName() == conf.conf.imageName()
+                        it.id != conf.appId && canUseTo(it.conf.group, it.conf.image)
                     }
                     for (app in redisAppList) {
                         monitorRedisServersIfMasterNameNotExist(conf, app)
@@ -441,10 +441,13 @@ class RedisPlugin extends BasePlugin {
                             def infoSentinel = jedis.info('sentinel')
                             if (infoSentinel.contains(masterName + ',')) {
                                 log.info 'sentinel monitor already added, instance index: {}, master name: {}', x.instanceIndex(), masterName
-                                def masterAddressAlreadyAdded = jedis.sentinelGetMasterAddrByName(masterName).join(':')
-                                multiMasterAddressSet << masterAddressAlreadyAdded
-                                if (!masterAddress) {
-                                    masterAddress = masterAddressAlreadyAdded
+                                def rList = jedis.sentinelGetMasterAddrByName(masterName)
+                                if (rList) {
+                                    def masterAddressAlreadyAdded = rList.join(':')
+                                    multiMasterAddressSet << masterAddressAlreadyAdded
+                                    if (!masterAddress) {
+                                        masterAddress = masterAddressAlreadyAdded
+                                    }
                                 }
 
                                 for (sr in jedis.sentinelReplicas(masterName)) {
@@ -689,6 +692,9 @@ class RedisPlugin extends BasePlugin {
 
     @Override
     boolean canUseTo(String group, String image) {
+        if ('library' == group && 'redis' == image) {
+            return true
+        }
         if ('library' == group && 'valkey' == image) {
             return true
         }
