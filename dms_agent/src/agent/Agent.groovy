@@ -195,6 +195,18 @@ class Agent extends IntervalJob {
         info.time = new Date()
         info.isDmsAgentRunningInDocker = isDmsAgentRunningInDocker
 
+        // do sth eg. add labels
+        def scriptContentBefore = ScriptHolder.instance.getContentByName('before node hb')
+        if (scriptContentBefore) {
+            Map<String, Object> params = [:]
+            params.info = info
+            try {
+                CachedGroovyClassLoader.instance.eval(scriptContentBefore, params)
+            } catch (Exception e) {
+                log.error('before node hb script execute error', e)
+            }
+        }
+
         AgentTempInfoHolder.instance.addNode(info)
 
         isSendNodeInfoOk = true
@@ -203,12 +215,12 @@ class Agent extends IntervalJob {
         }
         if (isSendNodeInfoOk) {
             def jo = JSON.parseObject(body)
-            String scriptContent = ScriptHolder.instance.getContentByName('after node hb')
-            if (scriptContent) {
+            def scriptContentAfter = ScriptHolder.instance.getContentByName('after node hb')
+            if (scriptContentAfter) {
                 Map<String, Object> params = [:]
                 params.jo = jo
                 try {
-                    CachedGroovyClassLoader.instance.eval(scriptContent, params)
+                    CachedGroovyClassLoader.instance.eval(scriptContentAfter, params)
                 } catch (Exception e) {
                     log.error('after node hb script execute error', e)
                 }
