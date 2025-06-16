@@ -1,6 +1,5 @@
 package ctrl.redis
 
-import com.segment.common.Utils
 import com.segment.common.job.chain.JobParams
 import com.segment.common.job.chain.JobStatus
 import model.*
@@ -46,21 +45,14 @@ h.group('/redis/sentinel-service') {
         def instance = InMemoryAllContainerManager.instance
         if (pager.list) {
             pager.list.each { one ->
+                def runningContainerList = instance.getRunningContainerList(RedisManager.CLUSTER_ID, one.appId)
+                def runningNumber = runningContainerList.size()
                 if (one.status == RmSentinelServiceDTO.Status.running) {
-                    def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, one.appId)
-                    def runningNumber = containerList.findAll { x ->
-                        x.running()
-                    }.size()
-
                     if (one.replicas != runningNumber) {
                         one.status = RmSentinelServiceDTO.Status.unhealthy
+                        one.extendParams.put('statusMessage', 'running instances not ready')
                     }
                 } else if (one.status == RmSentinelServiceDTO.Status.creating) {
-                    def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, one.appId)
-                    def runningNumber = containerList.findAll { x ->
-                        x.running()
-                    }.size()
-
                     if (one.replicas == runningNumber) {
                         one.status = RmSentinelServiceDTO.Status.running
                         new RmSentinelServiceDTO(id: one.id, status: RmSentinelServiceDTO.Status.running).update()
@@ -143,7 +135,7 @@ h.group('/redis/sentinel-service') {
         conf.isLimitNode = isSingleNode
 
         final String dataDir = RedisManager.dataDir()
-        def sentinelDataDir = dataDir + '/sentinel_data_' + Utils.uuid()
+        def sentinelDataDir = dataDir + '/sentinel_data_app_' + '_${appId}'
         def nodeVolumeId = new NodeVolumeDTO(imageName: 'library/redis', name: 'for sentinel ' + one.name, dir: sentinelDataDir,
                 clusterId: RedisManager.CLUSTER_ID, des: 'data dir for sentinel').add()
         def dirOne = new DirVolumeMount(

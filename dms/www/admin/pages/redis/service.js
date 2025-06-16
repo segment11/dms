@@ -21,8 +21,9 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
             uiTips.loading();
             $http.delete('/dms/redis/service/delete', {params: {id: one.id}}).success(function (data) {
                 if (data.flag) {
-                    var i = _.indexOf($scope.ll, one);
-                    $scope.ll.splice(i, 1);
+                    // var i = _.indexOf($scope.ll, one);
+                    // $scope.ll.splice(i, 1);
+                    one.status = 'deleted';
                 }
             });
         }, null);

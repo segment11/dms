@@ -31,7 +31,11 @@
                             <td>{{one.des}}</td>
                             <td>{{one.replicas}}</td>
                             <td><span
-                                    ng-class="{'bg-info': 'creating' == one.status, 'bg-success': 'running' == one.status, 'bg-danger': 'deleted' == one.status}">{{one.status}}</span>
+                                    ng-class="{'bg-info': 'creating' == one.status, 'bg-success': 'running' == one.status, 'bg-tips': 'deleted' == one.status, 'bg-danger': 'unhealthy' == one.status}">{{one.status}}</span>
+                                <hr/>
+                                <span class="bg-danger" ng-show="one.extendParams.params.statusMessage">
+                                    {{one.extendParams.params.statusMessage}}
+                                </span>
                             </td>
                             <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
                             <td class="opts">
