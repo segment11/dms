@@ -241,7 +241,8 @@ h.group('/redis/service') {
             one.pass = RedisManager.encode(one.pass)
         }
 
-        boolean isSentinelMode = one.mode == RmServiceDTO.Mode.sentinel
+        def isStandaloneMode = one.mode == RmServiceDTO.Mode.standalone
+        def isSentinelMode = one.mode == RmServiceDTO.Mode.sentinel
         def isClusterMode = one.mode == RmServiceDTO.Mode.cluster
 
         String sentinelAppName
@@ -265,7 +266,8 @@ h.group('/redis/service') {
         app.clusterId = RedisManager.CLUSTER_ID
         app.namespaceId = namespaceId
         app.name = 'rm_' + one.name
-        app.status = AppDTO.Status.manual
+        // sentinel managed redis servers can be managed by dms
+        app.status = (isStandaloneMode || isSentinelMode) ? AppDTO.Status.auto : AppDTO.Status.manual
         app.updatedDate = new Date()
 
         def conf = new AppConf()

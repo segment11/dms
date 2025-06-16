@@ -1,6 +1,5 @@
 package ctrl.redis
 
-import com.segment.common.Conf
 import com.segment.common.Utils
 import com.segment.common.job.chain.JobParams
 import com.segment.common.job.chain.JobStatus
@@ -112,7 +111,8 @@ h.group('/redis/sentinel-service') {
         app.clusterId = RedisManager.CLUSTER_ID
         app.namespaceId = namespaceId
         app.name = 'rm_sentinel_' + one.name
-        app.status = AppDTO.Status.manual
+        // sentinel application can be managed by dms
+        app.status = AppDTO.Status.auto
         app.updatedDate = new Date()
 
         def conf = new AppConf()
