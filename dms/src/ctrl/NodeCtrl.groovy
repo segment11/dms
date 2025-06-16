@@ -415,11 +415,35 @@ h.group('/api') {
             def instance = InMemoryAllContainerManager.instance
             instance.addAuthToken(nodeIp, authToken)
             instance.addNodeInfo(nodeIp, info)
-            def old = new NodeDTO(ip: nodeIp).queryFields('id').one()
+            def old = new NodeDTO(ip: nodeIp).queryFields('id,tags').one()
             if (old) {
                 old.updatedDate = info.hbTime
                 old.agentVersion = info.version
                 old.clusterId = info.clusterId
+                if (info.tags) {
+                    def tags = info.tags
+                    // merge tags
+                    if (old.tags) {
+                        for (tag in old.tags) {
+                            tags << tag
+                        }
+                    }
+                    old.tags = common.Utils.toStringArray(tags)
+                }
+                // label to tag
+                if (info.labels) {
+                    List<String> tags = []
+                    info.labels.each { k, v ->
+                        def tag = k + '=' + v
+                        tags << tag
+                    }
+                    if (old.tags) {
+                        for (tag in old.tags) {
+                            tags << tag
+                        }
+                    }
+                    old.tags = common.Utils.toStringArray(tags)
+                }
                 old.update()
             } else {
                 new NodeDTO(ip: nodeIp, clusterId: info.clusterId, agentVersion: info.version, updatedDate: info.hbTime).add()

@@ -14,6 +14,18 @@ import java.nio.file.attribute.PosixFilePermission
 @CompileStatic
 @Slf4j
 class Utils {
+    static String[] toStringArray(List<String> list) {
+        if (list.isEmpty()) {
+            return null
+        }
+
+        def arr = new String[list.size()]
+        for (i in (0..<list.size())) {
+            arr[i] = list[i]
+        }
+        arr
+    }
+
     static Date getNodeAliveCheckLastDate(int heartBeatLossTimes = 3) {
         int heartBeatIntervalMillis = Conf.instance.getInt('server.heartBeatIntervalMillis', 1000 * 10)
         def dat = new Date()

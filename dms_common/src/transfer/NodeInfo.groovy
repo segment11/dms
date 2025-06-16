@@ -15,6 +15,9 @@ class NodeInfo {
     Date hbTime
     boolean isDmsAgentRunningInDocker
 
+    Map<String, String> labels = [:]
+    List<String> tags = []
+
     // server side
     boolean isOk
 
