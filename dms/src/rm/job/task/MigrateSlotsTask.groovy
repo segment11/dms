@@ -3,6 +3,7 @@ package rm.job.task
 import com.segment.common.Conf
 import com.segment.common.job.chain.JobResult
 import com.segment.common.job.chain.JobStep
+import common.Utils
 import ex.JobProcessException
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
@@ -125,15 +126,6 @@ class MigrateSlotsTask extends RmJobTask {
         JobResult.ok('migrate slot ok, slots: ' + slotRange)
     }
 
-    private static String[] toStringArray(Collection<String> list) {
-        def arr2 = list.toArray()
-        String[] arr = new String[arr2.length]
-        for (int i = 0; i < arr2.length; i++) {
-            arr[i] = arr2[i] as String
-        }
-        arr
-    }
-
     private void waitUntilMigrateOneSlotSuccess(Jedis jedis, Integer slot, String toIp, Integer toPort, String fromUuid) {
         int onceKeyNumber = Conf.instance.getInt('rm.job.migrateSlots.onceKeyNumber', 1000)
 
@@ -143,7 +135,7 @@ class MigrateSlotsTask extends RmJobTask {
         int count = 0
         while (keyList) {
             count += keyList.size()
-            def arr = toStringArray(keyList)
+            def arr = Utils.toStringArray(keyList)
             def result = jedis.migrate(toIp, toPort, 0, new MigrateParams().auth(rmService.pass), arr)
             if ('OK' != result) {
                 if ('NOKEY' == result) {
@@ -153,6 +145,9 @@ class MigrateSlotsTask extends RmJobTask {
                 throw new JobProcessException('migrate slot fail, result: ' + result +
                         ', this node: ' + fromUuid + ', slot: ' + slot)
             }
+
+            // get again
+            keyList = jedis.clusterGetKeysInSlot(slot, onceKeyNumber)
         }
         log.debug 'done migrate slot: {}, key number: {}, from node: {}, to node: {}',
                 slot, count, fromUuid, toIp + ':' + toPort
