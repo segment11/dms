@@ -64,7 +64,7 @@ h.get('/metric/queue') { req, resp ->
             if ('cpu' == type) {
                 return it.cpuUsedPercent()
             } else if ('mem' == type) {
-                it.mem.usedPercent
+                return it.mem.usedPercent
             }
             0
         }] : [:]
