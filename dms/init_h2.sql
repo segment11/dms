@@ -348,3 +348,13 @@ create table rm_task_log
 );
 create index idx_rm_task_log_job_id on rm_task_log (job_id);
 
+create table rm_backup_template
+(
+    id            int auto_increment primary key,
+    name          varchar(50),
+    target_type   varchar(20),
+    provider      varchar(20),
+    target_bucket varchar(200),
+    updated_date  timestamp default current_timestamp
+);
+
