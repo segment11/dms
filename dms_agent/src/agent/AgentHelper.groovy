@@ -26,11 +26,16 @@ class AgentHelper {
         if (!Conf.isWindows()) {
             info.loadAverage = sigar.loadAverage
         }
-        sigar.fileSystemList.each { FileSystem it ->
+        sigar.fileSystemList.findAll {
+            it.type == FileSystem.TYPE_LOCAL_DISK
+        }.each { FileSystem it ->
             try {
                 def usage = sigar.getFileSystemUsage(it.dirName)
                 info.fileUsageList << new NodeInfo.FileUsage(
-                        dirName: it.dirName, total: (usage.total / 1024 / 1024).doubleValue().round(2),
+                        dirName: it.dirName,
+                        devName: it.devName,
+                        type: it.type,
+                        total: (usage.total / 1024 / 1024).doubleValue().round(2),
                         free: (usage.free / 1024 / 1024).doubleValue().round(2),
                         usePercent: usage.usePercent * 100)
             } catch (SigarPermissionDeniedException ignored) {

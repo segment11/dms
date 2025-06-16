@@ -90,6 +90,8 @@ class NodeInfo {
     @ToString(includeNames = true)
     static class FileUsage {
         String dirName
+        String devName
+        int type
         double total
         double free
         double usePercent

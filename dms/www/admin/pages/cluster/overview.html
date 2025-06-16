@@ -324,20 +324,22 @@
 
         <div class="dialog_main_wrapper">
             <ul class="nav nav-tabs" ui-tabs="{beforeFn: 'changeNodeStatsTab'}">
-                <li class="active"><a>File Systen Usage</a></li>
+                <li class="active"><a>File System Usage</a></li>
                 <li><a>Cpu Usage</a></li>
                 <li><a>Memory Usage</a></li>
             </ul>
             <div class="tabs active">
                 <table class="table table-bordered table-striped">
                     <tr>
-                        <th width="40%">dir</th>
-                        <th width="20%">total</th>
-                        <th width="20%">free</th>
-                        <th width="20%">usage</th>
+                        <th width="30%">dir</th>
+                        <th width="30%">dev</th>
+                        <th width="15%">total</th>
+                        <th width="15%">free</th>
+                        <th width="10%">usage</th>
                     </tr>
                     <tr ng-repeat="x in tmp.targetNode.fsUsageList">
                         <td>{{x.dirName | shortView}}</td>
+                        <td>{{x.devName | shortView}}</td>
                         <td>{{x.total}} GB</td>
                         <td>{{x.free}} GB</td>
                         <td><span class="bg-info">{{x.usePercent}}%</span></td>
