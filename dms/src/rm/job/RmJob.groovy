@@ -60,7 +60,10 @@ class RmJob extends Job implements Serializable {
 
     @Override
     void lockExecute(Closure<Void> cl) {
-        def key = "redis_service_job_${rmService.id}".toString()
+        def id = rmService?.id ?: rmSentinelService.id
+        def name = rmService?.name ?: rmSentinelService.name
+
+        def key = "redis_service_job_${id}".toString()
 
         def lock = SpiSupport.createLock()
         lock.lockKey = key
@@ -68,7 +71,7 @@ class RmJob extends Job implements Serializable {
             cl.call()
         }
         if (!isDone) {
-            log.info 'get redis service job lock fail - {}', rmSentinelService.name
+            log.info 'get redis job lock fail - {}', name
         }
     }
 
