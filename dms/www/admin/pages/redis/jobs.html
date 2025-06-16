@@ -32,7 +32,7 @@
                             <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
                             <td class="opts">
                                 <div class="btn-line">
-                                    <button class="btn" ng-click="showDetail(one)">Detail
+                                    <button class="btn" ng-click="showTaskLog(one)">Detail
                                     </button>
                                 </div>
                             </td>
@@ -46,4 +46,30 @@
 
     </div>
 
+    <script type="text/x-template"
+            ui-dialog="{showModel: 'ctrl.isShowTaskLog', title: 'Detail / Task List', dialogId: 'dialogTaskLog', lock: true, fixed: true, ext: {max: false}}">
+        <table class="table table-bordered table-striped" style="width: 1200px;">
+            <tr>
+                <th width="20%">Step</th>
+                <th width="10%">Cost (ms)</th>
+                <th width="15%">Created Date</th>
+                <th width="15%">Updated Date</th>
+                <th width="10%">Result</th>
+                <th width="30%">Message</th>
+            </tr>
+            <tr ng-repeat="one in taskLogList">
+                <td>{{one.step}}</td>
+                <td>{{one.costMs}}</td>
+                <td>{{one.createdDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
+                <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
+                <td>
+                    <span ng-class="{'bg-success': one.jobResult.isOk, 'bg-danger': !one.jobResult.isOk}">{{one.jobResult.isOk}}</span>
+                </td>
+                <td>
+                    <p ng-show="one.jobResult.message">{{one.jobResult.message}}</p>
+                </td>
+            </tr>
+        </table>
+        <button class="btn" ng-click="ctrl.isShowTaskLog = false">Close</button>
+    </script>
 </div>

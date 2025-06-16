@@ -28,10 +28,15 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
 
     $scope.refresh();
 
-    $scope.showDetail = function (one) {
-        $.dialog({
-            title: 'Steps',
-            content: '<pre style="height: 400px;">' + JSON.stringify(one.content, null, 2) + '</pre>'
+    $scope.showTaskLog = function (one) {
+        uiTips.loading();
+        $http.get('/dms/redis/job/task/list', {params: {jobId: one.id}}).success(function (data) {
+            $scope.taskLogList = data.list;
+            _.each(data.list, function (it) {
+                it.jobResult = JSON.parse(it.jobResult)
+            });
+
+            $scope.ctrl.isShowTaskLog = true;
         });
     };
 

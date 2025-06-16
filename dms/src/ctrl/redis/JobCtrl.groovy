@@ -3,6 +3,7 @@ package ctrl.redis
 import model.RmServiceDTO
 import model.cluster.SlotRange
 import model.job.RmJobDTO
+import model.job.RmTaskLogDTO
 import model.json.ClusterSlotsDetail
 import model.json.PrimaryReplicasDetail
 import org.segment.web.handler.ChainHandler
@@ -29,6 +30,15 @@ h.group('/redis/job') {
         def pager = dto.listPager(pageNum, pageSize)
 
         pager
+    }
+
+    h.get('/task/list') { req, resp ->
+        def jobIdStr = req.param('jobId')
+        assert jobIdStr
+        def jobId = jobIdStr as int
+
+        def list = new RmTaskLogDTO(jobId: jobId).list()
+        [list: list]
     }
 
     h.get('/service/status/update') { req, resp ->
