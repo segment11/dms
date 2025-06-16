@@ -9,6 +9,7 @@
                     <span class="icon"><i class="icon-info"></i></span>
                     <h5>Add One Redis Service</h5>
                     <div class="actions">
+                        <button class="btn btn-blue" ng-click="add()">Add</button>
                         <button class="btn" ng-click="back()">Back</button>
                     </div>
                 </div>
@@ -16,7 +17,7 @@
                     <table class="table table-bordered table-striped m_top6" style="width: 1200px;"
                            ng-form="tmp.addForm">
                         <tr>
-                            <td style="color: blue;">Name</td>
+                            <td width="30%" style="color: blue;">Name</td>
                             <td>
                                 <input type="text" ng-model="editOne.name" ui-valid="r"/>
                             </td>
@@ -141,7 +142,51 @@
                             </td>
                         </tr>
                     </table>
-                    <button class="btn btn-blue" ng-click="add()">Add</button>
+                </div>
+            </div>
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Backup / Maintain</h5>
+                </div>
+                <div class="widget-content">
+                    <table class="table table-bordered table-striped m_top6" style="width: 1200px;"
+                           ng-form="tmp.addForm2">
+                        <tr>
+                            <td width="30%" style="color: blue;">Is Automatic Backup</td>
+                            <td>
+                                <input type="checkbox" ng-model="editOne.backupPolicy.isAutomaticBackup"/>
+                            </td>
+                        </tr>
+                        <tr ng-show="editOne.backupPolicy.isAutomaticBackup">
+                            <td style="color: blue;">Is Backup Window Specify</td>
+                            <td>
+                                <input type="checkbox" ng-model="editOne.backupPolicy.isBackupWindowSpecify"/>
+                            </td>
+                        </tr>
+                        <tr ng-show="editOne.backupPolicy.isAutomaticBackup">
+                            <td style="color: blue;">Retention Period (days)</td>
+                            <td>
+                                <input type="text" ng-model="editOne.backupPolicy.retentionPeriod"
+                                       ui-valid="int minval:int:1 maxval:int:7"/>
+                            </td>
+                        </tr>
+                        <tr ng-show="editOne.backupPolicy.isAutomaticBackup">
+                            <td style="color: blue;">Start Time</td>
+                            <td>
+                                <input type="text" ng-model="editOne.backupPolicy.startTime"
+                                       ui-valid="time"/>
+                            </td>
+                        </tr>
+                        <tr ng-show="editOne.backupPolicy.isAutomaticBackup">
+                            <td style="color: blue;">Duration Hours</td>
+                            <td>
+                                <input type="text" ng-model="editOne.backupPolicy.durationHours"
+                                       ui-valid="int minval:int:1 maxval:int:6"/>
+                            </td>
+                        </tr>
+                    </table>
                 </div>
             </div>
 

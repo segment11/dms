@@ -13,7 +13,8 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         engineVersion: '7.2',
         shards: 1,
         replicas: 1,
-        extendParams: {params: params}
+        extendParams: {params: params},
+        backupPolicy: {startTime: '00:00', retentionPeriod: 7, durationHours: 3}
     };
 
     $http.get('/dms/redis/node/tag/list').success(function (data) {
@@ -53,6 +54,10 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
 
     $scope.add = function () {
         if (!uiValid.checkForm($scope.tmp.addForm) || !$scope.tmp.addForm.$valid) {
+            uiTips.tips('Input Invalid');
+            return;
+        }
+        if (!uiValid.checkForm($scope.tmp.addForm2) || !$scope.tmp.addForm2.$valid) {
             uiTips.tips('Input Invalid');
             return;
         }
