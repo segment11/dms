@@ -10,22 +10,7 @@ import plugin.BasePlugin
 
 @CompileStatic
 @Slf4j
-class InitToolPlugin extends BasePlugin {
-    @Override
-    String group() {
-        'key232323'
-    }
-
-    @Override
-    String image() {
-        'dms'
-    }
-
-    @Override
-    void init() {
-        initApi()
-    }
-
+class InitToolPlugin {
     static int addAppIfNotExists(AppDTO app) {
         def one = new AppDTO(name: app.name, clusterId: app.clusterId).queryFields('id').one()
         if (one) {
@@ -96,28 +81,28 @@ class InitToolPlugin extends BasePlugin {
                 namespaceId = ns.id
             }
 
-            def appPrometheus = new PrometheusPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
+            def appPrometheus = new PrometheusPlugin().demoApp(BasePlugin.tplApp(clusterId, namespaceId, nodeIpList))
             def prometheusAppId = addAppIfNotExists(appPrometheus)
 
-            def appNodeExporter = new NodeExporterPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
+            def appNodeExporter = new NodeExporterPlugin().demoApp(BasePlugin.tplApp(clusterId, namespaceId, nodeIpList))
             addAppIfNotExists(appNodeExporter)
 
-            def appGrafana = new GrafanaPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
+            def appGrafana = new GrafanaPlugin().demoApp(BasePlugin.tplApp(clusterId, namespaceId, nodeIpList))
             def grafanaAppId = addAppIfNotExists(appGrafana)
 
-            def appOo = new OpenobservePlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
+            def appOo = new OpenobservePlugin().demoApp(BasePlugin.tplApp(clusterId, namespaceId, nodeIpList))
             def ooAppId = addAppIfNotExists(appOo)
 
-            def appVector = new VectorPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
+            def appVector = new VectorPlugin().demoApp(BasePlugin.tplApp(clusterId, namespaceId, nodeIpList))
             addAppIfNotExists(appVector)
 
-            def appZk = new ZookeeperPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
+            def appZk = new ZookeeperPlugin().demoApp(BasePlugin.tplApp(clusterId, namespaceId, nodeIpList))
             addAppIfNotExists(appZk)
 
-            def appTraefik = new TraefikPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
+            def appTraefik = new TraefikPlugin().demoApp(BasePlugin.tplApp(clusterId, namespaceId, nodeIpList))
             def traefikAppId = addAppIfNotExists(appTraefik)
 
-            def appEtcd = new EtcdPlugin().demoApp(tplApp(clusterId, namespaceId, nodeIpList))
+            def appEtcd = new EtcdPlugin().demoApp(BasePlugin.tplApp(clusterId, namespaceId, nodeIpList))
             addAppIfNotExists(appEtcd)
 
             cluster.globalEnvConf.dnsInfo.nameservers = nodeIpList[0]
