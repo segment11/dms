@@ -71,9 +71,10 @@ h.group('/redis') {
 
     h.get('/setting') { req, resp ->
         def dataDir = RedisManager.dataDir()
+        def backupDataDir = RedisManager.backupDataDir()
         def isOnlyOneNodeForTest = RedisManager.isOnlyOneNodeForTest()
 
-        [dataDir: dataDir, isOnlyOneNodeForTest: isOnlyOneNodeForTest]
+        [dataDir: dataDir, backupDataDir: backupDataDir, isOnlyOneNodeForTest: isOnlyOneNodeForTest]
     }
 
     h.post('/setting/data-dir') { req, resp ->
@@ -83,6 +84,16 @@ h.group('/redis') {
 
         RedisManager.updateDataDir(dataDir)
         log.warn "update data dir to {}", dataDir
+        [flag: true]
+    }
+
+    h.post('/setting/backup-data-dir') { req, resp ->
+        def map = req.bodyAs(HashMap)
+        def backupDataDir = map.backupDataDir as String
+        assert backupDataDir
+
+        RedisManager.updateBackupDataDir(backupDataDir)
+        log.warn "update backup data dir to {}", backupDataDir
         [flag: true]
     }
 

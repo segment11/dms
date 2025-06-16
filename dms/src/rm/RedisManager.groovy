@@ -16,6 +16,8 @@ class RedisManager {
     // settings
     static final String DEFAULT_DATA_DIR = '/data/redis_manager'
 
+    static final String DEFAULT_BACKUP_DATA_DIR = '/data/redis_manager_backup'
+
     static String dataDir() {
         def one = new DynConfigDTO(name: 'redis_manager.data.dir').one()
         return one?.vv ?: DEFAULT_DATA_DIR
@@ -27,6 +29,20 @@ class RedisManager {
             new DynConfigDTO(id: one.id, vv: dataDir, updatedDate: new Date()).update()
         } else {
             new DynConfigDTO(name: 'redis_manager.data.dir', vv: dataDir, updatedDate: new Date()).add()
+        }
+    }
+
+    static String backupDataDir() {
+        def one = new DynConfigDTO(name: 'redis_manager.backup.data.dir').one()
+        return one?.vv ?: DEFAULT_BACKUP_DATA_DIR
+    }
+
+    static void updateBackupDataDir(String backupDataDir) {
+        def one = new DynConfigDTO(name: 'redis_manager.backup.data.dir').one()
+        if (one) {
+            new DynConfigDTO(id: one.id, vv: backupDataDir, updatedDate: new Date()).update()
+        } else {
+            new DynConfigDTO(name: 'redis_manager.backup.data.dir', vv: backupDataDir, updatedDate: new Date()).add()
         }
     }
 
