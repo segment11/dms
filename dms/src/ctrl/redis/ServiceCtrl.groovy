@@ -1,7 +1,6 @@
 package ctrl.redis
 
 import com.alibaba.fastjson.JSON
-import com.segment.common.Utils
 import com.segment.common.job.chain.JobParams
 import com.segment.common.job.chain.JobStatus
 import model.*
@@ -322,7 +321,7 @@ h.group('/redis/service') {
         conf.isLimitNode = isSingleNode
 
         final String dataDir = RedisManager.dataDir()
-        def serviceDataDir = dataDir + '/' + one.engineType + '_data_' + Utils.uuid() + '_${appId}_${instanceIndex}'
+        def serviceDataDir = dataDir + '/' + one.engineType + '_data_app_' + '_${appId}_${instanceIndex}'
         def nodeVolumeId = new NodeVolumeDTO(imageName: conf.imageName(), name: 'for service ' + one.name, dir: serviceDataDir,
                 clusterId: RedisManager.CLUSTER_ID, des: 'data dir for service').add()
         def dirOne = new DirVolumeMount(
