@@ -87,8 +87,6 @@ h.group('/redis') {
     }
 
     h.post('/setting/change-one-node-for-test-flag') { req, resp ->
-        RedisManager.changeOneNodeForTestFlag()
-
-        [isOnlyOneNodeForTest: RedisManager.isOnlyOneNodeForTest()]
+        [isOnlyOneNodeForTest: RedisManager.changeOneNodeForTestFlag()]
     }
 }

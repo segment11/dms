@@ -30,12 +30,15 @@ class RedisManager {
         }
     }
 
-    static void changeOneNodeForTestFlag() {
+    static boolean changeOneNodeForTestFlag() {
         def one = new DynConfigDTO(name: 'redis_manager.one.node.for.test').one()
         if (one) {
-            new DynConfigDTO(id: one.id, vv: one.vv == 'false' ? 'true' : 'false', updatedDate: new Date()).update()
+            def isOldFalse = one.vv == 'false'
+            new DynConfigDTO(id: one.id, vv: isOldFalse ? 'true' : 'false', updatedDate: new Date()).update()
+            return isOldFalse
         } else {
-            new DynConfigDTO(name: 'redis_manager.one.node.for.test', vv: 'false', updatedDate: new Date()).add()
+            new DynConfigDTO(name: 'redis_manager.one.node.for.test', vv: 'true', updatedDate: new Date()).add()
+            return true
         }
     }
 
