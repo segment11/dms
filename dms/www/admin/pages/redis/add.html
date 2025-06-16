@@ -13,22 +13,22 @@
                     </div>
                 </div>
                 <div class="widget-content">
-                    <table class="table table-bordered table-striped m_top6" style="width: 800px;"
+                    <table class="table table-bordered table-striped m_top6" style="width: 1200px;"
                            ng-form="tmp.addForm">
                         <tr>
-                            <td>Name</td>
+                            <td style="color: blue;">Name</td>
                             <td>
                                 <input type="text" ng-model="editOne.name" ui-valid="r"/>
                             </td>
                         </tr>
                         <tr>
-                            <td>Des</td>
+                            <td style="color: blue;">Des</td>
                             <td>
                                 <input type="text" ng-model="editOne.des"/>
                             </td>
                         </tr>
                         <tr>
-                            <td>Engine</td>
+                            <td style="color: blue;">Engine</td>
                             <td>
                                 <input type="radio" value="redis" ng-model="editOne.engineType"/>&nbsp;Redis&nbsp;&nbsp;
                                 <input type="radio" value="valkey" ng-model="editOne.engineType"/>&nbsp;Valkey&nbsp;&nbsp;
@@ -36,7 +36,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Engine Version</td>
+                            <td style="color: blue;">Engine Version</td>
                             <td>
                                 <select ng-model="editOne.engineVersion" style="width: 80px;">
                                     <option value="6.2">6.2</option>
@@ -45,7 +45,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Mode</td>
+                            <td style="color: blue;">Mode</td>
                             <td>
                                 <input type="radio" value="standalone" ng-model="editOne.mode"/>&nbsp;standalone&nbsp;&nbsp;
                                 <input type="radio" value="sentinel" ng-model="editOne.mode"/>&nbsp;sentinel&nbsp;&nbsp;
@@ -53,7 +53,7 @@
                             </td>
                         </tr>
                         <tr ng-show="editOne.mode == 'cluster'">
-                            <td>Shards</td>
+                            <td style="color: blue;">Shards</td>
                             <td>
                                 <select ng-model="editOne.shards" style="width: 80px;"
                                         ui-valid="{{editOne.mode == 'cluster' ? 'r' : ''}}">
@@ -66,7 +66,7 @@
                             </td>
                         </tr>
                         <tr ng-show="editOne.mode == 'sentinel' || editOne.mode == 'cluster'">
-                            <td>Replicas</td>
+                            <td style="color: blue;">Replicas</td>
                             <td>
                                 <select ng-model="editOne.replicas" style="width: 80px;"
                                         ui-valid="{{editOne.mode == 'sentinel' || editOne.mode == 'cluster' ? 'r' : ''}}">
@@ -78,7 +78,7 @@
                             </td>
                         </tr>
                         <tr ng-show="editOne.mode == 'sentinel'">
-                            <td>Sentinel Name</td>
+                            <td style="color: blue;">Sentinel Name</td>
                             <td>
                                 <select ng-options="a.id as a.name for a in tmp.sentinelServiceList"
                                         ng-model="editOne.sentinelServiceId"
@@ -88,18 +88,17 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Port</td>
+                            <td style="color: blue;">Port</td>
                             <td><input type="text" ng-model="editOne.port"
                                        ui-valid="r int minval:int:6379 maxval:int:36379"
                                        style="width: 120px;"/></td>
                         </tr>
                         <tr>
-                            <td>Password (Optional)</td>
-                            <td><input type="password" ng-model="editOne.pass"
-                                       style="width: 120px;"/></td>
+                            <td style="color: blue;">Password (Optional)</td>
+                            <td><input type="password" ng-model="editOne.pass" style="width: 120px;"/></td>
                         </tr>
                         <tr>
-                            <td>Config Template</td>
+                            <td style="color: blue;">Config Template</td>
                             <td>
                                 <select ng-options="a.id as a.name for a in tmp.configTemplateList"
                                         ng-model="editOne.configTemplateId"
@@ -109,14 +108,21 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Target Node Tag (Optional)</td>
+                            <td style="color: blue;">Target Node Tag (Optional)</td>
                             <td>
                                 <input type="text" ng-model="editOne.nodeTags" width="400px"
                                        ui-dropdown="{valueField: 'tag', labelField: 'tag', list: 'tmp.nodeTagList', multiple: true, blankLabel: '--/--', widthMultipleInput: 400}"/>
                             </td>
                         </tr>
                         <tr>
-                            <td>Config Items</td>
+                            <td style="color: blue;">Target Node Tag By Replica Index (Optional)</td>
+                            <td>
+                                <input type="text" ng-model="editOne.nodeTagsByReplicaIndex" width="400px"
+                                       ui-dropdown="{valueField: 'tag', labelField: 'tag', list: 'tmp.nodeTagList', multiple: true, blankLabel: '--/--', widthMultipleInput: 400}"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="color: blue;">Config Items</td>
                             <td>
                                 <table>
                                     <tr>
