@@ -12,6 +12,3 @@ if (info.nodeIp.startsWith('192.168.')) {
 
 // void
 return
-
-
-

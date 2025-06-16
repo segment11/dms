@@ -428,7 +428,7 @@ h.group('/api') {
                             tags << tag
                         }
                     }
-                    old.tags = common.Utils.toStringArray(tags)
+                    old.tags = common.Utils.toStringArray(tags.unique())
                 }
                 // label to tag
                 if (info.labels) {
@@ -442,7 +442,7 @@ h.group('/api') {
                             tags << tag
                         }
                     }
-                    old.tags = common.Utils.toStringArray(tags)
+                    old.tags = common.Utils.toStringArray(tags.unique())
                 }
                 old.update()
             } else {
