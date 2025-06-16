@@ -177,7 +177,6 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
     JobResult checkPrimaryReplicaNodes() {
         assert mode == Mode.sentinel
-        assert replicas > 1
         assert primaryReplicasDetail
 
         def runningContainerList = this.runningContainerList()
