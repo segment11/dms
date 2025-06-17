@@ -54,6 +54,6 @@ if (isOverwrite) {
     [flag: true]
 } else {
     def support = new InitAgentEnvSupport(kp)
-    def flag = support.copyFileIfNotExists(localFilePath, isTarX.booleanValue(), isMkdir.booleanValue())
+    def flag = support.copyFileIfNotExists(localFilePath, isTarX.booleanValue(), isMkdir.booleanValue(), remoteFilePath)
     [flag: flag, steps: support.getSteps()]
 }
