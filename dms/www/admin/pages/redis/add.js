@@ -14,7 +14,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         shards: 1,
         replicas: 1,
         extendParams: {params: params},
-        backupPolicy: {startTime: '00:00', retentionPeriod: 7, durationHours: 3}
+        backupPolicy: {startTime: '00:00', retentionPeriod: 7, durationHours: 3, dailyOrHourly: 'daily'}
     };
 
     $http.get('/dms/redis/node/tag/list').success(function (data) {

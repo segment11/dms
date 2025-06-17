@@ -14,6 +14,7 @@ import org.segment.web.common.CachedGroovyClassLoader
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
 import plugin.PluginManager
+import rm.BackupManager
 import rm.RedisManager
 import rm.RmJobExecutor
 import server.AgentCaller
@@ -134,6 +135,8 @@ log.info 'metrics server started - http://localhost:{}', Const.METRICS_HTTP_LIST
 
 RedisManager.initMetricCollector()
 
+BackupManager.instance.start()
+
 def stopCl = {
     metricsServer.close()
     server.stop()
@@ -145,6 +148,7 @@ def stopCl = {
     leaderFlagHolder.stop()
     JedisPoolHolder.instance.close()
     AuthTokenCacheHolder.instance.cleanUp()
+    BackupManager.instance.stop()
     RmJobExecutor.instance.cleanUp()
     Ds.disconnectAll()
 }

@@ -158,6 +158,7 @@
                             <td>
                                 <select ng-options="a.id as a.name for a in tmp.backupTemplateList"
                                         ng-model="editOne.backupPolicy.backupTemplateId"
+                                        ui-valid="{{editOne.backupPolicy.isAutomaticBackup ? 'r' :''}}"
                                         style="width: 120px;">
                                 </select>
                             </td>
@@ -175,6 +176,15 @@
                                        ui-valid="int minval:int:1 maxval:int:7"/>
                             </td>
                         </tr>
+                        <tr ng-show="editOne.backupPolicy.isAutomaticBackup">
+                            <td style="color: blue;">Interval Type</td>
+                            <td>
+                                <input type="radio" value="daily" ng-model="editOne.backupPolicy.dailyOrHourly"/>&nbsp;Daily&nbsp;&nbsp;
+                                <input type="radio" value="hourly" ng-model="editOne.backupPolicy.dailyOrHourly"/>&nbsp;Hourly&nbsp;&nbsp;
+                            </td>
+                        </tr>
+
+
                         <tr ng-show="editOne.backupPolicy.isAutomaticBackup">
                             <td style="color: blue;">Is Backup Window Specify</td>
                             <td>

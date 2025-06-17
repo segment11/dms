@@ -102,7 +102,7 @@ h.get('/deploy/node-file/list') { req, resp ->
         def needProxy = proxyInfo && proxyInfo.proxyNodeIp != kp.ip
 
         if (needProxy) {
-            def r = AgentCaller.instance.doSshCopy(kp, targetOne.localPath, targetOne.destPath,
+            def r = AgentCaller.instance.doSshCopy(kp, null, targetOne.localPath, targetOne.destPath,
                     null, 30000, [isOverwrite: true])
             log.info r ? r.toString() : '...'
         } else {

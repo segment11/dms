@@ -351,11 +351,30 @@ create index idx_rm_task_log_job_id on rm_task_log (job_id);
 
 create table rm_backup_template
 (
-    id            int auto_increment primary key,
-    name          varchar(50),
-    target_type   varchar(20),
-    provider      varchar(20),
-    target_bucket varchar(200),
-    updated_date  timestamp default current_timestamp
+    id              int auto_increment primary key,
+    name            varchar(50),
+    target_type     varchar(20),
+    provider        varchar(20),
+    target_bucket   varchar(200),
+    target_node_ips varchar(200),
+    backup_data_dir varchar(200),
+    updated_date    timestamp default current_timestamp
 );
+
+create table rm_backup_log
+(
+    id                 int auto_increment primary key,
+    name               varchar(50),
+    service_id         int,
+    shard_index        int,
+    replica_index      int,
+    backup_template_id int,
+    cost_ms            int,
+    status             varchar(20),
+    message            varchar(200),
+    save_date          timestamp,
+    created_date       timestamp,
+    updated_date       timestamp default current_timestamp
+);
+create index idx_rm_backup_log_service_id on rm_backup_log (service_id);
 

@@ -1,5 +1,6 @@
 package ctrl.redis
 
+import model.NodeKeyPairDTO
 import model.job.RmBackupTemplateDTO
 import org.segment.web.handler.ChainHandler
 
@@ -10,6 +11,13 @@ h.group('/redis/backup-template') {
         def list = new RmBackupTemplateDTO().noWhere().queryFields('id,name').list()
         [list: list.collect {
             [id: it.id, name: it.name]
+        }]
+    }
+
+    h.get('/backup-target-node/list') { req, resp ->
+        def list = new NodeKeyPairDTO().noWhere().queryFields('id,ip').list()
+        [list: list.collect {
+            [id: it.id, ip: it.ip]
         }]
     }
 
@@ -36,6 +44,16 @@ h.group('/redis/backup-template') {
             one.update()
             id = one.id
         }
+
+        if (one.targetType == RmBackupTemplateDTO.TargetType.scp) {
+            for (targetNodeIp in one.targetNodeIps) {
+                def kp = new NodeKeyPairDTO(ip: targetNodeIp).queryFields('id').one()
+                if (kp == null) {
+                    resp.halt(404, 'node key pair not exists for node ip ' + targetNodeIp)
+                }
+            }
+        }
+
         [id: id]
     }
 

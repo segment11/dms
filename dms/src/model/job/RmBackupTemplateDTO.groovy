@@ -10,12 +10,12 @@ import model.vendor.TargetBucket
 class RmBackupTemplateDTO extends BaseRecord<RmBackupTemplateDTO> {
     @CompileStatic
     enum TargetType {
-        nfs, s3
+        scp, nfs, s3
     }
 
     @CompileStatic
     enum Provider {
-        aws, aliyun, tencent, huawei
+        idc, aws, aliyun, tencent, huawei
     }
 
     Integer id
@@ -26,7 +26,14 @@ class RmBackupTemplateDTO extends BaseRecord<RmBackupTemplateDTO> {
 
     Provider provider
 
+    // for s3
     TargetBucket targetBucket
+
+    // for scp
+    String[] targetNodeIps
+
+    // when scp or nfs, backup data dir, when s3, object key prefix in bucket
+    String backupDataDir
 
     Date updatedDate
 }

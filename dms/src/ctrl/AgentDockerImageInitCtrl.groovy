@@ -47,7 +47,7 @@ h.post('/agent/image/init/load') { req, resp ->
                 message: 'Please view log for detail']
     } else {
         List steps = []
-        def copyR = AgentCaller.instance.doSshCopy(kp, localFilePath, localFilePath,
+        def copyR = AgentCaller.instance.doSshCopy(kp, null, localFilePath, localFilePath,
                 null, 30000, [isTarX: false, isMkdir: true])
         def isCopyOk = copyR.getBoolean('flag').booleanValue()
         steps.addAll copyR.getJSONArray('steps')

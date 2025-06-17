@@ -19,6 +19,8 @@ class BackupPolicy implements JSONFiled {
 
     Integer durationHours
 
+    String dailyOrHourly
+
     Boolean isMaintenanceWindowSpecify
 
     String maintenanceStartDay

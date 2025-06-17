@@ -134,11 +134,12 @@ class AgentCaller {
         body
     }
 
-    JSONObject doSshByScriptName(NodeKeyPairDTO kp, String scriptName, int readTimeout, Map ext = null) {
+    JSONObject doSshByScriptName(NodeKeyPairDTO kp, String nodeIp, String scriptName, int readTimeout, Map ext = null) {
         Map params = [:]
         params.ip = kp.ip
         params.port = kp.sshPort
         params.user = kp.userName
+        params.pass = kp.pass
         params.rootPass = kp.rootPass
         params.keyPrivate = kp.keyPrivate
 
@@ -148,13 +149,17 @@ class AgentCaller {
             params.putAll(ext)
         }
 
+        agentScriptExe(kp.clusterId, nodeIp, scriptName, params)
+    }
+
+    JSONObject doSshByScriptName(NodeKeyPairDTO kp, String scriptName, int readTimeout, Map ext = null) {
         def one = InMemoryCacheSupport.instance.oneCluster(kp.clusterId)
         def proxyInfo = one.globalEnvConf.getProxyInfo(kp.ip)
 
-        agentScriptExe(kp.clusterId, proxyInfo.proxyNodeIp, scriptName, params)
+        doSshByScriptName(kp, proxyInfo.proxyNodeIp, scriptName, readTimeout, ext)
     }
 
-    JSONObject doSshCopy(NodeKeyPairDTO kp, String localFilePath, String remoteFilePath,
+    JSONObject doSshCopy(NodeKeyPairDTO kp, String nodeIp, String localFilePath, String remoteFilePath,
                          String localFileContent = null, int readTimeout = 30000, Map extParams = null) {
         Map ext = [:]
         ext.localFilePath = localFilePath
@@ -162,7 +167,7 @@ class AgentCaller {
         ext.localFileContent = localFileContent
 
         ext.isTarX = localFilePath.contains('.tar')
-        ext.isMkdir = false
+        ext.isMkdir = true
         ext.isOverwrite = false
 
         if (extParams) {
@@ -172,7 +177,11 @@ class AgentCaller {
         }
 
         final String scriptName = 'ssh copy'
-        doSshByScriptName(kp, scriptName, readTimeout, ext)
+        if (nodeIp) {
+            doSshByScriptName(kp, nodeIp, scriptName, readTimeout, ext)
+        } else {
+            doSshByScriptName(kp, scriptName, readTimeout, ext)
+        }
     }
 
     JSONObject doSshExec(NodeKeyPairDTO kp, String command, int readTimeout = 30000) {
@@ -205,7 +214,7 @@ class AgentCaller {
         String localFileContent = agentConf.generate()
         String destAgentDir = new InitAgentEnvSupport(kp).agentTarFile.replace('.tar.gz', '')
         String localFilePath = destAgentDir + '/conf.properties'
-        doSshCopy(kp, localFilePath, localFilePath, localFileContent, readTimeout)
+        doSshCopy(kp, null, localFilePath, localFilePath, localFileContent, readTimeout)
     }
 
     JSONObject doSshStartAgent(NodeKeyPairDTO kp, int readTimeout = 10000) {

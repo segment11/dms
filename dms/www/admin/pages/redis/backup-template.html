@@ -9,7 +9,7 @@
                     <h5>Redis Backup Template</h5>
                     <div class="actions">
                         <button class="btn"
-                                ng-click="editOne = {provider: 'aliyun', targetType: 's3', targetBucket: {}}; ctrl.isShowAdd = true;">
+                                ng-click="editOne = {provider: 'idc', targetType: 'scp', targetBucket: {}}; ctrl.isShowAdd = true;">
                             Add One
                         </button>
                     </div>
@@ -20,7 +20,7 @@
                             <th width="15%">name</th>
                             <th width="20%">target type</th>
                             <th width="20%">provider</th>
-                            <th width="20%">target bucket</th>
+                            <th width="20%">target</th>
                             <th width="15%">updated date</th>
                             <th></th>
                         </tr>
@@ -28,7 +28,17 @@
                             <td>{{one.name}}</td>
                             <td>{{one.targetType}}</td>
                             <td>{{one.provider}}</td>
-                            <td>{{one.targetBucket.bucketName}}</td>
+                            <td>
+                                <div ng-show="one.targetType == 'scp'">
+                                    {{one.targetNodeIps.join(',')}}
+                                </div>
+                                <div ng-show="one.targetType == 'scp'">
+                                    {{one.backupDataDir}}
+                                </div>
+                                <div ng-show="one.targetType == 's3'">
+                                    {{one.targetBucket.bucketName}}
+                                </div>
+                            </td>
                             <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
                             <td class="opts">
                                 <div class="btn-line">
@@ -70,6 +80,7 @@
             <tr>
                 <td>Target Type</td>
                 <td>
+                    <input type="radio" value="scp" ng-model="editOne.targetType"/>&nbsp;SSH Copy&nbsp;&nbsp;
                     <input type="radio" value="nfs" ng-model="editOne.targetType"/>&nbsp;NFS&nbsp;&nbsp;
                     <input type="radio" value="s3" ng-model="editOne.targetType"/>&nbsp;S3&nbsp;&nbsp;
                 </td>
@@ -77,39 +88,62 @@
             <tr>
                 <td>Provider</td>
                 <td>
+                    <input type="radio" value="idc" ng-model="editOne.provider"/>&nbsp;Local IDC&nbsp;&nbsp;
                     <input type="radio" value="aws" ng-model="editOne.provider"/>&nbsp;AWS&nbsp;&nbsp;
                     <input type="radio" value="aliyun" ng-model="editOne.provider"/>&nbsp;Aliyun&nbsp;&nbsp;
                 </td>
             </tr>
-            <tr>
+            <tr ng-show="editOne.targetType == 'scp'">
+                <td>Target Nodes</td>
+                <td>
+                    <select ng-options="a.ip as a.ip for a in tmp.backupTargetNodeList"
+                            ng-model="editOne.targetNodeIps"
+                            ui-valid="{{editOne.targetType == 'scp' ? 'r' :''}}"
+                            multiple
+                            style="width: 200px;">
+                    </select>
+                </td>
+            </tr>
+            <tr ng-show="editOne.targetType == 'scp'">
+                <td>Backup Data Dir</td>
+                <td>
+                    <input type="text" ng-model="editOne.backupDataDir"
+                           ui-valid="{{editOne.targetType == 's3' ? 'r' : ''}}"/>
+                </td>
+            </tr>
+            <tr ng-show="editOne.targetType == 's3'">
                 <td>Target Bucket</td>
                 <td>
                     <table class="table">
                         <tr>
                             <td width="20%">Bucket Name</td>
                             <td>
-                                <input type="text" ng-model="editOne.targetBucket.bucketName" ui-valid="r"
+                                <input type="text" ng-model="editOne.targetBucket.bucketName"
+                                       ui-valid="{{editOne.targetType == 's3' ? 'r' : ''}}"
                                        style="width: 200px;"/>
                             </td>
                         </tr>
                         <tr>
                             <td>Endpoint</td>
                             <td>
-                                <input type="text" ng-model="editOne.targetBucket.endpoint" ui-valid="r"
+                                <input type="text" ng-model="editOne.targetBucket.endpoint"
+                                       ui-valid="{{editOne.targetType == 's3' ? 'r' : ''}}"
                                        style="width: 200px;"/>
                             </td>
                         </tr>
                         <tr>
                             <td>Access Key</td>
                             <td>
-                                <input type="password" ng-model="editOne.targetBucket.accessKey" ui-valid="r"
+                                <input type="password" ng-model="editOne.targetBucket.accessKey"
+                                       ui-valid="{{editOne.targetType == 's3' ? 'r' : ''}}"
                                        style="width: 200px;"/>
                             </td>
                         </tr>
                         <tr>
                             <td>Secret Key</td>
                             <td>
-                                <input type="password" ng-model="editOne.targetBucket.secretKey" ui-valid="r"
+                                <input type="password" ng-model="editOne.targetBucket.secretKey"
+                                       ui-valid="{{editOne.targetType == 's3' ? 'r' : ''}}"
                                        style="width: 200px;"/>
                             </td>
                         </tr>

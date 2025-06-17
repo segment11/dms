@@ -5,12 +5,16 @@ import deploy.DeploySupport
 import deploy.InitAgentEnvSupport
 import model.NodeKeyPairDTO
 import org.apache.commons.io.FileUtils
+import org.slf4j.LoggerFactory
+
+def log = LoggerFactory.getLogger(this.getClass())
 
 Map params = super.binding.getProperty('params') as Map
 
 String ip = params.ip as String
 int port = params.port as int
 String user = params.user as String
+String pass = params.pass as String
 String rootPass = params.rootPass as String
 
 String keyPrivate = params.keyPrivate as String
@@ -20,6 +24,8 @@ String remoteFilePath = params.remoteFilePath as String
 Boolean isTarX = Boolean.valueOf(params.isTarX as String)
 Boolean isMkdir = Boolean.valueOf(params.isMkdir as String)
 Boolean isOverwrite = Boolean.valueOf(params.isOverwrite as String)
+
+log.info 'do ssh copy from {} to {}', localFilePath, remoteFilePath
 
 if (localFileContent) {
     def f = new File(localFilePath)
@@ -34,7 +40,11 @@ kp.ip = ip
 kp.sshPort = port
 kp.userName = user
 kp.rootPass = rootPass
-kp.keyPrivate = keyPrivate
+if (pass) {
+    kp.pass = pass
+} else {
+    kp.keyPrivate = keyPrivate
+}
 
 DeploySupport.instance.isAgent = true
 DeployInit.initDeployEventCallback()

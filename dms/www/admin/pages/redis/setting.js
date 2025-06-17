@@ -21,6 +21,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
             }).success(function (data) {
                 if (data.flag) {
                     uiTips.alert('Update data dir success');
+                    $scope.tmp.dataDir = val;
                 }
             });
         }, $scope.tmp.dataDir);
@@ -38,6 +39,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
             }).success(function (data) {
                 if (data.flag) {
                     uiTips.alert('Update backup data dir success');
+                    $scope.tmp.backupDataDir = val;
                 }
             })
         }, $scope.tmp.backupDataDir);

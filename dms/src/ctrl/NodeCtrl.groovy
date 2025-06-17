@@ -82,6 +82,10 @@ h.group('/node') {
 
         assert pass || keyPrivate
 
+        if (keyPrivate) {
+            keyPrivate = keyPrivate.replaceAll('OPENSSH', 'RSA')
+        }
+
         // node id, not key pair node id
         String id = params.id
 
