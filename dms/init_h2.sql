@@ -320,6 +320,7 @@ create table rm_sentinel_service
     updated_date  timestamp default current_timestamp
 );
 create unique index idx_rm_sentinel_service_name on rm_sentinel_service (name);
+create index idx_rm_sentinel_service_status on rm_sentinel_service (status);
 
 create table rm_job
 (

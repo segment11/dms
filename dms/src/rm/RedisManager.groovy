@@ -2,8 +2,11 @@ package rm
 
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import metric.SimpleGauge
 import model.AppDTO
 import model.DynConfigDTO
+import model.RmSentinelServiceDTO
+import model.RmServiceDTO
 import plugin.BasePlugin
 import server.AgentCaller
 import server.InMemoryAllContainerManager
@@ -65,6 +68,71 @@ class RedisManager {
 
     static int preferRegistryId() {
         BasePlugin.addRegistryIfNotExist('docker.1ms.run', 'https://docker.1ms.run')
+    }
+
+    // metrics
+    static final SimpleGauge globalGauge = new SimpleGauge('Redis Manager', 'Redis Manager Metrics.', ['cluster_id'])
+
+    static {
+        globalGauge.register()
+    }
+
+    static void initMetricCollector() {
+        var labelValues = List.of(CLUSTER_ID.toString())
+
+        globalGauge.addRawGetter(() -> {
+            def map = new HashMap<String, SimpleGauge.ValueWithLabelValues>()
+
+            def instance = InMemoryAllContainerManager.instance
+
+            def sentinelServiceList = new RmSentinelServiceDTO(status: RmSentinelServiceDTO.Status.running).list()
+            def sentinelClusterCount = sentinelServiceList.size()
+            def sentinelClusterStateOkCount = 0
+            for (one in sentinelServiceList) {
+                def runningContainerList = instance.getRunningContainerList(CLUSTER_ID, one.appId)
+                if (runningContainerList.size() == one.replicas) {
+                    sentinelClusterStateOkCount++
+                }
+            }
+            map.rm_sentinel_cluster_count = new SimpleGauge.ValueWithLabelValues((double) sentinelClusterCount, labelValues)
+            map.rm_sentinel_cluster_state_ok_count = new SimpleGauge.ValueWithLabelValues((double) sentinelClusterStateOkCount, labelValues)
+
+            def serviceList = new RmServiceDTO(status: RmServiceDTO.Status.running).list()
+            def serviceSentinelStandaloneCount = 0
+            def serviceSentinelStandaloneStateOkCount = 0
+            def serviceSentinelModeCount = 0
+            def serviceSentinelModeStateOkCount = 0
+            def serverClusterModeCount = 0
+            def serverClusterModeStateOkCount = 0
+            for (one in serviceList) {
+                def jobResult = one.checkNodes()
+                if (one.mode == RmServiceDTO.Mode.standalone) {
+                    serviceSentinelStandaloneCount++
+                    if (jobResult) {
+                        serviceSentinelStandaloneStateOkCount++
+                    }
+                } else if (one.mode == RmServiceDTO.Mode.sentinel) {
+                    serviceSentinelModeCount++
+                    if (jobResult) {
+                        serviceSentinelModeStateOkCount++
+                    }
+                } else {
+                    serverClusterModeCount++
+                    if (jobResult) {
+                        serverClusterModeStateOkCount++
+                    }
+                }
+            }
+
+            map.rm_service_sentinel_standalone_count = new SimpleGauge.ValueWithLabelValues((double) serviceSentinelStandaloneCount, labelValues)
+            map.rm_service_sentinel_standalone_state_ok_count = new SimpleGauge.ValueWithLabelValues((double) serviceSentinelStandaloneStateOkCount, labelValues)
+            map.rm_service_sentinel_mode_count = new SimpleGauge.ValueWithLabelValues((double) serviceSentinelModeCount, labelValues)
+            map.rm_service_sentinel_mode_state_ok_count = new SimpleGauge.ValueWithLabelValues((double) serviceSentinelModeStateOkCount, labelValues)
+            map.rm_server_cluster_mode_count = new SimpleGauge.ValueWithLabelValues((double) serverClusterModeCount, labelValues)
+            map.rm_server_cluster_mode_state_ok_count = new SimpleGauge.ValueWithLabelValues((double) serverClusterModeStateOkCount, labelValues)
+
+            map
+        })
     }
 
     // for password encode/decode

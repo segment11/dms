@@ -14,6 +14,7 @@ import org.segment.web.common.CachedGroovyClassLoader
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
 import plugin.PluginManager
+import rm.RedisManager
 import rm.RmJobExecutor
 import server.AgentCaller
 import server.DBLeaderFlagHolder
@@ -130,6 +131,8 @@ log.info 'server started - http://localhost:{}/admin/', Const.SERVER_HTTP_LISTEN
 DefaultExports.initialize()
 def metricsServer = new HTTPServer('0.0.0.0', Const.METRICS_HTTP_LISTEN_PORT, true)
 log.info 'metrics server started - http://localhost:{}', Const.METRICS_HTTP_LISTEN_PORT
+
+RedisManager.initMetricCollector()
 
 def stopCl = {
     metricsServer.close()
