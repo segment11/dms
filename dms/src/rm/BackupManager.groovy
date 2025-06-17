@@ -38,8 +38,10 @@ class BackupManager extends IntervalJob {
             // try again
             return new CheckResult(one.saveDate, true)
         }
-        // created
-        return new CheckResult(one.saveDate, false)
+
+        final int timeoutSeconds = 10 * 60
+        def isTimeout = (new Date().time - one.createdDate.time) > timeoutSeconds * 1000
+        return new CheckResult(one.saveDate, isTimeout)
     }
 
     Map<Integer, RmBackupTemplateDTO> cachedBackupTemplates = [:]
