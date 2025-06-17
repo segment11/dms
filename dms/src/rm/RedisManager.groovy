@@ -3,10 +3,7 @@ package rm
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import metric.SimpleGauge
-import model.AppDTO
-import model.DynConfigDTO
-import model.RmSentinelServiceDTO
-import model.RmServiceDTO
+import model.*
 import plugin.BasePlugin
 import server.AgentCaller
 import server.InMemoryAllContainerManager
@@ -187,6 +184,14 @@ class RedisManager {
                 def stopR = AgentCaller.instance.agentScriptExe(CLUSTER_ID, x.nodeIp, 'container stop', p)
                 log.info 'done stop and remove container - {} - {}, result: {}', x.id, x.appId(), stopR
             }
+        }
+    }
+
+    static void deleteDmsApp(int appId) {
+        def appJobList = new AppJobDTO(appId: appId).queryFields('id').list()
+        if (appJobList) {
+            new AppJobLogDTO().whereIn('job_id', appJobList.collect { it.id }).deleteAll()
+            new AppJobDTO(appId: appId).deleteAll()
         }
     }
 }

@@ -793,23 +793,33 @@ h.group('/redis/service') {
             resp.halt(404, 'service not exists')
         }
 
-        if (one.status == RmServiceDTO.Status.deleted) {
-            resp.halt(409, 'already deleted')
-        }
+        def isTerminate = 'true' == req.param('isTerminate')
 
-        if (one.status == RmServiceDTO.Status.creating) {
-            resp.halt(409, 'creating, please wait')
-        }
+//        if (one.status == RmServiceDTO.Status.deleted) {
+//            resp.halt(409, 'already deleted')
+//        }
+//
+//        if (one.status == RmServiceDTO.Status.creating) {
+//            resp.halt(409, 'creating, please wait')
+//        }
 
         if (one.mode == RmServiceDTO.Mode.standalone || one.mode == RmServiceDTO.Mode.sentinel) {
             RedisManager.stopContainers(one.appId)
+            RedisManager.deleteDmsApp(one.appId)
         } else {
             // cluster mode
             one.clusterSlotsDetail.shards.each {
                 RedisManager.stopContainers(it.appId)
+                RedisManager.deleteDmsApp(it.appId)
             }
         }
-        new RmServiceDTO(id: id, status: RmServiceDTO.Status.deleted, updatedDate: new Date()).update()
+
+        if (isTerminate) {
+            // job and task log, need deleted, todo
+            new RmServiceDTO(id: id).delete()
+        } else {
+            new RmServiceDTO(id: id, status: RmServiceDTO.Status.deleted, updatedDate: new Date()).update()
+        }
 
         [flag: true]
     }

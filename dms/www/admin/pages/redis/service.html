@@ -72,8 +72,11 @@
                                     </button>
                                 </div>
                                 <div class="btn-line">
-                                    <button class="btn btn-red" ng-click="delete(one)"
+                                    <button class="btn btn-red" ng-click="delete(one, false)"
                                             ng-show="one.status != 'deleted'">Delete
+                                    </button>
+                                    <button class="btn btn-red" ng-click="delete(one, true)"
+                                            ng-show="one.status == 'deleted'">Terminate
                                     </button>
                                 </div>
                             </td>

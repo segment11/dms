@@ -16,14 +16,23 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
 
     $scope.queryLl();
 
-    $scope.delete = function (one) {
-        uiTips.confirm('Sure Delete - ' + one.name + '?', function () {
+    $scope.delete = function (one, isTerminate) {
+        var warnPrefix = isTerminate ? 'Sure Terminate - ' : 'Sure Delete - ';
+        uiTips.confirm(warnPrefix + one.name + '?', function () {
             uiTips.loading();
-            $http.delete('/dms/redis/service/delete', {params: {id: one.id}}).success(function (data) {
+            $http.delete('/dms/redis/service/delete', {
+                params: {
+                    id: one.id,
+                    isTerminate: isTerminate
+                }
+            }).success(function (data) {
                 if (data.flag) {
-                    // var i = _.indexOf($scope.ll, one);
-                    // $scope.ll.splice(i, 1);
-                    one.status = 'deleted';
+                    if (isTerminate) {
+                        var i = _.indexOf($scope.ll, one);
+                        $scope.ll.splice(i, 1);
+                    } else {
+                        one.status = 'deleted';
+                    }
                 }
             });
         }, null);
