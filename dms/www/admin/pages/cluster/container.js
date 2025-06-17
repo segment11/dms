@@ -128,16 +128,6 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid, uiLog) {
         });
     };
 
-    $scope.getJobTypeLabel = function (jobType) {
-        var map = {1: 'create', 2: 'remove', 3: 'scroll'};
-        return map[jobType];
-    };
-
-    $scope.getJobStatusLabel = function (status) {
-        var map = {'0': 'created', '1': 'processing', '-1': 'failed', '10': 'done'};
-        return map[status];
-    };
-
     $scope.showMessage = function (one) {
         $.dialog({title: 'Job Message', content: '<pre style="height: 400px;">' + one.message + '</pre>'});
     };

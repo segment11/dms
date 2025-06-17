@@ -140,14 +140,14 @@
                             <tr ng-repeat="one in jobList">
                                 <td>
                                     <p
-                                            ng-class="{'bg-success': one.jobType == 1, 'bg-danger': one.jobType == 2, 'bg-info': one.jobType == 3}">
-                                        {{getJobTypeLabel(one.jobType)}}</p>
+                                            ng-class="{'bg-success': one.jobType == 'create', 'bg-danger': one.jobType == 'remove', 'bg-info': one.jobType == 'scroll'}">
+                                        {{one.jobType}}</p>
                                 </td>
                                 <td>{{one.params}}</td>
                                 <td>
                                     <p
-                                            ng-class="{'bg-success': one.status == 10, 'bg-danger': one.status == -1, 'bg-info': one.status == 1 || one.status == 0}">
-                                        {{getJobStatusLabel(one.status)}}</p>
+                                            ng-class="{'bg-success': one.status == 'done', 'bg-danger': one.status == 'failed', 'bg-info': one.status == 'processing' || one.status == 'created'}">
+                                        {{one.status}}</p>
                                 </td>
                                 <td>{{one.failNum}}</td>
                                 <!-- <td>{{one.createdDate|date:'yyyy/MM/dd HH:mm:ss'}}</td>
