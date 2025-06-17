@@ -232,16 +232,17 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
         for (roleResult in sortedList) {
             if (roleResult.role() == 'master') {
                 if (primaryNodeIp != roleResult.nodeIp || primaryNodePort != roleResult.nodePort) {
-                    return JobResult.fail('primary node ip not equal to master node ip, ' + roleResult.roleList + ', ' + primaryNodeIp + ':' + primaryNodePort)
+                    return JobResult.fail('primary node ip not equal to master node ip, ' +
+                            roleResult.nodeIp + ':' + roleResult.nodePort + ', expected ' + primaryNodeIp + ':' + primaryNodePort)
                 }
             } else {
                 assert roleResult.role() == 'slave'
 
                 if (roleResult.roleList[1].toString() != primaryNodeIp) {
-                    return JobResult.fail('slave node ip not equal to primary node ip, ' + roleResult.roleList + ', ' + primaryNodeIp + ':' + primaryNodePort)
+                    return JobResult.fail('slave node ip not equal to primary node ip, ' + roleResult.roleList[1] + ', ' + primaryNodeIp)
                 }
                 if (roleResult.roleList[2].toString() != primaryNodePort.toString()) {
-                    return JobResult.fail('slave node port not equal to primary node port, ' + roleResult.roleList + ', ' + primaryNodeIp + ':' + primaryNodePort)
+                    return JobResult.fail('slave node port not equal to primary node port, ' + roleResult.roleList[2] + ', ' + primaryNodePort)
                 }
             }
         }
