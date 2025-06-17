@@ -161,10 +161,18 @@
                                     </ul>
                                 </td>
                                 <td>
-                                    <button class="btn btn-gray" ng-click="goAppDetail(node.appId, node.appName)"
-                                            ng-show="one.mode == 'cluster' && node.isPrimary">
-                                        Go To Target DMS App
-                                    </button>
+                                    <div class="btn-line">
+                                        <button class="btn btn-gray"
+                                                ng-click="goAppDetail(node.appId, node.appName)"
+                                                ng-show="one.mode == 'cluster' && node.isPrimary">
+                                            Go To Target DMS App
+                                        </button>
+                                        <button class="btn bg-danger"
+                                                ng-click="doFailover(one.id, node.shardIndex, node.replicaIndex)"
+                                                ng-show="!node.isPrimary && node.running">
+                                            Do Failover
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         </table>

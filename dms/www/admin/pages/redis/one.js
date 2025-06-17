@@ -191,4 +191,18 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog) {
             });
         }, one.replicas);
     };
+
+    $scope.doFailover = function (id, shardIndex, replicaIndex) {
+        uiTips.confirm('Sure Do Failover - Shard ' + shardIndex + ', set primary to replica ' + replicaIndex + '?', function () {
+            $http.post('/dms/redis/service/failover', {
+                id: id,
+                shardIndex: shardIndex,
+                replicaIndex: replicaIndex
+            }).success(function (data) {
+                if (data.id) {
+                    uiTips.alert('Failover ok, view jobs for detail');
+                }
+            });
+        });
+    };
 });

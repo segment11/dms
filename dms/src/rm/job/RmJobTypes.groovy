@@ -11,4 +11,6 @@ class RmJobTypes {
 
     static final JobType CLUSTER_SCALE = new JobType('cluster_scale')
     static final JobType REPLICAS_SCALE = new JobType('replicas_scale')
+
+    static final JobType FAILOVER = new JobType('failover')
 }

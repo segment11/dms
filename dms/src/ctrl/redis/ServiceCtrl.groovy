@@ -717,6 +717,54 @@ h.group('/redis/service') {
         [id: id]
     }
 
+    h.post('/failover') { req, resp ->
+        def map = req.bodyAs(HashMap)
+        def id = map.id as int
+        def shardIndex = map.shardIndex as int
+        def replicaIndex = map.replicaIndex as int
+
+        def one = new RmServiceDTO(id: id).one()
+        if (!one) {
+            resp.halt(404, 'service not exists')
+        }
+
+        def oldReplicas = one.replicas
+        if (oldReplicas <= replicaIndex) {
+            resp.halt(409, 'replicas index is out of range')
+        }
+
+        if (one.status != RmServiceDTO.Status.running) {
+            resp.halt(409, 'service must be running')
+        }
+
+        def checkResult = one.checkNodes()
+        if (!checkResult.isOk) {
+            resp.halt(409, checkResult.message)
+        }
+
+        def rmJob = new RmJob()
+        rmJob.rmService = one
+        rmJob.type = RmJobTypes.FAILOVER
+        rmJob.status = JobStatus.created
+        rmJob.params = new JobParams()
+        rmJob.params.put('rmServiceId', id.toString())
+        rmJob.params.put('shardIndex', shardIndex.toString())
+        rmJob.params.put('replicaIndex', replicaIndex.toString())
+
+        rmJob.taskList << new FailoverTask(rmJob, shardIndex, replicaIndex)
+        rmJob.taskList << new WaitServiceCheckNodesOkTask(rmJob)
+
+        rmJob.createdDate = new Date()
+        rmJob.updatedDate = new Date()
+        rmJob.save()
+
+        RmJobExecutor.instance.execute {
+            rmJob.run()
+        }
+
+        [id: id]
+    }
+
     h.post('/view-pass') { req, resp ->
         def map = req.bodyAs(HashMap)
         def id = map.id as int
