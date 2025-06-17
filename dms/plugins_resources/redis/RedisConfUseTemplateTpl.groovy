@@ -12,7 +12,7 @@ def password = super.binding.getProperty('password') as String
 def isSingleNode = 'true' == (super.binding.getProperty('isSingleNode') as String)
 def isCluster = 'true' == (super.binding.getProperty('isCluster') as String)
 
-def dataDirFinal = isSingleNode ? dataDir + "/instance_${instanceIndex}" : dataDir
+def dataDirFinal = dataDir + "/instance_${instanceIndex}"
 
 def configTemplateId = super.binding.getProperty('configTemplateId') as int
 def configTemplateOne = new RmConfigTemplateDTO(id: configTemplateId).one()

@@ -233,19 +233,6 @@ class RedisPlugin extends BasePlugin {
                     conf.conf.cmd = '[ "sh", "-c", "redis-server /etc/redis/redis.conf" ]'
                 }
 
-                // check if single node
-                boolean isSingleNode
-                if (isSentinel) {
-                    isSingleNode = sentinelConfOne.paramValue('isSingleNode') == 'true'
-                } else {
-                    def confOne = conf.conf.fileVolumeList.find { it.dist == '/etc/redis/redis.conf' }
-                    isSingleNode = confOne && confOne.paramValue('isSingleNode') == 'true'
-                }
-
-                if (!isSingleNode) {
-                    return true
-                }
-
                 def containerNumber = conf.conf.containerNumber
 
                 List<String> list = []
