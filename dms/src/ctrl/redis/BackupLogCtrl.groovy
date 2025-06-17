@@ -11,8 +11,12 @@ h.group('/redis/backup-log') {
         assert serviceIdStr
         def serviceId = serviceIdStr as int
 
-        def list = new RmBackupLogDTO(serviceId: serviceId).list()
-        [list: list]
+        def p = req.param('pageNum')
+        int pageNum = p ? p as int : 1
+        final int pageSize = 10
+
+        def pager = new RmBackupLogDTO(serviceId: serviceId).listPager(pageNum, pageSize)
+        pager
     }
 
     h.delete('/delete') { req, resp ->

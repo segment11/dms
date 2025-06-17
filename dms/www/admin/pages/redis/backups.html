@@ -1,0 +1,48 @@
+<div ng-controller="MainCtrl">
+
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Redis Service - {{params.name}} - Backup List</h5>
+                    <div class="actions">
+                        <button class="btn" ng-click="back()">Back</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <table class="table table-bordered table-striped">
+                        <tr>
+                            <th width="10%">backup id</th>
+                            <th width="30%">name</th>
+                            <th width="10%">status</th>
+                            <th width="10%">cost ms</th>
+                            <th width="10%">created date</th>
+                            <th width="10%">updated date</th>
+                            <th></th>
+                        </tr>
+                        <tr ng-repeat="one in ll">
+                            <td>{{one.id}}</td>
+                            <td>{{one.name}}</td>
+                            <td>{{one.status}}</td>
+                            <td>{{one.costMs}}</td>
+                            <td>{{one.createdDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
+                            <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
+                            <td class="opts">
+                                <div class="btn-line">
+                                    <button class="btn btn-danger" ng-click="delete(one)">Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="margin-top: 6px;" ui-pagi="" pager="pager" on-change-page="queryLl(cp, event)"></div>
+                </div>
+            </div>
+
+        </div><!-- /.row-fluid -->
+
+    </div>
+</div>

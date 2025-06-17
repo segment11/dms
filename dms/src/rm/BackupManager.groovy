@@ -73,7 +73,7 @@ class BackupManager extends IntervalJob {
         log.info 'begin do backup for service {}, backup template: {}, backup log id: {}', one.name, backupTemplate.name, backupLogId
         def beginT = System.currentTimeMillis()
 
-        def isNeedNotDoSave = checkResult.saveDate && (new Date().time - checkResult.saveDate.time) < backupPolicy.durationHours * 3600
+        def isNeedNotDoSave = checkResult.saveDate && (new Date().time - checkResult.saveDate.time) < backupPolicy.durationHours * 3600 * 1000
         if (!isNeedNotDoSave) {
             try {
                 def r = one.connectAndExe(x) { jedis ->

@@ -46,6 +46,13 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog) {
         });
     };
 
+    $scope.goServiceBackups = function () {
+        var one = $scope.one;
+        Page.go('/page/redis_backups', {
+            id: one.id, name: one.name, des: one.des
+        });
+    };
+
     $scope.goAppDetail = function (appId, appName, appDes) {
         Page.go('/page/cluster_container', {
             appId: appId, appName: appName, appDes: appDes,
