@@ -29,6 +29,10 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         $scope.tmp.configTemplateList = data.list;
     });
 
+    $http.get('/dms/redis/backup-template/simple-list').success(function (data) {
+        $scope.tmp.backupTemplateList = data.list;
+    });
+
     $scope.back = function () {
         Page.go('/page/redis_service', {});
     };

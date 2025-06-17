@@ -7,6 +7,8 @@ import org.segment.d.json.JSONFiled
 @CompileStatic
 @ToString(includeNames = true, includePackage = false)
 class BackupPolicy implements JSONFiled {
+    Integer backupTemplateId
+
     Boolean isAutomaticBackup
 
     Boolean isBackupWindowSpecify

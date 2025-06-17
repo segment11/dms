@@ -154,15 +154,18 @@
                     <table class="table table-bordered table-striped m_top6" style="width: 1200px;"
                            ng-form="tmp.addForm2">
                         <tr>
-                            <td width="30%" style="color: blue;">Is Automatic Backup</td>
+                            <td width="30%" style="color: blue;">Backup Template</td>
                             <td>
-                                <input type="checkbox" ng-model="editOne.backupPolicy.isAutomaticBackup"/>
+                                <select ng-options="a.id as a.name for a in tmp.backupTemplateList"
+                                        ng-model="editOne.backupPolicy.backupTemplateId"
+                                        style="width: 120px;">
+                                </select>
                             </td>
                         </tr>
-                        <tr ng-show="editOne.backupPolicy.isAutomaticBackup">
-                            <td style="color: blue;">Is Backup Window Specify</td>
+                        <tr>
+                            <td style="color: blue;">Is Automatic Backup</td>
                             <td>
-                                <input type="checkbox" ng-model="editOne.backupPolicy.isBackupWindowSpecify"/>
+                                <input type="checkbox" ng-model="editOne.backupPolicy.isAutomaticBackup"/>
                             </td>
                         </tr>
                         <tr ng-show="editOne.backupPolicy.isAutomaticBackup">
@@ -173,13 +176,19 @@
                             </td>
                         </tr>
                         <tr ng-show="editOne.backupPolicy.isAutomaticBackup">
+                            <td style="color: blue;">Is Backup Window Specify</td>
+                            <td>
+                                <input type="checkbox" ng-model="editOne.backupPolicy.isBackupWindowSpecify"/>
+                            </td>
+                        </tr>
+                        <tr ng-show="editOne.backupPolicy.isBackupWindowSpecify">
                             <td style="color: blue;">Start Time</td>
                             <td>
                                 <input type="text" ng-model="editOne.backupPolicy.startTime"
                                        ui-valid="time"/>
                             </td>
                         </tr>
-                        <tr ng-show="editOne.backupPolicy.isAutomaticBackup">
+                        <tr ng-show="editOne.backupPolicy.isBackupWindowSpecify">
                             <td style="color: blue;">Duration Hours</td>
                             <td>
                                 <input type="text" ng-model="editOne.backupPolicy.durationHours"
