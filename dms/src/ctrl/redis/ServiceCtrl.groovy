@@ -17,6 +17,7 @@ import rm.job.RmJobTypes
 import rm.job.task.*
 import server.InMemoryAllContainerManager
 import server.InMemoryCacheSupport
+import server.scheduler.Guardian
 
 def h = ChainHandler.instance
 
@@ -805,12 +806,18 @@ h.group('/redis/service') {
 
         if (one.mode == RmServiceDTO.Mode.standalone || one.mode == RmServiceDTO.Mode.sentinel) {
             RedisManager.stopContainers(one.appId)
-            RedisManager.deleteDmsApp(one.appId)
+
+            AppDTO.deleteWithJobs(one.appId)
+            InMemoryCacheSupport.instance.appDeleted(one.id)
+            Guardian.instance.stopOneRunning(one.id)
         } else {
             // cluster mode
             one.clusterSlotsDetail.shards.each {
                 RedisManager.stopContainers(it.appId)
-                RedisManager.deleteDmsApp(it.appId)
+
+                AppDTO.deleteWithJobs(it.appId)
+                InMemoryCacheSupport.instance.appDeleted(it.appId)
+                Guardian.instance.stopOneRunning(it.appId)
             }
         }
 

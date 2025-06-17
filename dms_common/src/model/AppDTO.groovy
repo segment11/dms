@@ -48,4 +48,13 @@ class AppDTO extends BaseRecord<AppDTO> {
     boolean autoManage() {
         status == Status.auto
     }
+
+    static void deleteWithJobs(int appId) {
+        def appJobList = new AppJobDTO(appId: appId).queryFields('id').list()
+        if (appJobList) {
+            new AppJobLogDTO().whereIn('job_id', appJobList.collect { it.id }).deleteAll()
+            new AppJobDTO(appId: appId).deleteAll()
+        }
+        new AppDTO(id: appId).delete()
+    }
 }

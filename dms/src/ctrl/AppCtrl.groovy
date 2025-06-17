@@ -155,14 +155,8 @@ h.group('/app') {
             resp.halt(500, 'this app has containers')
         }
 
-        def appJobList = new AppJobDTO(appId: one.id).queryFields('id').list()
-        if (appJobList) {
-            new AppJobLogDTO().whereIn('job_id', appJobList.collect { it.id }).deleteAll()
-            new AppJobDTO(appId: one.id).deleteAll()
-        }
-        new AppDTO(id: one.id).delete()
+        AppDTO.deleteWithJobs(one.id)
         InMemoryCacheSupport.instance.appDeleted(one.id)
-
         Guardian.instance.stopOneRunning(one.id)
 
         String imageName = one.conf.imageName()
