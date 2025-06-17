@@ -125,8 +125,8 @@ class RedisManager {
             map.rm_service_sentinel_standalone_state_ok_count = new SimpleGauge.ValueWithLabelValues((double) serviceSentinelStandaloneStateOkCount, labelValues)
             map.rm_service_sentinel_mode_count = new SimpleGauge.ValueWithLabelValues((double) serviceSentinelModeCount, labelValues)
             map.rm_service_sentinel_mode_state_ok_count = new SimpleGauge.ValueWithLabelValues((double) serviceSentinelModeStateOkCount, labelValues)
-            map.rm_server_cluster_mode_count = new SimpleGauge.ValueWithLabelValues((double) serverClusterModeCount, labelValues)
-            map.rm_server_cluster_mode_state_ok_count = new SimpleGauge.ValueWithLabelValues((double) serverClusterModeStateOkCount, labelValues)
+            map.rm_service_cluster_mode_count = new SimpleGauge.ValueWithLabelValues((double) serverClusterModeCount, labelValues)
+            map.rm_service_cluster_mode_state_ok_count = new SimpleGauge.ValueWithLabelValues((double) serverClusterModeStateOkCount, labelValues)
 
             map
         })
