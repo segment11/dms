@@ -31,6 +31,10 @@ A docker instances manage system like k8s write in java/groovy, including web ui
 ## dms build-in plugins
 ![dms build-in plugins](./pic/arch/dms-plugin-build-in.png)
 
+## dms redis-manager
+
+[README_redis_manager.md](README_redis_manager.md)
+
 # Quick start
 
 ## run dms server
@@ -44,21 +48,29 @@ dbDataFile=/data/dms/db;FILE_LOCK=SOCKET
 
 ### run in docker
 
-- docker run -d --name dms_server --net=host -v /opt/log:/opt/log -v /data/dms:/data/dms -v $pwd/conf.properties:/opt/dms/conf.properties -e ADMIN_PASSWORD=123456 -e LOCAL_IP_FILTER_PRE=192. key232323/dms_server:1.2.0
-- open http://your-ip:5010/admin/login.html user/password -> admin/abc
+```bash
+docker run -d --name dms_server --net=host -v /opt/log:/opt/log -v /data/dms:/data/dms -v $pwd/conf.properties:/opt/dms/conf.properties -e ADMIN_PASSWORD=123456 -e LOCAL_IP_FILTER_PRE=192. key232323/dms_server:1.2.1
+```
+
+Then open http://your-ip:5010/
+Input user/password and login -> admin/123456
 
 ### or run by compiling from source
 
-TIPS: Need jdk17+/gradle7+
+TIPS: Need jdk21+/gradle8+
 
-- cd ~/ws
-- git clone git@github.com:segment11/dms.git
-- cd ~/ws/dms/dms_agent
-- gradle tar
-- cd ~/ws/dms/dms
-- gradle buildToRun
-- cd ~/ws/dms/dms/build/libs & java -cp . -jar dms_server-1.2.jar
-- open http://your-ip:5010/admin/login.html user/password -> admin/abc
+```bash
+cd ~/ws
+git clone git@github.com:segment11/dms.git
+git clone git@github.com:segment11/segmentd.git
+git clone git@github.com:segment11/segmentweb.git
+git clone git@github.com:segment11/segment_command.git
+cd ~/ws/dms/dms_agent
+gradle tar
+cd ~/ws/dms/dms
+gradle buildToRun
+cd ~/ws/dms/dms/build/libs & java -cp . -jar dms_server-1.2.jar
+```
 
 ## run dms agent
 
@@ -75,14 +87,20 @@ server.runtime.jar=1
 ```
 
 ### run in docker
-- docker run -d --name dms_agent --cpu-period 1000000 --cpu-quota 250000 --net host -v /opt/log:/opt/log -v /opt/dms/config:/opt/dms/config -v /var/run/docker.sock:/var/run/docker.sock -v $pwd/conf.properties:/opt/dms_agent/conf.properties key232323/dms_agent:1.2.0
+
+```bash
+docker run -d --name dms_agent --cpu-period 1000000 --cpu-quota 250000 --net host -v /opt/log:/opt/log -v /opt/dms/config:/opt/dms/config -v /var/run/docker.sock:/var/run/docker.sock -v $pwd/conf.properties:/opt/dms_agent/conf.properties key232323/dms_agent:1.2.0
+```
 
 ### or run by compiling from source
 
-TIPS: Need jdk17+
+TIPS: Need jdk21+, and root user
 
-- cd ~/ws/dms/dms_agent/build/libs
-- java -Djava.library.path=. -cp . -jar dms_agent-1.2.jar
+```bash
+su
+cd ~/ws/dms/dms_agent/build/libs
+nohup java -Xms128m -Xmx256m -Djava.library.path=. -cp . -jar dms_agent-1.2.jar > /dev/null 2>&1 &
+```
 
 # Screenshots
 
