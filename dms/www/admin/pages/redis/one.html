@@ -202,7 +202,21 @@
                             </div>
                             <div class="col-md-4">
                                 <div style="height: 400px;"
-                                     ui-chart-line="{scopeDataName: 'charts.redis_commands_processed_qps', name: 'Commands QPS', title: 'Connected Clients', width: 400}"></div>
+                                     ui-chart-line="{scopeDataName: 'charts.redis_db_keys', name: 'DB Keys', title: 'DB Keys', width: 400}"></div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div style="height: 400px;"
+                                     ui-chart-line="{scopeDataName: 'charts.redis_cpu_usage_percent', name: 'Cpu Used', title: 'Cpu Used', width: 400}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div style="height: 400px;"
+                                     ui-chart-line="{scopeDataName: 'charts.redis_commands_processed_qps', name: 'Commands QPS', title: 'Commands QPS', width: 400}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div style="height: 400px;"
+                                     ui-chart-line="{scopeDataName: 'charts.redis_keyspace_hits_ratio', name: 'Hits ratio', title: 'Hits ratio', width: 400}"></div>
                             </div>
                         </div>
                     </div>

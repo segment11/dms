@@ -336,10 +336,13 @@ h.group('/redis/metric') {
         }.join('|')
 
         def nameList = '''
+redis_db_keys
 redis_memory_used_bytes
-redis_connected_clients
 redis_keyspace_hits_total
 redis_keyspace_misses_total
+redis_connected_clients
+redis_cpu_sys_seconds_total
+redis_cpu_user_seconds_total
 '''.readLines().collect { it.trim() }.findAll { it }
         def namesFilter = nameList.join('|')
 
@@ -379,6 +382,74 @@ redis_keyspace_misses_total
         def qpsQl = 'rate(redis_commands_processed_total{instance=~"' + instancesFilter + '"}[1m])'
         list.addAll queryOneLabel(url, connectTimeout, readTimeout, start, end, step, qpsQl, 'redis_commands_processed_qps')
 
+        // hit ratio
+        def subList = list.findAll { it.metricName == 'redis_keyspace_hits_total' || it.metricName == 'redis_keyspace_misses_total' }
+        subList.groupBy {
+            it.metricInstance
+        }.each { metricInstance, ll ->
+            def map = [:]
+            map.metricName = 'redis_keyspace_hits_ratio'
+            map.metricInstance = metricInstance
+            map.xData = ll[0].xData
+
+            def hitsOne = ll.find { it.metricName == 'redis_keyspace_hits_total' }
+            def missesOne = ll.find { it.metricName == 'redis_keyspace_misses_total' }
+            def hitsData = hitsOne.data as List<Double>
+            def missesData = missesOne.data as List as List<Double>
+
+            def vvData = []
+            hitsData.eachWithIndex { vv, i ->
+                def missesVv = missesData[i]
+                def totalVv = vv + missesVv
+                if (totalVv == 0) {
+                    vvData << 0
+                } else {
+                    vvData << (vv / totalVv).round(2)
+                }
+            }
+            map.data = vvData
+            list << map
+        }
+
+        // cpu usage
+        def cpuSubList = list.findAll { it.metricName == 'redis_cpu_sys_seconds_total' || it.metricName == 'redis_cpu_user_seconds_total' }
+        cpuSubList.groupBy {
+            it.metricInstance
+        }.each { metricInstance, ll ->
+            def map = [:]
+            map.metricName = 'redis_cpu_usage_percent'
+            map.metricInstance = metricInstance
+            map.xData = ll[0].xData
+
+            def sysOne = ll.find { it.metricName == 'redis_cpu_sys_seconds_total' }
+            def userOne = ll.find { it.metricName == 'redis_cpu_user_seconds_total' }
+            def sysData = sysOne.data as List<Double>
+            def userData = userOne.data as List as List<Double>
+
+            def millisData = sysOne.xMillis as List<Long>
+
+            def vvData = []
+            sysData.eachWithIndex { vv, i ->
+                if (i > 0) {
+                    def totalVv = vv + userData[i]
+                    def prevTotalVv = sysData[i - 1] + userData[i - 1]
+                    def diffVv = totalVv - prevTotalVv
+                    def diffSeconds = (millisData[i] - millisData[i - 1]) / 1000
+                    def cpuUsage = (diffVv / diffSeconds).round(4)
+                    vvData << cpuUsage
+                } else {
+                    vvData << 0
+                }
+            }
+
+            // set first cpu usage same as second
+            if (vvData.size() > 1) {
+                vvData[0] = vvData[1]
+            }
+            map.data = vvData
+            list << map
+        }
+
         [map: list.groupBy { it.metricName }]
     }
 }
@@ -393,6 +464,10 @@ static Map resultItemToMap(JSONObject jo, String givenMetricName = null) {
 
     [metricName    : metricName,
      metricInstance: metricInstance,
+     xMillis       : values.collect { value ->
+         def ll = value as List
+         ll[0] as double * 1000
+     },
      xData         : values.collect { value ->
          def ll = value as List
          def millis = ll[0] as double * 1000
