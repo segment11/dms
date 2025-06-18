@@ -1,18 +1,27 @@
 package ctrl.redis
 
+import com.alibaba.fastjson.JSON
+import com.alibaba.fastjson.JSONObject
+import com.github.kevinsawicki.http.HttpRequest
 import model.AppDTO
 import model.NamespaceDTO
+import model.RmServiceDTO
 import model.json.AppConf
+import model.json.ExtendParams
 import model.json.KVPair
 import model.json.PortMapping
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
 import plugin.BasePlugin
 import plugin.demo2.*
+import redis.clients.jedis.HostAndPort
 import rm.RedisManager
 import rm.RmJobExecutor
 import server.InMemoryAllContainerManager
+import server.InMemoryCacheSupport
 import transfer.ContainerInfo
+
+import java.text.SimpleDateFormat
 
 def h = ChainHandler.instance
 
@@ -64,6 +73,8 @@ h.group('/redis/metric') {
         prometheusApp.name = prometheusAppName
         // config file need reload
         prometheusApp.status = AppDTO.Status.auto
+        prometheusApp.extendParams = new ExtendParams()
+        prometheusApp.extendParams.put('for_redis_manager', '1')
         def prometheusAppId = InitToolPlugin.addAppIfNotExists(prometheusApp)
         log.warn 'created prometheus app {}', prometheusAppId
         def prometheusJobId = RmJobExecutor.instance.runCreatingAppJob(prometheusApp)
@@ -247,4 +258,171 @@ h.group('/redis/metric') {
 
         [flag: true, nodeExporterJobId: nodeExporterJobId]
     }
+
+    h.get('/query') { req, resp ->
+        def idStr = req.param('id')
+        assert idStr
+        def id = idStr as int
+        def timeRange = req.param('timeRange') ?: '1h'
+        Map<String, String> steps = [:]
+        steps['5m'] = '15s'
+        steps['1h'] = '1m'
+        steps['3h'] = '5m'
+        steps['1d'] = '20m'
+        steps['7d'] = '1h'
+        steps['30d'] = '6h'
+        def step = steps[timeRange]
+        if (!step) {
+            resp.halt(400, 'time range not support')
+        }
+
+        // js: (new Date().time / 1000) as int
+        def start = req.param('start')
+        def end = req.param('end')
+
+        if (!start && !end) {
+            // now
+            def endSeconds = (System.currentTimeMillis() / 1000).intValue()
+            int fromMinute
+            if (timeRange.endsWith('m')) {
+                fromMinute = timeRange[0..-2] as int
+            } else if (timeRange.endsWith('h')) {
+                fromMinute = timeRange[0..-2] as int * 60
+            } else if (timeRange.endsWith('d')) {
+                fromMinute = timeRange[0..-2] as int * 60 * 24
+            } else {
+                fromMinute = 60 * 24
+//                resp.halt(400, 'time range not support')
+            }
+            start = (endSeconds - fromMinute * 60).toString()
+            end = endSeconds.toString()
+        }
+
+        def prometheusApp = InMemoryCacheSupport.instance.appList.find { app ->
+            app.conf.image == 'prometheus' && app.extendParams && app.extendParams.get('for_redis_manager') == '1'
+        }
+        if (!prometheusApp) {
+            resp.halt(404, 'prometheus app not found, need "Init Exporters / Prometheus" first')
+        }
+
+        def instance = InMemoryAllContainerManager.instance
+        def prometheusContainerList = instance.getRunningContainerList(prometheusApp.clusterId, prometheusApp.id)
+        if (!prometheusContainerList) {
+            resp.halt(409, 'prometheus no running instances')
+        }
+
+        def prometheusX = prometheusContainerList[0]
+        def nodeIp = prometheusX.nodeIp
+        def port = prometheusX.publicPort(9090)
+
+        final String uriPrefix = '/api/v1/query_range'
+        def url = "http://${nodeIp}:${port}${uriPrefix}".toString()
+
+        def one = new RmServiceDTO(id: id).one()
+        if (!one) {
+            resp.halt(404, 'service not found')
+        }
+
+        def runningContainerList = one.runningContainerList()
+        if (!runningContainerList) {
+            resp.halt(409, 'no running instances')
+        }
+
+        List<HostAndPort> hostAndPortList = runningContainerList.collect { x ->
+            new HostAndPort(x.nodeIp, one.listenPort(x))
+        }
+        def instancesFilter = hostAndPortList.collect {
+            "redis://${it.host}:${it.port}"
+        }.join('|')
+
+        def nameList = '''
+redis_memory_used_bytes
+redis_connected_clients
+redis_keyspace_hits_total
+redis_keyspace_misses_total
+'''.readLines().collect { it.trim() }.findAll { it }
+        def namesFilter = nameList.join('|')
+
+        def queryQl = '{__name__=~"' + namesFilter + '", instance=~"' + instancesFilter + '"}'
+
+        final int connectTimeout = 500
+        final int readTimeout = 2000
+
+        def body = HttpRequest.post(url).form([query: queryQl, start: start, end: end, step: step]).
+                connectTimeout(connectTimeout).readTimeout(readTimeout).body()
+
+        def obj = JSON.parseObject(body)
+        if ('success' != obj.getString('status')) {
+            log.warn 'query failed, queryQL: {}, body: {}', queryQl, body
+            resp.halt(500, 'query failed')
+        }
+
+        List<Map> list = []
+        def result = obj.getJSONObject('data').getJSONArray('result')
+        for (item in result) {
+            /*
+    {
+        "metric" : {
+           "__name__" : "redis_memory_used_bytes",
+           "job" : "***",
+           "instance" : "localhost:9090",
+        },
+        "values" : [[
+           1435781430.781, "1024"
+        ]]
+     }
+    */
+            def jo = item as JSONObject
+            list << resultItemToMap(jo)
+        }
+
+        def qpsQl = 'rate(redis_commands_processed_total{instance=~"' + instancesFilter + '"}[1m])'
+        list.addAll queryOneLabel(url, connectTimeout, readTimeout, start, end, step, qpsQl, 'redis_commands_processed_qps')
+
+        [map: list.groupBy { it.metricName }]
+    }
+}
+
+static Map resultItemToMap(JSONObject jo, String givenMetricName = null) {
+    def sf = new SimpleDateFormat('yyyy-MM-dd HH:mm:ss')
+
+    def metric = jo.getJSONObject('metric')
+    def metricName = givenMetricName ?: metric.getString('__name__')
+    def metricInstance = metric.getString('instance')
+    def values = jo.getJSONArray('values')
+
+    [metricName    : metricName,
+     metricInstance: metricInstance,
+     xData         : values.collect { value ->
+         def ll = value as List
+         def millis = ll[0] as double * 1000
+         sf.format(new Date(millis as long))
+     },
+     data          : values.collect { value ->
+         def ll = value as List
+         (ll[1] as double).round(2)
+     }]
+}
+
+static List<Map> queryOneLabel(String url, int connectTimeout, int readTimeout, String start, String end, String step,
+                               String queryQl, String givenMetricName = null) {
+    def log = LoggerFactory.getLogger(MetricCtrl.class)
+
+    def body = HttpRequest.post(url).form([query: queryQl, start: start, end: end, step: step]).
+            connectTimeout(connectTimeout).readTimeout(readTimeout).body()
+
+    def obj = JSON.parseObject(body)
+    if ('success' != obj.getString('status')) {
+        log.warn 'query failed, query: {}, body: {}', queryQl, body
+        return []
+    }
+
+
+    List<Map> list = []
+    def result = obj.getJSONObject('data').getJSONArray('result')
+    for (item in result) {
+        def jo = item as JSONObject
+        list << resultItemToMap(jo, givenMetricName)
+    }
+    list
 }

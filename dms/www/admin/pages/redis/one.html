@@ -125,13 +125,13 @@
             </div>
 
             <div class="widget-box">
-                <div class="widget-title">
-                    <span class="icon"><i class="icon-list"></i></span>
-                    <h5>Instances</h5>
-                </div>
+
                 <div class="widget-content">
-                    <div class="row">
-                        <h5>Nodes</h5>
+                    <ul class="nav nav-tabs" ui-tabs="{beforeFn: 'changeTab'}">
+                        <li class="active"><a>Instance List</a></li>
+                        <li><a>Metrics</a></li>
+                    </ul>
+                    <div class="tabs active">
                         <table class="table table-bordered table-striped m_top6">
                             <tr>
                                 <th width="10%">Shard Index</th>
@@ -177,6 +177,34 @@
                                 </td>
                             </tr>
                         </table>
+                    </div>
+
+                    <div class="tabs">
+                        <div class="form-group">
+                            <label>time range: </label>
+                            <select ng-model="tmp.timeRange" ng-options="a for a in tmp.timeRangeList"
+                                    style="width: 200px;" ng-change="queryMetrics()">
+                            </select>
+                            <select ng-model="tmp.metricInstance" ng-options="a for a in tmp.metricInstanceList"
+                                    style="width: 200px;" ng-change="changeInstanceMetrics()">
+                            </select>
+                            <button class="btn" ng-click="queryMetrics()">Refresh</button>
+                            <label>Metrics Last Refreshed: {{tmp.metricsRefreshTime | date:'yyyy/MM/dd HH:mm:ss'}}</label>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div style="height: 400px;"
+                                     ui-chart-line="{scopeDataName: 'charts.redis_memory_used_bytes', name: 'Memory Used', title: 'Memory Used', width: 400}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div style="height: 400px;"
+                                     ui-chart-line="{scopeDataName: 'charts.redis_connected_clients', name: 'Connected Clients', title: 'Connected Clients', width: 400}"></div>
+                            </div>
+                            <div class="col-md-4">
+                                <div style="height: 400px;"
+                                     ui-chart-line="{scopeDataName: 'charts.redis_commands_processed_qps', name: 'Commands QPS', title: 'Connected Clients', width: 400}"></div>
+                            </div>
+                        </div>
                     </div>
 
                 </div>

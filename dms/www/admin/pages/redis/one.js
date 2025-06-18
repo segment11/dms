@@ -1,7 +1,13 @@
 var md = angular.module('module_redis/one', ['base']);
 md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog) {
-    $scope.tmp = {};
+    $scope.tmp = {
+        timeRangeList: ['5m', '1h', '3h', '1d', '7d', '30d'],
+        timeRange: '5m',
+        metricInstanceList: [],
+        metricInstance: ''
+    };
     $scope.ctrl = {};
+    $scope.charts = {};
 
     var Page = window.Page;
     var params = Page.params();
@@ -32,6 +38,21 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog) {
             $scope.checkResult = data.checkResult;
             $scope.ext = data.ext;
             $scope.nodes = data.nodes;
+
+            $scope.tmp.metricInstanceList = [];
+            if (data.nodes) {
+                _.each(data.nodes, function (n) {
+                    $scope.tmp.metricInstanceList.push('redis://' + n.ip + ':' + n.port);
+                });
+                if (!$scope.tmp.metricInstance) {
+                    $scope.tmp.metricInstance = $scope.tmp.metricInstanceList[0];
+                } else {
+                    // not in instance list
+                    if (!_.contains($scope.tmp.metricInstanceList, $scope.tmp.metricInstance)) {
+                        $scope.tmp.metricInstance = $scope.tmp.metricInstanceList[0];
+                    }
+                }
+            }
 
             $scope.tmp.refreshTime = new Date();
         });
@@ -211,5 +232,46 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog) {
                 }
             });
         });
+    };
+
+    $scope.changeTab = function (index, triggerIndex) {
+        if (index == 1) {
+            $scope.queryMetrics();
+        }
+        return true;
+    };
+
+    var metricsMap = {};
+
+    $scope.queryMetrics = function () {
+        $http.get('/dms/redis/metric/query', {
+            params: {
+                id: id,
+                timeRange: $scope.tmp.timeRange,
+            }
+        }).success(function (data) {
+            $scope.tmp.metricsRefreshTime = new Date();
+            if (data.map) {
+                metricsMap = data.map;
+                for (metricName in data.map) {
+                    if ($scope.tmp.metricInstance) {
+                        $scope.charts[metricName] = _.find(data.map[metricName], function (it) {
+                            return it.metricInstance == $scope.tmp.metricInstance;
+                        });
+                    } else {
+                        $scope.charts[metricName] = data.map[metricName][0];
+                        $scope.tmp.metricInstance = data.map[metricName][0].metricInstance;
+                    }
+                }
+            }
+        });
+    };
+
+    $scope.changeInstanceMetrics = function () {
+        for (metricName in metricsMap) {
+            $scope.charts[metricName] = _.find(metricsMap[metricName], function (it) {
+                return it.metricInstance == $scope.tmp.metricInstance;
+            });
+        }
     };
 });
