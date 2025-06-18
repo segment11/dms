@@ -20,7 +20,9 @@ h.group('/redis/config') {
         }
 
         def one = new RmServiceDTO(id: id).one()
-        assert one
+        if (!one) {
+            resp.halt(404, 'service not found')
+        }
 
         def runningContainerList = one.runningContainerList()
         runningContainerList.each { x ->

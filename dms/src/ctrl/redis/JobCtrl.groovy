@@ -50,7 +50,9 @@ h.group('/redis/job') {
         def s = RmServiceDTO.Status.valueOf(status)
 
         def one = new RmServiceDTO(id: id).one()
-        assert one
+        if (!one) {
+            resp.halt(404, 'service not found')
+        }
 
         new RmServiceDTO(id: id, status: s).update()
         [flag: true]
@@ -62,7 +64,9 @@ h.group('/redis/job') {
         def id = idStr as int
 
         def one = new RmServiceDTO(id: id).one()
-        assert one
+        if (!one) {
+            resp.halt(404, 'service not found')
+        }
 
         assert one.mode == RmServiceDTO.Mode.sentinel
 
@@ -92,7 +96,9 @@ h.group('/redis/job') {
         def id = idStr as int
 
         def one = new RmServiceDTO(id: id).one()
-        assert one
+        if (!one) {
+            resp.halt(404, 'service not found')
+        }
 
         assert one.mode == RmServiceDTO.Mode.cluster
 
@@ -135,7 +141,9 @@ h.group('/redis/job') {
         def shardIndexList = shardIndexes.split(',').collect { it as int }
 
         def one = new RmServiceDTO(id: id).one()
-        assert one
+        if (!one) {
+            resp.halt(404, 'service not found')
+        }
 
         assert one.mode == RmServiceDTO.Mode.cluster
 
@@ -158,7 +166,9 @@ h.group('/redis/job') {
         def toShardIndex = toShardIndexStr as int
 
         def one = new RmServiceDTO(id: id).one()
-        assert one
+        if (!one) {
+            resp.halt(404, 'service not found')
+        }
 
         assert one.mode == RmServiceDTO.Mode.cluster
 
