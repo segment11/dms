@@ -159,7 +159,7 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
         } else if (mode == Mode.cluster) {
             return checkClusterNodesAndSlots()
         } else {
-            def runningContainerList = this.runningContainerList()
+            def runningContainerList = runningContainerList()
             if (runningContainerList.size() == 0) {
                 return JobResult.fail('no running container')
             } else {
@@ -179,7 +179,7 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
         assert mode == Mode.sentinel
         assert primaryReplicasDetail
 
-        def runningContainerList = this.runningContainerList()
+        def runningContainerList = runningContainerList()
         if (!primaryReplicasDetail.nodes) {
             runningContainerList.each { x ->
                 def node = new PrimaryReplicasDetail.Node()
@@ -250,6 +250,28 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
         JobResult.ok('primary and replica nodes role ok')
     }
 
+    JobResult checkClusterInfoState() {
+        assert mode == Mode.cluster
+        assert clusterSlotsDetail && clusterSlotsDetail.shards
+
+        if (!clusterSlotsDetail.shards.every { it.nodes.size() == replicas }) {
+            return JobResult.fail('nodes number not equal to replicas')
+        }
+
+        for (shard in clusterSlotsDetail.shards) {
+            for (node in shard.nodes) {
+                def lines = connectAndExe(node) { jedis ->
+                    jedis.clusterInfo()
+                }
+                def isStateOk = lines && lines.contains('cluster_state:ok')
+                if (!isStateOk) {
+                    return JobResult.fail('cluster state not ok')
+                }
+            }
+        }
+        JobResult.ok('cluster state ok')
+    }
+
     JobResult checkClusterNodesAndSlots() {
         assert mode == Mode.cluster
         assert clusterSlotsDetail && clusterSlotsDetail.shards
@@ -303,7 +325,6 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
                 // check slot range
                 if (cn.isPrimary) {
-                    def localShard = clusterSlotsDetail.findShardByIpPort(node.ip, node.port)
                     def multiSlotRange = shard.multiSlotRange
                     if (!cn.multiSlotRange?.list) {
                         // not null

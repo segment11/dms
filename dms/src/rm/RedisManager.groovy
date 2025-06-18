@@ -105,20 +105,23 @@ class RedisManager {
             def serverClusterModeCount = 0
             def serverClusterModeStateOkCount = 0
             for (one in serviceList) {
-                def jobResult = one.checkNodes()
                 if (one.mode == RmServiceDTO.Mode.standalone) {
                     serviceSentinelStandaloneCount++
-                    if (jobResult) {
+                    def jobResult = one.checkNodes()
+                    if (jobResult.isOk) {
                         serviceSentinelStandaloneStateOkCount++
                     }
                 } else if (one.mode == RmServiceDTO.Mode.sentinel) {
                     serviceSentinelModeCount++
-                    if (jobResult) {
+                    serviceSentinelStandaloneCount++
+                    def jobResult = one.checkPrimaryReplicaNodes()
+                    if (jobResult.isOk) {
                         serviceSentinelModeStateOkCount++
                     }
                 } else {
                     serverClusterModeCount++
-                    if (jobResult) {
+                    def jobResult = one.checkClusterInfoState()
+                    if (jobResult.isOk) {
                         serverClusterModeStateOkCount++
                     }
                 }
