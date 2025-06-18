@@ -121,17 +121,9 @@ test {
 jar {
     manifest {
         attributes "Main-Class": 'RunServer'
+        attributes "Class-Path": '. lib/' + configurations.runtimeClasspath.collect { it.name }.join(' lib/')
     }
-    from {
-        configurations.runtimeClasspath.collect {
-            it.isDirectory() || it.name.endsWith('.so') || it.name.endsWith('.dll') ? it : zipTree(it)
-        }
-    } {
-        exclude "META-INF/*.SF"
-        exclude "META-INF/*.DSA"
-        exclude "META-INF/*.RSA"
-        exclude "conf.properties"
-    }
+    exclude "conf.properties"
     zip64 true
 }
 
@@ -160,6 +152,11 @@ tasks.register('copyPluginsResources', Copy) {
     into "$buildDir/libs/plugins_resources"
 }
 
+tasks.register('copyDependencies', Copy) {
+    from configurations.runtimeClasspath
+    into 'build/libs/lib'
+}
+
 tasks.register('buildToRun', Copy) {
     from 'src/conf.properties', 'src/log4j2.xml', 'init_h2.sql'
     into "$buildDir/libs"
@@ -176,6 +173,7 @@ tasks.register('clearLibDir', Delete) {
     file(libDir).deleteDir()
 }
 
+jar.dependsOn copyDependencies
 buildToRun.dependsOn copyAgentScript, copyAgentTar, copyWww, copyPlugins, copyPluginsResources, jar
 
 tasks.withType(Jar).configureEach {

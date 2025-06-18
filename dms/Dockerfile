@@ -1,13 +1,7 @@
-# docker run -d --name dms_server --net=host -v /opt/log:/opt/log -v /data/dms:/data/dms -v /opt/dms/conf.properties:/opt/dms/conf.properties -e ADMIN_PASSWORD=123456 -e LOCAL_IP_FILTER_PRE=192. key232323/dms_server:1.2.0
+# docker run -d --name dms_server --net=host -v /opt/log:/opt/log -v /data/dms:/data/dms -v /opt/dms/conf.properties:/opt/dms/conf.properties -e ADMIN_PASSWORD=123456 -e LOCAL_IP_FILTER_PRE=192. key232323/dms_server:1.2.1
 # nohup java -Xms128m -Xmx256m -Djava.library.path=. -cp . -jar dms_agent-1.2.jar > /dev/null 2>&1 &
-FROM eclipse-temurin:17-jre-alpine
-# docker build -t key232323/dms .
-
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
-RUN apk update && apk upgrade
-
-RUN apk --no-cache add bash busybox busybox-extras curl
-RUN rm -rf /tmp/* /var/cache/apk/*
+FROM docker.1ms.run/library/eclipse-temurin:21-jre
+# docker build -t key232323/dms_server:1.2.1 .
 
 COPY build/libs /opt/dms
 WORKDIR /opt/dms
