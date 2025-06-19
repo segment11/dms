@@ -16,6 +16,8 @@ class RmBackupLogDTO extends BaseRecord<RmBackupLogDTO> {
 
     String name
 
+    String dateTimeStr
+
     Integer serviceId
 
     Integer shardIndex

@@ -34,4 +34,6 @@ class CreateContainerConf {
 
     String imageWithTag
 
+    // for before start check
+    String containerId
 }

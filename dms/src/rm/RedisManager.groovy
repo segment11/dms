@@ -8,6 +8,8 @@ import model.DynConfigDTO
 import model.RmSentinelServiceDTO
 import model.RmServiceDTO
 import plugin.BasePlugin
+import plugin.PluginManager
+import plugin.redis.RedisManagerBackupPlugin
 import server.AgentCaller
 import server.InMemoryAllContainerManager
 
@@ -68,6 +70,11 @@ class RedisManager {
 
     static int preferRegistryId() {
         BasePlugin.addRegistryIfNotExist('docker.1ms.run', 'https://docker.1ms.run')
+    }
+
+    static void init() {
+        initMetricCollector()
+        PluginManager.instance.add(new RedisManagerBackupPlugin())
     }
 
     // metrics

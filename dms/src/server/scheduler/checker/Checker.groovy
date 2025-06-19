@@ -18,8 +18,12 @@ interface Checker {
         null
     }
 
+    default boolean canUseTo(String group, String image) {
+        false
+    }
+
     @CompileStatic
     static enum Type {
-        before, after, init
+        before, beforeStart, after, init
     }
 }

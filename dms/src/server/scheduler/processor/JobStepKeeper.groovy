@@ -10,7 +10,7 @@ import model.AppJobLogDTO
 class JobStepKeeper {
     @CompileStatic
     static enum Step {
-        chooseNode, pullImage, preCheck, createContainer, initContainer, startContainer,
+        chooseNode, pullImage, beforeCheck, createContainer, beforeStartCheck, initContainer, startContainer,
         copyDirs, updateTpl, startCmd, afterCmd, wrapContainerInfo,
         updateDns, afterCheck, addToGateway, stopAndRemoveContainer, removeFromGateway, done, yourStep
     }

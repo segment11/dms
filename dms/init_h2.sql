@@ -365,6 +365,7 @@ create table rm_backup_log
 (
     id                 int auto_increment primary key,
     name               varchar(50),
+    date_time_str      varchar(20),
     service_id         int,
     shard_index        int,
     replica_index      int,

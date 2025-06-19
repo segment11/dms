@@ -119,7 +119,8 @@ class BackupManager extends IntervalJob {
                 try {
                     AgentCaller.instance.doSshCopy(kp, nodeIp, hostRdbFilePath, backupFilePath)
                 } catch (Exception e) {
-                    log.error 'scp from {} to {} error, host file: {}, dest file: {}', nodeIp, targetNodeIp, hostRdbFilePath, backupFilePath, e
+                    log.error 'scp from {} to {} error, from file: {}, to file: {}', nodeIp, targetNodeIp, hostRdbFilePath, backupFilePath, e
+                    // any one failed, return false
                     return false
                 }
             }
@@ -133,6 +134,60 @@ class BackupManager extends IntervalJob {
         } else {
             log.warn 'unknown backup target type: {}', backupTemplate.targetType
             return false
+        }
+    }
+
+    // for restore
+    static boolean doDownload(RmBackupTemplateDTO backupTemplate, String nodeIp, String hostRdbFilePath, String backupFilePath, long backupFileSavedMillis) {
+        if (backupTemplate.targetType == RmBackupTemplateDTO.TargetType.scp) {
+            assert backupTemplate.targetNodeIps != null
+            for (targetNodeIp in backupTemplate.targetNodeIps) {
+                def kp = new NodeKeyPairDTO(ip: targetNodeIp).one()
+                if (kp == null) {
+                    log.warn 'node key pair not found, ip: {}', targetNodeIp
+                    continue
+                }
+                try {
+                    AgentCaller.instance.doSshCopyFrom(kp, nodeIp, hostRdbFilePath, backupFilePath, backupFileSavedMillis)
+                    // any one success, return true
+                    return true
+                } catch (Exception e) {
+                    log.error 'scp from {} to {} error, from file: {}, to file: {}', targetNodeIp, nodeIp, backupFilePath, hostRdbFilePath, e
+                }
+            }
+            return false
+        } else if (backupTemplate.targetType == RmBackupTemplateDTO.TargetType.nfs) {
+            // todo
+            return true
+        } else if (backupTemplate.targetType == RmBackupTemplateDTO.TargetType.s3) {
+            // todo
+            return true
+        } else {
+            log.warn 'unknown backup target type: {}', backupTemplate.targetType
+            return false
+        }
+    }
+
+    @CompileStatic
+    record BackupUuid(String name, String dateTimeStr) {
+    }
+
+
+    static BackupUuid generateUuid(RmServiceDTO one, int shardIndex, Date givenDate, BackupPolicy backupPolicy) {
+        final String namePrefix = 'rm-service-'
+
+        def d = givenDate ?: new Date()
+        def dateTimeStr = backupPolicy.dailyOrHourly == 'daily' ?
+                d.format('yyyyMMdd') :
+                d.format('yyyyMMddHH')
+        def namePrefixService = namePrefix + one.id + '-' + dateTimeStr + '-'
+
+        if (one.mode == RmServiceDTO.Mode.standalone) {
+            return new BackupUuid(namePrefixService + 'standalone', dateTimeStr)
+        } else if (one.mode == RmServiceDTO.Mode.sentinel) {
+            return new BackupUuid(namePrefixService + 'from-slave', dateTimeStr)
+        } else {
+            return new BackupUuid(namePrefixService + 'shard-' + shardIndex, dateTimeStr)
         }
     }
 
@@ -164,16 +219,11 @@ class BackupManager extends IntervalJob {
                 continue
             }
 
-            def dateTimeStr = backupPolicy.dailyOrHourly == 'daily' ?
-                    new Date().format('yyyyMMdd') :
-                    new Date().format('yyyyMMddHH')
-
-            def nameThisService = namePrefix + one.id + '-' + dateTimeStr + '-'
             if (one.mode == RmServiceDTO.Mode.standalone) {
-                def name = nameThisService + 'standalone'
-                def checkResult = isNeedDoBackup(one.id, name)
+                def uuid = generateUuid(one, 0, null, backupPolicy)
+                def checkResult = isNeedDoBackup(one.id, uuid.name)
                 if (!checkResult.isNeedDoBackup) {
-                    log.debug 'no need to backup, name: {}', name
+                    log.debug 'no need to backup, name: {}', uuid.name
                     continue
                 }
 
@@ -184,9 +234,10 @@ class BackupManager extends IntervalJob {
                 }
                 def x = runningContainerList[0]
 
-                new RmBackupLogDTO(name: name, serviceId: one.id).deleteAll()
+                new RmBackupLogDTO(name: uuid.name, serviceId: one.id).deleteAll()
                 def backupLogId = new RmBackupLogDTO(
-                        name: name,
+                        name: uuid.name,
+                        dateTimeStr: uuid.dateTimeStr,
                         serviceId: one.id,
                         shardIndex: 0,
                         replicaIndex: 0,
@@ -195,13 +246,13 @@ class BackupManager extends IntervalJob {
                         createdDate: new Date()).add()
 
                 RmJobExecutor.instance.execute {
-                    doBackup(one, backupPolicy, backupLogId, dateTimeStr, 0, x, checkResult)
+                    doBackup(one, backupPolicy, backupLogId, uuid.dateTimeStr, 0, x, checkResult)
                 }
             } else if (one.mode == RmServiceDTO.Mode.sentinel) {
-                def name = nameThisService + 'from-slave'
-                def checkResult = isNeedDoBackup(one.id, name)
+                def uuid = generateUuid(one, 0, null, backupPolicy)
+                def checkResult = isNeedDoBackup(one.id, uuid.name)
                 if (!checkResult.isNeedDoBackup) {
-                    log.debug 'no need to backup, name: {}', name
+                    log.debug 'no need to backup, name: {}', uuid.name
                     continue
                 }
 
@@ -221,9 +272,10 @@ class BackupManager extends IntervalJob {
                     continue
                 }
 
-                new RmBackupLogDTO(name: name, serviceId: one.id).deleteAll()
+                new RmBackupLogDTO(name: uuid.name, serviceId: one.id).deleteAll()
                 def backupLogId = new RmBackupLogDTO(
-                        name: name,
+                        name: uuid.name,
+                        dateTimeStr: uuid.dateTimeStr,
                         serviceId: one.id,
                         shardIndex: 0,
                         replicaIndex: slaveX.instanceIndex(),
@@ -232,7 +284,7 @@ class BackupManager extends IntervalJob {
                         createdDate: new Date()).add()
 
                 RmJobExecutor.instance.execute {
-                    doBackup(one, backupPolicy, backupLogId, dateTimeStr, 0, slaveX, checkResult)
+                    doBackup(one, backupPolicy, backupLogId, uuid.dateTimeStr, 0, slaveX, checkResult)
                 }
             } else {
                 def runningContainerList = one.runningContainerList()
@@ -248,10 +300,10 @@ class BackupManager extends IntervalJob {
                         continue
                     }
 
-                    def name = nameThisService + 'shard-' + shard.shardIndex
-                    def checkResult = isNeedDoBackup(one.id, name)
+                    def uuid = generateUuid(one, shard.shardIndex, null, backupPolicy)
+                    def checkResult = isNeedDoBackup(one.id, uuid.name)
                     if (!checkResult.isNeedDoBackup) {
-                        log.debug 'no need to backup, name: {}', name
+                        log.debug 'no need to backup, name: {}', uuid.name
                         continue
                     }
 
@@ -263,9 +315,10 @@ class BackupManager extends IntervalJob {
                         continue
                     }
 
-                    new RmBackupLogDTO(name: name, serviceId: one.id).deleteAll()
+                    new RmBackupLogDTO(name: uuid.name, serviceId: one.id).deleteAll()
                     def backupLogId = new RmBackupLogDTO(
-                            name: name,
+                            name: uuid.name,
+                            dateTimeStr: uuid.dateTimeStr,
                             serviceId: one.id,
                             shardIndex: 0,
                             replicaIndex: slaveX.instanceIndex(),
@@ -274,7 +327,7 @@ class BackupManager extends IntervalJob {
                             createdDate: new Date()).add()
 
                     RmJobExecutor.instance.execute {
-                        doBackup(one, backupPolicy, backupLogId, dateTimeStr, shard.shardIndex, slaveX, checkResult)
+                        doBackup(one, backupPolicy, backupLogId, uuid.dateTimeStr, shard.shardIndex, slaveX, checkResult)
                     }
                 }
             }

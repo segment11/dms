@@ -133,7 +133,7 @@ DefaultExports.initialize()
 def metricsServer = new HTTPServer('0.0.0.0', Const.METRICS_HTTP_LISTEN_PORT, true)
 log.info 'metrics server started - http://localhost:{}', Const.METRICS_HTTP_LISTEN_PORT
 
-RedisManager.initMetricCollector()
+RedisManager.init()
 
 BackupManager.instance.start()
 

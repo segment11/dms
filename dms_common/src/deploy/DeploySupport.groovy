@@ -81,6 +81,10 @@ class DeploySupport {
         send(RemoteInfo.fromKeyPair(kp), localFilePath, remoteFilePath)
     }
 
+    void receive(NodeKeyPairDTO kp, String remoteFilePath, String localFilePath) {
+        receive(RemoteInfo.fromKeyPair(kp), remoteFilePath, localFilePath)
+    }
+
     @VisibleForTesting
     static Session connect(RemoteInfo remoteInfo) {
         def connectTimeoutMillis = Conf.instance.getInt('ssh.sessionConnectTimeoutMillis', 2000)
@@ -137,6 +141,43 @@ class DeploySupport {
 
                 def costT = System.currentTimeMillis() - beginT
                 def message = "scp cost ${costT}ms to ${remoteFilePath}".toString()
+                if (eventHandler) {
+                    def event = Event.builder().type(Event.Type.cluster).reason('scp').
+                            result(remoteInfo.host).build().
+                            log(message)
+                    eventHandler.handle(event)
+                } else {
+                    log.info message
+                }
+            } finally {
+                if (channel) {
+                    channel.quit()
+                    channel.disconnect()
+                }
+            }
+        } finally {
+            if (session) {
+                session.disconnect()
+            }
+        }
+    }
+
+    void receive(RemoteInfo remoteInfo, String remoteFilePath, String localFilePath) {
+        Session session
+        try {
+            session = connect(remoteInfo)
+
+            ChannelSftp channel
+            try {
+                channel = session.openChannel('sftp') as ChannelSftp
+                channel.connect()
+                log.info 'sftp channel connected {}', remoteInfo.host
+
+                long beginT = System.currentTimeMillis()
+                channel.get(remoteFilePath, localFilePath, null)
+
+                def costT = System.currentTimeMillis() - beginT
+                def message = "scp cost ${costT}ms to ${localFilePath}".toString()
                 if (eventHandler) {
                     def event = Event.builder().type(Event.Type.cluster).reason('scp').
                             result(remoteInfo.host).build().

@@ -13,6 +13,7 @@ class BackupPolicy implements JSONFiled {
 
     Boolean isBackupWindowSpecify
 
+    // in days
     Integer retentionPeriod
 
     String startTime

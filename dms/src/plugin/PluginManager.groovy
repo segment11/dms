@@ -20,7 +20,7 @@ class PluginManager {
 
     List<Plugin> pluginList = []
 
-    private synchronized void add(Plugin plugin) {
+    synchronized void add(Plugin plugin) {
         def name = plugin.name()
         def old = pluginList.find { it.name() == name }
         if (old) {

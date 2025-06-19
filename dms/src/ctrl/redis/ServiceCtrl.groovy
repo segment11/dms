@@ -370,6 +370,10 @@ h.group('/redis/service') {
             def id = one.add()
             one.id = id
 
+            app.extendParams = new ExtendParams()
+            app.extendParams.put('rmServiceId', id.toString())
+            new AppDTO(id: app.id, extendParams: app.extendParams).update()
+
             def rmJob = new RmJob()
             rmJob.rmService = one
             rmJob.type = RmJobTypes.BASE_CREATE
@@ -426,6 +430,12 @@ h.group('/redis/service') {
 
         def id = one.add()
         one.id = id
+
+        for (appShard in appListByShard) {
+            appShard.extendParams = new ExtendParams()
+            appShard.extendParams.put('rmServiceId', id.toString())
+            new AppDTO(id: appShard.id, extendParams: appShard.extendParams).update()
+        }
 
         def rmJob = new RmJob()
         rmJob.rmService = one

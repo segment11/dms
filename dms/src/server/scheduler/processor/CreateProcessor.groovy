@@ -381,63 +381,34 @@ class CreateProcessor implements GuardianProcessor {
         createContainerConf
     }
 
-    private static boolean beforeCheck(CreateContainerConf c, JobStepKeeper keeper) {
+    private static boolean filterChecker(CreateContainerConf c, JobStepKeeper keeper, Checker.Type type, JobStepKeeper.Step step) {
+        def tips = type.name() + ' check'
         String imageName = c.conf.imageName()
 
-        def checkerList = CheckerHolder.instance.checkerList.findAll { it.imageName() == imageName }
-        def beforeCheckList = checkerList.findAll { it.type() == Checker.Type.before }
-
-        if (beforeCheckList && !c.conf.isParallel) {
-            try {
-                for (checker in beforeCheckList) {
-                    def isCheckOk = checker.check(c, keeper)
-                    if (!isCheckOk) {
-                        Event.builder().type(Event.Type.app).reason('before create check fail').
-                                result(c.appId).build().
-                                log('container run before check fail - ' +
-                                        c.instanceIndex + ' - when check ' + checker.name()).toDto().add()
-                        return false
-                    }
-                    keeper.next(JobStepKeeper.Step.preCheck, 'before create container check', checker.name())
-                }
-                return true
-            } catch (Exception e) {
-                log.error 'before check error - ' + c.appId + ' - ' + c.instanceIndex, e
-                return false
-            }
-        } else {
-            keeper.next(JobStepKeeper.Step.preCheck, 'before create container check skip')
-            return true
+        def checkerList = CheckerHolder.instance.checkerList.findAll {
+            it.imageName() == imageName || it.canUseTo(c.conf.group, c.conf.image)
         }
-    }
-
-    private static boolean afterCheck(CreateContainerConf c, JobStepKeeper keeper) {
-        String imageName = c.conf.imageName()
-
-        def checkerList = CheckerHolder.instance.checkerList.findAll { it.imageName() == imageName }
-        def afterCheckList = checkerList.findAll { it.type() == Checker.Type.after }
-
-        // need wait if container start but service will start last long time
-        if (afterCheckList && !c.conf.isParallel) {
+        def checkList = checkerList.findAll { it.type() == type }
+        if (checkList && !c.conf.isParallel) {
             try {
-                for (checker in afterCheckList) {
+                for (checker in checkList) {
                     def isCheckOk = checker.check(c, keeper)
                     if (!isCheckOk) {
-                        Event.builder().type(Event.Type.app).reason('after start check fail').
+                        Event.builder().type(Event.Type.app).reason(tips + ' fail').
                                 result(c.appId).build().
-                                log('container run after check fail - ' +
+                                log('container run ' + tips + ' fail - ' +
                                         c.instanceIndex + ' - when check ' + checker.name()).toDto().add()
                         return false
                     }
-                    keeper.next(JobStepKeeper.Step.afterCheck, 'after container start check', checker.name(), isCheckOk)
+                    keeper.next(step, tips + ' container check', checker.name())
                 }
                 return true
             } catch (Exception e) {
-                log.error 'after check error - ' + c.appId + ' - ' + c.instanceIndex, e
+                log.error tips + ' check error - ' + c.appId + ' - ' + c.instanceIndex, e
                 return false
             }
         } else {
-            keeper.next(JobStepKeeper.Step.afterCheck, 'after container start check skip')
+            keeper.next(step, tips + ' container check skip')
             return true
         }
     }
@@ -445,9 +416,10 @@ class CreateProcessor implements GuardianProcessor {
     private static boolean initCheck(CreateContainerConf c, JobStepKeeper keeper, String containerId) {
         String imageName = c.conf.imageName()
 
-        def checkerList = CheckerHolder.instance.checkerList.findAll { it.imageName() == imageName }
+        def checkerList = CheckerHolder.instance.checkerList.findAll {
+            it.imageName() == imageName || it.canUseTo(c.conf.group, c.conf.image)
+        }
         def initCheckList = checkerList.findAll { it.type() == Checker.Type.init }
-
         if (initCheckList) {
             try {
                 for (checker in initCheckList) {
@@ -572,13 +544,13 @@ class CreateProcessor implements GuardianProcessor {
             throw new JobProcessException('node volume conflict check fail - ' + nodeIp + ' - ' + thisAppMountVolumeDirList)
         }
 
-        // before init after check
+        // before, beforeStart, init, after steps check
         def createContainerConf = prepareCreateContainerConf(confCopy, app, instanceIndex, nodeIp, nodeIpList, imageWithTag)
         log.info createContainerConf.toString()
         createContainerConf.jobId = jobId
 
-        if (!beforeCheck(createContainerConf, keeper)) {
-            throw new JobProcessException('before check fail')
+        if (!filterChecker(createContainerConf, keeper, Checker.Type.before, JobStepKeeper.Step.beforeCheck)) {
+            throw new JobProcessException('before start check fail')
         }
 
         // support dyn cmd using plugin expression
@@ -600,6 +572,11 @@ class CreateProcessor implements GuardianProcessor {
         keeper.next(JobStepKeeper.Step.createContainer, 'created container', containerConfigInfo.toString())
 
         def containerId = containerConfigInfo.containerId
+        createContainerConf.containerId = containerId
+        if (!filterChecker(createContainerConf, keeper, Checker.Type.beforeStart, JobStepKeeper.Step.beforeStartCheck)) {
+            throw new JobProcessException('before start check fail')
+        }
+
         def startR = AgentCaller.instance.agentScriptExe(app.clusterId, nodeIp, 'container start', [id: containerId])
         Boolean isErrorStart = startR.getBoolean('isError')
         if (isErrorStart != null && isErrorStart.booleanValue()) {
@@ -607,8 +584,9 @@ class CreateProcessor implements GuardianProcessor {
         }
         keeper.next(JobStepKeeper.Step.startContainer, 'start container', containerId)
 
+        // ignore result
         initCheck(createContainerConf, keeper, containerId)
-        afterCheck(createContainerConf, keeper)
+        filterChecker(createContainerConf, keeper, Checker.Type.after, JobStepKeeper.Step.afterCheck)
 
         def result = new ContainerRunResult(nodeIp: nodeIp, containerConfig: containerConfigInfo, keeper: keeper)
         for (pluginInner in PluginManager.instance.pluginList) {
@@ -630,13 +608,12 @@ class CreateProcessor implements GuardianProcessor {
 
         def keeper = passedKeeper ?: new JobStepKeeper(jobId: jobId, instanceIndex: instanceIndex, nodeIp: nodeIp)
 
-        if (!beforeCheck(createContainerConf, keeper)) {
+        if (!filterChecker(createContainerConf, keeper, Checker.Type.before, JobStepKeeper.Step.beforeCheck)) {
             throw new JobProcessException('before check fail')
         }
 
         int pid = HostProcessSupport.instance.startOneProcess(createContainerConf, keeper)
-
-        afterCheck(createContainerConf, keeper)
+        filterChecker(createContainerConf, keeper, Checker.Type.after, JobStepKeeper.Step.afterCheck)
 
         def containerConfigInfo = new ContainerConfigInfo(pid: pid, networkMode: 'host')
         def result = new ContainerRunResult(nodeIp: nodeIp, containerConfig: containerConfigInfo, keeper: keeper)

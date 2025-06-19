@@ -184,6 +184,29 @@ class AgentCaller {
         }
     }
 
+    JSONObject doSshCopyFrom(NodeKeyPairDTO kp, String nodeIp, String localFilePath, String remoteFilePath, long remoteFileSavedMillis,
+                             int readTimeout = 30000, Map extParams = null) {
+        assert nodeIp
+        Map ext = [:]
+        ext.localFilePath = localFilePath
+        ext.remoteFilePath = remoteFilePath
+        ext.remoteFileSavedMillis = remoteFileSavedMillis
+
+        ext.isTarX = localFilePath.contains('.tar')
+        ext.isMkdir = false
+        ext.isOverwrite = false
+        ext.isUseNewestFile = true
+
+        if (extParams) {
+            extParams.each { k, v ->
+                ext[k] = v
+            }
+        }
+
+        final String scriptName = 'ssh copy from'
+        doSshByScriptName(kp, nodeIp, scriptName, readTimeout, ext)
+    }
+
     JSONObject doSshExec(NodeKeyPairDTO kp, String command, int readTimeout = 30000) {
         Map ext = [:]
         ext.command = command
