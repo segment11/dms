@@ -35,6 +35,7 @@ class PluginManager {
     void loadDemo() {
         loadPlugin('plugin.demo2.EtcdPlugin', false)
         loadPlugin('plugin.demo2.GrafanaPlugin', false)
+        loadPlugin('plugin.demo2.LokiPlugin', false)
         loadPlugin('plugin.demo2.MySQLPlugin', false)
         loadPlugin('plugin.demo2.N9ePlugin', false)
         loadPlugin('plugin.demo2.NodeExporterPlugin', false)

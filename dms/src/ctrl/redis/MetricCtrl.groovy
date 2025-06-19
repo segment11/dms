@@ -158,16 +158,16 @@ h.group('/redis/metric') {
 
         def namespaceIdMetric = NamespaceDTO.createIfNotExist(RedisManager.CLUSTER_ID, 'metric')
 
-        // openobserve application
-        final String openobserveAppName = 'openobserve'
-        def existsOne = new AppDTO(clusterId: RedisManager.CLUSTER_ID, name: openobserveAppName).one()
+        // loki application
+        final String lokiAppName = 'loki'
+        def existsOne = new AppDTO(clusterId: RedisManager.CLUSTER_ID, name: lokiAppName).one()
         if (existsOne) {
-            log.warn('openobserve already exists {}', openobserveAppName)
-            resp.halt(409, 'openobserve already exists')
+            log.warn('loki already exists {}', lokiAppName)
+            resp.halt(409, 'loki already exists')
         }
 
         List<String> targetNodeIpList = [targetNodeIp]
-        def ooApp = BasePlugin.tplApp(RedisManager.CLUSTER_ID, namespaceIdMetric, targetNodeIpList) { conf ->
+        def lokiApp = BasePlugin.tplApp(RedisManager.CLUSTER_ID, namespaceIdMetric, targetNodeIpList) { conf ->
             // use plugin define registry url
             conf.registryId = 0
 
@@ -175,17 +175,17 @@ h.group('/redis/metric') {
             conf.cpuFixed = 2.0d
         }
 
-        def ooPlugin = new OpenobservePlugin()
-        ooPlugin.nodeDir = RedisManager.dataDir() + '/openobserve'
-        ooPlugin.addNodeVolumeForUpdate('data-dir-only-for-redis-manager', ooPlugin.nodeDir,
-                'need mount to /data/openobserve same value as env ZO_DATA_DIR')
-        ooPlugin.demoApp(ooApp)
-        ooApp.name = openobserveAppName
-        ooApp.status = AppDTO.Status.manual
-        def ooAppId = InitToolPlugin.addAppIfNotExists(ooApp)
-        log.warn 'created openobserve app {}', ooAppId
-        def ooJobId = RmJobExecutor.instance.runCreatingAppJob(ooApp)
-        log.warn 'created openobserve job {}', ooJobId
+        def lokiPlugin = new LokiPlugin()
+        lokiPlugin.nodeDir = RedisManager.dataDir() + '/loki'
+        lokiPlugin.addNodeVolumeForUpdate('data-dir-only-for-redis-manager', lokiPlugin.nodeDir,
+                'need mount to /loki')
+        lokiPlugin.demoApp(lokiApp)
+        lokiApp.name = lokiAppName
+        lokiApp.status = AppDTO.Status.manual
+        def lokiAppId = InitToolPlugin.addAppIfNotExists(lokiApp)
+        log.warn 'created loki app {}', lokiAppId
+        def lokiJobId = RmJobExecutor.instance.runCreatingAppJob(lokiApp)
+        log.warn 'created loki job {}', lokiJobId
 
         // vector application
         final String vectorAppName = 'vector'
@@ -221,7 +221,7 @@ h.group('/redis/metric') {
         def vectorJobId = RmJobExecutor.instance.runCreatingAppJob(vectorApp)
         log.warn 'created vector job {}', vectorJobId
 
-        [flag: true, ooJobId: ooJobId, vectorJobId: vectorJobId]
+        [flag: true, ooJobId: lokiJobId, vectorJobId: vectorJobId]
     }
 
     h.get('/init-node-exporters') { req, resp ->

@@ -74,7 +74,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     };
 
     $scope.initLogCollectors = function () {
-        uiTips.prompt('Choose one node ip to create openobserve application', function (val) {
+        uiTips.prompt('Choose one node ip to create loki application', function (val) {
             if (!val) {
                 uiTips.alert('Please input a node ip');
                 return;

@@ -13,9 +13,9 @@ def nodeIp = super.binding.getProperty('nodeIp') as String
 
 def list = []
 
-def openobserveAppName = super.binding.getProperty('openobserveAppName') as String
+def lokiAppName = super.binding.getProperty('lokiAppName') as String
 ContainerMountTplHelper applications = super.binding.getProperty('applications') as ContainerMountTplHelper
-ContainerMountTplHelper.OneApp ooApp = applications.app(openobserveAppName)
+ContainerMountTplHelper.OneApp lokiApp = applications.app(lokiAppName)
 
 // dms server and dms agent
 list << """
@@ -82,12 +82,9 @@ include = [ "${logFile.pathPattern}" ]
     }
 }
 
-if (ooApp && ooApp.containerList) {
-    def user = ooApp.app.conf.envList.find { it.key == 'ZO_ROOT_USER_EMAIL' }.value as String
-    def pass = ooApp.app.conf.envList.find { it.key == 'ZO_ROOT_USER_PASSWORD' }.value as String
-
-    def ooNodeIp = ooApp.containerList[0].nodeIp
-    int ooPort = ooApp.containerList[0].publicPort(5080)
+if (lokiApp && lokiApp.containerList) {
+    def lokiNodeIp = lokiApp.containerList[0].nodeIp
+    int lokiPort = lokiApp.containerList[0].publicPort(3100)
 
     appSourceIds << 'local_docker_logs'
     appSourceIds << 'dms_server'
@@ -99,18 +96,10 @@ if (ooApp && ooApp.containerList) {
 type = "docker_logs"
 exclude_containers = [ "app_${appId}_${instanceIndex}", "dms" ]
 
-[sinks.openobserve]
-type = "http"
+[sinks.loki]
+type = "loki"
 inputs = [${appSourceIds.collect { '"' + it + '"' }.join(',')}]
-uri = "http://${ooNodeIp}:${ooPort}/api/default/default/_json"
-method = "post"
-auth.strategy = "basic"
-auth.user = "${user}"
-auth.password = "${pass}"
-compression = "gzip"
-encoding.codec = "json"
-encoding.timestamp_format = "rfc3339"
-healthcheck.enabled = false
+endpoint = "http://${lokiNodeIp}:${lokiPort}"
 """
 }
 

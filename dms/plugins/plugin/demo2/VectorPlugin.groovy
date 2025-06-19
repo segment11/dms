@@ -33,7 +33,7 @@ class VectorPlugin extends BasePlugin {
         String content = new File(tplFilePath).text
 
         TplParamsConf tplParams = new TplParamsConf()
-        tplParams.addParam('openobserveAppName', 'openobserve', 'string')
+        tplParams.addParam('lokiAppName', 'loki', 'string')
 
         def imageName = imageName()
 
@@ -92,13 +92,13 @@ class VectorPlugin extends BasePlugin {
 
         conf.fileVolumeList << new FileVolumeMount(
                 isReloadInterval: true,
-                paramList: [new KVPair<String>('openobserveAppName', 'openobserve')],
+                paramList: [new KVPair<String>('lokiAppName', 'loki')],
                 dist: '/etc/vector/vector.toml',
                 imageTplId: getImageTplIdByName('vector.toml.tpl'))
 
         conf.portList << new PortMapping(privatePort: 8686, publicPort: 8686)
 
-        conf.dependAppIdList << new AppDTO(name: 'openobserve').queryFields('id').one().id
+//        conf.dependAppIdList << new AppDTO(name: 'loki').queryFields('id').one().id
 
         app
     }

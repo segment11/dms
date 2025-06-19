@@ -87,6 +87,9 @@ class InitToolPlugin {
             def appNodeExporter = new NodeExporterPlugin().demoApp(BasePlugin.tplApp(clusterId, namespaceId, nodeIpList))
             addAppIfNotExists(appNodeExporter)
 
+            def lokiPrometheus = new LokiPlugin().demoApp(BasePlugin.tplApp(clusterId, namespaceId, nodeIpList))
+            def lokiAppId = addAppIfNotExists(lokiPrometheus)
+
             def appGrafana = new GrafanaPlugin().demoApp(BasePlugin.tplApp(clusterId, namespaceId, nodeIpList))
             def grafanaAppId = addAppIfNotExists(appGrafana)
 
@@ -119,6 +122,7 @@ class InitToolPlugin {
             def gwClusterId = gw.add()
 
             addGwRouterIfNotExists(gwClusterId, clusterId, prometheusAppId, 'prometheus', 9090)
+            addGwRouterIfNotExists(gwClusterId, clusterId, lokiAppId, 'loki', 3100)
             addGwRouterIfNotExists(gwClusterId, clusterId, grafanaAppId, 'grafana', 3000)
             addGwRouterIfNotExists(gwClusterId, clusterId, ooAppId, 'openobserve', 5080)
 

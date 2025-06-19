@@ -55,9 +55,6 @@ class GrafanaPlugin extends BasePlugin {
                 dir: '/var/lib/grafana', dist: '/var/lib/grafana', mode: 'rw',
                 nodeVolumeId: getNodeVolumeIdByDir('/var/lib/grafana'))
 
-        conf.fileVolumeList << new FileVolumeMount(
-                dist: '/etc/grafana/grafana.ini',
-                imageTplId: getImageTplIdByName('grafana.ini.tpl'))
         conf.portList << new PortMapping(privatePort: 3000, publicPort: 3000)
 
         app

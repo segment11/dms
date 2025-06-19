@@ -27,7 +27,10 @@ h.group('/plugin') {
 
         def keyword = req.param('keyword')
 
-        def list = PluginManager.instance.pluginList
+        final List<String> excludeNameList = ['redis_manager_backup']
+        def list = PluginManager.instance.pluginList.findAll{
+            it.name() !in excludeNameList
+        }
         def filterList = keyword ? list.findAll {
             it.name().contains(keyword) || it.group().contains(keyword) || it.image().contains(keyword)
         } : list
