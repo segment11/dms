@@ -13,7 +13,7 @@ This is a module + some plugins in dms, it's a manager system for redis.
 - add and remove replicas
 - auto backup and recover by scp or s3 in cloud
 - node exporter, redis exporter and prometheus, one button to collect metrics
-- vector log collect and open observe, one button to collect logs
+- vector log collect and loki, one button to collect logs
 - some basic metrics charts
 - Node resource overview
 
