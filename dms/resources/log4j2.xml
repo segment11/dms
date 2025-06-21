@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Appenders>
-        <RollingFile name="DailyFile" fileName="/opt/log/dms.log"
-                     filePattern="/opt/log/$${date:yyyy-MM}/dms-%d{yyyy-MM-dd}-%i.log">
+        <RollingFile name="DailyFile" fileName="/var/log/dms/dms.log"
+                     filePattern="/var/log/dms/$${date:yyyy-MM}/dms-%d{yyyy-MM-dd}-%i.log">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
             <Policies>
                 <TimeBasedTriggeringPolicy modulate="true" interval="1"/>

@@ -52,7 +52,6 @@ class VectorPlugin extends BasePlugin {
 
         addNodeVolumeForUpdate('redis-manager-data-dir', '/data/redis_manager', 'host redis manager data dir, eg. /data/redis_manager')
         addNodeVolumeForUpdate('var-log-dir', '/var/log', 'host log dir, eg. /var/log')
-        addNodeVolumeForUpdate('opt-log-dir', '/opt/log', 'host log dir, eg. /opt/log')
         addNodeVolumeForUpdate('docker-sock', '/var/run/docker.sock', '/var/run/docker.sock')
     }
 
@@ -80,9 +79,6 @@ class VectorPlugin extends BasePlugin {
         conf.dirVolumeList << new DirVolumeMount(
                 dir: '/data/redis_manager', dist: '/data/redis_manager', mode: 'ro',
                 nodeVolumeId: getNodeVolumeIdByDir('/data/redis_manager'))
-        conf.dirVolumeList << new DirVolumeMount(
-                dir: '/opt/log', dist: '/opt/log', mode: 'ro',
-                nodeVolumeId: getNodeVolumeIdByDir('/opt/log'))
         conf.dirVolumeList << new DirVolumeMount(
                 dir: '/var/log', dist: '/var/log', mode: 'rw',
                 nodeVolumeId: getNodeVolumeIdByDir('/var/log'))

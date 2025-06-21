@@ -21,7 +21,7 @@ ContainerMountTplHelper.OneApp lokiApp = applications.app(lokiAppName)
 list << """
 [sources.dms_server]
 type = "file"
-include = [ "/opt/log/dms.log" ]
+include = [ "/var/log/dms/dms.log" ]
 
 [sources.dms_server.multiline]
 mode = "continue_through"
@@ -33,7 +33,7 @@ condition_pattern = '(?m)^[\\s|\\W].*\$|(?m)^(Caused|java|org|com|net).+\$|(?m)^
 list << """
 [sources.dms_agent]
 type = "file"
-include = [ "/opt/log/dms_agent.log" ]
+include = [ "/var/log/dms/dms_agent.log" ]
 
 [sources.dms_agent.multiline]
 mode = "continue_through"
