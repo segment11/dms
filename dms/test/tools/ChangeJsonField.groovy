@@ -11,7 +11,7 @@ import org.segment.d.D
 import org.segment.d.Ds
 import org.segment.d.dialect.MySQLDialect
 
-def ds = Ds.h2Local('/data/dms/db;FILE_LOCK=SOCKET')
+def ds = Ds.h2Local('/var/lib/dms/db;FILE_LOCK=SOCKET')
 def d = new D(ds, new MySQLDialect())
 
 d.query('select id, conf from app').each {

@@ -25,7 +25,7 @@ class DefaultLocalH2DataSourceCreator {
         }
 
         def envDbDataFile = System.getenv('DB_DATA_FILE')
-        String dbDataFile = envDbDataFile ?: c.getString('dbDataFile', '/data/dms/db;FILE_LOCK=SOCKET')
+        String dbDataFile = envDbDataFile ?: c.getString('dbDataFile', '/var/lib/dms/db;FILE_LOCK=SOCKET')
         // for sql stats
         Ds.h2LocalWithPool(dbDataFile, 'dms_server_ds').export()
     }

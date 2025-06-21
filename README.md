@@ -43,13 +43,13 @@ A docker instances manage system like k8s write in java/groovy, including web ui
 
 ```properties
 # change here
-dbDataFile=/data/dms/db;FILE_LOCK=SOCKET
+dbDataFile=/var/lib/dms/db;FILE_LOCK=SOCKET
 ```
 
 ### run in docker
 
 ```bash
-docker run -d --name dms_server --net=host -v /opt/log:/opt/log -v /data/dms:/data/dms -v $pwd/conf.properties:/opt/dms/conf.properties -e ADMIN_PASSWORD=123456 -e LOCAL_IP_FILTER_PRE=192. key232323/dms_server:1.2.1
+docker run -d --name dms_server --net=host -v /var/log/dms:/var/log/dms -v /var/lib/dms:/var/lib/dms -v $pwd/conf.properties:/opt/dms/conf.properties -e ADMIN_PASSWORD=123456 -e LOCAL_IP_FILTER_PRE=192. key232323/dms_server:1.2.1
 ```
 
 Then open http://your-ip:5010/
@@ -89,7 +89,7 @@ server.runtime.jar=1
 ### run in docker
 
 ```bash
-docker run -d --name dms_agent --cpu-period 1000000 --cpu-quota 250000 --net host -v /opt/log:/opt/log -v /opt/dms/config:/opt/dms/config -v /var/run/docker.sock:/var/run/docker.sock -v $pwd/conf.properties:/opt/dms_agent/conf.properties key232323/dms_agent:1.2.0
+docker run -d --name dms_agent --cpu-period 1000000 --cpu-quota 250000 --net host -v /var/log/dms:/var/log/dms -v /opt/dms/config:/opt/dms/config -v /var/run/docker.sock:/var/run/docker.sock -v $pwd/conf.properties:/opt/dms_agent/conf.properties key232323/dms_agent:1.2.0
 ```
 
 ### or run by compiling from source
