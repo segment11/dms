@@ -5,6 +5,7 @@ import com.segment.common.job.chain.JobParams
 import com.segment.common.job.chain.JobStatus
 import model.*
 import model.cluster.SlotRange
+import model.job.RmBackupTemplateDTO
 import model.json.*
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
@@ -98,6 +99,12 @@ h.group('/redis/service') {
         def configTemplateOne = new RmConfigTemplateDTO(id: one.configTemplateId).queryFields('name').one()
         assert configTemplateOne
         ext.configTemplateName = configTemplateOne.name
+
+        if (one.backupPolicy && one.backupPolicy.backupTemplateId) {
+            def backupTemplateOne = new RmBackupTemplateDTO(id: one.backupPolicy.backupTemplateId).queryFields('name').one()
+            assert backupTemplateOne
+            ext.backupTemplateName = backupTemplateOne.name
+        }
 
         List<Map> nodes = []
         r.nodes = nodes

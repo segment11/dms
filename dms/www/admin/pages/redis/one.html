@@ -108,6 +108,49 @@
             <div class="widget-box">
                 <div class="widget-title">
                     <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Backup / Maintain</h5>
+                </div>
+                <div class="widget-content">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <span>Backup Template</span>
+                            <span class="pull-right">{{ext.backupTemplateName}}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <span>Is Automatic Backup</span>
+                            <span class="pull-right">{{one.backupPolicy.isAutomaticBackup}}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <span>Retention Period (days / or hours)</span>
+                            <span class="pull-right">{{one.backupPolicy.retentionPeriod}}</span>
+                        </div>
+                        <div class="col-md-3">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <span>Interval Type</span>
+                            <span class="pull-right">{{one.backupPolicy.dailyOrHourly}}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <span>Is Backup Window Specify</span>
+                            <span class="pull-right">{{one.backupPolicy.isBackupWindowSpecify}}</span>
+                        </div>
+                        <div class="col-md-3" ng-show="one.backupPolicy.isBackupWindowSpecify">
+                            <span>Start Time</span>
+                            <span class="pull-right">{{one.backupPolicy.startTime}}</span>
+                        </div>
+                        <div class="col-md-3" ng-show="one.backupPolicy.isBackupWindowSpecify">
+                            <span>Duration Hours</span>
+                            <span class="pull-right">{{one.backupPolicy.durationHours}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
                     <h5>Status</h5>
                 </div>
                 <div class="widget-content">
@@ -121,11 +164,9 @@
                         </div>
                     </div>
                 </div>
-
             </div>
 
             <div class="widget-box">
-
                 <div class="widget-content">
                     <ul class="nav nav-tabs" ui-tabs="{beforeFn: 'changeTab'}">
                         <li class="active"><a>Instance List</a></li>
