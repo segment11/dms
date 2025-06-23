@@ -76,6 +76,8 @@ class VectorPlugin extends BasePlugin {
         conf.memReservationMB = conf.memMB
         conf.cpuFixed = 0.1
 
+        conf.cmd = '["--config", "/etc/vector/vector.toml"]'
+
         conf.dirVolumeList << new DirVolumeMount(
                 dir: '/data/redis_manager', dist: '/data/redis_manager', mode: 'ro',
                 nodeVolumeId: getNodeVolumeIdByDir('/data/redis_manager'))

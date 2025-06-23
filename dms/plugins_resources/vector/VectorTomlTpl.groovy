@@ -100,6 +100,11 @@ exclude_containers = [ "app_${appId}_${instanceIndex}", "dms" ]
 type = "loki"
 inputs = [${appSourceIds.collect { '"' + it + '"' }.join(',')}]
 endpoint = "http://${lokiNodeIp}:${lokiPort}"
+encoding.codec = "text"
+
+[sinks.loki.labels]
+job = "vector-dms"
+instance = "${nodeIp}"
 """
 }
 
