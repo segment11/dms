@@ -8,7 +8,6 @@ import model.job.RmBackupTemplateDTO
 import model.server.CreateContainerConf
 import plugin.BasePlugin
 import rm.BackupManager
-import rm.RedisManager
 import server.InMemoryAllContainerManager
 import server.scheduler.checker.Checker
 import server.scheduler.checker.CheckerHolder
@@ -75,10 +74,8 @@ class RedisManagerBackupPlugin extends BasePlugin {
                     return true
                 }
 
-                def backupLog = filterList.first()
-                def backupTemplate = new RmBackupTemplateDTO(id: rmService.backupPolicy.backupTemplateId).one()
-                def backupDataDir = backupTemplate.backupDataDir ?: RedisManager.backupDataDir()
-                def backupFilePath = backupDataDir + '/' + backupLog.dateTimeStr + '/service-' + rmService.id + '/shard-' + shardIndex + '.rdb'
+                def backupLogOne = filterList.first()
+                def backupFilePath = BackupManager.instance.getBackupFilePath(rmService.backupPolicy, backupLogOne)
 
                 def instance = InMemoryAllContainerManager.instance
                 def containerList = instance.getContainerList(conf.app.clusterId, conf.app.id)
@@ -89,10 +86,10 @@ class RedisManagerBackupPlugin extends BasePlugin {
                     return false
                 }
 
-                def hostDataDir = x.mounts.find { m -> m.destination == '/data/redis' }.source
-                def hostRdbFilePath = hostDataDir + '/instance_' + x.instanceIndex() + '/dump.rdb'
+                def hostRdbFilePath = BackupManager.getHostRdbFilePath(x)
 
-                def result = BackupManager.doDownload(backupTemplate, conf.nodeIp, hostRdbFilePath, backupFilePath, backupLog.saveDate.time)
+                def backupTemplate = new RmBackupTemplateDTO(id: rmService.backupPolicy.backupTemplateId).one()
+                def result = BackupManager.doDownload(backupTemplate, conf.nodeIp, hostRdbFilePath, backupFilePath, backupLogOne.saveDate.time)
                 log.warn 'backup manager download {} to {} result: {}', backupFilePath, hostRdbFilePath, result
 
                 // return true or false?

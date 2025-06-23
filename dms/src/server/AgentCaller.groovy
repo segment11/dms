@@ -215,6 +215,14 @@ class AgentCaller {
         doSshByScriptName(kp, scriptName, readTimeout, ext)
     }
 
+    JSONObject doSshExec(NodeKeyPairDTO kp, String nodeIp, String command, int readTimeout = 30000) {
+        Map ext = [:]
+        ext.command = command
+
+        final String scriptName = 'ssh exec'
+        doSshByScriptName(kp, nodeIp, scriptName, readTimeout, ext)
+    }
+
     JSONObject doSshShell(NodeKeyPairDTO kp, List<OneCmd> cmdList, int readTimeout = 30000) {
         Map ext = [:]
         ext.cmdListJson = new DefaultJsonTransformer().json(cmdList)

@@ -11,6 +11,7 @@ Map params = super.binding.getProperty('params') as Map
 String ip = params.ip as String
 int port = params.port as int
 String user = params.user as String
+String pass = params.pass as String
 String rootPass = params.rootPass as String
 
 String keyPrivate = params.keyPrivate as String
@@ -22,7 +23,11 @@ kp.ip = ip
 kp.sshPort = port
 kp.userName = user
 kp.rootPass = rootPass
-kp.keyPrivate = keyPrivate
+if (pass) {
+    kp.pass = pass
+} else {
+    kp.keyPrivate = keyPrivate
+}
 
 DeploySupport.instance.isAgent = true
 DeployInit.initDeployEventCallback()

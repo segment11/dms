@@ -8,6 +8,7 @@ import model.json.ClusterSlotsDetail
 import model.json.PrimaryReplicasDetail
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
+import rm.BackupManager
 import rm.job.RmJob
 import rm.job.task.MeetNodesWhenScaleUpTask
 import rm.job.task.MigrateSlotsTask
@@ -153,6 +154,20 @@ h.group('/redis/job') {
         def task = new MeetNodesWhenScaleUpTask(new RmJob(rmService: one), newShardList)
         task.doTask()
 
+        [flag: true]
+    }
+
+    h.get('/service/backup-log/remove-old-list') { req, resp ->
+        def idStr = req.param('id')
+        assert idStr
+        def id = idStr as int
+
+        def one = new RmServiceDTO(id: id).one()
+        if (!one) {
+            resp.halt(404, 'service not found')
+        }
+
+        BackupManager.instance.removeOldBackupLogs(one.id, one.backupPolicy)
         [flag: true]
     }
 
