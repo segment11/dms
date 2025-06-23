@@ -170,7 +170,7 @@
                             </td>
                         </tr>
                         <tr ng-show="editOne.backupPolicy.isAutomaticBackup">
-                            <td style="color: blue;">Retention Period (days)</td>
+                            <td style="color: blue;">Retention Period (days / or hours)</td>
                             <td>
                                 <input type="text" ng-model="editOne.backupPolicy.retentionPeriod"
                                        ui-valid="int minval:int:1 maxval:int:7"/>
