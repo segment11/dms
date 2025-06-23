@@ -26,6 +26,13 @@ class AgentCaller {
 
     private JsonTransformer json = new DefaultJsonTransformer()
 
+    private static Map removeSensitiveInfo(Map params) {
+        params.remove('pass')
+        params.remove('rootPass')
+        params.remove('keyPrivate')
+        params
+    }
+
     private <T> T httpRequest(int clusterId, String nodeIp, String uri, Map params, Class<T> clz = String,
                               Closure failCallback, boolean isPost = false) {
         def one = InMemoryCacheSupport.instance.oneCluster(clusterId as int)
@@ -81,10 +88,10 @@ class AgentCaller {
             def body = req.body()
             if (req.code() != 200) {
                 if (failCallback) {
-                    log.warn 'server get agent info fail - ' + uri + ' - ' + params + ' - ' + body
+                    log.warn 'server get agent info fail - ' + uri + ' - ' + removeSensitiveInfo(params) + ' - ' + body
                     failCallback.call(body)
                 } else {
-                    throw new HttpInvokeException('server get agent info fail - ' + uri + ' - ' + params + ' - ' + body)
+                    throw new HttpInvokeException('server get agent info fail - ' + uri + ' - ' + removeSensitiveInfo(params) + ' - ' + body)
                 }
             }
             if (clz == String) {
