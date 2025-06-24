@@ -25,8 +25,6 @@ import server.scheduler.processor.JobStepKeeper
 @Slf4j
 /**
  * this only support redis master slave + sentinel
- * use segment_kvrocks_controller to manage redis cluster
- * https://github.com/segment11/segment_kvrocks_controller
  */
 class RedisPlugin extends BasePlugin {
     @Override
