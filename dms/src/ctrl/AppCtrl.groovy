@@ -386,7 +386,7 @@ h.group('/app') {
 
 h.group('/api/app') {
     h.post('/live-check-conf/query') { req, resp ->
-        HashMap map = req.bodyAs()
+        def map = req.bodyAs(HashMap)
         List<Integer> appIdList = map.appIdList as List<Integer>
         def appList = InMemoryCacheSupport.instance.appList
         if (!appList) {

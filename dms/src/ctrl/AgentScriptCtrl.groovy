@@ -91,7 +91,7 @@ h.group('/agent/script') {
 
 // for script holder
 h.post('/api/agent/script/pull') { req, resp ->
-    HashMap map = req.bodyAs()
+    def map = req.bodyAs(HashMap)
     def list = new AgentScriptDTO().noWhere().list()
     // compare updated date
     def r = []

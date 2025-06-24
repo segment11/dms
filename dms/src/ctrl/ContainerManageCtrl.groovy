@@ -379,7 +379,7 @@ h.post('/api/container/create/tpl') { req, resp ->
              envList         : envList,
              imageTplId      : one.imageTplId], String)
      */
-    HashMap map = req.bodyAs()
+    def map = req.bodyAs(HashMap)
     int clusterId = map.clusterId as int
     int appId = map.appId as int
     int imageTplId = map.imageTplId as int
