@@ -12,6 +12,7 @@
                         <button class="btn" ng-click="refresh()">Refresh</button>
                         <button class="btn" ng-click="goServiceJobs()">Jobs</button>
                         <button class="btn" ng-click="goServiceBackups()">Backups</button>
+                        <button class="btn btn-info" ng-click="chooseCopyFrom()">Data Transfer</button>
                         <button class="btn btn-gray" ng-click="goAppDetail(ext.appId, ext.appName, ext.appDes)"
                                 ng-show="one.mode == 'standalone' || one.mode == 'sentinel'">Go To Target DMS App
                         </button>
@@ -269,4 +270,20 @@
 
     </div>
 
+    <script type="text/x-template"
+            ui-dialog="{showModel: 'ctrl.isShowCopyFrom', title: 'Copy Data From Another Redis Service', dialogId: 'dialogCopyFrom', lock: true, fixed: true, ext: {max: false}}">
+        <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+            <tr>
+                <td width="30%">From Service</td>
+                <td>
+                    <select ng-options="a.id as a.name for a in tmp.copyFromServiceList"
+                            ng-model="tmp.copyFromId"
+                            style="width: 200px;">
+                    </select>
+                </td>
+            </tr>
+        </table>
+        <button class="btn btn-blue" ng-click="doCopyFrom()">Do Copy From</button>
+        <button class="btn" ng-click="ctrl.isShowCopyFrom = false">Close</button>
+    </script>
 </div>

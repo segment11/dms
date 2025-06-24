@@ -1,0 +1,12 @@
+FROM docker.1ms.run/library/golang:1.24-alpine AS builder
+WORKDIR /app
+COPY . .
+RUN go env -w GO111MODULE=on && go env -w GOPROXY=https://goproxy.cn,direct
+RUN go mod download
+RUN go build -o redis-shake ./cmd/redis-shake
+
+FROM docker.1ms.run/library/alpine:latest
+WORKDIR /app
+COPY --from=builder /app/redis-shake .
+
+ENTRYPOINT ["/app/redis-shake", "/etc/redis-shake.toml"]

@@ -43,6 +43,7 @@ class PluginManager {
         loadPlugin('plugin.demo2.PmaPlugin', false)
         loadPlugin('plugin.demo2.PrometheusPlugin', false)
         loadPlugin('plugin.demo2.RedisPlugin', false)
+        loadPlugin('plugin.demo2.RedisShakePlugin', false)
         loadPlugin('plugin.demo2.TraefikPlugin', false)
         loadPlugin('plugin.demo2.VectorPlugin', false)
         loadPlugin('plugin.demo2.OpenobservePlugin', false)

@@ -1,5 +1,8 @@
 package ctrl.redis
 
+import com.segment.common.job.chain.JobParams
+import com.segment.common.job.chain.JobStatus
+import model.NamespaceDTO
 import model.RmServiceDTO
 import model.cluster.SlotRange
 import model.job.RmJobDTO
@@ -9,7 +12,11 @@ import model.json.PrimaryReplicasDetail
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
 import rm.BackupManager
+import rm.RedisManager
+import rm.RmJobExecutor
 import rm.job.RmJob
+import rm.job.RmJobTypes
+import rm.job.task.CopyFromTask
 import rm.job.task.MeetNodesWhenScaleUpTask
 import rm.job.task.MigrateSlotsTask
 
@@ -42,6 +49,124 @@ h.group('/redis/job') {
         [list: list]
     }
 
+    h.post('/service/copy-from') { req, resp ->
+        Map map = req.bodyAs()
+        def fromId = map.fromId as int
+        def id = map.id as int
+
+        if (id == fromId) {
+            resp.halt(409, 'service cannot be itself')
+        }
+
+        def one = new RmServiceDTO(id: id).one()
+        if (!one) {
+            resp.halt(404, 'service not found')
+        }
+
+        def fromOne = new RmServiceDTO(id: fromId).one()
+        if (!fromOne) {
+            resp.halt(404, 'copy from service not found')
+        }
+
+        def checkResult = one.checkNodes()
+        if (!checkResult.isOk) {
+            resp.halt(409, checkResult.message)
+        }
+
+        def checkResult2 = fromOne.checkNodes()
+        if (!checkResult2.isOk) {
+            resp.halt(409, checkResult2.message)
+        }
+
+        def runningContainerList = one.runningContainerList()
+        def fromRunningContainerList = fromOne.runningContainerList()
+        if (!runningContainerList || !fromRunningContainerList) {
+            resp.halt(409, 'service not running')
+        }
+
+        // redis shake params
+        final String type = 'sync'
+        String targetType
+        String targetAddress
+//        String targetUsername
+        def targetPassword = one.pass
+        if (one.mode == RmServiceDTO.Mode.cluster) {
+            targetType = 'cluster'
+            def node = one.clusterSlotsDetail.shards.find { shard ->
+                shard.shardIndex == 0
+            }.nodes.find { n ->
+                n.isPrimary
+            }
+            targetAddress = node.ip + ':' + node.port
+        } else if (one.mode == RmServiceDTO.Mode.sentinel) {
+            targetType = 'standalone'
+            def node = one.primaryReplicasDetail.nodes.find { n ->
+                n.isPrimary
+            }
+            targetAddress = node.ip + ':' + node.port
+        } else {
+            targetType = 'standalone'
+            def x = runningContainerList[0]
+            targetAddress = x.nodeIp + ':' + one.port
+        }
+
+        // when cluster, need copy from multi-shards
+        List<Tuple3<String, String, String>> srcParamsGroupList = []
+        if (fromOne.mode == RmServiceDTO.Mode.cluster) {
+            fromOne.clusterSlotsDetail.shards.each { shard ->
+                def node = shard.nodes.find { n ->
+                    n.isPrimary
+                }
+                srcParamsGroupList << new Tuple3(
+                        node.ip + ':' + node.port,
+                        fromOne.id + 'shard' + shard.shardIndex + '->' + one.id,
+                        fromOne.pass,
+                )
+            }
+        } else if (fromOne.mode == RmServiceDTO.Mode.sentinel) {
+            def node = fromOne.primaryReplicasDetail.nodes.find { n ->
+                n.isPrimary
+            }
+            srcParamsGroupList << new Tuple3(
+                    node.ip + ':' + node.port,
+                    fromOne.id + 'shard->' + one.id,
+                    fromOne.pass,
+            )
+        } else {
+            def fromX = fromRunningContainerList[0]
+            srcParamsGroupList << new Tuple3(
+                    fromX.nodeIp + ':' + fromOne.port,
+                    fromOne.id + 'shard->' + one.id,
+                    fromOne.pass,
+            )
+        }
+
+        NamespaceDTO.createIfNotExist(RedisManager.CLUSTER_ID, 'redis-shake')
+
+        def rmJob = new RmJob()
+        rmJob.rmService = one
+        rmJob.type = RmJobTypes.COPY_FROM
+        rmJob.status = JobStatus.created
+        rmJob.params = new JobParams()
+        rmJob.params.put('rmServiceId', id.toString())
+        rmJob.params.put('fromServiceId', fromId.toString())
+
+        for (srcParamsGroup in srcParamsGroupList) {
+            rmJob.taskList << new CopyFromTask(rmJob, srcParamsGroup.v2, type, srcParamsGroup.v1, srcParamsGroup.v3, targetType, targetAddress, targetPassword)
+        }
+
+        rmJob.createdDate = new Date()
+        rmJob.updatedDate = new Date()
+        rmJob.save()
+
+        RmJobExecutor.instance.execute {
+            rmJob.run()
+        }
+
+        [flag: true]
+    }
+
+    // for debug
     h.get('/service/status/update') { req, resp ->
         def idStr = req.param('id')
         def status = req.param('status')

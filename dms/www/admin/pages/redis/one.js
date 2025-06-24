@@ -74,6 +74,32 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog) {
         });
     };
 
+    $scope.chooseCopyFrom = function () {
+        $http.get('/dms/redis/service/simple-list', {params: {}}).success(function (data) {
+            $scope.tmp.copyFromServiceList = _.filter(data.list, function (it) {
+                return it.id != id;
+            });
+            $scope.ctrl.isShowCopyFrom = true;
+        });
+    };
+
+    $scope.doCopyFrom = function () {
+        if (!$scope.tmp.copyFromId) {
+            uiTips.alert('Please choose a service to copy from');
+            return;
+        }
+
+        $http.post('/dms/redis/job/service/copy-from', {
+            fromId: $scope.tmp.copyFromId,
+            id: id
+        }).success(function (data) {
+            if (data.flag) {
+                $scope.ctrl.isShowCopyFrom = false;
+                uiTips.alert('Doing copy from, view jobs for detail');
+            }
+        });
+    };
+
     $scope.goAppDetail = function (appId, appName, appDes) {
         Page.go('/page/cluster_container', {
             appId: appId, appName: appName, appDes: appDes,

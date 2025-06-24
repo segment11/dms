@@ -25,6 +25,19 @@ def h = ChainHandler.instance
 def log = LoggerFactory.getLogger(this.getClass())
 
 h.group('/redis/service') {
+    h.get('/simple-list') { req, resp ->
+        def list = new RmServiceDTO(status: RmServiceDTO.Status.running).
+                queryFields('id,name').
+                list()
+
+        [list: list.collect {
+            return [
+                    id  : it.id,
+                    name: it.name,
+            ]
+        }]
+    }
+
     h.get('/list') { req, resp ->
         def p = req.param('pageNum')
         int pageNum = p ? p as int : 1
@@ -111,6 +124,10 @@ h.group('/redis/service') {
 
         if (one.mode == RmServiceDTO.Mode.standalone || one.mode == RmServiceDTO.Mode.sentinel) {
             def appOne = InMemoryCacheSupport.instance.oneApp(one.appId)
+            if (!appOne) {
+                // not in cache
+                appOne = new AppDTO(id: one.appId).one()
+            }
             ext.appId = appOne.id
             ext.appName = appOne.name
             ext.appDes = appOne.des
@@ -167,6 +184,10 @@ h.group('/redis/service') {
             def instance = InMemoryAllContainerManager.instance
             for (shard in one.clusterSlotsDetail.shards) {
                 def appOne = InMemoryCacheSupport.instance.oneApp(shard.appId)
+                if (!appOne) {
+                    // not in cache
+                    appOne = new AppDTO(id: shard.appId).one()
+                }
 
                 def containerList = instance.getContainerList(RedisManager.CLUSTER_ID, shard.appId)
                 for (n in shard.nodes) {
