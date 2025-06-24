@@ -11,22 +11,21 @@ class BackupPolicy implements JSONFiled {
 
     Boolean isAutomaticBackup
 
-    Boolean isBackupWindowSpecify
-
-    // in days
+    // in days or hours
     Integer retentionPeriod
 
+    Boolean isBackupWindowSpecify
+
+    // format: HH:mm
     String startTime
 
     Integer durationHours
 
     String dailyOrHourly
 
-    Boolean isMaintenanceWindowSpecify
-
-    String maintenanceStartDay
-
-    String maintenanceStartTime
-
-    Integer maintenanceDurationHours
+    String endTime() {
+        def arr = startTime.split(':')
+        def hour = arr[0].toInteger()
+        (hour + durationHours).toString() + ':' + arr[1]
+    }
 }

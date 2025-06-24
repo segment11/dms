@@ -246,11 +246,11 @@ class BackupManager extends IntervalJob {
     void removeOldBackupLogs(int serviceId, BackupPolicy backupPolicy) {
         String expiredDateTimeStr
         if (backupPolicy.dailyOrHourly == 'daily') {
-            def expiredD = new Date() - backupPolicy.retentionPeriod
-            expiredDateTimeStr = expiredD.format('yyyyMMdd')
+            def expireDate = new Date() - backupPolicy.retentionPeriod
+            expiredDateTimeStr = expireDate.format('yyyyMMdd')
         } else {
-            def expiredD = new Date(new Date().time - backupPolicy.retentionPeriod * 3600 * 1000)
-            expiredDateTimeStr = expiredD.format('yyyyMMddHH')
+            def expireDate = new Date(new Date().time - backupPolicy.retentionPeriod * 3600 * 1000)
+            expiredDateTimeStr = expireDate.format('yyyyMMddHH')
         }
 
         def backupTemplate = getBackupTemplate(backupPolicy.backupTemplateId)
@@ -293,8 +293,18 @@ class BackupManager extends IntervalJob {
                 continue
             }
 
-            // every 1hour
-            if (intervalCount % (6 * 60) == 0) {
+            if (backupPolicy.isBackupWindowSpecify) {
+                assert backupPolicy.startTime && backupPolicy.durationHours
+                // check time window
+                def nowStr = new Date().format('HH:mm')
+                if (nowStr < backupPolicy.startTime || nowStr > backupPolicy.endTime()) {
+                    log.debug 'not in backup window, ignore'
+                    continue
+                }
+            }
+
+            // check if there are old backup logs need remove, every 30 minutes
+            if (intervalCount % (6 * 30) == 0) {
                 removeOldBackupLogs(one.id, backupPolicy)
             }
 
