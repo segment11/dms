@@ -44,12 +44,6 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
         });
     };
 
-    $scope.goServiceJobs = function (one) {
-        Page.go('/page/redis_jobs', {
-            id: one.id, name: one.name, des: one.des
-        });
-    };
-
     $scope.goAddOne = function () {
         Page.go('/page/redis_add', {});
     };

@@ -30,8 +30,9 @@
                     </div>
                     <table class="table table-bordered table-striped">
                         <tr>
+                            <th width="5%">id</th>
                             <th width="15%">name</th>
-                            <th width="15%">engine</th>
+                            <th width="10%">engine</th>
                             <th width="15%">mode</th>
                             <th width="15%">replicas</th>
                             <th width="15%">status</th>
@@ -39,6 +40,7 @@
                             <th></th>
                         </tr>
                         <tr ng-repeat="one in ll">
+                            <td>{{one.id}}</td>
                             <td title="{{one.des}}">
                                 {{one.name}}
                             </td>
@@ -65,10 +67,6 @@
                                 <div class="btn-line">
                                     <button class="btn" ng-click="goServiceOne(one)"
                                             ng-show="one.status != 'deleted'">Detail
-                                    </button>
-                                </div>
-                                <div class="btn-line">
-                                    <button class="btn" ng-click="goServiceJobs(one)">Jobs
                                     </button>
                                 </div>
                                 <div class="btn-line">
