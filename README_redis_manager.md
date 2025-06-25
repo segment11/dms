@@ -15,7 +15,8 @@ This is a module + some plugins in dms, it's a manager system for redis.
 - node exporter, redis exporter and prometheus, one button to collect metrics
 - vector log collect and loki, one button to collect logs
 - some basic metrics charts
-- Node resource overview
+- data transfer by redis-shake
+- node resource overview
 
 # Some screenshots
 
