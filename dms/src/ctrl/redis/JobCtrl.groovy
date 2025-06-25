@@ -115,35 +115,28 @@ h.group('/redis/job') {
             targetAddress = x.nodeIp + ':' + one.port
         }
 
-        // when cluster, need copy from multi-shards
-        List<Tuple3<String, String, String>> srcParamsGroupList = []
+        def uuid = fromOne.id + '->' + one.id
+        String srcType
+        String srcAddress
+        String srcPassword = fromOne.pass
+
         if (fromOne.mode == RmServiceDTO.Mode.cluster) {
-            fromOne.clusterSlotsDetail.shards.each { shard ->
-                def node = shard.nodes.find { n ->
-                    n.isPrimary
-                }
-                srcParamsGroupList << new Tuple3(
-                        fromOne.id + 'shard' + shard.shardIndex + '->' + one.id,
-                        node.ip + ':' + node.port,
-                        fromOne.pass,
-                )
+            srcType = 'cluster'
+            // any is ok
+            def node = fromOne.clusterSlotsDetail.shards[0].nodes.find { n ->
+                n.isPrimary
             }
+            srcAddress = node.ip + ':' + node.port
         } else if (fromOne.mode == RmServiceDTO.Mode.sentinel) {
+            srcType = 'standalone'
             def node = fromOne.primaryReplicasDetail.nodes.find { n ->
                 n.isPrimary
             }
-            srcParamsGroupList << new Tuple3(
-                    fromOne.id + 'shard->' + one.id,
-                    node.ip + ':' + node.port,
-                    fromOne.pass,
-            )
+            srcAddress = node.ip + ':' + node.port
         } else {
+            srcType = 'standalone'
             def fromX = fromRunningContainerList[0]
-            srcParamsGroupList << new Tuple3(
-                    fromOne.id + 'shard->' + one.id,
-                    fromX.nodeIp + ':' + fromOne.port,
-                    fromOne.pass,
-            )
+            srcAddress = fromX.nodeIp + ':' + fromOne.listenPort(fromX)
         }
 
         NamespaceDTO.createIfNotExist(RedisManager.CLUSTER_ID, 'redis-shake')
@@ -156,10 +149,9 @@ h.group('/redis/job') {
         rmJob.params.put('rmServiceId', id.toString())
         rmJob.params.put('fromServiceId', fromId.toString())
 
-        for (srcParamsGroup in srcParamsGroupList) {
-            rmJob.taskList << new CopyFromTask(rmJob, srcParamsGroup.v1, type,
-                    srcParamsGroup.v2, srcParamsGroup.v3, targetType, targetAddress, targetPassword)
-        }
+        rmJob.taskList << new CopyFromTask(rmJob, uuid, type,
+                srcType, srcAddress, srcPassword,
+                targetType, targetAddress, targetPassword)
 
         rmJob.createdDate = new Date()
         rmJob.updatedDate = new Date()

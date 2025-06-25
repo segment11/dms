@@ -22,16 +22,18 @@ import server.InMemoryAllContainerManager
 class CopyFromTask extends RmJobTask {
     final String uuid
     final String type
+    final String srcType
     final String srcAddress
     final String srcPassword
     final String targetType
     final String targetAddress
     final String targetPassword
 
-    CopyFromTask(RmJob rmJob, String uuid, String type, String srcAddress, String srcPassword,
+    CopyFromTask(RmJob rmJob, String uuid, String type, String srcType, String srcAddress, String srcPassword,
                  String targetType, String targetAddress, String targetPassword) {
         this.uuid = uuid
         this.type = type
+        this.srcType = srcType
         this.srcAddress = srcAddress
         this.srcPassword = srcPassword
         this.targetType = targetType
@@ -51,6 +53,7 @@ class CopyFromTask extends RmJobTask {
             app.clusterId = RedisManager.CLUSTER_ID
             app.namespaceId = NamespaceDTO.createIfNotExist(RedisManager.CLUSTER_ID, 'redis-shake')
             app.name = step.name
+            app.status = AppDTO.Status.manual
 
             app.conf = createAppConf()
 
@@ -96,6 +99,7 @@ class CopyFromTask extends RmJobTask {
         mountOne.paramList << new KVPair<String>('targetAddress', targetAddress)
         mountOne.paramList << new KVPair<String>('targetUsername', '')
         mountOne.paramList << new KVPair<String>('targetPassword', targetPassword ?: '')
+        mountOne.paramList << new KVPair<String>('srcType', srcType)
         mountOne.paramList << new KVPair<String>('srcAddress', srcAddress)
         mountOne.paramList << new KVPair<String>('srcUsername', '')
         mountOne.paramList << new KVPair<String>('srcPassword', srcPassword ?: '')

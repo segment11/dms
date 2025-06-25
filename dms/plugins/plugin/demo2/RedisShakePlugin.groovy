@@ -31,6 +31,7 @@ class RedisShakePlugin extends BasePlugin {
         TplParamsConf tplParams = new TplParamsConf()
         // sync or scan
         tplParams.addParam('type', 'sync', 'string')
+        tplParams.addParam('srcType', 'standalone', 'string')
         tplParams.addParam('srcAddress', 'localhost:6379', 'string')
         tplParams.addParam('srcUsername', '', 'string')
         tplParams.addParam('srcPassword', '', 'string')

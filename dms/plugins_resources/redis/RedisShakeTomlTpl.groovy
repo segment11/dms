@@ -2,6 +2,7 @@ package redis
 
 def type = super.binding.getProperty('type') as String
 
+def srcType = super.binding.getProperty('srcType') as String
 def srcAddress = super.binding.getProperty('srcAddress') as String
 def srcUsername = super.binding.getProperty('srcUsername') as String
 def srcPassword = super.binding.getProperty('srcPassword') as String
@@ -13,6 +14,7 @@ def targetPassword = super.binding.getProperty('targetPassword') as String
 
 """
 [${type}_reader]
+cluster = "${srcType == 'cluster' ? 'true' : 'false'}"
 address = "${srcAddress}"
 username = "${srcUsername}"
 password = "${srcPassword}"
