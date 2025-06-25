@@ -53,9 +53,15 @@ h.group('/redis/job') {
         Map map = req.bodyAs()
         def fromId = map.fromId as int
         def id = map.id as int
+        def type = map.type as String
 
         if (id == fromId) {
             resp.halt(409, 'service cannot be itself')
+        }
+
+        // redis-shake only support sync or scan
+        if (type !in ['sync', 'scan']) {
+            resp.halt(409, 'type must be sync or scan')
         }
 
         def one = new RmServiceDTO(id: id).one()
@@ -85,7 +91,6 @@ h.group('/redis/job') {
         }
 
         // redis shake params
-        final String type = 'sync'
         String targetType
         String targetAddress
 //        String targetUsername
@@ -118,8 +123,8 @@ h.group('/redis/job') {
                     n.isPrimary
                 }
                 srcParamsGroupList << new Tuple3(
-                        node.ip + ':' + node.port,
                         fromOne.id + 'shard' + shard.shardIndex + '->' + one.id,
+                        node.ip + ':' + node.port,
                         fromOne.pass,
                 )
             }
@@ -128,15 +133,15 @@ h.group('/redis/job') {
                 n.isPrimary
             }
             srcParamsGroupList << new Tuple3(
-                    node.ip + ':' + node.port,
                     fromOne.id + 'shard->' + one.id,
+                    node.ip + ':' + node.port,
                     fromOne.pass,
             )
         } else {
             def fromX = fromRunningContainerList[0]
             srcParamsGroupList << new Tuple3(
-                    fromX.nodeIp + ':' + fromOne.port,
                     fromOne.id + 'shard->' + one.id,
+                    fromX.nodeIp + ':' + fromOne.port,
                     fromOne.pass,
             )
         }
@@ -152,7 +157,8 @@ h.group('/redis/job') {
         rmJob.params.put('fromServiceId', fromId.toString())
 
         for (srcParamsGroup in srcParamsGroupList) {
-            rmJob.taskList << new CopyFromTask(rmJob, srcParamsGroup.v2, type, srcParamsGroup.v1, srcParamsGroup.v3, targetType, targetAddress, targetPassword)
+            rmJob.taskList << new CopyFromTask(rmJob, srcParamsGroup.v1, type,
+                    srcParamsGroup.v2, srcParamsGroup.v3, targetType, targetAddress, targetPassword)
         }
 
         rmJob.createdDate = new Date()

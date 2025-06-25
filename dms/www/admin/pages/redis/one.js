@@ -4,7 +4,8 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog) {
         timeRangeList: ['5m', '1h', '3h', '1d', '7d', '30d'],
         timeRange: '5m',
         metricInstanceList: [],
-        metricInstance: ''
+        metricInstance: '',
+        copyFromType: 'sync'
     };
     $scope.ctrl = {};
     $scope.charts = {};
@@ -90,6 +91,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog) {
         }
 
         $http.post('/dms/redis/job/service/copy-from', {
+            type: $scope.tmp.copyFromType,
             fromId: $scope.tmp.copyFromId,
             id: id
         }).success(function (data) {

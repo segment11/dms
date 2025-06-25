@@ -274,12 +274,21 @@
             ui-dialog="{showModel: 'ctrl.isShowCopyFrom', title: 'Copy Data From Another Redis Service', dialogId: 'dialogCopyFrom', lock: true, fixed: true, ext: {max: false}}">
         <table class="table table-bordered table-striped m_top6" style="width: 600px;">
             <tr>
-                <td width="30%">From Service</td>
+                <td width="40%">From Service</td>
                 <td>
                     <select ng-options="a.id as a.name for a in tmp.copyFromServiceList"
                             ng-model="tmp.copyFromId"
                             style="width: 200px;">
                     </select>
+                </td>
+                <td>
+                    Type
+                    <a href="https://tair-opensource.github.io/RedisShake/en/reader/sync_reader.html" target="_blank">Refer
+                        to doc</a>
+                </td>
+                <td>
+                    <input type="radio" value="sync" ng-model="tmp.copyFromType"/>&nbsp;sync&nbsp;&nbsp;
+                    <input type="radio" value="scan" ng-model="tmp.copyFromType"/>&nbsp;scan&nbsp;&nbsp;
                 </td>
             </tr>
         </table>
