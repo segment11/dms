@@ -133,6 +133,22 @@
                                                    style="width: 120px;"/></td>
                                     </tr>
                                     <tr>
+                                        <td><label>Maxmemory Policy</label></td>
+                                        <td>
+                                            <select ng-model="editOne.extendParams.params.maxmemoryPolicy"
+                                                    style="width: 120px;">
+                                                <option value="noeviction">noeviction</option>
+                                                <option value="allkeys-lru">allkeys-lru</option>
+                                                <option value="allkeys-lfu">allkeys-lfu</option>
+                                                <option value="allkeys-random">allkeys-random</option>
+                                                <option value="volatile-lru" selected>volatile-lru</option>
+                                                <option value="volatile-lfu">volatile-lfu</option>
+                                                <option value="volatile-random">volatile-random</option>
+                                                <option value="volatile-ttl">volatile-ttl</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
                                         <td>Cpu Cores</td>
                                         <td><input type="text" ng-model="editOne.extendParams.params.cpuFixed"
                                                    ui-valid="r float minval:float:0.5 maxval:float:4.0"

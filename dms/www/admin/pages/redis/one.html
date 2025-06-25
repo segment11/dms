@@ -53,9 +53,10 @@
 
                     <div class="row">
                         <div class="col-md-4">
-                            <span>Each Instance Max Memory</span>
-                            <span class="pull-right">{{one.maxmemoryMb}} MB</span>
+                            <span>Max Memory</span>
+                            <span class="pull-right">{{one.maxmemoryMb}} MB / {{one.maxmemoryPolicy}}</span>
                             <button class="btn" ng-click="updateMaxmemory(one)">Update</button>
+                            <button class="btn btn-gray" ng-click="updateMaxmemoryPolicy(one)">Update Policy</button>
                         </div>
                         <div class="col-md-4">
                             <span>Shards</span>
@@ -296,5 +297,33 @@
         </table>
         <button class="btn btn-blue" ng-click="doCopyFrom()">Do Copy From</button>
         <button class="btn" ng-click="ctrl.isShowCopyFrom = false">Close</button>
+    </script>
+
+    <script type="text/x-template"
+            ui-dialog="{showModel: 'ctrl.isShowUpdateMaxmemoryPolicy', title: 'Update Maxmemory Policy', dialogId: 'dialogUpdateMaxmemoryPolicy', lock: true, fixed: true, ext: {max: false}}">
+        <table class="table table-bordered table-striped m_top6" style="width: 600px;">
+            <tr>
+                <td width="40%">
+                    Maxmemory Policy
+                    <a href="https://redis.io/docs/latest/develop/reference/eviction/" target="_blank">Refer
+                        to doc</a>
+                </td>
+                <td>
+                    <select ng-model="tmp.maxmemoryPolicy"
+                            style="width: 120px;">
+                        <option value="noeviction">noeviction</option>
+                        <option value="allkeys-lru">allkeys-lru</option>
+                        <option value="allkeys-lfu">allkeys-lfu</option>
+                        <option value="allkeys-random">allkeys-random</option>
+                        <option value="volatile-lru" selected>volatile-lru</option>
+                        <option value="volatile-lfu">volatile-lfu</option>
+                        <option value="volatile-random">volatile-random</option>
+                        <option value="volatile-ttl">volatile-ttl</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+        <button class="btn btn-blue" ng-click="doUpdateMaxmemoryPolicy(one)">Do Update</button>
+        <button class="btn" ng-click="ctrl.isShowUpdateMaxmemoryPolicy = false">Close</button>
     </script>
 </div>

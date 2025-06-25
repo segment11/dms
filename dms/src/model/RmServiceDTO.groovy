@@ -61,6 +61,8 @@ class RmServiceDTO extends BaseRecord<RmServiceDTO> {
 
     Integer maxmemoryMb
 
+    String maxmemoryPolicy
+
     Integer port
 
     Integer shards

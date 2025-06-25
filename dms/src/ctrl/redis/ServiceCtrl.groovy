@@ -329,6 +329,7 @@ h.group('/redis/service') {
         if (one.maxmemoryMb > RedisManager.ONE_INSTANCE_MAX_MEMORY_MB) {
             resp.halt(409, 'maxmemory MB need less than ' + RedisManager.ONE_INSTANCE_MAX_MEMORY_MB + 'MB')
         }
+        one.maxmemoryPolicy = extendParams.getString('maxmemoryPolicy', 'volatile-lru')
 
         conf.networkMode = 'host'
         conf.portList << new PortMapping(privatePort: one.port, publicPort: one.port)

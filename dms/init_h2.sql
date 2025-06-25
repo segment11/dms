@@ -273,6 +273,7 @@ create table rm_service
     sentinel_app_id            int,
     pass                       varchar(200),
     maxmemory_mb               int,
+    maxmemory_policy           varchar(20),
     port                       int,
     shards                     int,
     replicas                   int,

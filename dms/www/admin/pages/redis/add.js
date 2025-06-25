@@ -3,6 +3,7 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiValid) {
     var params = {};
     params.memMB = 1024;
     params.cpuFixed = 1.0;
+    params.maxmemoryPolicy = 'volatile-lru';
 
     $scope.tmp = {};
     $scope.ctrl = {};

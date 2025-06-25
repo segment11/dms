@@ -150,9 +150,10 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog) {
                 return;
             }
 
-            $http.post('/dms/redis/config/update-maxmemory', {
+            $http.post('/dms/redis/config/update', {
                 id: one.id,
-                maxmemoryMb: val
+                key: 'maxmemoryMb',
+                value: val,
             }).success(function (data) {
                 if (data.flag) {
                     uiTips.alert('Update maxmemory success');
@@ -160,6 +161,26 @@ md.controller('MainCtrl', function ($scope, $http, uiTips, uiLog) {
                 }
             });
         }, one.maxmemoryMb);
+    };
+
+    $scope.updateMaxmemoryPolicy = function (one) {
+        $scope.tmp.maxmemoryPolicy = one.maxmemoryPolicy;
+        $scope.ctrl.isShowUpdateMaxmemoryPolicy = true;
+    };
+
+    $scope.doUpdateMaxmemoryPolicy = function (one) {
+        var val = $scope.tmp.maxmemoryPolicy;
+        $http.post('/dms/redis/config/update', {
+            id: one.id,
+            key: 'maxmemoryPolicy',
+            value: val,
+        }).success(function (data) {
+            if (data.flag) {
+                uiTips.alert('Update maxmemory policy success');
+                one.maxmemoryPolicy = val;
+                $scope.ctrl.isShowUpdateMaxmemoryPolicy = false;
+            }
+        });
     };
 
     $scope.doScale = function (one) {
