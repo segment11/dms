@@ -1,0 +1,12 @@
+[submodule "segment_common"]
+	path = segment_common
+	url = git@github.com:segment11/segment_common.git
+	branch = main
+[submodule "segmentd"]
+	path = segmentd
+	url = git@github.com:segment11/segmentd.git
+	branch = main
+[submodule "segmentweb"]
+	path = segmentweb
+	url = git@github.com:segment11/segmentweb.git
+	branch = main
