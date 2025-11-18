@@ -63,7 +63,7 @@ TIPS: Need jdk21+/gradle8+
 cd ~/ws
 git clone git@github.com:segment11/dms.git
 cd dms
-git submodule update --remote
+git submodule update --init
 cd ~/ws/dms/dms_agent
 gradle tar
 cd ~/ws/dms/dms
