@@ -1,12 +1,12 @@
 [submodule "segment_common"]
 	path = segment_common
 	url = https://github.com/segment11/segment_common
-	branch = main
+	branch = master
 [submodule "segmentd"]
-	path = segmentd
+	path = master
 	url = https://github.com/segment11/segmentd
-	branch = main
+	branch = master
 [submodule "segmentweb"]
 	path = segmentweb
 	url = https://github.com/segment11/segmentweb
-	branch = main
+	branch = master
