@@ -402,7 +402,7 @@ create table km_service
     is_sasl_on                 bit,
     is_tls_on                  bit,
     node_tags                  varchar(100),
-    node_tags_by_broker_index  varchar(100),
+    node_tags_by_broker_index  varchar(500),
     log_policy                 varchar(200),
     status                     varchar(20),   -- creating/running/scaling_up/scaling_down/stopped/deleted/unhealthy
     extend_params              varchar(2000),
