@@ -3,7 +3,7 @@
 	url = https://github.com/segment11/segment_common
 	branch = master
 [submodule "segmentd"]
-	path = master
+	path = segmentd
 	url = https://github.com/segment11/segmentd
 	branch = master
 [submodule "segmentweb"]
