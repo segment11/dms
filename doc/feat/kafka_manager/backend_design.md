@@ -344,7 +344,8 @@ Input style follows conversion doc 3.1:
 |--------|------|-------|--------|-------------|
 | GET | `/list` | `serviceId` | list of KmSnapshotDTO | List snapshots for service |
 | POST | `/export` | `{serviceId}` | `[id: snapshotId]` | Export cluster metadata |
-| POST | `/import` | KmImportRequest body | `[id: serviceId]` | Reconstruct cluster from snapshot || GET | `/download` | `id` | file stream | Download snapshot zip |
+| POST | `/import` | KmImportRequest body | `[id: serviceId]` | Reconstruct cluster from snapshot |
+| GET | `/download` | `id` | file stream | Download snapshot zip |
 
 ### 8.5 KmConfigTemplateCtrl — `/kafka/config-template`
 
