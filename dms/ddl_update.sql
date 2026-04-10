@@ -1,5 +1,8 @@
 -- kafka manager tables for existing deployments
 
+-- alter existing km_service if column is undersized
+alter table km_service alter column node_tags_by_broker_index varchar(500);
+
 create table if not exists km_service
 (
     id                         int auto_increment primary key,
