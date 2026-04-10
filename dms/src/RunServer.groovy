@@ -68,7 +68,8 @@ String queryTableNameSql = isPG ?
         : "SELECT table_name FROM information_schema.tables"
 def tableNameList = d.query(queryTableNameSql, String).collect { it.toUpperCase() }
 if (!tableNameList.contains('CLUSTER')) {
-    new File(c.projectPath('/init_h2.sql')).text.split(';').each {
+    def ddlInitFile = new File(c.projectPath('/init_h2.sql'))
+    ddlInitFile.text.split(';').each {
         def ddl = it.trim()
         if (!ddl) {
             return
@@ -78,6 +79,24 @@ if (!tableNameList.contains('CLUSTER')) {
             log.info 'done execute ddl: \n {}', ddl
         } catch (Exception e) {
             log.error 'execute ddl error, ddl: {}\n', ddl, e
+        }
+    }
+} else {
+    // ddl change
+    def ddlChangeFile = new File(c.projectPath('/ddl_update.sql'))
+    if (ddlChangeFile.exists()) {
+        log.warn 'ddl update file exist'
+        ddlChangeFile.text.split(';').each {
+            def ddl = it.toString().trim()
+            if (!ddl) {
+                return
+            }
+            try {
+                d.exe(ddl)
+                log.info 'ddl update success: {}', ddl
+            } catch (Exception e) {
+                log.error('ddl update fail', e)
+            }
         }
     }
 }
