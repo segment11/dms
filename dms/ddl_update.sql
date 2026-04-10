@@ -1,10 +1,5 @@
 -- kafka manager tables for existing deployments
 
--- alter existing km_service if column is undersized
--- both H2 and PostgreSQL syntax tried; one will fail harmlessly in the existing try/catch
-alter table km_service alter column node_tags_by_broker_index varchar(500);
-alter table km_service alter column node_tags_by_broker_index type varchar(500);
-
 create table if not exists km_service
 (
     id                         int auto_increment primary key,

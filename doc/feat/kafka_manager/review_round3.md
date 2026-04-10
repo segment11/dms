@@ -23,8 +23,6 @@ Round 2 closed the earlier H2 upgrade gap and the design-doc mismatch. The remai
 
 ## Resolution
 
-Made the ALTER TABLE portable for both H2 and PostgreSQL. `ddl_update.sql` now contains two separate statements:
-- `alter table km_service alter column node_tags_by_broker_index varchar(500)` — H2 syntax
-- `alter table km_service alter column node_tags_by_broker_index type varchar(500)` — PostgreSQL syntax
+The interim dual-ALTER approach from this round was later removed.
 
-The RunServer.groovy DDL runner (line 97-99) catches exceptions per-statement, so whichever syntax doesn't match the active database backend will fail harmlessly and the other will succeed.
+Final handling moved the backend-specific repair into `support/DDLPostChecker.groovy`, so `ddl_update.sql` no longer depends on intentional statement failures to support both H2 and PostgreSQL.

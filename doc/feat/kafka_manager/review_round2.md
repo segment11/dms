@@ -31,8 +31,6 @@ Round 1 feedback is only partially closed. The missing-table upgrade path is fix
 
 ## Resolution
 
-Both findings addressed:
+The immediate fix from this round was later replaced.
 
-1. Added `alter table km_service alter column node_tags_by_broker_index varchar(500)` before the `create table if not exists` block in `ddl_update.sql`. If the table exists with the old `varchar(100)`, the ALTER widens it. If the table does not exist, the ALTER fails harmlessly (caught by the same try/catch in RunServer.groovy) and the CREATE follows.
-
-2. Updated `doc/kafka_manager_design.md` line 110 to reflect `varchar(500)` for `node_tags_by_broker_index`.
+Final handling moved the width repair into `support/DDLPostChecker.groovy`, and `RunServer.groovy` now treats DDL update failures as fatal instead of relying on an expected SQL failure path.

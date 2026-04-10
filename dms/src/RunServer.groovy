@@ -86,17 +86,19 @@ if (!tableNameList.contains('CLUSTER')) {
     def ddlChangeFile = new File(c.projectPath('/ddl_update.sql'))
     if (ddlChangeFile.exists()) {
         log.warn 'ddl update file exist'
-        ddlChangeFile.text.split(';').each {
-            def ddl = it.toString().trim()
-            if (!ddl) {
-                return
-            }
-            try {
+        try {
+            ddlChangeFile.text.split(';').each {
+                def ddl = it.toString().trim()
+                if (!ddl) {
+                    return
+                }
                 d.exe(ddl)
                 log.info 'ddl update success: {}', ddl
-            } catch (Exception e) {
-                log.error('ddl update fail', e)
             }
+            DDLPostChecker.instance.check(d, isPG)
+        } catch (Exception e) {
+            log.error 'ddl update fail, server stop', e
+            throw e
         }
     }
 }
