@@ -39,7 +39,7 @@ Inner enums:
 - `Status` — `creating`, `running`, `scaling_up`, `scaling_down`, `stopped`, `deleted`, `unhealthy`
 
 JSON-backed fields (use `JSONFiled` types):
-- `configOverrides` → `KmConfigOverrides` (new JSON model, wraps `Map<String, String>`)
+- `configOverrides` → `ExtendParams` (reuse existing from `dms_common` — generic key-value JSON, per web_api_code_conversion.md reuse guidance)
 - `brokerDetail` → `BrokerDetail` (new JSON model)
 - `logPolicy` → `LogPolicy` (reuse existing)
 - `extendParams` → `ExtendParams` (reuse existing from `dms_common`)
@@ -63,7 +63,7 @@ Maps to `km_topic`. Fields: `id, serviceId, name, partitions, replicationFactor,
 Inner enum:
 - `Status` — `creating`, `active`, `deleting`, `deleted`
 
-`configOverrides` → `KmConfigOverrides` (new JSON model, wraps `Map<String, String>`).
+`configOverrides` → `ExtendParams` (reuse existing from `dms_common`).
 
 ### 1.4 KmJobDTO
 
@@ -94,17 +94,7 @@ Inner enum:
 
 All under `dms/src/model/json/`, implement `JSONFiled`.
 
-### 2.1 KmConfigOverrides
-
-Wraps broker/topic runtime config overrides as a `Map<String, String>`. Used by `KmServiceDTO.configOverrides` and `KmTopicDTO.configOverrides` for proper DB JSON serialization via `JSONFiled`.
-
-```groovy
-class KmConfigOverrides implements JSONFiled {
-    Map<String, String> entries
-}
-```
-
-### 2.2 BrokerDetail
+### 2.1 BrokerDetail
 
 Cluster topology stored in `km_service.broker_detail`.
 
@@ -129,7 +119,7 @@ class BrokerDetail implements JSONFiled {
 }
 ```
 
-### 2.3 KmSnapshotContent
+### 2.2 KmSnapshotContent
 
 Snapshot payload, stored as `snapshot.json` file (not a DB column).
 
@@ -144,7 +134,7 @@ class KmSnapshotContent implements JSONFiled {
     String zkChroot
     List<TopicEntry> topics
     List<KVPair<String>> configItems
-    KmConfigOverrides configOverrides
+    ExtendParams configOverrides
 
     static class BrokerEntry implements JSONFiled {
         int brokerId
@@ -158,7 +148,7 @@ class KmSnapshotContent implements JSONFiled {
         String name
         int partitions
         int replicationFactor
-        KmConfigOverrides configOverrides
+        ExtendParams configOverrides
     }
 }
 ```
@@ -312,6 +302,11 @@ All under `dms/src/ctrl/kafka/`, package `ctrl.kafka`.
 
 Each controller is a Groovy script using `ChainHandler.instance` DSL.
 
+Input style follows conversion doc 3.1:
+- Simple GET/DELETE inputs: `req.param('x')`
+- Simple POST/PUT inputs with few fields: `req.bodyAs(HashMap)`
+- Larger or reused payloads: typed DTO/JSONFiled classes (e.g. `KmServiceDTO`, `KmTopicDTO`, `KmImportRequest`)
+
 ### 8.1 KmServiceCtrl — `/kafka/service`
 
 | Method | Path | Input | Output | Description |
@@ -417,44 +412,47 @@ Under `dms/plugins_resources/kafka/`:
 | 5 | `dms/src/model/job/KmTaskLogDTO.groovy` | DTO |
 | 6 | `dms/src/model/job/KmSnapshotDTO.groovy` | DTO |
 | 7 | `dms/src/model/json/BrokerDetail.groovy` | JSON model |
-| 8 | `dms/src/model/json/KmConfigOverrides.groovy` | JSON model |
-| 9 | `dms/src/model/json/KmSnapshotContent.groovy` | JSON model |
-| 10 | `dms/src/model/json/KmImportRequest.groovy` | JSON model (request) |
-| 11 | `dms/src/km/KafkaManager.groovy` | Manager |
-| 12 | `dms/src/km/KmJobExecutor.groovy` | Executor |
-| 13 | `dms/src/km/KmSnapshotManager.groovy` | Snapshot |
-| 14 | `dms/src/km/PartitionBalancer.groovy` | Utility |
-| 15 | `dms/src/km/job/KmJobTypes.groovy` | Job types |
-| 16 | `dms/src/km/job/KmJob.groovy` | Job |
-| 17 | `dms/src/km/job/KmJobTask.groovy` | Abstract task |
-| 18 | `dms/src/km/job/KmTaskLog.groovy` | Task log helper |
-| 19 | `dms/src/km/job/task/ValidateZookeeperTask.groovy` | Task |
-| 20 | `dms/src/km/job/task/RunCreatingAppJobTask.groovy` | Task |
-| 21 | `dms/src/km/job/task/WaitInstancesRunningTask.groovy` | Task |
-| 22 | `dms/src/km/job/task/WaitBrokersRegisteredTask.groovy` | Task |
-| 23 | `dms/src/km/job/task/AddBrokersTask.groovy` | Task |
-| 24 | `dms/src/km/job/task/ReassignPartitionsTask.groovy` | Task |
-| 25 | `dms/src/km/job/task/WaitReassignmentCompleteTask.groovy` | Task |
-| 26 | `dms/src/km/job/task/DecommissionBrokerTask.groovy` | Task |
-| 27 | `dms/src/km/job/task/RemoveBrokersTask.groovy` | Task |
-| 28 | `dms/src/km/job/task/CreateTopicTask.groovy` | Task |
-| 29 | `dms/src/km/job/task/AlterTopicTask.groovy` | Task |
-| 30 | `dms/src/km/job/task/DeleteTopicTask.groovy` | Task |
-| 31 | `dms/src/km/job/task/FailoverTask.groovy` | Task |
-| 32 | `dms/src/ctrl/kafka/KmServiceCtrl.groovy` | Controller |
-| 33 | `dms/src/ctrl/kafka/KmTopicCtrl.groovy` | Controller |
-| 34 | `dms/src/ctrl/kafka/KmJobCtrl.groovy` | Controller |
-| 35 | `dms/src/ctrl/kafka/KmSnapshotCtrl.groovy` | Controller |
-| 36 | `dms/src/ctrl/kafka/KmConfigTemplateCtrl.groovy` | Controller |
-| 37 | `dms/src/ctrl/kafka/KmMetricCtrl.groovy` | Controller |
-| 38 | `dms/plugins/plugin/demo2/KafkaPlugin.groovy` | Plugin |
-| 39 | `dms/plugins_resources/kafka/ServerPropertiesTpl.groovy` | Template |
-| 40 | `dms/plugins_resources/kafka/ServerPropertiesUseTemplateTpl.groovy` | Template |
+| 8 | `dms/src/model/json/KmSnapshotContent.groovy` | JSON model |
+| 9 | `dms/src/model/json/KmImportRequest.groovy` | JSON model (request) |
+| 10 | `dms/src/km/KafkaManager.groovy` | Manager |
+| 11 | `dms/src/km/KmJobExecutor.groovy` | Executor |
+| 12 | `dms/src/km/KmSnapshotManager.groovy` | Snapshot |
+| 13 | `dms/src/km/PartitionBalancer.groovy` | Utility |
+| 14 | `dms/src/km/job/KmJobTypes.groovy` | Job types |
+| 15 | `dms/src/km/job/KmJob.groovy` | Job |
+| 16 | `dms/src/km/job/KmJobTask.groovy` | Abstract task |
+| 17 | `dms/src/km/job/KmTaskLog.groovy` | Task log helper |
+| 18 | `dms/src/km/job/task/ValidateZookeeperTask.groovy` | Task |
+| 19 | `dms/src/km/job/task/RunCreatingAppJobTask.groovy` | Task |
+| 20 | `dms/src/km/job/task/WaitInstancesRunningTask.groovy` | Task |
+| 21 | `dms/src/km/job/task/WaitBrokersRegisteredTask.groovy` | Task |
+| 22 | `dms/src/km/job/task/AddBrokersTask.groovy` | Task |
+| 23 | `dms/src/km/job/task/ReassignPartitionsTask.groovy` | Task |
+| 24 | `dms/src/km/job/task/WaitReassignmentCompleteTask.groovy` | Task |
+| 25 | `dms/src/km/job/task/DecommissionBrokerTask.groovy` | Task |
+| 26 | `dms/src/km/job/task/RemoveBrokersTask.groovy` | Task |
+| 27 | `dms/src/km/job/task/CreateTopicTask.groovy` | Task |
+| 28 | `dms/src/km/job/task/AlterTopicTask.groovy` | Task |
+| 29 | `dms/src/km/job/task/DeleteTopicTask.groovy` | Task |
+| 30 | `dms/src/km/job/task/FailoverTask.groovy` | Task |
+| 31 | `dms/src/ctrl/kafka/KmServiceCtrl.groovy` | Controller |
+| 32 | `dms/src/ctrl/kafka/KmTopicCtrl.groovy` | Controller |
+| 33 | `dms/src/ctrl/kafka/KmJobCtrl.groovy` | Controller |
+| 34 | `dms/src/ctrl/kafka/KmSnapshotCtrl.groovy` | Controller |
+| 35 | `dms/src/ctrl/kafka/KmConfigTemplateCtrl.groovy` | Controller |
+| 36 | `dms/src/ctrl/kafka/KmMetricCtrl.groovy` | Controller |
+| 37 | `dms/plugins/plugin/demo2/KafkaPlugin.groovy` | Plugin |
+| 38 | `dms/plugins_resources/kafka/ServerPropertiesTpl.groovy` | Template |
+| 39 | `dms/plugins_resources/kafka/ServerPropertiesUseTemplateTpl.groovy` | Template |
 
 ### Reused Existing Types
 
 - `model.json.ConfigItems` — for `KmConfigTemplateDTO.configItems`
 - `model.json.LogPolicy` — for `KmServiceDTO.logPolicy`
-- `model.json.ExtendParams` (from `dms_common`) — for `KmServiceDTO.extendParams`
+- `model.json.ExtendParams` (from `dms_common`) — for `KmServiceDTO.extendParams` and `KmServiceDTO.configOverrides` and `KmTopicDTO.configOverrides`
 - `org.segment.d.json.JSONFiled` — marker interface for all JSON models
 - `com.segment.common.job.chain.*` — framework for Job, JobTask, JobResult
+
+### Pattern Reuse Note
+
+Per web_api_code_conversion.md section 3.6.5, the KM job/task framework reuses the RM pattern (`RmJob`, `RmJobTask`, `RmTaskLog`, `RmJobExecutor`) with feature-specific naming (`KmJob`, `KmJobTask`, `KmTaskLog`, `KmJobExecutor`). No behavioral divergence from the RM pattern.
