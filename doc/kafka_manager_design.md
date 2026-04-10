@@ -107,7 +107,7 @@ dms/src/km/
 | `is_sasl_on` | bit | SASL authentication enabled |
 | `is_tls_on` | bit | TLS encryption enabled |
 | `node_tags` | varchar(100) | Target node constraint tags |
-| `node_tags_by_broker_index` | varchar(100) | Per-broker node placement |
+| `node_tags_by_broker_index` | varchar(500) | Per-broker node placement |
 | `log_policy` | varchar(200) | JSON (LogPolicy) |
 | `status` | varchar(20) | See status enum below |
 | `extend_params` | varchar(2000) | JSON (ExtendParams) |

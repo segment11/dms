@@ -164,6 +164,10 @@ Conversion rule:
 
 - separate syntax validation from business validation
 - keep the required-field contract, but do not rely on `assert` in the new stack as the main validation mechanism
+- do not create a request class only to receive a simple HTTP request with few params and no reuse elsewhere
+- for simple GET/DELETE inputs, prefer `req.param(...)`
+- for simple POST/PUT inputs, prefer `req.bodyAs(HashMap)` or `req.bodyAs()`
+- introduce a typed request class only when the payload is larger, reused, or important enough to deserve an explicit contract
 
 ### 3.2 Response style
 
@@ -343,6 +347,10 @@ Conversion rule:
 
 - treat JSON-backed types as part of the database contract
 - preserve their serialized field names and nesting first
+- for new feature modeling, prefer a JSON field when a structure is not clearly a business DTO/persistent record
+- for new feature modeling, prefer a JSON field when a structure has many nested properties and would otherwise create a noisy or low-value table split
+- for generic key-value JSON payloads, prefer reusing `dms_common/src/model/json/ExtendParams.groovy` before creating a new wrapper type
+- for config template item lists, log-policy structures, or similar existing shapes, prefer reusing existing `JSONFiled` types such as `ConfigItems`, `LogPolicy`, `BackupPolicy`, `PrimaryReplicasDetail`, or `ClusterSlotsDetail` when the semantics already match
 - normalize them into separate tables only with explicit migration planning
 
 #### 3.6.4 Cluster support classes in `dms/src/model/cluster`
@@ -377,7 +385,22 @@ Conversion rule:
 - do not misclassify these as database entities
 - they are domain support types used by job orchestration and cluster-state reconciliation
 
-#### 3.6.5 How the CRUD models are used today
+#### 3.6.5 Reuse Existing Backend Patterns First
+
+Before introducing a new backend abstraction, check whether an existing Redis-manager or plugin pattern already fits with renaming and small adaptations.
+
+Good reuse candidates in this repo:
+
+- `dms/src/rm/job/RmJob.groovy`, `dms/src/rm/job/RmJobTask.groovy`, `dms/src/rm/job/RmTaskLog.groovy`, `dms/src/rm/RmJobExecutor.groovy` for async job/task execution patterns
+- `dms/src/plugin/BasePlugin.groovy` for DMS plugin lifecycle, template registration, and checker integration
+- existing DTO placement patterns under `dms/src/model/` and `dms/src/model/job/`
+
+Conversion rule:
+
+- prefer reusing an existing pattern with feature-specific naming over creating a parallel framework with slightly different behavior
+- if a new feature diverges from Redis-manager patterns, document the reason explicitly in the design doc before implementation
+
+#### 3.6.6 How the CRUD models are used today
 
 The persistent classes under `dms/src/model` are used in two layers:
 

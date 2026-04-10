@@ -155,7 +155,7 @@ tasks.register('copyDependencies', Copy) {
 }
 
 tasks.register('buildToRun', Copy) {
-    from 'src/conf.properties', 'src/log4j2.xml', 'init_h2.sql'
+    from 'src/conf.properties', 'src/log4j2.xml', 'init_h2.sql', './ddl_update.sql'
     into "$buildDir/libs"
 }
 
