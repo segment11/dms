@@ -57,6 +57,8 @@ Three Gradle subprojects plus three git submodule dependencies:
 
 - Use two AI roles for feature delivery: one implementer and one reviewer.
 - Implement in this order: DDL first, then web API, then web pages.
+- Before web API stage coding, write `doc/feat/<feature_name>/backend_design.md` first. It should cover the web API sub-steps, and implementation should wait for reviewer feedback on that design doc.
+- Web API stage sub-steps: DTO models first, then Utils methods if needed, then Managers if needed, then `ChainHandler` routers, then Jobs and tasks, then DMS plugins if needed.
 - Each stage must be reviewed before moving to the next stage.
 - Record every review round in `doc/feat/<feature_name>/review_round{N}.md`.
 - Kafka manager review files must use `doc/feat/kafka_manager/review_round{N}.md`.
