@@ -49,6 +49,10 @@ Three Gradle subprojects plus three git submodule dependencies:
 - **Plugin system** (`dms/src/plugin/`, `dms/plugins/`) - Extensible via Groovy classes implementing `Plugin` interface. Built-in plugins for MySQL, Redis, PostgreSQL, Prometheus, Grafana, Traefik, etc.
 - **Redis Manager** (`dms/src/rm/`) - Full Redis cluster/sentinel management with backup, failover, scaling, data transfer
 
+### AI Agent Guides
+- For legacy admin frontend conversion work, read `doc/web_pages_code_conversion.md`
+- For backend web/API conversion work, read `doc/web_api_code_conversion.md`
+
 ### Key Agent Components
 - **Controllers** (`dms_agent/src/agent/ctrl/`) - Container CRUD, image pull, log viewing, file ops, script execution
 - **ContainerCreate** (`dms_agent/src/agent/`) - Container provisioning with mount file generation
