@@ -1,4 +1,5 @@
 plugins {
+    id 'jacoco'
     id 'groovy'
     id 'java'
 }
@@ -46,6 +47,10 @@ String nettyVersion = '4.2.1.Final'
 configurations {
     runtime.exclude group: "org.slf4j", module: "slf4j-log4j12"
     compile.exclude group: "org.slf4j", module: "slf4j-log4j12"
+}
+
+configurations.configureEach {
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
 }
 
 dependencies {
@@ -113,6 +118,47 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    forkEvery = 1
+    jacoco {
+        excludes = ['*MethodAccess']
+    }
+
+    testLogging {
+        showStandardStreams = true
+    }
+}
+
+tasks.register('unitTest', Test) {
+    group = LifecycleBasePlugin.VERIFICATION_GROUP
+    description = 'Runs only dms unit tests without pulling sibling project test tasks into the execution path.'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform()
+    forkEvery = 1
+    jacoco {
+        excludes = ['*MethodAccess']
+    }
+
+    testLogging {
+        showStandardStreams = true
+    }
+}
+
+jacoco {
+    toolVersion = '0.8.12'
+}
+
+tasks.register('jacocoUnitTestReport', JacocoReport) {
+    dependsOn tasks.named('unitTest')
+    executionData.from(file("$buildDir/jacoco/unitTest.exec"))
+    sourceDirectories.from = files(sourceSets.main.allSource.srcDirs)
+    classDirectories.from = files(sourceSets.main.output)
+
+    reports {
+        xml.required = false
+        csv.required = false
+        html.outputLocation = layout.buildDirectory.dir('reports/jacocoUnitTestHtml')
+    }
 }
 
 jar {
