@@ -1,45 +1,39 @@
 package ctrl
 
-import com.github.kevinsawicki.http.HttpRequest
-import org.segment.web.RouteServer
+import com.alibaba.fastjson.JSON
 import org.segment.web.handler.ChainHandler
+import org.springframework.mock.web.MockHttpServletRequest
+import org.springframework.mock.web.MockHttpServletResponse
 import spock.lang.Specification
+import utils.RouterInit
 
 class FirstCtrlRouteTest extends Specification {
-    private static final int PORT = 5115
+    def h = ChainHandler.instance
 
     def setup() {
-        RouteServer.instance.stop()
-        clearRoutes()
+//        LocalGroovyScriptLoader.loadWhenFirstStart(true)
+        h.clear()
     }
 
     def cleanup() {
-        RouteServer.instance.stop()
-        clearRoutes()
+        h.clear()
     }
 
-    def 'route list returns the routes registered by the first controller script'() {
+    def 'route list handles an in-process mocked GET request'() {
         given:
-        new GroovyShell(this.class.classLoader).evaluate(new File('src/ctrl/First.groovy'))
+        RouterInit.init(First)
+        def request = new MockHttpServletRequest('GET', '/dms/route/list')
+        def response = new MockHttpServletResponse()
 
         when:
-        RouteServer.instance.start(PORT, '127.0.0.1')
-        Thread.sleep(1000)
-        def body = HttpRequest.get("http://127.0.0.1:${PORT}/route/list").body()
-
+        def handled = h.handle(request, response)
+        def result = JSON.parseObject(response.contentAsString, HashMap)
+        List<String> list = result.list as List
         then:
-        body.contains('GET:/route/list')
-        body.contains('GET:/hz')
-        body.contains('GET:/leader/hz')
-    }
-
-    private static void clearRoutes() {
-        def handler = ChainHandler.instance
-        handler.list.clear()
-        handler.beforeList.clear()
-        handler.afterList.clear()
-        handler.afterAfterList.clear()
-        handler.context(null)
-        handler.exceptionHandler(null)
+        handled
+        response.status == 200
+        list.contains('GET:/dms/route/list')
+        list.contains('GET:/dms/hz')
+        list.contains('GET:/dms/leader/hz')
     }
 }
