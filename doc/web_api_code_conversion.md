@@ -2,6 +2,19 @@
 
 This document explains how the backend HTTP layer under `dms/src/ctrl/` is organized today and how to convert it safely and consistently.
 
+## TDD First
+
+For backend conversion work, follow the same test discipline now used in `dms` and informed by `velo`:
+
+- write the focused Spock spec before changing production code
+- run it with `cd dms && gradle unitTest --tests "ExactSpecName"` and confirm the expected failure
+- make the smallest code change that turns the spec green
+- rerun the focused spec and adjacent relevant specs
+- run `cd dms && gradle jacocoUnitTestReport` and inspect `dms/build/reports/jacocoUnitTestHtml/`
+- verify the changed path was actually executed, not merely that the task passed
+
+Prefer a narrow TDD loop over broad suite runs while converting API code. Keep infrastructure-heavy cases out of that loop unless they are the specific subject of the change.
+
 ## Scope
 
 Reviewed controller files:
@@ -78,6 +91,7 @@ Conversion rule:
 
 - do not convert route handlers without first deciding how this filter behavior will be preserved
 - auth, session refresh, and agent token validation are cross-cutting runtime concerns, not controller-local details
+- preserve them behind tests before moving route code
 
 ## 2. Route Families
 
@@ -235,6 +249,7 @@ Conversion rule:
 - controllers currently mix HTTP, validation, and persistence directly
 - when converting, move DTO query logic behind services/repositories first if possible
 - preserve query semantics such as `queryFields`, paging defaults, and ad hoc filters
+- add DTO or service-level tests before route rewrites so the HTTP conversion is not the first place where behavior is verified
 
 ### 3.5 Inline permission checks
 

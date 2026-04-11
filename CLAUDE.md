@@ -23,11 +23,40 @@ cd dms && gradle buildToRun
 # Run server
 cd dms/build/libs && java -cp . -jar dms_server-1.2.jar
 
-# Run tests (Spock framework, JUnit Platform)
+# Run tests
 cd dms && gradle test
-cd dms_common && gradle test          # also generates JaCoCo coverage report
+cd dms && gradle unitTest                                 # isolated dms test loop
+cd dms && gradle unitTest --tests "model.job.RmBackupTemplateDTOTest"
+cd dms && gradle unitTest --tests "support.AuthTokenCacheHolderTest"
+cd dms && gradle jacocoUnitTestReport                     # report: dms/build/reports/jacocoUnitTestHtml/
+cd dms_common && gradle test                              # also generates JaCoCo coverage report
 cd dms_agent && gradle test
 ```
+
+### DMS TDD Workflow
+
+- `dms` tests use Spock on the JUnit Platform.
+- For backend changes under `dms/`, prefer `gradle unitTest` instead of `gradle test` for the red-green loop. `unitTest` runs only the local `dms` test task and avoids sibling-project `--tests` filter issues.
+- Use single-class or single-method runs during implementation:
+  - `cd dms && gradle unitTest --tests "model.job.RmBackupTemplateDTOTest"`
+  - `cd dms && gradle unitTest --tests "model.job.RmBackupTemplateDTOTest.crud persists enum json and array fields for backup templates"`
+- Follow strict TDD order:
+  1. write one failing Spock spec
+  2. run that spec and confirm it fails for the expected reason
+  3. write the minimal code change
+  4. rerun the focused spec until green
+  5. rerun adjacent relevant specs
+  6. generate and inspect JaCoCo coverage for the touched path
+- A passing test alone is not enough. After relevant `unitTest` runs, inspect `dms/build/reports/jacocoUnitTestHtml/` and confirm the changed lines or branches were actually executed.
+- Keep automated `dms` tests deterministic. If a case needs real MySQL, ZooKeeper, Redis, or remote nodes, do not fold it into the default TDD loop.
+- Prefer small reusable test helpers under `dms/test/support/` and follow sample specs already added in:
+  - `dms/test/model/job/RmBackupTemplateDTOTest.groovy`
+  - `dms/test/support/AuthTokenCacheHolderTest.groovy`
+  - `dms/test/ctrl/FirstCtrlRouteTest.groovy`
+  - `dms/test/plugin/redis/RedisManagerBackupPluginTest.groovy`
+  - `dms/test/metric/SimpleGaugeTest.groovy`
+- Use descriptive Spock names such as `def 'setCookie strips the port from the host before writing the auth cookie'()`.
+- `forkEvery = 1` is enabled for `dms` tests. Keep specs isolated and avoid shared global state where possible.
 
 ## Architecture
 
@@ -63,6 +92,7 @@ Three Gradle subprojects plus three git submodule dependencies:
 - Record every review round in `doc/feat/<feature_name>/review_round{N}.md`.
 - Kafka manager review files must use `doc/feat/kafka_manager/review_round{N}.md`.
 - DDL tip for new features: update both `dms/init_h2.sql` and `dms/ddl_update.sql`; if old deployments may need repair or schema validation after `ddl_update.sql`, add or update `support/DDLPostChecker.groovy` and keep `RunServer.groovy` fail-fast on post-check errors.
+- For web API or backend feature work, test in this order where applicable: DTO/model, helper or support method, controller route, plugin behavior, then adjacent subsystem logic. Keep each new behavior anchored by a focused Spock spec before changing production code.
 
 ### Key Agent Components
 - **Controllers** (`dms_agent/src/agent/ctrl/`) - Container CRUD, image pull, log viewing, file ops, script execution
@@ -77,6 +107,8 @@ Three Gradle subprojects plus three git submodule dependencies:
 - Commit messages follow `type: description` format (feat, fix, build, doc, style, refactor, test, perf, layout)
 - JSON handling uses FastJSON (`com.alibaba.fastjson`)
 - SSH operations use JSch
+- For `dms`, put new Spock specs under `dms/test/` with package-aligned directories and put shared helpers in `dms/test/support/`
+- When a controller is loaded dynamically as a Groovy script, route tests may pass while JaCoCo reports class-mismatch warnings; treat the HTTP assertion as the primary verifier and coverage as advisory for that specific case
 
 ## Groovy Code Style (see `dms/test/GroovyStyleRefer.groovy`)
 
