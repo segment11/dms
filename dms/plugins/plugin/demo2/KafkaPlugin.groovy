@@ -7,6 +7,8 @@ import model.json.TplParamsConf
 import model.server.CreateContainerConf
 import plugin.BasePlugin
 import plugin.PluginManager
+import server.AgentCaller
+import server.InMemoryCacheSupport
 import server.scheduler.checker.Checker
 import server.scheduler.checker.CheckerHolder
 import server.scheduler.processor.JobStepKeeper
@@ -121,6 +123,42 @@ class KafkaPlugin extends BasePlugin {
         CheckerHolder.instance.add new Checker() {
             @Override
             boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
+                def confOne = conf.conf.fileVolumeList.find {
+                    it.dist == '/opt/bitnami/kafka/config/server.properties'
+                }
+                if (confOne) {
+                    def checkPort = confOne.paramValue('port') as int
+
+                    def apps = InMemoryCacheSupport.instance.appList
+                    for (otherApp in apps) {
+                        if (otherApp.id == conf.appId) continue
+                        def otherConf = otherApp.conf
+                        if (otherConf.group == 'bitnami' && otherConf.image == 'kafka') {
+                            def otherConfOne = otherConf.fileVolumeList.find {
+                                it.dist == '/opt/bitnami/kafka/config/server.properties'
+                            }
+                            if (otherConfOne) {
+                                def otherPort = otherConfOne.paramValue('port') as int
+                                if (otherPort == checkPort) {
+                                    log.warn 'kafka port conflict, port: {}, app: {}', checkPort, otherApp.name
+                                    return false
+                                }
+                            }
+                        }
+                    }
+                }
+
+                List<String> dirList = []
+                conf.conf.dirVolumeList.collect { it.dir }.each { nodeDir ->
+                    String nodeDirTmp = nodeDir.replace('${appId}', conf.appId.toString())
+                    conf.conf.containerNumber.times { instanceIndex ->
+                        dirList << (nodeDirTmp.replace('${instanceIndex}', instanceIndex.toString()))
+                    }
+                }
+                if (dirList) {
+                    AgentCaller.instance.agentScriptExe(conf.app.clusterId, conf.nodeIp, 'mk dir', [dir: dirList.join(',')])
+                }
+
                 true
             }
 
@@ -131,7 +169,7 @@ class KafkaPlugin extends BasePlugin {
 
             @Override
             String name() {
-                'kafka port conflict check'
+                'kafka port conflict check and dir create'
             }
 
             @Override

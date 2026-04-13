@@ -7,6 +7,8 @@ import groovy.util.logging.Slf4j
 import km.job.KmJob
 import km.job.KmJobTask
 import model.KmServiceDTO
+import org.apache.curator.framework.CuratorFrameworkFactory
+import org.apache.curator.retry.ExponentialBackoffRetry
 
 @CompileStatic
 @Slf4j
@@ -21,6 +23,36 @@ class WaitReassignmentCompleteTask extends KmJobTask {
 
     @Override
     JobResult doTask() {
-        JobResult.ok('wait reassignment complete done')
+        def connectionString = kmService.zkConnectString + kmService.zkChroot
+        def client = CuratorFrameworkFactory.newClient(connectionString, new ExponentialBackoffRetry(1000, 3))
+        try {
+            client.start()
+
+            int maxRetries = 20
+            for (int i = 0; i <= maxRetries; i++) {
+                def reassignPath = '/admin/reassign_partitions'
+                if (client.checkExists().forPath(reassignPath) == null) {
+                    return JobResult.ok('no reassignment in progress')
+                }
+
+                def data = client.getData().forPath(reassignPath)
+                if (data == null || data.length == 0 || new String(data, 'UTF-8') == '{}') {
+                    return JobResult.ok('reassignment complete')
+                }
+
+                if (i == maxRetries) {
+                    return JobResult.fail('reassignment timeout')
+                }
+
+                Thread.sleep(5 * 1000)
+            }
+
+            JobResult.ok('reassignment complete')
+        } catch (Exception e) {
+            log.error('wait reassignment error', e)
+            JobResult.fail('wait reassignment error: ' + e.message)
+        } finally {
+            client.close()
+        }
     }
 }
