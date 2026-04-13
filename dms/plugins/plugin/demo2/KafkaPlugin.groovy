@@ -60,7 +60,9 @@ class KafkaPlugin extends BasePlugin {
         final String tplNameUseTemplate = 'server.properties.template.tpl'
 
         String tplFilePath = PluginManager.pluginsResourceDirPath() + '/kafka/ServerPropertiesTpl.groovy'
+        String tplFilePathUseTemplate = PluginManager.pluginsResourceDirPath() + '/kafka/ServerPropertiesUseTemplateTpl.groovy'
         String content = new File(tplFilePath).text
+        String contentUseTemplate = new File(tplFilePathUseTemplate).text
 
         TplParamsConf tplParams = new TplParamsConf()
         tplParams.addParam('port', '9092', 'int')
@@ -105,7 +107,7 @@ class KafkaPlugin extends BasePlugin {
                     imageName: imageName,
                     tplType: ImageTplDTO.TplType.mount,
                     mountDist: '/opt/bitnami/kafka/config/server.properties',
-                    content: content,
+                    content: contentUseTemplate,
                     isParentDirMount: false,
                     params: tplParamsUseTemplate
             ).add()
