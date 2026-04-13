@@ -201,7 +201,9 @@ h.group('/kafka/service') {
 
         def tplName = configTemplateId ? 'server.properties.template.tpl' : 'server.properties.tpl'
         def tplOne = new ImageTplDTO(imageName: 'bitnami/kafka', name: tplName).one()
-        assert tplOne
+        if (!tplOne) {
+            resp.halt(409, 'KafkaPlugin not initialized — image templates not found')
+        }
         def mountOne = new FileVolumeMount(imageTplId: tplOne.id, content: tplOne.content, dist: '/opt/bitnami/kafka/config/server.properties')
         mountOne.isParentDirMount = false
         mountOne.paramList << new KVPair<String>('brokerId', '${instanceIndex}')
@@ -213,7 +215,9 @@ h.group('/kafka/service') {
         mountOne.paramList << new KVPair<String>('defaultReplicationFactor', '' + defaultReplicationFactor)
         mountOne.paramList << new KVPair<String>('brokerCount', '' + brokers)
         mountOne.paramList << new KVPair<String>('heapMb', heapMb.toString())
-        mountOne.paramList << new KVPair<String>('configTemplateId', configTemplateId ? '' + configTemplateId : '0')
+        if (configTemplateId) {
+            mountOne.paramList << new KVPair<String>('configTemplateId', '' + configTemplateId)
+        }
         conf.fileVolumeList << mountOne
 
         app.conf = conf
@@ -391,9 +395,13 @@ h.group('/kafka/service') {
 
         one.status = KmServiceDTO.Status.scaling_down
 
-        def removeBrokerIds = (brokerCount > 0 && one.brokerDetail?.brokers) ?
-                one.brokerDetail.brokers[-brokerCount..-1].collect { it.brokerId } as int[] :
-                ((one.brokers - brokerCount)..<one.brokers) as int[]
+        int[] removeBrokerIds
+        if (one.brokerDetail?.brokers) {
+            def sorted = one.brokerDetail.brokers.sort { a, b -> b.brokerId <=> a.brokerId }
+            removeBrokerIds = sorted[0..<Math.min(brokerCount, sorted.size())].collect { it.brokerId } as int[]
+        } else {
+            removeBrokerIds = ((one.brokers - brokerCount)..<one.brokers) as int[]
+        }
 
         def kmJob = new KmJob()
         kmJob.kmService = one

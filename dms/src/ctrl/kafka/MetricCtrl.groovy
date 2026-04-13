@@ -70,6 +70,8 @@ h.group('/kafka/metric') {
         }
 
         def prometheusPlugin = new PrometheusPlugin()
+        prometheusPlugin.configTplName = prometheusPlugin.tplNameKafkaExporter
+        prometheusPlugin.nodeDir = KafkaManager.dataDir() + '/prometheus'
         prometheusPlugin.demoApp(prometheusApp)
         prometheusApp.name = prometheusAppName
         prometheusApp.status = AppDTO.Status.auto
@@ -98,6 +100,7 @@ h.group('/kafka/metric') {
         app.conf = conf
 
         conf.containerNumber = 1
+        conf.registryId = KafkaManager.preferRegistryId()
         conf.envList << new KVPair<String>('KAFKA_SERVER', brokerServerValue)
         conf.group = 'danielqsj'
         conf.image = 'kafka-exporter'

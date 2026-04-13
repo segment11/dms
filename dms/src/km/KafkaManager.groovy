@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import metric.SimpleGauge
 import model.AppDTO
+import model.DynConfigDTO
 import model.KmServiceDTO
 import plugin.BasePlugin
 import server.AgentCaller
@@ -16,8 +17,15 @@ class KafkaManager {
     static final int ONE_CLUSTER_MAX_BROKERS = 32
     static final int MAX_PARTITIONS_PER_TOPIC = 256
 
+    static final String DEFAULT_DATA_DIR = '/data/kafka_manager'
+
     static int preferRegistryId() {
         BasePlugin.addRegistryIfNotExist('docker.1ms.run', 'https://docker.1ms.run')
+    }
+
+    static String dataDir() {
+        def one = new DynConfigDTO(name: 'kafka_manager.data.dir').one()
+        return one?.vv ?: DEFAULT_DATA_DIR
     }
 
     static final SimpleGauge globalGauge = new SimpleGauge('Kafka Manager', 'Kafka Manager Metrics.', ['cluster_id'])

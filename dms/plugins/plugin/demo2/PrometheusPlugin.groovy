@@ -34,6 +34,7 @@ class PrometheusPlugin extends BasePlugin implements ConfigFileReloaded {
 
     final String tplName = 'prometheus.yml.tpl'
     final String tplNameRedisExporter = 'prometheus.redis.exporter.yml.tpl'
+    final String tplNameKafkaExporter = 'prometheus.kafka.exporter.yml.tpl'
 
     private void initImageConfig() {
         addEnvIfNotExists('DATA_DIR', 'DATA_DIR', '--storage.tsdb.path, default /prometheus')
@@ -45,12 +46,18 @@ class PrometheusPlugin extends BasePlugin implements ConfigFileReloaded {
         String tplFilePathRedisExporter = PluginManager.pluginsResourceDirPath() + '/prometheus/PrometheusRedisExporterYmlTpl.groovy'
         String contentRedisExporter = new File(tplFilePathRedisExporter).text
 
+        String tplFilePathKafkaExporter = PluginManager.pluginsResourceDirPath() + '/prometheus/PrometheusKafkaExporterYmlTpl.groovy'
+        String contentKafkaExporter = new File(tplFilePathKafkaExporter).text
+
         TplParamsConf tplParams = new TplParamsConf()
         tplParams.addParam('intervalSecondsGlobal', '15', 'int')
 
         TplParamsConf tplParams2 = new TplParamsConf()
         tplParams2.addParam('intervalSecondsGlobal', '15', 'int')
         tplParams2.addParam('eachContainerChargeRedisServerCount', '100', 'int')
+
+        TplParamsConf tplParams3 = new TplParamsConf()
+        tplParams3.addParam('intervalSecondsGlobal', '15', 'int')
 
         def imageName = imageName()
 
@@ -77,6 +84,19 @@ class PrometheusPlugin extends BasePlugin implements ConfigFileReloaded {
                     content: contentRedisExporter,
                     isParentDirMount: false,
                     params: tplParams2
+            ).add()
+        }
+
+        def three = new ImageTplDTO(imageName: imageName, name: tplNameKafkaExporter).queryFields('id').one()
+        if (!three) {
+            new ImageTplDTO(
+                    name: tplNameKafkaExporter,
+                    imageName: imageName,
+                    tplType: ImageTplDTO.TplType.mount,
+                    mountDist: '/etc/prometheus/prometheus.yml',
+                    content: contentKafkaExporter,
+                    isParentDirMount: false,
+                    params: tplParams3
             ).add()
         }
 
