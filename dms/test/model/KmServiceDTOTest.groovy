@@ -2,7 +2,6 @@ package model
 
 import model.json.BrokerDetail
 import model.json.ExtendParams
-import model.json.LogPolicy
 import org.segment.d.D
 import org.segment.d.Ds
 import spock.lang.Specification
@@ -76,7 +75,6 @@ create table km_service
                 isTlsOn: false,
                 nodeTags: ['tag1', 'tag2'] as String[],
                 nodeTagsByBrokerIndex: ['broker-0:tag1'] as String[],
-                logPolicy: new LogPolicy(isSlowCollect: true, isEngineCollect: false),
                 status: KmServiceDTO.Status.creating,
                 extendParams: new ExtendParams(['key1': 'value1']),
                 brokerDetail: new BrokerDetail(brokers: [
@@ -117,8 +115,6 @@ create table km_service
         loaded.isTlsOn == false
         loaded.nodeTags as List == ['tag1', 'tag2']
         loaded.nodeTagsByBrokerIndex as List == ['broker-0:tag1']
-        loaded.logPolicy.isSlowCollect == true
-        loaded.logPolicy.isEngineCollect == false
         loaded.status == KmServiceDTO.Status.creating
         loaded.extendParams?.params?.key1 == 'value1'
         loaded.brokerDetail.brokers.size() == 1

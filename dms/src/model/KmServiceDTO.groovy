@@ -4,7 +4,6 @@ import groovy.transform.CompileStatic
 import groovy.transform.ToString
 import model.json.BrokerDetail
 import model.json.ExtendParams
-import model.json.LogPolicy
 
 @CompileStatic
 @ToString(includeNames = true, includeSuper = false)
@@ -61,8 +60,6 @@ class KmServiceDTO extends BaseRecord<KmServiceDTO> {
     String[] nodeTags
 
     String[] nodeTagsByBrokerIndex
-
-    LogPolicy logPolicy
 
     Status status
 
