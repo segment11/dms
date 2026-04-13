@@ -49,6 +49,15 @@ class ReassignPartitionsTask extends KmJobTask {
             def json = new DefaultJsonTransformer()
             boolean isScaleDown = job.type == KmJobTypes.BROKER_SCALE_DOWN
 
+            int[] removeBrokerIds = null
+            if (isScaleDown) {
+                def removeBrokerIdsStr = job.params?.get('removeBrokerIds') as String
+                if (!removeBrokerIdsStr) {
+                    return JobResult.fail('removeBrokerIds param missing for scale down')
+                }
+                removeBrokerIds = removeBrokerIdsStr.split(',').collect { it as int } as int[]
+            }
+
             List<Map> reassignmentPartitions = []
 
             for (topicName in topicNames) {
@@ -72,11 +81,6 @@ class ReassignPartitionsTask extends KmJobTask {
 
                 List<List<Integer>> newAssignment
                 if (isScaleDown) {
-                    def removeBrokerIdsStr = job.params?.get('removeBrokerIds') as String
-                    if (!removeBrokerIdsStr) {
-                        return JobResult.fail('removeBrokerIds param missing for scale down')
-                    }
-                    def removeBrokerIds = removeBrokerIdsStr.split(',').collect { it as int } as int[]
                     newAssignment = PartitionBalancer.reassignForDecommission(currentAssignment, removeBrokerIds)
                 } else {
                     def brokerIds = brokerDetail.brokers.collect { it.brokerId } as int[]

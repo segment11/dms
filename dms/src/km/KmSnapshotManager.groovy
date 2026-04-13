@@ -14,6 +14,7 @@ import km.job.task.WaitBrokersRegisteredTask
 import km.job.task.CreateTopicTask
 import model.AppDTO
 import model.ImageTplDTO
+import model.KmConfigTemplateDTO
 import model.KmServiceDTO
 import model.KmSnapshotDTO
 import model.KmTopicDTO
@@ -87,6 +88,21 @@ class KmSnapshotManager {
                         configOverrides: overrides)
             }
 
+            if (one.configTemplateId) {
+                def template = new KmConfigTemplateDTO(id: one.configTemplateId).one()
+                if (template?.configItems?.items) {
+                    template.configItems.items.each { kv ->
+                        content.configItems << new KVPair<String>(kv.key, kv.value)
+                    }
+                }
+            }
+
+            if (one.configOverrides?.params) {
+                one.configOverrides.params.each { k, v ->
+                    content.configOverrides.put(k as String, v as String)
+                }
+            }
+
             def json = new DefaultJsonTransformer()
             Files.write(Paths.get(snapshotDir + '/snapshot.json'), json.json(content).getBytes('UTF-8'))
 
@@ -94,9 +110,9 @@ class KmSnapshotManager {
             Files.write(Paths.get(snapshotDir + '/topics.json'), topicsJson.getBytes('UTF-8'))
 
             def sb = new StringBuilder()
-            sb.append('broker.id=${brokerId}').append('\n')
-            sb.append('listeners=PLAINTEXT://0.0.0.0:${port}').append('\n')
-            sb.append('advertised.listeners=PLAINTEXT://${nodeIp}:${port}').append('\n')
+            sb.append('broker.id=0').append('\n')
+            sb.append('listeners=PLAINTEXT://0.0.0.0:').append(one.port).append('\n')
+            sb.append('advertised.listeners=PLAINTEXT://<node_ip>:').append(one.port).append('\n')
             sb.append('zookeeper.connect=').append(one.zkConnectString).append(one.zkChroot).append('\n')
             sb.append('log.dirs=/data/kafka/data').append('\n')
             sb.append('num.partitions=').append(one.defaultPartitions).append('\n')
@@ -147,8 +163,11 @@ class KmSnapshotManager {
         def kafkaVersion = content.kafkaVersion as String
         def brokersList = (content.brokers as List<Map>) ?: []
         def brokers = brokersList.size() ?: 1
-        def port = brokersList ? (brokersList[0]['port'] as Integer ?: 9029) : 9092
-        if (port == 9029) port = 9092
+        def port = brokersList ? ((brokersList[0]['port'] as Integer) ?: 9092) : 9092
+
+        def defaultPartitions = (content['defaultPartitions'] as Integer) ?: 8
+        def defaultReplicationFactor = (content['defaultReplicationFactor'] as Integer) ?: 1
+        def heapMb = (content['heapMb'] as Integer) ?: 1024
 
         def beginT = System.currentTimeMillis()
 
@@ -157,7 +176,7 @@ class KmSnapshotManager {
         snapshot.serviceId = 0
         snapshot.snapshotDir = snapshotPath
         snapshot.status = KmSnapshotDTO.Status.created
-        snapshot.message = 'imported'
+        snapshot.message = 'importing'
         snapshot.createdDate = new Date()
         snapshot.updatedDate = new Date()
         def snapshotId = snapshot.add()
@@ -187,8 +206,8 @@ class KmSnapshotManager {
             conf.group = 'bitnami'
             conf.image = 'kafka'
             conf.tag = kafkaVersion
-            conf.memReservationMB = 1024
-            conf.memMB = 2048
+            conf.memReservationMB = heapMb
+            conf.memMB = (heapMb * 2).intValue()
             conf.cpuFixed = 1.0
             conf.networkMode = 'host'
             conf.portList << new PortMapping(privatePort: port, publicPort: port)
@@ -214,10 +233,10 @@ class KmSnapshotManager {
             mountOne.paramList << new KVPair<String>('dataDir', '/kafka/logs')
             mountOne.paramList << new KVPair<String>('zkConnectString', zkConnectString)
             mountOne.paramList << new KVPair<String>('zkChroot', zkChroot)
-            mountOne.paramList << new KVPair<String>('defaultPartitions', '8')
-            mountOne.paramList << new KVPair<String>('defaultReplicationFactor', '1')
+            mountOne.paramList << new KVPair<String>('defaultPartitions', '' + defaultPartitions)
+            mountOne.paramList << new KVPair<String>('defaultReplicationFactor', '' + defaultReplicationFactor)
             mountOne.paramList << new KVPair<String>('brokerCount', '' + brokers)
-            mountOne.paramList << new KVPair<String>('heapMb', '1024')
+            mountOne.paramList << new KVPair<String>('heapMb', '' + heapMb)
             conf.fileVolumeList << mountOne
 
             app.conf = conf
@@ -233,13 +252,20 @@ class KmSnapshotManager {
             one.appId = appId
             one.port = port
             one.brokers = brokers
-            one.heapMb = 1024
-            one.defaultReplicationFactor = 1
-            one.defaultPartitions = 8
+            one.heapMb = heapMb
+            one.defaultReplicationFactor = defaultReplicationFactor
+            one.defaultPartitions = defaultPartitions
             one.status = KmServiceDTO.Status.creating
             one.extendParams = new ExtendParams()
             one.createdDate = new Date()
             one.updatedDate = new Date()
+
+            def configOverridesMap = content.configOverrides as Map
+            if (configOverridesMap) {
+                def extParams = new ExtendParams()
+                configOverridesMap.each { k, v -> extParams.params.put(k as String, v) }
+                one.configOverrides = extParams
+            }
 
             def id = one.add()
             one.id = id
@@ -267,8 +293,8 @@ class KmSnapshotManager {
             if (topics) {
                 topics.each { t ->
                     def topicName = t.name as String
-                    def partitions = (t.partitions as Integer) ?: 8
-                    def replicationFactor = (t.replicationFactor as Integer) ?: 1
+                    def partitions = (t.partitions as Integer) ?: defaultPartitions
+                    def replicationFactor = (t.replicationFactor as Integer) ?: defaultReplicationFactor
                     new KmTopicDTO(
                             serviceId: id,
                             name: topicName,
@@ -289,9 +315,6 @@ class KmSnapshotManager {
             KmJobExecutor.instance.execute {
                 kmJob.run()
             }
-
-            def costMs = System.currentTimeMillis() - beginT
-            new KmSnapshotDTO(id: snapshotId, status: KmSnapshotDTO.Status.done, costMs: costMs as int, updatedDate: new Date()).update()
 
             id as String
         } catch (Exception e) {

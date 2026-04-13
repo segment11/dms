@@ -78,19 +78,18 @@ class FailoverTask extends KmJobTask {
 
             Thread.sleep(5 * 1000)
 
-            String originalData = data
-            int maxRetries = 10
+            int maxRetries = 15
             boolean newElected = false
             for (int i = 0; i < maxRetries; i++) {
                 def exists = client.checkExists().forPath(controllerPath)
-                if (exists == null) {
-                    newElected = true
-                    break
-                }
-                def newData = new String(client.getData().forPath(controllerPath), 'UTF-8')
-                if (newData != originalData) {
-                    newElected = true
-                    break
+                if (exists != null) {
+                    def newData = new String(client.getData().forPath(controllerPath), 'UTF-8')
+                    def newJson = new DefaultJsonTransformer().read(newData, Map.class)
+                    def newBrokerId = newJson['brokerid'] as int
+                    if (newBrokerId != controllerBrokerId) {
+                        newElected = true
+                        break
+                    }
                 }
                 Thread.sleep(3 * 1000)
             }

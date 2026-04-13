@@ -61,7 +61,7 @@ class WaitBrokersRegisteredTask extends KmJobTask {
                 }
 
                 def brokerDetail = new BrokerDetail()
-                brokerIds.each { idStr ->
+                brokerIds.eachWithIndex { idStr, int idx ->
                     def brokerId = Integer.parseInt(idStr)
                     def data = client.getData().forPath(brokersPath + '/' + idStr)
                     def json = mapper.readValue(new String(data, 'UTF-8'), Map) as Map<String, Object>
@@ -70,6 +70,7 @@ class WaitBrokersRegisteredTask extends KmJobTask {
 
                     def node = new BrokerDetail.BrokerNode()
                     node.brokerId = brokerId
+                    node.brokerIndex = idx
                     node.ip = host
                     node.port = port ?: kmService.port
                     brokerDetail.brokers << node
