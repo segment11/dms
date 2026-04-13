@@ -70,7 +70,7 @@ class WaitBrokersRegisteredTask extends KmJobTask {
 
                     def node = new BrokerDetail.BrokerNode()
                     node.brokerId = brokerId
-                    node.brokerIndex = idx
+                    node.brokerIndex = brokerId
                     node.ip = host
                     node.port = port ?: kmService.port
                     brokerDetail.brokers << node

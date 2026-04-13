@@ -67,6 +67,9 @@ class KmSnapshotManager {
             content.snapshotDate = new Date()
             content.zkConnectString = one.zkConnectString
             content.zkChroot = one.zkChroot
+            content.defaultPartitions = one.defaultPartitions ?: 8
+            content.defaultReplicationFactor = one.defaultReplicationFactor ?: 1
+            content.heapMb = one.heapMb ?: 1024
 
             if (one.brokerDetail?.brokers) {
                 one.brokerDetail.brokers.each { b ->
@@ -112,7 +115,8 @@ class KmSnapshotManager {
             def sb = new StringBuilder()
             sb.append('broker.id=0').append('\n')
             sb.append('listeners=PLAINTEXT://0.0.0.0:').append(one.port).append('\n')
-            sb.append('advertised.listeners=PLAINTEXT://<node_ip>:').append(one.port).append('\n')
+            def firstBrokerIp = one.brokerDetail?.brokers ? one.brokerDetail.brokers[0].ip : '127.0.0.1'
+            sb.append('advertised.listeners=PLAINTEXT://').append(firstBrokerIp).append(':').append(one.port).append('\n')
             sb.append('zookeeper.connect=').append(one.zkConnectString).append(one.zkChroot).append('\n')
             sb.append('log.dirs=/data/kafka/data').append('\n')
             sb.append('num.partitions=').append(one.defaultPartitions).append('\n')
@@ -315,6 +319,9 @@ class KmSnapshotManager {
             KmJobExecutor.instance.execute {
                 kmJob.run()
             }
+
+            def costMs = System.currentTimeMillis() - beginT
+            new KmSnapshotDTO(id: snapshotId, status: KmSnapshotDTO.Status.done, costMs: costMs as int, updatedDate: new Date()).update()
 
             id as String
         } catch (Exception e) {

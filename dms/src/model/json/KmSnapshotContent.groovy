@@ -19,6 +19,10 @@ class KmSnapshotContent implements JSONFiled {
 
     List<TopicEntry> topics = []
 
+    int defaultPartitions
+    int defaultReplicationFactor
+    int heapMb
+
     ArrayList<KVPair<String>> configItems = []
     Map<String, String> configOverrides = [:]
 
