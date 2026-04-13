@@ -3,6 +3,7 @@ package ctrl.kafka
 import km.KafkaManager
 import km.KmJobExecutor
 import model.AppDTO
+import model.KmServiceDTO
 import model.NamespaceDTO
 import model.json.AppConf
 import model.json.ExtendParams
@@ -23,6 +24,22 @@ h.group('/kafka/metric') {
     h.get('/init-exporters') { req, resp ->
         def targetNodeIp = req.param('targetNodeIp')
         assert targetNodeIp
+
+        def serviceIdStr = req.param('serviceId')
+        assert serviceIdStr
+        def serviceId = serviceIdStr as int
+
+        def kmService = new KmServiceDTO(id: serviceId).one()
+        if (!kmService) {
+            resp.halt(404, 'service not found')
+        }
+
+        String brokerServerValue
+        if (kmService.brokerDetail?.brokers) {
+            brokerServerValue = kmService.brokerDetail.brokers.collect { "${it.ip}:${it.port}" }.join(',')
+        } else {
+            brokerServerValue = "${targetNodeIp}:${kmService.port}"
+        }
 
         def instance = InMemoryAllContainerManager.instance
         def nodeInfo = instance.getNodeInfo(targetNodeIp)
@@ -80,7 +97,8 @@ h.group('/kafka/metric') {
         def conf = new AppConf()
         app.conf = conf
 
-        conf.envList << new KVPair<String>('KAFKA_SERVER', 'broker1:9092')
+        conf.containerNumber = 1
+        conf.envList << new KVPair<String>('KAFKA_SERVER', brokerServerValue)
         conf.group = 'danielqsj'
         conf.image = 'kafka-exporter'
         conf.tag = 'latest'

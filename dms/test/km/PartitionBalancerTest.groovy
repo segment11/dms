@@ -98,4 +98,35 @@ class PartitionBalancerTest extends Specification {
         then:
         result.size() == 2
     }
+
+    void 'reassign for scale - non-contiguous broker IDs'() {
+        given:
+        def current = [[0], [2], [5], [0], [2], [5], [0], [2]]
+        when:
+        def result = PartitionBalancer.reassignForScale(current, [7] as int[])
+        then:
+        result.size() == 8
+        result.every { it.size() == 1 }
+        def allResultBrokers = result.collect { it[0] }.toSet()
+        allResultBrokers.contains(7)
+    }
+
+    void 'reassign for decommission - non-contiguous broker IDs'() {
+        given:
+        def current = [[0, 2], [2, 5], [5, 0]]
+        when:
+        def result = PartitionBalancer.reassignForDecommission(current, [2] as int[])
+        then:
+        result.size() == 3
+        result.every { replicas -> replicas.every { it != 2 } }
+        result.every { it.toSet().size() == it.size() }
+        def allBrokers = result.flatten().toSet()
+        allBrokers.containsAll([0, 5])
+    }
+
+    void 'empty assignment inputs'() {
+        expect:
+        PartitionBalancer.reassignForScale([], [] as int[]) == []
+        PartitionBalancer.reassignForDecommission([], [1] as int[]) == []
+    }
 }

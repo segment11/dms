@@ -12,7 +12,6 @@ import model.KmServiceDTO
 @Slf4j
 class WaitReassignmentCompleteTask extends KmJobTask {
     final KmServiceDTO kmService
-    int tryCount = 0
 
     WaitReassignmentCompleteTask(KmJob kmJob) {
         this.kmService = kmJob.kmService

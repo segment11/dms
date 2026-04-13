@@ -192,15 +192,17 @@ h.group('/kafka/service') {
 
         final String dataDir = '/data'
         def serviceDataDir = dataDir + '/kafka_data_app_' + '_${appId}_${instanceIndex}'
-        def nodeVolumeId = new NodeVolumeDTO(imageName: 'library/kafka', name: 'for service ' + name, dir: serviceDataDir,
+        def nodeVolumeId = new NodeVolumeDTO(imageName: 'bitnami/kafka', name: 'for service ' + name, dir: serviceDataDir,
                 clusterId: KafkaManager.CLUSTER_ID, des: 'data dir for kafka service').add()
         def dirOne = new DirVolumeMount(
                 dir: serviceDataDir, dist: '/kafka/logs', mode: 'rw',
                 nodeVolumeId: nodeVolumeId)
         conf.dirVolumeList << dirOne
 
-        def mountOne = new FileVolumeMount()
-        mountOne.dist = '/opt/bitnami/kafka/config/server.properties'
+        def tplName = configTemplateId ? 'server.properties.template.tpl' : 'server.properties.tpl'
+        def tplOne = new ImageTplDTO(imageName: 'bitnami/kafka', name: tplName).one()
+        assert tplOne
+        def mountOne = new FileVolumeMount(imageTplId: tplOne.id, content: tplOne.content, dist: '/opt/bitnami/kafka/config/server.properties')
         mountOne.isParentDirMount = false
         mountOne.paramList << new KVPair<String>('brokerId', '${instanceIndex}')
         mountOne.paramList << new KVPair<String>('port', '' + port)
@@ -211,6 +213,7 @@ h.group('/kafka/service') {
         mountOne.paramList << new KVPair<String>('defaultReplicationFactor', '' + defaultReplicationFactor)
         mountOne.paramList << new KVPair<String>('brokerCount', '' + brokers)
         mountOne.paramList << new KVPair<String>('heapMb', heapMb.toString())
+        mountOne.paramList << new KVPair<String>('configTemplateId', configTemplateId ? '' + configTemplateId : '0')
         conf.fileVolumeList << mountOne
 
         app.conf = conf
@@ -388,7 +391,9 @@ h.group('/kafka/service') {
 
         one.status = KmServiceDTO.Status.scaling_down
 
-        def removeBrokerIds = ((one.brokers - brokerCount)..<one.brokers) as int[]
+        def removeBrokerIds = (brokerCount > 0 && one.brokerDetail?.brokers) ?
+                one.brokerDetail.brokers[-brokerCount..-1].collect { it.brokerId } as int[] :
+                ((one.brokers - brokerCount)..<one.brokers) as int[]
 
         def kmJob = new KmJob()
         kmJob.kmService = one
