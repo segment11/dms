@@ -48,12 +48,16 @@ class CreateTopicTask extends KmJobTask {
                 return JobResult.fail('no broker detail found')
             }
 
-            def brokerCount = brokerDetail.brokers.size()
+            def brokerIds = brokerDetail.brokers.collect { it.brokerId }.sort()
+            def brokerCount = brokerIds.size()
             if (replicationFactor > brokerCount) {
                 return JobResult.fail('replicationFactor ' + replicationFactor + ' > broker count ' + brokerCount)
             }
 
-            def assignment = PartitionBalancer.assignReplicas(brokerCount, partitions, replicationFactor)
+            def rawAssignment = PartitionBalancer.assignReplicas(brokerCount, partitions, replicationFactor)
+            def assignment = rawAssignment.collect { replicas ->
+                replicas.collect { idx -> brokerIds[idx] }
+            }
 
             Map<String, List<Integer>> partitionMap = [:]
             assignment.eachWithIndex { List<Integer> replicas, int p ->
@@ -68,12 +72,20 @@ class CreateTopicTask extends KmJobTask {
             def topicJson = new DefaultJsonTransformer().json(topicData)
             client.create().creatingParentsIfNeeded().forPath(topicsPath, topicJson.bytes)
 
-            new KmTopicDTO(
-                    serviceId: kmService.id,
-                    name: topicName,
-                    status: KmTopicDTO.Status.active,
-                    updatedDate: new Date()
-            ).where('service_id = ? and name = ?', kmService.id, topicName).update()
+            def existingTopic = new KmTopicDTO().where('service_id = ? and name = ?', kmService.id, topicName).one()
+            if (existingTopic) {
+                new KmTopicDTO(id: existingTopic.id, status: KmTopicDTO.Status.active, updatedDate: new Date()).update()
+            } else {
+                new KmTopicDTO(
+                        serviceId: kmService.id,
+                        name: topicName,
+                        partitions: partitions,
+                        replicationFactor: replicationFactor,
+                        status: KmTopicDTO.Status.active,
+                        createdDate: new Date(),
+                        updatedDate: new Date()
+                ).add()
+            }
 
             JobResult.ok('topic created: ' + topicName + ', partitions: ' + partitions)
         } catch (Exception e) {

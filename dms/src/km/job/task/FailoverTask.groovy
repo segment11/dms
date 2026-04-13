@@ -55,29 +55,70 @@ class FailoverTask extends KmJobTask {
             def instance = InMemoryAllContainerManager.instance
             def containerList = instance.getContainerList(KafkaManager.CLUSTER_ID, kmService.appId)
             def controllerContainer = containerList.find { x ->
-                def containerIp = x.nodeIp
-                controllerNode.ip == containerIp
+                x.nodeIp == controllerNode.ip && x.instanceIndex() == controllerNode.brokerIndex
             }
 
-            if (controllerContainer?.running()) {
-                log.warn 'stopping controller broker: id={}, ip={}', controllerBrokerId, controllerNode.ip
-                def p = [id: controllerContainer.id, readTimeout: 30 * 1000]
-                AgentCaller.instance.agentScriptExe(KafkaManager.CLUSTER_ID, controllerContainer.nodeIp, 'container stop', p)
-
-                Thread.sleep(5 * 1000)
-
-                int maxRetries = 10
-                for (int i = 0; i < maxRetries; i++) {
-                    def newData = client.checkExists().forPath(controllerPath) != null ?
-                            new String(client.getData().forPath(controllerPath), 'UTF-8') : ''
-                    if (!newData || newData != data) {
-                        return JobResult.ok('failover complete, new controller elected')
-                    }
-                    Thread.sleep(3 * 1000)
+            if (!controllerContainer) {
+                controllerContainer = containerList.find { x ->
+                    x.nodeIp == controllerNode.ip
                 }
             }
 
-            JobResult.ok('failover skipped or completed')
+            if (!controllerContainer) {
+                return JobResult.fail('controller container not found for broker id: ' + controllerBrokerId)
+            }
+
+            if (!controllerContainer.running()) {
+                return JobResult.ok('controller broker already stopped')
+            }
+
+            log.warn 'stopping controller broker: id={}, ip={}', controllerBrokerId, controllerNode.ip
+            def stopP = [id: controllerContainer.id, readTimeout: 30 * 1000]
+            AgentCaller.instance.agentScriptExe(KafkaManager.CLUSTER_ID, controllerContainer.nodeIp, 'container stop', stopP)
+
+            Thread.sleep(5 * 1000)
+
+            String originalData = data
+            int maxRetries = 10
+            boolean newElected = false
+            for (int i = 0; i < maxRetries; i++) {
+                def exists = client.checkExists().forPath(controllerPath)
+                if (exists == null) {
+                    newElected = true
+                    break
+                }
+                def newData = new String(client.getData().forPath(controllerPath), 'UTF-8')
+                if (newData != originalData) {
+                    newElected = true
+                    break
+                }
+                Thread.sleep(3 * 1000)
+            }
+
+            if (!newElected) {
+                return JobResult.fail('new controller election timeout')
+            }
+
+            Thread.sleep(3 * 1000)
+            def startP = [id: controllerContainer.id, readTimeout: 30 * 1000]
+            AgentCaller.instance.agentScriptExe(KafkaManager.CLUSTER_ID, controllerContainer.nodeIp, 'container start', startP)
+            log.warn 'restarted controller broker container, id={}', controllerContainer.id
+
+            Thread.sleep(5 * 1000)
+
+            def newControllerData = client.checkExists().forPath(controllerPath) != null ?
+                    new String(client.getData().forPath(controllerPath), 'UTF-8') : null
+            if (newControllerData) {
+                def newControllerJson = new DefaultJsonTransformer().read(newControllerData, Map.class)
+                def newControllerBrokerId = newControllerJson['brokerid'] as int
+
+                brokerDetail.brokers.each { b ->
+                    b.isController = (b.brokerId == newControllerBrokerId)
+                }
+                new KmServiceDTO(id: kmService.id, brokerDetail: brokerDetail, updatedDate: new Date()).update()
+            }
+
+            JobResult.ok('failover complete, controller restarted and broker detail updated')
         } catch (Exception e) {
             log.error('failover error', e)
             JobResult.fail('failover error: ' + e.message)

@@ -411,10 +411,12 @@ h.group('/kafka/service') {
         kmJob.params.put('kmServiceId', id.toString())
         kmJob.params.put('brokerCount', brokerCount.toString())
 
+        kmJob.params.put('removeBrokerIds', removeBrokerIds.toList().join(','))
+
         kmJob.taskList << new ReassignPartitionsTask(kmJob)
         kmJob.taskList << new WaitReassignmentCompleteTask(kmJob)
-        kmJob.taskList << new DecommissionBrokerTask(kmJob, removeBrokerIds)
         kmJob.taskList << new RemoveBrokersTask(kmJob)
+        kmJob.taskList << new DecommissionBrokerTask(kmJob, removeBrokerIds)
 
         kmJob.createdDate = new Date()
         kmJob.updatedDate = new Date()
