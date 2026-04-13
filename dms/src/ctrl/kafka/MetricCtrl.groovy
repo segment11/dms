@@ -80,7 +80,7 @@ h.group('/kafka/metric') {
         def conf = new AppConf()
         app.conf = conf
 
-        conf.containerNumber = 1
+        conf.envList << new KVPair<String>('KAFKA_SERVER', 'broker1:9092')
         conf.group = 'danielqsj'
         conf.image = 'kafka-exporter'
         conf.tag = 'latest'

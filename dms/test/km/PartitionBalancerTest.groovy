@@ -67,7 +67,8 @@ class PartitionBalancerTest extends Specification {
         then:
         result.size() == 3
         result.every { replicas -> replicas.every { it != 1 } }
-        result.every { it.size() == 3 }
+        result.every { it.size() == 2 }
+        result.every { it.toSet().size() == it.size() }
     }
 
     void 'reassign for decommission - remove all brokers throws'() {

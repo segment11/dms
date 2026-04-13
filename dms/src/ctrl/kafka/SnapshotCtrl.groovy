@@ -22,7 +22,6 @@ h.group('/kafka/snapshot') {
         def body = req.bodyAs(Map)
 
         def serviceId = body.serviceId as int
-        def name = body.name as String
 
         def service = new model.KmServiceDTO(id: serviceId).one()
         if (!service) {

@@ -5,6 +5,7 @@ import groovy.util.logging.Slf4j
 import metric.SimpleGauge
 import model.AppDTO
 import model.KmServiceDTO
+import plugin.BasePlugin
 import server.AgentCaller
 import server.InMemoryAllContainerManager
 
@@ -15,6 +16,10 @@ class KafkaManager {
     static final int ONE_CLUSTER_MAX_BROKERS = 32
     static final int MAX_PARTITIONS_PER_TOPIC = 256
 
+    static int preferRegistryId() {
+        BasePlugin.addRegistryIfNotExist('docker.1ms.run', 'https://docker.1ms.run')
+    }
+
     static final SimpleGauge globalGauge = new SimpleGauge('Kafka Manager', 'Kafka Manager Metrics.', ['cluster_id'])
 
     static { globalGauge.register() }
@@ -24,7 +29,7 @@ class KafkaManager {
     }
 
     static void initMetricCollector() {
-        var labelValues = List.of(CLUSTER_ID.toString())
+        def labelValues = List.of(CLUSTER_ID.toString())
         globalGauge.addRawGetter(() -> {
             def map = new HashMap<String, SimpleGauge.ValueWithLabelValues>()
             def serviceList = new KmServiceDTO(status: KmServiceDTO.Status.running).list()

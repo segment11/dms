@@ -61,24 +61,6 @@ h.group('/kafka/service') {
 
         def pager = dto.listPager(pageNum, pageSize)
 
-        if (pager.list) {
-            pager.list.each { one ->
-                def instance = InMemoryAllContainerManager.instance
-                def runningContainerList = instance.getRunningContainerList(KafkaManager.CLUSTER_ID, one.appId)
-                if (runningContainerList.size() == one.brokers) {
-                    if (one.status.canChangeToRunningWhenInstancesRunningOk()) {
-                        one.status = KmServiceDTO.Status.running
-                        new KmServiceDTO(id: one.id, status: KmServiceDTO.Status.running).update()
-                    }
-                } else {
-                    if (one.status == KmServiceDTO.Status.running) {
-                        one.status = KmServiceDTO.Status.unhealthy
-                        one.extendParams.put('statusMessage', 'running instances not ready')
-                    }
-                }
-            }
-        }
-
         pager
     }
 
@@ -185,8 +167,8 @@ h.group('/kafka/service') {
 
         def conf = new AppConf()
         conf.containerNumber = brokers
-        conf.registryId = 0
-        conf.group = 'library'
+        conf.registryId = KafkaManager.preferRegistryId()
+        conf.group = 'bitnami'
         conf.image = 'kafka'
         conf.tag = kafkaVersion
         conf.memReservationMB = heapMb
@@ -218,16 +200,17 @@ h.group('/kafka/service') {
         conf.dirVolumeList << dirOne
 
         def mountOne = new FileVolumeMount()
-        mountOne.dist = '/opt/kafka/config/server.properties'
+        mountOne.dist = '/opt/bitnami/kafka/config/server.properties'
         mountOne.isParentDirMount = false
         mountOne.paramList << new KVPair<String>('brokerId', '${instanceIndex}')
         mountOne.paramList << new KVPair<String>('port', '' + port)
         mountOne.paramList << new KVPair<String>('dataDir', '/kafka/logs')
-        mountOne.paramList << new KVPair<String>('zkConnect', zkConnectString + zkChroot)
+        mountOne.paramList << new KVPair<String>('zkConnectString', zkConnectString)
+        mountOne.paramList << new KVPair<String>('zkChroot', zkChroot)
+        mountOne.paramList << new KVPair<String>('defaultPartitions', '' + defaultPartitions)
+        mountOne.paramList << new KVPair<String>('defaultReplicationFactor', '' + defaultReplicationFactor)
+        mountOne.paramList << new KVPair<String>('brokerCount', '' + brokers)
         mountOne.paramList << new KVPair<String>('heapMb', heapMb.toString())
-        if (configTemplateId) {
-            mountOne.paramList << new KVPair<String>('configTemplateId', '' + configTemplateId)
-        }
         conf.fileVolumeList << mountOne
 
         app.conf = conf
@@ -300,7 +283,7 @@ h.group('/kafka/service') {
 
         KafkaManager.stopContainers(one.appId)
 
-        if (one.zkConnectString && one.zkChroot) {
+        if (one.zkConnectString && one.zkChroot && km.job.task.ValidateZookeeperTask.isValidChroot(one.zkChroot)) {
             try {
                 def connectionString = one.zkConnectString + one.zkChroot
                 def client = CuratorFrameworkFactory.newClient(connectionString,
@@ -359,6 +342,12 @@ h.group('/kafka/service') {
         kmJob.params.put('kmServiceId', id.toString())
         kmJob.params.put('brokerCount', brokerCount.toString())
 
+        kmJob.taskList << new AddBrokersTask(kmJob, brokerCount)
+        kmJob.taskList << new WaitInstancesRunningTask(kmJob)
+        kmJob.taskList << new WaitBrokersRegisteredTask(kmJob)
+        kmJob.taskList << new ReassignPartitionsTask(kmJob)
+        kmJob.taskList << new WaitReassignmentCompleteTask(kmJob)
+
         kmJob.createdDate = new Date()
         kmJob.updatedDate = new Date()
         kmJob.save()
@@ -399,6 +388,8 @@ h.group('/kafka/service') {
 
         one.status = KmServiceDTO.Status.scaling_down
 
+        def removeBrokerIds = ((one.brokers - brokerCount)..<one.brokers) as int[]
+
         def kmJob = new KmJob()
         kmJob.kmService = one
         kmJob.type = KmJobTypes.BROKER_SCALE_DOWN
@@ -406,6 +397,11 @@ h.group('/kafka/service') {
         kmJob.params = new JobParams()
         kmJob.params.put('kmServiceId', id.toString())
         kmJob.params.put('brokerCount', brokerCount.toString())
+
+        kmJob.taskList << new ReassignPartitionsTask(kmJob)
+        kmJob.taskList << new WaitReassignmentCompleteTask(kmJob)
+        kmJob.taskList << new DecommissionBrokerTask(kmJob, removeBrokerIds)
+        kmJob.taskList << new RemoveBrokersTask(kmJob)
 
         kmJob.createdDate = new Date()
         kmJob.updatedDate = new Date()

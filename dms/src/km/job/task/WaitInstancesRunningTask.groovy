@@ -17,39 +17,32 @@ class WaitInstancesRunningTask extends KmJobTask {
         this.step = new JobStep('wait_instances_running', 2)
     }
 
-    int tryCount = 0
-
     @Override
     JobResult doTask() {
         def kmService = ((KmJob) job).kmService
         assert kmService
 
         def instance = InMemoryAllContainerManager.instance
-        def runningContainerList = instance.getRunningContainerList(KafkaManager.CLUSTER_ID, kmService.appId)
-        if (!runningContainerList) {
-            Thread.sleep(10 * 1000)
-            tryCount++
+        int maxRetries = 10
 
-            if (tryCount > 10) {
-                return JobResult.fail('no containers found for app id: ' + kmService.appId)
-            } else {
-                return doTask()
+        for (int i = 0; i <= maxRetries; i++) {
+            def runningContainerList = instance.getRunningContainerList(KafkaManager.CLUSTER_ID, kmService.appId)
+            if (runningContainerList) {
+                def runningNumber = runningContainerList.size()
+                log.info 'running containers number: {}, app id: {}', runningNumber, kmService.appId
+                if (runningNumber == kmService.brokers) {
+                    return JobResult.ok('running containers number: ' + runningNumber)
+                }
             }
+
+            if (i == maxRetries) {
+                def running = runningContainerList ? runningContainerList.size() : 0
+                return JobResult.fail('running containers number: ' + running + ', expect: ' + kmService.brokers)
+            }
+
+            Thread.sleep(10 * 1000)
         }
 
-        def runningNumber = runningContainerList.size()
-        log.info 'running containers number: {}, app id: {}', runningNumber, kmService.appId
-        if (runningNumber == kmService.brokers) {
-            return JobResult.ok('running containers number: ' + runningNumber)
-        }
-
-        Thread.sleep(10 * 1000)
-        tryCount++
-
-        if (tryCount > 10) {
-            return JobResult.fail('running containers number: ' + runningNumber + ', expect: ' + kmService.brokers)
-        } else {
-            return doTask()
-        }
+        JobResult.fail('unexpected state')
     }
 }

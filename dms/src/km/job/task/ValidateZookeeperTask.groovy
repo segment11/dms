@@ -33,17 +33,17 @@ class ValidateZookeeperTask extends KmJobTask {
             return JobResult.fail('invalid zk chroot: ' + kmService.zkChroot)
         }
 
-        def connectionString = kmService.zkConnectString + kmService.zkChroot
-        def client = CuratorFrameworkFactory.newClient(connectionString,
+        def client = CuratorFrameworkFactory.newClient(kmService.zkConnectString,
                 new ExponentialBackoffRetry(1000, 3))
         try {
             client.start()
 
-            if (client.checkExists().forPath('/') == null) {
-                client.create().creatingParentsIfNeeded().forPath('/')
+            def chrootPath = kmService.zkChroot
+            if (client.checkExists().forPath(chrootPath) == null) {
+                client.create().creatingParentsIfNeeded().forPath(chrootPath)
             }
 
-            def brokersPath = '/brokers/ids'
+            def brokersPath = chrootPath + '/brokers/ids'
             if (client.checkExists().forPath(brokersPath) != null) {
                 def children = client.getChildren().forPath(brokersPath)
                 if (children) {
