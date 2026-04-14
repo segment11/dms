@@ -62,6 +62,12 @@ h.group('/kafka/snapshot') {
             resp.halt(404, 'snapshot not found')
         }
 
-        [message: 'not implemented']
+        def snapshotDir = one.snapshotDir
+        def snapshotFile = new File(snapshotDir + '/snapshot.json')
+        if (!snapshotFile.exists()) {
+            resp.halt(404, 'snapshot file not found on disk')
+        }
+
+        resp.download(new FileInputStream(snapshotFile), one.name + '.json')
     }
 }

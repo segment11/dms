@@ -429,7 +429,7 @@ h.group('/kafka/service') {
         [id: id]
     }
 
-    h.post('/update-config') { req, resp ->
+    h.post('/failover') { req, resp ->
         def body = req.bodyAs(Map)
         def id = body.id as int
 
@@ -441,6 +441,119 @@ h.group('/kafka/service') {
         if (one.status != KmServiceDTO.Status.running) {
             resp.halt(409, 'service must be running')
         }
+
+        if (one.mode == KmServiceDTO.Mode.standalone) {
+            resp.halt(409, 'failover not supported for standalone mode')
+        }
+
+        def kmJob = new KmJob()
+        kmJob.kmService = one
+        kmJob.type = KmJobTypes.FAILOVER
+        kmJob.status = JobStatus.created
+        kmJob.params = new JobParams()
+        kmJob.params.put('kmServiceId', id.toString())
+
+        kmJob.taskList << new FailoverTask(kmJob)
+
+        kmJob.createdDate = new Date()
+        kmJob.updatedDate = new Date()
+        kmJob.save()
+
+        KmJobExecutor.instance.execute {
+            kmJob.run()
+        }
+
+        [id: id]
+    }
+
+    h.post('/update-config') { req, resp ->
+        def body = req.bodyAs(Map)
+        def id = body.id as int
+        def configOverrides = body.configOverrides as Map
+
+        def one = new KmServiceDTO(id: id).one()
+        if (!one) {
+            resp.halt(404, 'service not found')
+        }
+
+        if (one.status != KmServiceDTO.Status.running) {
+            resp.halt(409, 'service must be running')
+        }
+
+        if (!configOverrides) {
+            resp.halt(409, 'configOverrides is required')
+        }
+
+        def connectionString = one.zkConnectString + one.zkChroot
+        def client = CuratorFrameworkFactory.newClient(connectionString,
+                new ExponentialBackoffRetry(1000, 3))
+        try {
+            client.start()
+
+            def configPath = '/config/brokers/0'
+            def configData = [version: 1, config: configOverrides]
+            def configJson = com.alibaba.fastjson.JSON.toJSONString(configData)
+
+            if (client.checkExists().forPath(configPath) != null) {
+                client.setData().forPath(configPath, configJson.getBytes('UTF-8'))
+            } else {
+                client.create().creatingParentsIfNeeded().forPath(configPath, configJson.getBytes('UTF-8'))
+            }
+
+            if (!one.configOverrides) {
+                one.configOverrides = new ExtendParams()
+            }
+            configOverrides.each { k, v -> one.configOverrides.put(k as String, v) }
+            new KmServiceDTO(id: id, configOverrides: one.configOverrides, updatedDate: new Date()).update()
+
+            [id: id]
+        } catch (Exception e) {
+            log.error('update config error', e)
+            resp.halt(500, 'update config error: ' + e.message)
+        } finally {
+            client.close()
+        }
+    }
+
+    h.post('/stop') { req, resp ->
+        def body = req.bodyAs(Map)
+        def id = body.id as int
+
+        def one = new KmServiceDTO(id: id).one()
+        if (!one) {
+            resp.halt(404, 'service not found')
+        }
+
+        if (one.status != KmServiceDTO.Status.running) {
+            resp.halt(409, 'service must be running')
+        }
+
+        KafkaManager.stopContainers(one.appId)
+        new KmServiceDTO(id: id, status: KmServiceDTO.Status.stopped, updatedDate: new Date()).update()
+
+        [id: id]
+    }
+
+    h.post('/start') { req, resp ->
+        def body = req.bodyAs(Map)
+        def id = body.id as int
+
+        def one = new KmServiceDTO(id: id).one()
+        if (!one) {
+            resp.halt(404, 'service not found')
+        }
+
+        if (one.status != KmServiceDTO.Status.stopped) {
+            resp.halt(409, 'service must be stopped')
+        }
+
+        def app = new AppDTO(id: one.appId).one()
+        if (!app) {
+            resp.halt(404, 'app not found')
+        }
+
+        new AppDTO(id: app.id, status: AppDTO.Status.auto, updatedDate: new Date()).update()
+        new KmServiceDTO(id: id, status: KmServiceDTO.Status.running, updatedDate: new Date()).update()
 
         [id: id]
     }
