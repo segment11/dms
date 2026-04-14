@@ -68,6 +68,11 @@ h.group('/kafka/snapshot') {
             resp.halt(404, 'snapshot file not found on disk')
         }
 
-        resp.download(new FileInputStream(snapshotFile), one.name + '.json')
+        def stream = new FileInputStream(snapshotFile)
+        try {
+            resp.download(stream, one.name + '.json')
+        } finally {
+            stream.close()
+        }
     }
 }

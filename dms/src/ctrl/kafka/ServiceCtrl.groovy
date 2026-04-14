@@ -484,20 +484,34 @@ h.group('/kafka/service') {
             resp.halt(409, 'configOverrides is required')
         }
 
+        def brokerDetail = one.brokerDetail
+        if (!brokerDetail?.brokers) {
+            resp.halt(409, 'no broker detail found')
+        }
+
         def connectionString = one.zkConnectString + one.zkChroot
         def client = CuratorFrameworkFactory.newClient(connectionString,
                 new ExponentialBackoffRetry(1000, 3))
         try {
             client.start()
 
-            def configPath = '/config/brokers/0'
-            def configData = [version: 1, config: configOverrides]
-            def configJson = com.alibaba.fastjson.JSON.toJSONString(configData)
+            brokerDetail.brokers.each { broker ->
+                def configPath = '/config/brokers/' + broker.brokerId
+                Map existingConfig = [:]
+                if (client.checkExists().forPath(configPath) != null) {
+                    def existingData = new String(client.getData().forPath(configPath), 'UTF-8')
+                    def existingJson = com.alibaba.fastjson.JSON.parseObject(existingData, Map.class)
+                    existingConfig = (existingJson['config'] as Map) ?: [:]
+                }
+                existingConfig.putAll(configOverrides)
+                def configData = [version: 1, config: existingConfig]
+                def configJson = com.alibaba.fastjson.JSON.toJSONString(configData)
 
-            if (client.checkExists().forPath(configPath) != null) {
-                client.setData().forPath(configPath, configJson.getBytes('UTF-8'))
-            } else {
-                client.create().creatingParentsIfNeeded().forPath(configPath, configJson.getBytes('UTF-8'))
+                if (client.checkExists().forPath(configPath) != null) {
+                    client.setData().forPath(configPath, configJson.getBytes('UTF-8'))
+                } else {
+                    client.create().creatingParentsIfNeeded().forPath(configPath, configJson.getBytes('UTF-8'))
+                }
             }
 
             if (!one.configOverrides) {
@@ -553,7 +567,7 @@ h.group('/kafka/service') {
         }
 
         new AppDTO(id: app.id, status: AppDTO.Status.auto, updatedDate: new Date()).update()
-        new KmServiceDTO(id: id, status: KmServiceDTO.Status.running, updatedDate: new Date()).update()
+        new KmServiceDTO(id: id, status: KmServiceDTO.Status.creating, updatedDate: new Date()).update()
 
         [id: id]
     }

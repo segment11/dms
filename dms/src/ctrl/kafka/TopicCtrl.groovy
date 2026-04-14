@@ -119,6 +119,10 @@ h.group('/kafka/topic') {
             resp.halt(404, 'topic not found')
         }
 
+        if (one.status != KmTopicDTO.Status.active) {
+            resp.halt(409, 'topic must be active')
+        }
+
         def service = new KmServiceDTO(id: serviceId).one()
         if (!service) {
             resp.halt(404, 'service not found')
@@ -165,6 +169,10 @@ h.group('/kafka/topic') {
         def one = new KmTopicDTO(serviceId: serviceId, name: name).one()
         if (!one) {
             resp.halt(404, 'topic not found')
+        }
+
+        if (one.status != KmTopicDTO.Status.active) {
+            resp.halt(409, 'topic must be active')
         }
 
         def service = new KmServiceDTO(id: serviceId).one()

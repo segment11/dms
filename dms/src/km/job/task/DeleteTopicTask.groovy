@@ -42,14 +42,6 @@ class DeleteTopicTask extends KmJobTask {
                 client.delete().deletingChildrenIfNeeded().forPath(configPath)
             }
 
-            def adminPath = '/admin/delete_topics/' + topicName
-            if (client.checkExists().forPath('/admin/delete_topics') == null) {
-                client.create().creatingParentsIfNeeded().forPath('/admin/delete_topics')
-            }
-            if (client.checkExists().forPath(adminPath) == null) {
-                client.create().forPath(adminPath)
-            }
-
             def existingTopic = new KmTopicDTO().where('service_id = ? and name = ?', kmService.id, topicName).one()
             if (existingTopic) {
                 new KmTopicDTO(id: existingTopic.id, status: KmTopicDTO.Status.deleted, updatedDate: new Date()).update()

@@ -82,7 +82,14 @@ class AlterTopicTask extends KmJobTask {
 
             if (configOverrides) {
                 def configPath = '/config/topics/' + topicName
-                def configData = [version: 1, config: configOverrides]
+                Map existingConfig = [:]
+                if (client.checkExists().forPath(configPath) != null) {
+                    def existingData = new String(client.getData().forPath(configPath), 'UTF-8')
+                    def existingJson = json.read(existingData, Map.class) as Map
+                    existingConfig = (existingJson['config'] as Map) ?: [:]
+                }
+                existingConfig.putAll(configOverrides)
+                def configData = [version: 1, config: existingConfig]
                 def configJson = json.json(configData)
 
                 if (client.checkExists().forPath(configPath) != null) {
