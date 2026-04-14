@@ -22,6 +22,7 @@ class CuratorPoolHolder {
         }
 
         client = CuratorFrameworkFactory.newClient(connectionString,
+                5000, 30000,
                 new ExponentialBackoffRetry(1000, 3))
         client.start()
         log.info 'curator client started for {}', connectionString

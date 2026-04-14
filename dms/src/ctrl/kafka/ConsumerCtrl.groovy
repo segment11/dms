@@ -34,7 +34,7 @@ h.group('/kafka/consumer') {
             }
 
             List<String> groups = client.getChildren().forPath(consumersPath)
-            [list: groups]
+            [serviceId: serviceId, list: groups]
         } catch (Exception e) {
             log.error('list consumer groups error', e)
             resp.halt(500, 'list consumer groups error: ' + e.message)
@@ -125,7 +125,7 @@ h.group('/kafka/consumer') {
                 }
             }
 
-            [groupId: groupId, members: memberIds, offsets: partitionOffsets, owners: owners]
+            [serviceId: serviceId, groupId: groupId, members: memberIds, offsets: partitionOffsets, owners: owners]
         } catch (Exception e) {
             log.error('describe consumer group error', e)
             resp.halt(500, 'describe consumer group error: ' + e.message)
@@ -152,13 +152,11 @@ h.group('/kafka/consumer') {
         try {
             def offsetsPath = '/consumers/' + groupId + '/offsets'
             if (client.checkExists().forPath(offsetsPath) == null) {
-                return [groupId: groupId, totalLag: 0L, topics: []]
+                return [serviceId: serviceId, groupId: groupId, topics: [], note: 'ZK-based lag requires kafka-consumer-groups.sh for actual LOG_END_OFFSET; use kafka_exporter for new-style consumers']
             }
 
             List<String> topicNames = client.getChildren().forPath(offsetsPath)
-            long totalLag = 0L
-            Map<String, Long> topicLag = [:]
-            Map<String, Integer> topicPartitionCount = [:]
+            List<Map> topicSummaries = []
 
             for (String topicName : topicNames) {
                 def topicOffsetPath = offsetsPath + '/' + topicName
@@ -166,42 +164,25 @@ h.group('/kafka/consumer') {
                     continue
                 }
 
-                def topicPath = '/brokers/topics/' + topicName
-                if (client.checkExists().forPath(topicPath) == null) {
-                    continue
-                }
-
-                def topicData = new String(client.getData().forPath(topicPath), 'UTF-8')
-                def topicJson = new DefaultJsonTransformer().read(topicData, Map.class) as Map
-                def partitionsMap = topicJson['partitions'] as Map
-                if (!partitionsMap) {
-                    continue
-                }
-
                 List<String> partitionIds = client.getChildren().forPath(topicOffsetPath)
+                long lastOffset = 0L
                 for (String partitionId : partitionIds) {
                     def partitionOffsetPath = topicOffsetPath + '/' + partitionId
-                    long consumerOffset = 0L
                     if (client.checkExists().forPath(partitionOffsetPath) != null) {
                         def offsetData = new String(client.getData().forPath(partitionOffsetPath), 'UTF-8')
-                        consumerOffset = offsetData as long
+                        lastOffset += offsetData as long
                     }
-
-                    def replicas = partitionsMap[partitionId] as List
-                    long logEndOffset = replicas ? replicas.size() as long : 0L
-
-                    long lag = Math.max(0L, logEndOffset - consumerOffset)
-                    totalLag += lag
-                    topicLag[topicName] = (topicLag[topicName] ?: 0L) + lag
-                    topicPartitionCount[topicName] = (topicPartitionCount[topicName] ?: 0) + 1
                 }
+
+                topicSummaries << [
+                        topic          : topicName,
+                        partitionCount: partitionIds.size(),
+                        lastOffset     : lastOffset,
+                ]
             }
 
-            List topics = topicLag.collect { String topic, Long lag ->
-                [topic: topic, lag: lag, partitionCount: topicPartitionCount[topic]]
-            }
-
-            [groupId: groupId, totalLag: totalLag, topics: topics]
+            [serviceId: serviceId, groupId: groupId, topics: topicSummaries,
+             note     : 'ZK stores consumer offsets only, not LOG_END_OFFSET. Use kafka_exporter for actual lag.']
         } catch (Exception e) {
             log.error('consumer lag error', e)
             resp.halt(500, 'consumer lag error: ' + e.message)

@@ -6,7 +6,6 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import km.job.KmJob
 import km.CuratorPoolHolder
-import km.job.KmJob
 import km.job.KmJobTask
 import model.KmTopicDTO
 

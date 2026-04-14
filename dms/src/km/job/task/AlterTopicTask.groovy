@@ -7,7 +7,6 @@ import groovy.util.logging.Slf4j
 import km.PartitionBalancer
 import km.job.KmJob
 import km.CuratorPoolHolder
-import km.job.KmJob
 import km.job.KmJobTask
 import model.KmTopicDTO
 import org.segment.d.json.DefaultJsonTransformer

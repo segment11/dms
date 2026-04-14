@@ -27,8 +27,15 @@ class PreferredReplicaElectionTask extends KmJobTask {
         try {
 
             def electionPath = '/admin/preferred_replica_election'
-            if (client.checkExists().forPath(electionPath) != null) {
-                return JobResult.fail('preferred replica election already in progress')
+            def stat = client.checkExists().forPath(electionPath)
+            if (stat != null) {
+                long staleThresholdMs = 5 * 60 * 1000L
+                long ageMs = System.currentTimeMillis() - stat.ctime
+                if (ageMs < staleThresholdMs) {
+                    return JobResult.fail('preferred replica election already in progress')
+                }
+                log.warn 'deleting stale election path, ageMs={}', ageMs
+                client.delete().forPath(electionPath)
             }
 
             client.create().creatingParentsIfNeeded().forPath(electionPath, '{}'.getBytes('UTF-8'))
