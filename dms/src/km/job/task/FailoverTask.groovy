@@ -6,11 +6,11 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import km.KafkaManager
 import km.job.KmJob
+import km.CuratorPoolHolder
+import km.job.KmJob
 import km.job.KmJobTask
 import model.KmServiceDTO
 import model.json.BrokerDetail
-import org.apache.curator.framework.CuratorFrameworkFactory
-import org.apache.curator.retry.ExponentialBackoffRetry
 import org.segment.d.json.DefaultJsonTransformer
 import server.AgentCaller
 import server.InMemoryAllContainerManager
@@ -29,9 +29,8 @@ class FailoverTask extends KmJobTask {
     @Override
     JobResult doTask() {
         def connectionString = kmService.zkConnectString + kmService.zkChroot
-        def client = CuratorFrameworkFactory.newClient(connectionString, new ExponentialBackoffRetry(1000, 3))
+        def client = CuratorPoolHolder.instance.create(connectionString)
         try {
-            client.start()
 
             def controllerPath = '/controller'
             if (client.checkExists().forPath(controllerPath) == null) {
@@ -121,8 +120,6 @@ class FailoverTask extends KmJobTask {
         } catch (Exception e) {
             log.error('failover error', e)
             JobResult.fail('failover error: ' + e.message)
-        } finally {
-            client.close()
         }
     }
 }

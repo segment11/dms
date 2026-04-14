@@ -5,10 +5,10 @@ import com.segment.common.job.chain.JobStep
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import km.job.KmJob
+import km.CuratorPoolHolder
+import km.job.KmJob
 import km.job.KmJobTask
 import model.KmServiceDTO
-import org.apache.curator.framework.CuratorFrameworkFactory
-import org.apache.curator.retry.ExponentialBackoffRetry
 
 @CompileStatic
 @Slf4j
@@ -26,9 +26,8 @@ class DecommissionBrokerTask extends KmJobTask {
     @Override
     JobResult doTask() {
         def connectionString = kmService.zkConnectString + kmService.zkChroot
-        def client = CuratorFrameworkFactory.newClient(connectionString, new ExponentialBackoffRetry(1000, 3))
+        def client = CuratorPoolHolder.instance.create(connectionString)
         try {
-            client.start()
 
             removeBrokerIds.each { brokerId ->
                 def brokerPath = '/brokers/ids/' + brokerId
@@ -48,8 +47,6 @@ class DecommissionBrokerTask extends KmJobTask {
         } catch (Exception e) {
             log.error('decommission broker error', e)
             JobResult.fail('decommission broker error: ' + e.message)
-        } finally {
-            client.close()
         }
     }
 }

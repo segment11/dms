@@ -5,9 +5,8 @@ import com.segment.common.job.chain.JobStep
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import km.job.KmJob
+import km.CuratorPoolHolder
 import km.job.KmJobTask
-import org.apache.curator.framework.CuratorFrameworkFactory
-import org.apache.curator.retry.ExponentialBackoffRetry
 
 @CompileStatic
 @Slf4j
@@ -33,10 +32,8 @@ class ValidateZookeeperTask extends KmJobTask {
             return JobResult.fail('invalid zk chroot: ' + kmService.zkChroot)
         }
 
-        def client = CuratorFrameworkFactory.newClient(kmService.zkConnectString,
-                new ExponentialBackoffRetry(1000, 3))
+        def client = CuratorPoolHolder.instance.create(kmService.zkConnectString)
         try {
-            client.start()
 
             def chrootPath = kmService.zkChroot
             if (client.checkExists().forPath(chrootPath) == null) {
@@ -55,8 +52,6 @@ class ValidateZookeeperTask extends KmJobTask {
         } catch (Exception e) {
             log.error('validate zookeeper error', e)
             return JobResult.fail('validate zookeeper error: ' + e.message)
-        } finally {
-            client.close()
         }
     }
 }

@@ -6,10 +6,10 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import km.PartitionBalancer
 import km.job.KmJob
+import km.CuratorPoolHolder
+import km.job.KmJob
 import km.job.KmJobTask
 import model.KmTopicDTO
-import org.apache.curator.framework.CuratorFrameworkFactory
-import org.apache.curator.retry.ExponentialBackoffRetry
 import org.segment.d.json.DefaultJsonTransformer
 
 @CompileStatic
@@ -33,10 +33,8 @@ class AlterTopicTask extends KmJobTask {
         assert kmService
 
         def connectionString = kmService.zkConnectString + kmService.zkChroot
-        def client = CuratorFrameworkFactory.newClient(connectionString,
-                new ExponentialBackoffRetry(1000, 3))
+        def client = CuratorPoolHolder.instance.create(connectionString)
         try {
-            client.start()
             def json = new DefaultJsonTransformer()
 
             def topicPath = '/brokers/topics/' + topicName
@@ -103,8 +101,6 @@ class AlterTopicTask extends KmJobTask {
         } catch (Exception e) {
             log.error('alter topic error', e)
             JobResult.fail('alter topic error: ' + e.message)
-        } finally {
-            client.close()
         }
     }
 }

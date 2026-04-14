@@ -5,10 +5,10 @@ import com.segment.common.job.chain.JobStep
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import km.job.KmJob
+import km.CuratorPoolHolder
+import km.job.KmJob
 import km.job.KmJobTask
 import model.KmServiceDTO
-import org.apache.curator.framework.CuratorFrameworkFactory
-import org.apache.curator.retry.ExponentialBackoffRetry
 
 @CompileStatic
 @Slf4j
@@ -24,9 +24,8 @@ class WaitReassignmentCompleteTask extends KmJobTask {
     @Override
     JobResult doTask() {
         def connectionString = kmService.zkConnectString + kmService.zkChroot
-        def client = CuratorFrameworkFactory.newClient(connectionString, new ExponentialBackoffRetry(1000, 3))
+        def client = CuratorPoolHolder.instance.create(connectionString)
         try {
-            client.start()
 
             int maxRetries = 20
             for (int i = 0; i <= maxRetries; i++) {
@@ -51,8 +50,6 @@ class WaitReassignmentCompleteTask extends KmJobTask {
         } catch (Exception e) {
             log.error('wait reassignment error', e)
             JobResult.fail('wait reassignment error: ' + e.message)
-        } finally {
-            client.close()
         }
     }
 }

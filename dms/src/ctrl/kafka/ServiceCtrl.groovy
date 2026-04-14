@@ -2,6 +2,7 @@ package ctrl.kafka
 
 import com.segment.common.job.chain.JobParams
 import com.segment.common.job.chain.JobStatus
+import km.CuratorPoolHolder
 import km.KafkaManager
 import km.KmJobExecutor
 import km.job.KmJob
@@ -9,8 +10,6 @@ import km.job.KmJobTypes
 import km.job.task.*
 import model.*
 import model.json.*
-import org.apache.curator.framework.CuratorFrameworkFactory
-import org.apache.curator.retry.ExponentialBackoffRetry
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
 import server.InMemoryAllContainerManager
@@ -293,15 +292,9 @@ h.group('/kafka/service') {
         if (one.zkConnectString && one.zkChroot && km.job.task.ValidateZookeeperTask.isValidChroot(one.zkChroot)) {
             try {
                 def connectionString = one.zkConnectString + one.zkChroot
-                def client = CuratorFrameworkFactory.newClient(connectionString,
-                        new ExponentialBackoffRetry(1000, 3))
-                try {
-                    client.start()
-                    if (client.checkExists().forPath('/') != null) {
-                        client.delete().deletingChildrenIfNeeded().forPath('/')
-                    }
-                } finally {
-                    client.close()
+                def client = CuratorPoolHolder.instance.create(connectionString)
+                if (client.checkExists().forPath('/') != null) {
+                    client.delete().deletingChildrenIfNeeded().forPath('/')
                 }
             } catch (Exception e) {
                 log.warn('delete zk chroot error: {}', e.message)
@@ -466,6 +459,43 @@ h.group('/kafka/service') {
         [id: id]
     }
 
+    h.post('/preferred-replica-election') { req, resp ->
+        def body = req.bodyAs(Map)
+        def id = body.id as int
+
+        def one = new KmServiceDTO(id: id).one()
+        if (!one) {
+            resp.halt(404, 'service not found')
+        }
+
+        if (one.status != KmServiceDTO.Status.running) {
+            resp.halt(409, 'service must be running')
+        }
+
+        if (one.mode == KmServiceDTO.Mode.standalone) {
+            resp.halt(409, 'preferred replica election not supported for standalone mode')
+        }
+
+        def kmJob = new KmJob()
+        kmJob.kmService = one
+        kmJob.type = KmJobTypes.PREFERRED_REPLICA_ELECTION
+        kmJob.status = JobStatus.created
+        kmJob.params = new JobParams()
+        kmJob.params.put('kmServiceId', id.toString())
+
+        kmJob.taskList << new PreferredReplicaElectionTask(kmJob)
+
+        kmJob.createdDate = new Date()
+        kmJob.updatedDate = new Date()
+        kmJob.save()
+
+        KmJobExecutor.instance.execute {
+            kmJob.run()
+        }
+
+        [id: id]
+    }
+
     h.post('/update-config') { req, resp ->
         def body = req.bodyAs(Map)
         def id = body.id as int
@@ -490,11 +520,8 @@ h.group('/kafka/service') {
         }
 
         def connectionString = one.zkConnectString + one.zkChroot
-        def client = CuratorFrameworkFactory.newClient(connectionString,
-                new ExponentialBackoffRetry(1000, 3))
+        def client = CuratorPoolHolder.instance.create(connectionString)
         try {
-            client.start()
-
             brokerDetail.brokers.each { broker ->
                 def configPath = '/config/brokers/' + broker.brokerId
                 Map existingConfig = [:]
@@ -524,8 +551,6 @@ h.group('/kafka/service') {
         } catch (Exception e) {
             log.error('update config error', e)
             resp.halt(500, 'update config error: ' + e.message)
-        } finally {
-            client.close()
         }
     }
 

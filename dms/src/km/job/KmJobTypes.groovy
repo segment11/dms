@@ -13,6 +13,7 @@ class KmJobTypes {
     static final JobType TOPIC_ALTER = new JobType('topic_alter')
     static final JobType TOPIC_DELETE = new JobType('topic_delete')
     static final JobType REASSIGN_PARTITIONS = new JobType('reassign_partitions')
+    static final JobType PREFERRED_REPLICA_ELECTION = new JobType('preferred_replica_election')
     static final JobType FAILOVER = new JobType('failover')
     static final JobType SNAPSHOT = new JobType('snapshot')
     static final JobType IMPORT = new JobType('import')

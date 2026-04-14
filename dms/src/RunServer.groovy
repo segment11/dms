@@ -2,6 +2,7 @@ import auth.User
 import com.segment.common.Conf
 import common.Const
 import ha.JedisPoolHolder
+import km.CuratorPoolHolder
 import io.prometheus.client.exporter.HTTPServer
 import io.prometheus.client.hotspot.DefaultExports
 import model.DynConfigDTO
@@ -168,6 +169,7 @@ def stopCl = {
     containerManager.stop()
     leaderFlagHolder.stop()
     JedisPoolHolder.instance.close()
+    CuratorPoolHolder.instance.close()
     AuthTokenCacheHolder.instance.cleanUp()
     BackupManager.instance.stop()
     RmJobExecutor.instance.cleanUp()

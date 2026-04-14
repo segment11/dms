@@ -7,11 +7,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import km.job.KmJob
+import km.CuratorPoolHolder
+import km.job.KmJob
 import km.job.KmJobTask
 import model.KmServiceDTO
 import model.json.BrokerDetail
-import org.apache.curator.framework.CuratorFrameworkFactory
-import org.apache.curator.retry.ExponentialBackoffRetry
 
 @CompileStatic
 @Slf4j
@@ -34,10 +34,8 @@ class WaitBrokersRegisteredTask extends KmJobTask {
         def connectionString = kmService.zkConnectString + kmService.zkChroot
         int maxRetries = 20
 
-        def client = CuratorFrameworkFactory.newClient(connectionString,
-                new ExponentialBackoffRetry(1000, 3))
+        def client = CuratorPoolHolder.instance.create(connectionString)
         try {
-            client.start()
 
             for (int i = 0; i <= maxRetries; i++) {
                 def brokersPath = '/brokers/ids'
@@ -86,8 +84,6 @@ class WaitBrokersRegisteredTask extends KmJobTask {
         } catch (Exception e) {
             log.error('wait brokers registered error', e)
             return JobResult.fail('wait brokers registered error: ' + e.message)
-        } finally {
-            client.close()
         }
     }
 }

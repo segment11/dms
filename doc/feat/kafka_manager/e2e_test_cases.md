@@ -110,6 +110,17 @@ Comprehensive operations for managing multiple Kafka standalone servers and clus
 - Stop controller container manually, then trigger failover
 - **Verify:** returns "controller broker already stopped"
 
+### 4.3 Preferred replica election
+- Create 3-broker cluster with topic (partitions=6, replicationFactor=3)
+- Stop broker 0 (leader for some partitions), wait for leader election, restart broker 0
+- At this point some partitions have broker 1 or 2 as leader instead of preferred broker 0
+- POST `/kafka/service/preferred-replica-election`
+- **Verify:** ZK path `/admin/preferred_replica_election` written then deleted by Controller, partition leaders reset to preferred replicas, job status = `ok`
+
+### 4.4 Preferred replica election — election already in progress
+- Trigger preferred replica election twice rapidly
+- **Verify:** second call returns job with `failed` status, "preferred replica election already in progress"
+
 ---
 
 ## 5. Snapshot Export / Import
@@ -244,56 +255,117 @@ Comprehensive operations for managing multiple Kafka standalone servers and clus
 
 ---
 
-## 9. Job and Task Observability
+## 9. Consumer Group Inspection
 
-### 9.1 Job history
+### 9.1 List consumer groups
+- Produce messages to topic, start a Kafka consumer group (e.g., `test-group` with 2 members)
+- GET `/kafka/consumer/list?serviceId=X`
+- **Verify:** returns `test-group` in the list
+
+### 9.2 Consumer group detail
+- GET `/kafka/consumer/one?serviceId=X&groupId=test-group`
+- **Verify:** returns members (client ID, host), assigned topic-partitions, current offsets
+
+### 9.3 Consumer lag
+- Produce 1000 messages, consume only 100
+- GET `/kafka/consumer/lag?serviceId=X&groupId=test-group`
+- **Verify:** lag ≈ 900 for the consumed topic, log-end-offset and current offset reported per partition
+
+### 9.4 Consumer lag — no active consumers
+- Stop all consumers, GET `/kafka/consumer/lag`
+- **Verify:** group listed with no active members, lag reflects last committed offset vs current log-end-offset
+
+### 9.5 Consumer groups — stopped service
+- GET `/kafka/consumer/list?serviceId=X` on a stopped service
+- **Verify:** 409 "service must be running"
+
+---
+
+## 10. Job and Task Observability
+
+### 10.1 Job history
 - GET `/kafka/job/list?serviceId=X`
 - **Verify:** returns all jobs (create, scale-up, scale-down, topic-create) with status and costMs
 
-### 9.2 Task logs for a job
+### 10.2 Task logs for a job
 - GET `/kafka/job/task/list?jobId=X`
 - **Verify:** returns step-by-step task execution log with individual costMs
 
-### 9.3 Failed job visibility
+### 10.3 Failed job visibility
 - Trigger a job that will fail (e.g., unreachable ZK)
 - **Verify:** job status = `failed`, result contains error message, task log shows which step failed
 
 ---
 
+## 11. Additional Endpoint Coverage
+
+### 11.1 Service stop/start round-trip
+- POST `/kafka/service/stop` on a running service
+- **Verify:** containers stopped, status = `stopped`
+- POST `/kafka/service/start`
+- **Verify:** status transitions to `creating`, Guardian restarts containers, `/one` eventually shows `running`
+
+### 11.2 Stop a stuck service
+- Start a service that fails to reach `running` (stuck in `creating`)
+- POST `/kafka/service/stop`
+- **Verify:** 409 "service must be running" — operator cannot stop a stuck service (known limitation)
+
+### 11.3 Update broker config
+- POST `/kafka/service/update-config` with `{configOverrides: {num.io.threads: "8"}}`
+- **Verify:** ZK `/config/brokers/{id}` updated for all brokers, DB `config_overrides` merged, config persists after broker restart
+
+### 11.4 Update config — merge behavior
+- Set `{a: "1"}` then `{b: "2"}`
+- **Verify:** ZK has both `{a: "1", b: "2"}`, DB has both
+
+### 11.5 Topic alter — partition increase
+- Create topic with partitions=4, POST `/kafka/topic/alter` with `partitions=8`
+- **Verify:** ZK `/brokers/topics/{name}` has 8 partition entries, KmTopicDTO updated
+
+### 11.6 Topic alter — config update
+- POST `/kafka/topic/alter` with `{configOverrides: {retention.ms: "86400000"}}`
+- **Verify:** ZK `/config/topics/{name}` merged (existing configs preserved)
+
+### 11.7 Topic alter — status guard
+- Attempt to alter a `creating` topic
+- **Verify:** 409 "topic must be active"
+
+### 11.8 Topic delete — status guard
+- Delete a topic, then attempt to delete again
+- **Verify:** second call returns 409 "topic must be active" (topic is now `deleted`)
+
+---
+
 ## Implementation Gap Analysis
 
-Comparing the test cases above against current implementation:
+### Previously identified gaps (G1-G8) — all resolved
+
+All gaps G1-G8 from the original analysis have been implemented and reviewed (rounds 18-19).
+
+### New features from CMAK comparison
 
 | Test Case | API Exists | Logic Implemented | Gap |
 |-----------|-----------|-------------------|-----|
-| 1.1–1.7 Standalone lifecycle | Yes | Yes | — |
-| 2.1–2.6 Cluster lifecycle | Yes | Yes | — |
-| 3.1–3.6 Scaling | Yes | Yes | — |
-| 4.1 Failover | **No endpoint** | Task exists | ServiceCtrl has no `/failover` route that creates a job with FailoverTask |
-| 4.2 Failover edge case | — | Task handles it | Same endpoint gap |
-| 5.1–5.8 Snapshot | Yes | Yes | `/download` is stub |
-| 6.1–6.3 Monitoring | Yes | Yes | — |
-| 7.1–7.4 Multi-service | Yes | Yes | — |
-| 8.1 Container crash | Implicit | Guardian handles | — |
-| 8.2 Cluster availability | Implicit | Kafka built-in | — |
-| 8.3–8.5 ZK unreachable | Yes | Tasks handle | — |
-| 8.6 Delete with ZK down | Yes | Caught exception | — |
-| 8.7 Partial scale failure | Yes | Job reports fail | — |
-| 8.8–8.9 Chroot conflict | Yes | ValidateZK handles | — |
-| 8.10 Recover from snapshot | Yes | Yes | — |
-| 8.11–8.13 Timeout cases | Yes | Task retries | — |
-| 8.13 Port conflict | Implicit | Plugin checker | — |
-| 9.1–9.3 Observability | Yes | Yes | — |
+| 4.3 Preferred replica election | **No** | **No task** | `PREFERRED_REPLICA_ELECTION` job type and `PreferredReplicaElectionTask` not yet implemented |
+| 4.4 Preferred replica election conflict | **No** | **No** | Same gap |
+| 9.1–9.5 Consumer group inspection | **No** | **No** | `KmConsumerCtrl` and consumer group read endpoints not yet implemented |
 
 ### Gaps Found
 
 | # | Gap | Severity | Detail |
 |---|-----|----------|--------|
-| G1 | **No `/kafka/service/failover` endpoint** | High | Design doc specifies `POST /kafka/service/failover`. `FailoverTask` exists with real logic but no controller route wires it into a job. Cannot trigger failover via API. |
-| G2 | **`POST /kafka/topic/alter` is a stub** | High | Design doc specifies "Increase partitions or update topic config." Implementation returns `{id}` without altering anything. No `TOPIC_ALTER` job chain exists. |
-| G3 | **`POST /kafka/topic/delete` is soft-only** | Medium | Updates `KmTopicDTO.status = deleted` in DB but does not delete the topic from ZooKeeper. The topic remains active on brokers. Should also delete `/brokers/topics/{name}` and `/config/topics/{name}` in ZK. |
-| G4 | **`POST /kafka/topic/reassign` is a stub** | Medium | Design doc specifies per-topic reassignment. Implementation returns `{id}` without triggering `REASSIGN_PARTITIONS` job. |
-| G5 | **`POST /kafka/service/update-config` is a stub** | Medium | Design doc specifies "Update broker runtime config via `kafka-configs.sh --alter`." Implementation only validates service exists. No ZK config update or `kafka-configs.sh` integration. |
-| G6 | **`GET /kafka/snapshot/download` is a stub** | Low | Returns "not implemented." Snapshot files exist on disk but cannot be downloaded via API. |
-| G7 | **No `TOPIC_DELETE` job with ZK cleanup** | Medium | Related to G3. `KmJobTypes.TOPIC_DELETE` exists but no task class deletes the topic from ZK. |
-| G8 | **No service stop/start endpoints** | Low | Design doc lists `stopped` as a valid status. No endpoint to stop a running service (without deleting it) or restart a stopped service. `KafkaManager.stopContainers()` exists but is only called from `/delete`. |
+| G9 | **No preferred replica election** | Medium | CMAK exposes `KMPreferredReplicaElectionFeature` as a first-class feature. KM has no endpoint or task. Implementation is simple: write empty JSON to ZK `/admin/preferred_replica_election`. Useful after broker restarts or scale-down to restore balanced leader distribution. |
+| G10 | **No consumer group inspection** | Medium | CMAK provides consumer list + lag views. KM has no visibility into consumer groups. Requires `KmConsumerCtrl` with read-only endpoints using `kafka-consumer-groups.sh`. kafka_exporter already exposes lag metrics to Prometheus, but the API provides on-demand human-readable inspection. |
+
+### Additional missing E2E test cases for existing endpoints
+
+These test cases cover endpoints that exist but were not in the original E2E doc:
+
+| Test Case | Endpoint | Description |
+|-----------|----------|-------------|
+| 10.1 | `POST /kafka/service/stop` + `POST /kafka/service/start` | Stop a running service, verify status = `stopped`, start it, verify status transitions to `creating` then `running` |
+| 10.2 | `POST /kafka/service/update-config` | Update broker config, verify persists in ZK and DB, survives broker restart |
+| 10.3 | `POST /kafka/topic/alter` — partition increase | Increase topic partitions, verify new partitions assigned to brokers via PartitionBalancer |
+| 10.4 | `POST /kafka/topic/alter` — config update | Update topic config (e.g., `retention.ms`), verify merged with existing config in ZK |
+| 10.5 | `POST /kafka/topic/alter` — status guard | Attempt to alter a `creating` topic, verify 409 |
+| 10.6 | `POST /kafka/topic/delete` — status guard | Attempt to delete an already `deleting` topic, verify 409 |

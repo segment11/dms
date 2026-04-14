@@ -6,11 +6,11 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import km.PartitionBalancer
 import km.job.KmJob
+import km.CuratorPoolHolder
+import km.job.KmJob
 import km.job.KmJobTask
 import km.job.KmJobTypes
 import model.KmServiceDTO
-import org.apache.curator.framework.CuratorFrameworkFactory
-import org.apache.curator.retry.ExponentialBackoffRetry
 import org.segment.d.json.DefaultJsonTransformer
 
 @CompileStatic
@@ -27,9 +27,8 @@ class ReassignPartitionsTask extends KmJobTask {
     @Override
     JobResult doTask() {
         def connectionString = kmService.zkConnectString + kmService.zkChroot
-        def client = CuratorFrameworkFactory.newClient(connectionString, new ExponentialBackoffRetry(1000, 3))
+        def client = CuratorPoolHolder.instance.create(connectionString)
         try {
-            client.start()
 
             def topicsPath = '/brokers/topics'
             if (client.checkExists().forPath(topicsPath) == null) {
@@ -116,8 +115,6 @@ class ReassignPartitionsTask extends KmJobTask {
         } catch (Exception e) {
             log.error('reassign partitions error', e)
             JobResult.fail('reassign partitions error: ' + e.message)
-        } finally {
-            client.close()
         }
     }
 }

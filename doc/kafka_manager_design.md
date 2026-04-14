@@ -26,7 +26,10 @@ Unlike Redis Manager's three modes (standalone/sentinel/cluster), Kafka has two 
 │  ┌──────────────┐  ┌────────────┐  ┌──────────┐ │
 │  │ KmServiceCtrl│  │ KmTopicCtrl│  │KmJobCtrl │ │
 │  └──────┬───────┘  └─────┬──────┘  └────┬─────┘ │
-│         │                │               │       │
+│  ┌──────┴───────┐  ┌─────┴──────┐              │
+│  │KmConsumerCtrl│  │KmSnapshot  │              │
+│  └──────┬───────┘  │    Ctrl    │              │
+│         │          └─────┬──────┘              │
 │  ┌──────▼────────────────▼───────────────▼─────┐ │
 │  │              KafkaManager                    │ │
 │  │  ┌──────────────┐  ┌────────────────────┐   │ │
@@ -53,6 +56,14 @@ Unlike Redis Manager's three modes (standalone/sentinel/cluster), Kafka has two 
 | `KmSnapshotManager` | Exports/imports cluster metadata snapshots (broker topology, topics, configs) to dir/zip. No message data — Kafka replication handles durability. |
 | `PartitionBalancer` | Utility for partition replica assignment across brokers. Methods: `assignReplicas(brokerCount, partitionCount, replicationFactor)`, `reassignForScale(currentAssignment, newBrokerIds)`, `reassignForDecommission(currentAssignment, removeBrokerIds)`. |
 
+### Read-only Inspection Components
+
+These components query live cluster state without modifying it. They provide CMAK-style visibility into cluster internals.
+
+| Class | Responsibility |
+|-------|---------------|
+| `PreferredReplicaElectionTask` | Triggers preferred replica election by writing to ZK `/admin/preferred_replica_election`. Single-step job. The Kafka Controller processes the election asynchronously. |
+
 ### Directory Layout
 
 ```
@@ -77,7 +88,8 @@ dms/src/km/
         ├── DecommissionBrokerTask.groovy
         ├── FailoverTask.groovy
         ├── AddBrokersTask.groovy
-        └── RemoveBrokersTask.groovy
+        ├── RemoveBrokersTask.groovy
+        └── PreferredReplicaElectionTask.groovy
 ```
 
 ## Data Model
@@ -273,6 +285,7 @@ class KmSnapshotContent {
 | `TOPIC_ALTER` | Modify topic partitions or config |
 | `TOPIC_DELETE` | Delete a topic |
 | `REASSIGN_PARTITIONS` | Rebalance partition replicas across brokers |
+| `PREFERRED_REPLICA_ELECTION` | Trigger preferred replica election — reset partition leaders to their first (preferred) replica |
 | `FAILOVER` | Force controller re-election |
 | `SNAPSHOT` | Export cluster metadata to dir/zip |
 | `IMPORT` | Recover/recreate cluster from a snapshot |
@@ -325,6 +338,9 @@ This means `broker.id`, `listeners`, `advertised.listeners`, and `zookeeper.conn
 1. `ReassignPartitionsTask` — Generate and execute reassignment JSON
 2. `WaitReassignmentCompleteTask` — Poll until all partitions are in-sync
 
+**PREFERRED_REPLICA_ELECTION**
+1. `PreferredReplicaElectionTask` — Write empty JSON `{}` to ZK path `/admin/preferred_replica_election`. If the path already exists (a previous election is in progress), fail with a conflict error. The Kafka Controller watches this ZK path and upon seeing the notification, will re-elect the preferred (first) replica as leader for all partitions where it is not currently the leader. After processing, the Controller deletes the ZK path. No task chain — single-step job.
+
 **FAILOVER**
 1. `FailoverTask` — Kill the current controller broker container, wait for ZooKeeper to elect a new controller, update `brokerDetail`
 
@@ -340,6 +356,7 @@ This means `broker.id`, `listeners`, `advertised.listeners`, and `zookeeper.conn
 | POST | `/scale-up` | Add brokers to cluster |
 | POST | `/scale-down` | Remove brokers from cluster (triggers partition reassignment first) |
 | POST | `/failover` | Force controller re-election |
+| POST | `/preferred-replica-election` | Trigger preferred replica election — reset partition leaders to preferred replicas |
 | POST | `/update-config` | Update broker runtime config via `kafka-configs.sh --alter` |
 | POST | `/delete` | Stop all brokers, recursively delete the service-owned `zk_chroot` from ZooKeeper, mark deleted |
 
@@ -353,6 +370,18 @@ This means `broker.id`, `listeners`, `advertised.listeners`, and `zookeeper.conn
 | POST | `/alter` | Increase partitions or update topic config |
 | POST | `/delete` | Delete topic |
 | POST | `/reassign` | Trigger partition reassignment across brokers |
+
+### KmConsumerCtrl (`/kafka/consumer`)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/list` | List consumer groups for a service (from ZK `/consumers` and `__consumer_offsets` topic via kafka-consumer-groups.sh) |
+| GET | `/one` | Consumer group detail: members, assigned partitions, offset per partition |
+| GET | `/lag` | Consumer lag: per-topic end-of-log offset minus consumer offset. Uses kafka-consumer-groups.sh `--describe` to fetch lag data |
+
+Consumer group inspection is read-only — KM does not manage consumer groups (no create, alter, delete). This provides visibility into which consumers are connected, how far behind they are, and which topics they consume.
+
+**Implementation note:** Consumer group data is read directly from ZooKeeper via Curator — no container exec or CLI tools needed. This is the same ZK-direct pattern used by all KM tasks. No async job is needed for read-only queries.
 
 ### KmJobCtrl (`/kafka/job`)
 
@@ -472,6 +501,57 @@ Same pattern as Redis Manager (`redis/MetricCtrl`): Prometheus and kafka_exporte
 - `km_broker_count` — Total brokers across all clusters
 - `km_service_status` — Per-service health state
 
+## Preferred Replica Election
+
+Over time, partition leaders can drift away from their preferred (first) replica due to broker restarts, failovers, or reassignments. This causes uneven leader distribution — some brokers handle more leader partitions than others, creating hot spots.
+
+CMAK exposes this as a first-class feature (`KMPreferredReplicaElectionFeature`). KM provides the same capability.
+
+### How it works
+
+1. `POST /kafka/service/preferred-replica-election` validates the service is running and in cluster mode.
+2. Creates a `PREFERRED_REPLICA_ELECTION` job with a single `PreferredReplicaElectionTask`.
+3. The task connects to ZK and checks if `/admin/preferred_replica_election` already exists. If so, a previous election is still in progress — returns fail.
+4. Writes an empty JSON `{}` to `/admin/preferred_replica_election`. The Kafka Controller watches this znode and triggers leader election for all partitions where the current leader is not the preferred replica.
+5. After processing, the Controller deletes the znode. KM does not need to poll — the election is asynchronous.
+
+### When to use
+
+- After broker restarts (leaders may have moved)
+- After scale-down (remaining partitions may have non-preferred leaders)
+- Periodically as a maintenance task for large clusters
+
+## Consumer Group Inspection
+
+CMAK provides visibility into consumer groups — which groups exist, their members, what topics they consume, and how far behind they are (consumer lag). KM provides the same read-only inspection capability.
+
+### Data sources
+
+Kafka 0.8-style consumers store group metadata directly in ZooKeeper under `/consumers/{group}/`. KM reads from these ZK paths — no container exec or CLI tools required. This is consistent with the ZK-direct pattern used across all KM tasks.
+
+- `/consumers/{group}/ids/` — consumer member IDs
+- `/consumers/{group}/offsets/{topic}/{partition}` — committed offset per partition
+- `/consumers/{group}/owners/{topic}/{partition}` — which consumer owns which partition
+- `/brokers/topics/{topic}` — partition replica assignment (used to compute log-end-offset for lag)
+
+For new-style consumers (0.9+) that store offsets in the `__consumer_offsets` internal topic, kafka_exporter (set up via `/kafka/metric/init-exporters`) already exposes `kafka_consumergroup_lag` metrics to Prometheus.
+
+### API behavior
+
+- `GET /kafka/consumer/list?serviceId=X` — Lists all consumer groups. For new-style consumers, runs `kafka-consumer-groups.sh --bootstrap-server` against the first live broker from `brokerDetail`.
+- `GET /kafka/consumer/one?serviceId=X&groupId=Y` — Detail for one group: members (client ID, host), assigned topic-partitions, current offset, log-end offset, lag.
+- `GET /kafka/consumer/lag?serviceId=X&groupId=Y` — Focused lag view: per-topic lag summary (total lag, partition count, consumer count).
+
+### Implementation approach
+
+Since these are read-only queries that shell out to `kafka-consumer-groups.sh`, they execute synchronously in the HTTP handler (same as `/one` reads). No async job is needed. The command timeout should be bounded (e.g., 10 seconds) to prevent hanging on unresponsive brokers.
+
+If the cluster is stopped or no broker is reachable, these endpoints return an appropriate error (e.g., 409 "cluster not running" or 503 "no broker available").
+
+### Consumer lag monitoring
+
+The kafka_exporter (set up via `/kafka/metric/init-exporters`) exposes `kafka_consumergroup_lag` metrics to Prometheus for new-style (0.9+) consumers. The API endpoints above provide on-demand ZK-based consumer inspection for old-style (0.8) consumers.
+
 ## Web UI Pages (under `dms/www/admin/pages/kafka/`)
 
 | Page | Description |
@@ -481,6 +561,8 @@ Same pattern as Redis Manager (`redis/MetricCtrl`): Prometheus and kafka_exporte
 | `add.html/js` | Create Kafka service form |
 | `topic.html/js` | Topic list with partition/replica info, ISR status |
 | `topic-one.html/js` | Topic detail: per-partition leader, replicas, offsets |
+| `consumer.html/js` | Consumer group list with lag per topic |
+| `consumer-one.html/js` | Consumer group detail: members, assigned partitions, offset timeline |
 | `jobs.html/js` | Job history |
 | `snapshot.html/js` | Snapshot list, export, import/recover |
 | `config-template.html/js` | Broker config template management |
@@ -514,4 +596,6 @@ Same pattern as Redis Manager (`redis/MetricCtrl`): Prometheus and kafka_exporte
 8. **Failover** — FailoverTask, controller re-election
 9. **Snapshot/Import** — KmSnapshotManager, metadata export to dir/zip, cluster recovery from snapshot
 10. **Monitoring** — kafka_exporter + Prometheus as separate DMS apps, KmMetricCtrl
-11. **Web UI** — Pages following existing Redis Manager UI patterns
+11. **Preferred replica election** — PreferredReplicaElectionTask, KmServiceCtrl endpoint
+12. **Consumer group inspection** — KmConsumerCtrl, read-only lag/group queries via kafka-consumer-groups.sh
+13. **Web UI** — Pages following existing Redis Manager UI patterns
