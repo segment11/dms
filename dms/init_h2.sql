@@ -336,7 +336,7 @@ create table rm_job
     created_date timestamp,
     updated_date timestamp default current_timestamp
 );
-create index idx_rm_job_app_id on rm_job (app_id);
+create index idx_rm_job_busi_id on rm_job (busi_id);
 
 create table rm_task_log
 (
