@@ -9,18 +9,36 @@ Map params = super.binding.getProperty('params') as Map
 def log = LoggerFactory.getLogger(this.getClass())
 
 String cmd = params.cmd.toString()
-// only compare start command
 def cmdArgs0 = cmd.contains(' ') ? cmd.split(' ')[0] : cmd
+def scriptName = new File(cmdArgs0).getName()
+
+def instanceIndex = null
+def appId = null
+def configPattern = null
+
+def cmdParts = cmd.split(' ')
+if (cmdParts.length >= 3) {
+    instanceIndex = cmdParts[1]
+    appId = cmdParts[2]
+    configPattern = "/opt/bitnami/kafka/config_${appId}/server.properties_${instanceIndex}"
+}
 
 try {
     for (pid in sigar.getProcList()) {
-        def procArgs = sigar.getProcArgs(pid)
-        if (procArgs.length > 0) {
-            def procArgs0 = procArgs[0]
-            def x = procArgs0.contains(' ') ? procArgs0.split(' ')[0] : procArgs0
-            if (cmdArgs0.startsWith(x)) {
-                return [pid: pid]
+        try {
+            def procArgs = sigar.getProcArgs(pid)
+            if (procArgs.length > 0) {
+                def procArgsStr = procArgs.join(' ')
+
+                if (procArgsStr.contains('kafka.Kafka') && procArgsStr.contains(configPattern)) {
+                    return [pid: pid]
+                }
+
+                if (procArgsStr.contains(cmdArgs0) || procArgsStr.contains(scriptName)) {
+                    return [pid: pid]
+                }
             }
+        } catch (Exception ignored) {
         }
     }
 

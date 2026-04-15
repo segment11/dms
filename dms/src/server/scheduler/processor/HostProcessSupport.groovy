@@ -95,6 +95,10 @@ class HostProcessSupport {
 
         // ***
         String fixPwd = c.conf.envList.find { it.key == 'PWD' }?.value
+
+        if (c.conf.cmd?.contains('$')) {
+            c.conf.cmd = evalUsingPluginExpression(c.conf.cmd, c)
+        }
         int pid = startCmdWithSsh(fixPwd, c.conf.cmd, c.clusterId, c.appId, c.nodeIp, keeper)
         if (c.conf.cpusetCpus) {
             // may set already
@@ -117,9 +121,33 @@ class HostProcessSupport {
 
         AgentCaller.instance.agentScriptExe(c.clusterId, c.nodeIp, 'set wrap container info',
                 [containerInfo: containerInfo])
-        keeper.next(JobStepKeeper.Step.wrapContainerInfo, 'set wrap container info')
+        keeper.next(JobStepKeeper.Step.wrapContainerInfo, 'set wrap container info', 'pid: ' + pid)
 
         pid
+    }
+
+    static String evalUsingPluginExpression(String value, CreateContainerConf createContainerConf) {
+        log.info 'before eval expression: {}', value
+
+        Map<String, Object> variables = [:]
+        variables.appId = createContainerConf.appId
+        variables.nodeIp = createContainerConf.nodeIp
+        variables.nodeIpList = createContainerConf.nodeIpList
+        variables.instanceIndex = createContainerConf.instanceIndex
+
+        Map<String, Object> envs = [:]
+        createContainerConf.conf.envList.each {
+            envs[it.key] = it.value
+        }
+        variables.envs = envs
+
+        variables.each { k, v ->
+            value = value.replace('$' + k, v.toString())
+            value = value.replace('${' + k + '}', v.toString())
+        }
+
+        log.info 'after eval expression: {}', value
+        value
     }
 
     static int startCmdWithSsh(String fixPwd, String cmd, int clusterId, int appId, String nodeIp, JobStepKeeper keeper = null) {

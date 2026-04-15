@@ -8,6 +8,7 @@ import common.Utils
 import model.AppDTO
 import model.AppJobDTO
 import model.ImageTplDTO
+import model.server.CreateContainerConf
 import org.segment.web.common.CachedGroovyClassLoader
 import org.segment.web.handler.ChainHandler
 import org.segment.web.handler.Req
@@ -343,6 +344,14 @@ private static void callAgentScript(Req req, Resp resp, String scriptName) {
         def app = new AppDTO(id: appId).one()
         if (app.conf.isRunningUnbox) {
             String fixPwd = app.conf.envList.find { it.key == 'PWD' }?.value
+            if (app.conf.cmd?.contains('$')) {
+                def createContainerConf = new CreateContainerConf()
+                createContainerConf.appId = app.id
+                createContainerConf.nodeIp = nodeIp
+                createContainerConf.nodeIpList = app.conf.targetNodeIpList
+                createContainerConf.instanceIndex = ContainerHelper.getInstanceIdFromProcess(id)
+                app.conf.cmd = HostProcessSupport.evalUsingPluginExpression(app.conf.cmd, createContainerConf)
+            }
             int pid = HostProcessSupport.instance.startCmdWithSsh(fixPwd, app.conf.cmd, app.clusterId, app.id, nodeIp)
             JSONObject r = AgentCaller.instance.agentScriptExe(clusterId, nodeIp, 'replace pid', [appId: app.id, id: id, pid: pid])
             resp.end r.toJSONString()
@@ -390,7 +399,14 @@ h.post('/api/container/create/tpl') { req, resp ->
     paramList.each {
         // value is always string, use as to transfer Type.
         // eg. def appId = super.binding.getProperty('appId') as int
-        map[it.key] = it.value
+        def val = it.value
+        if (val instanceof String && val.startsWith('${') && val.endsWith('}')) {
+            def inner = val[2..-2]
+            if (map.containsKey(inner)) {
+                val = map[inner]
+            }
+        }
+        map[it.key] = val
     }
     map.conf = app.conf
     map.applications = ContainerMountFileGenerator.prepare(User.Admin, clusterId)

@@ -1,8 +1,12 @@
 package plugin.demo2
 
+import com.segment.common.job.chain.JobResult
 import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
+import km.CuratorPoolHolder
+import model.AppDTO
 import model.ImageTplDTO
+import model.KmServiceDTO
 import model.json.TplParamsConf
 import model.server.CreateContainerConf
 import plugin.BasePlugin
@@ -11,6 +15,8 @@ import server.AgentCaller
 import server.InMemoryCacheSupport
 import server.scheduler.checker.Checker
 import server.scheduler.checker.CheckerHolder
+import server.scheduler.checker.HealthChecker
+import server.scheduler.checker.HealthCheckerHolder
 import server.scheduler.processor.JobStepKeeper
 
 @CompileStatic
@@ -47,6 +53,7 @@ class KafkaPlugin extends BasePlugin {
 
         initImageConfig()
         initChecker()
+        initHealthChecker()
     }
 
     private void initImageConfig() {
@@ -69,7 +76,6 @@ class KafkaPlugin extends BasePlugin {
         TplParamsConf tplParams = new TplParamsConf()
         tplParams.addParam('port', '9092', 'int')
         tplParams.addParam('dataDir', '/data/kafka/data', 'string')
-        tplParams.addParam('brokerId', '0', 'int')
         tplParams.addParam('zkConnectString', 'localhost:2181', 'string')
         tplParams.addParam('zkChroot', '', 'string')
         tplParams.addParam('defaultPartitions', '3', 'int')
@@ -79,7 +85,6 @@ class KafkaPlugin extends BasePlugin {
         TplParamsConf tplParamsUseTemplate = new TplParamsConf()
         tplParamsUseTemplate.addParam('port', '9092', 'int')
         tplParamsUseTemplate.addParam('dataDir', '/data/kafka/data', 'string')
-        tplParamsUseTemplate.addParam('brokerId', '0', 'int')
         tplParamsUseTemplate.addParam('zkConnectString', 'localhost:2181', 'string')
         tplParamsUseTemplate.addParam('zkChroot', '', 'string')
         tplParamsUseTemplate.addParam('defaultPartitions', '3', 'int')
@@ -123,11 +128,11 @@ class KafkaPlugin extends BasePlugin {
         CheckerHolder.instance.add new Checker() {
             @Override
             boolean check(CreateContainerConf conf, JobStepKeeper keeper) {
-                def confOne = conf.conf.fileVolumeList.find {
-                    it.dist == '/opt/bitnami/kafka/config/server.properties'
+                def kafkaConfOne = conf.conf.fileVolumeList.find {
+                    it.dist.contains('/opt/bitnami/kafka/config')
                 }
-                if (confOne) {
-                    def checkPort = confOne.paramValue('port') as int
+                if (kafkaConfOne) {
+                    def checkPort = kafkaConfOne.paramValue('port') as int
 
                     def apps = InMemoryCacheSupport.instance.appList
                     for (otherApp in apps) {
@@ -135,7 +140,7 @@ class KafkaPlugin extends BasePlugin {
                         def otherConf = otherApp.conf
                         if (otherConf.group == 'bitnami' && otherConf.image == 'kafka') {
                             def otherConfOne = otherConf.fileVolumeList.find {
-                                it.dist == '/opt/bitnami/kafka/config/server.properties'
+                                it.dist.contains('/opt/bitnami/kafka/config')
                             }
                             if (otherConfOne) {
                                 def otherPort = otherConfOne.paramValue('port') as int
@@ -175,6 +180,58 @@ class KafkaPlugin extends BasePlugin {
             @Override
             String imageName() {
                 KafkaPlugin.this.imageName()
+            }
+        }
+    }
+
+    private void initHealthChecker() {
+        HealthCheckerHolder.instance.add new HealthChecker() {
+            @Override
+            String name() {
+                'kafka broker health check'
+            }
+
+            @Override
+            String imageName() {
+                KafkaPlugin.this.imageName()
+            }
+
+            @Override
+            boolean check(AppDTO app) {
+                def kmServiceId = app.extendParams?.get('kmServiceId') as String
+                if (!kmServiceId) {
+                    log.warn 'kafka health check: kmServiceId not found for app id: {}', app.id
+                    return true
+                }
+
+                def kmService = new KmServiceDTO(id: kmServiceId as int).one()
+                if (!kmService) {
+                    log.warn 'kafka health check: kmService not found for id: {}', kmServiceId
+                    return true
+                }
+
+                def connectionString = kmService.zkConnectString + kmService.zkChroot
+                def client = CuratorPoolHolder.instance.create(connectionString)
+                try {
+                    def brokersPath = '/brokers/ids'
+                    if (client.checkExists().forPath(brokersPath) == null) {
+                        log.warn 'kafka health check: brokers path not found in zk for kmService: {}', kmService.name
+                        return false
+                    }
+
+                    def brokerIds = client.getChildren().forPath(brokersPath)
+                    if (!brokerIds || brokerIds.size() < kmService.brokers) {
+                        log.warn 'kafka health check: registered brokers: {}, expect: {} for kmService: {}',
+                                brokerIds ? brokerIds.size() : 0, kmService.brokers, kmService.name
+                        return false
+                    }
+
+                    log.info 'kafka health check ok: registered brokers: {} for kmService: {}', brokerIds.size(), kmService.name
+                    return true
+                } catch (Exception e) {
+                    log.error 'kafka health check error for kmService: {}', kmService.name, e
+                    return false
+                }
             }
         }
     }

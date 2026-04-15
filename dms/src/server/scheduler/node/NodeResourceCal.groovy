@@ -31,14 +31,14 @@ class NodeResourceCal {
                 if (!otherApp) {
                     def appOne = new AppDTO(id: otherAppId).queryFields('conf').one()
                     if (!appOne) {
-                        throw new JobProcessException('app not define for id - ' + otherAppId)
+                        return null
                     }
                     otherAppCached[otherAppId] = appOne
                     return new ContainerResourceAsk(node.ip, appOne.conf)
                 } else {
                     return new ContainerResourceAsk(node.ip, otherApp.conf)
                 }
-            } : [] as List<ContainerResourceAsk>
+            }.findAll { it != null } : [] as List<ContainerResourceAsk>
 
             int memMBUsed = 0
             int cpuSharesUsed = 0

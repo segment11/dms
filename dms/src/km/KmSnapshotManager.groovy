@@ -230,7 +230,7 @@ class KmSnapshotManager {
                 throw new IllegalStateException('KafkaPlugin not initialized - image templates not found')
             }
             def mountOne = new FileVolumeMount(imageTplId: tplOne.id, content: tplOne.content,
-                    dist: '/opt/bitnami/kafka/config/server.properties')
+                    dist: '/opt/bitnami/kafka/config_${appId}/server.properties_${instanceIndex}')
             mountOne.isParentDirMount = false
             mountOne.paramList << new KVPair<String>('brokerId', '${instanceIndex}')
             mountOne.paramList << new KVPair<String>('port', '' + port)

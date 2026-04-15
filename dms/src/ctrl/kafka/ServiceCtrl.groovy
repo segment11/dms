@@ -128,6 +128,7 @@ h.group('/kafka/service') {
         def defaultPartitions = body.defaultPartitions ? (body.defaultPartitions as int) : 8
         def nodeTags = body.nodeTags as String[]
         def nodeTagsByBrokerIndex = body.nodeTagsByBrokerIndex as String[]
+        def isLimitNode = body.isLimitNode ? (body.isLimitNode as boolean) : false
 
         assert name && mode && zkConnectString && kafkaVersion
 
@@ -175,6 +176,7 @@ h.group('/kafka/service') {
         conf.cpuFixed = 1.0
         conf.networkMode = 'host'
         conf.portList << new PortMapping(privatePort: port, publicPort: port)
+        conf.isLimitNode = isLimitNode
 
         conf.targetNodeTagList = []
         if (nodeTags) {
@@ -203,7 +205,7 @@ h.group('/kafka/service') {
         if (!tplOne) {
             resp.halt(409, 'KafkaPlugin not initialized — image templates not found')
         }
-        def mountOne = new FileVolumeMount(imageTplId: tplOne.id, content: tplOne.content, dist: '/opt/bitnami/kafka/config/server.properties')
+        def mountOne = new FileVolumeMount(imageTplId: tplOne.id, content: tplOne.content, dist: '/opt/bitnami/kafka/config_${appId}/server.properties_${instanceIndex}')
         mountOne.isParentDirMount = false
         mountOne.paramList << new KVPair<String>('brokerId', '${instanceIndex}')
         mountOne.paramList << new KVPair<String>('port', '' + port)
@@ -218,6 +220,10 @@ h.group('/kafka/service') {
             mountOne.paramList << new KVPair<String>('configTemplateId', '' + configTemplateId)
         }
         conf.fileVolumeList << mountOne
+
+        conf.isRunningUnbox = true
+        conf.cmd = '/tmp/start-kafka.sh ${instanceIndex} ${appId}'
+        conf.deployFileIdList << 1
 
         app.conf = conf
 
@@ -289,7 +295,7 @@ h.group('/kafka/service') {
 
         KafkaManager.stopContainers(one.appId)
 
-        if (one.zkConnectString && one.zkChroot && km.job.task.ValidateZookeeperTask.isValidChroot(one.zkChroot)) {
+        if (one.zkConnectString && one.zkChroot && ValidateZookeeperTask.isValidChroot(one.zkChroot)) {
             try {
                 def connectionString = one.zkConnectString + one.zkChroot
                 def client = CuratorPoolHolder.instance.create(connectionString)

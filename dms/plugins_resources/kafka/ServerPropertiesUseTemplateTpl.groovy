@@ -4,7 +4,6 @@ import model.KmConfigTemplateDTO
 
 def port = super.binding.getProperty('port') as int
 def dataDir = super.binding.getProperty('dataDir') as String
-def brokerId = super.binding.getProperty('brokerId') as int
 def zkConnectString = super.binding.getProperty('zkConnectString') as String
 def zkChroot = super.binding.getProperty('zkChroot') as String
 def defaultPartitions = super.binding.getProperty('defaultPartitions') as int
@@ -12,6 +11,7 @@ def defaultReplicationFactor = super.binding.getProperty('defaultReplicationFact
 def brokerCount = super.binding.getProperty('brokerCount') as int
 
 def nodeIp = super.binding.getProperty('nodeIp') as String
+def instanceIndex = super.binding.getProperty('instanceIndex') as int
 
 def zkConnect = zkConnectString + zkChroot
 
@@ -32,11 +32,11 @@ if (kvList) {
 }
 
 """
-broker.id=${brokerId}
-listeners=PLAINTEXT://0.0.0.0:${port}
-advertised.listeners=PLAINTEXT://${nodeIp}:${port}
+broker.id=${instanceIndex}
+listeners=PLAINTEXT://0.0.0.0:${port + instanceIndex}
+advertised.listeners=PLAINTEXT://${nodeIp}:${port + instanceIndex}
 zookeeper.connect=${zkConnect}
-log.dirs=${dataDir}
+log.dirs=${dataDir}_${instanceIndex}
 num.partitions=${defaultPartitions}
 default.replication.factor=${defaultReplicationFactor}
 offsets.topic.replication.factor=${minReplication}
