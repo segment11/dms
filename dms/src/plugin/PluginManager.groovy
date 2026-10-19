@@ -48,6 +48,7 @@ class PluginManager {
         loadPlugin('plugin.demo2.VectorPlugin', false)
         loadPlugin('plugin.demo2.OpenobservePlugin', false)
         loadPlugin('plugin.demo2.ZookeeperPlugin', false)
+        loadPlugin('plugin.demo2.KafkaPlugin', false)
     }
 
     void loadPlugin(String className, boolean isInClasspath = false) {

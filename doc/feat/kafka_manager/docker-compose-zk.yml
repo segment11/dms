@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  zookeeper-1:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper-1
+    hostname: localhost
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_SERVER_1: localhost:2888:3888
+      ZOOKEEPER_SERVER_2: localhost:2889:3889
+      ZOOKEEPER_SERVER_3: localhost:2890:3890
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+    volumes:
+      - zk1-data:/var/lib/zookeeper/data
+      - zk1-logs:/var/lib/zookeeper/log
+    network_mode: host
+    restart: unless-stopped
+
+  zookeeper-2:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper-2
+    hostname: localhost
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2182
+      ZOOKEEPER_SERVER_1: localhost:2888:3888
+      ZOOKEEPER_SERVER_2: localhost:2889:3889
+      ZOOKEEPER_SERVER_3: localhost:2890:3890
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+    volumes:
+      - zk2-data:/var/lib/zookeeper/data
+      - zk2-logs:/var/lib/zookeeper/log
+    network_mode: host
+    restart: unless-stopped
+
+  zookeeper-3:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper-3
+    hostname: localhost
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2183
+      ZOOKEEPER_SERVER_1: localhost:2888:3888
+      ZOOKEEPER_SERVER_2: localhost:2889:3889
+      ZOOKEEPER_SERVER_3: localhost:2890:3890
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+    volumes:
+      - zk3-data:/var/lib/zookeeper/data
+      - zk3-logs:/var/lib/zookeeper/log
+    network_mode: host
+    restart: unless-stopped
+
+volumes:
+  zk1-data:
+  zk1-logs:
+  zk2-data:
+  zk2-logs:
+  zk3-data:
+  zk3-logs:

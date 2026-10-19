@@ -3,117 +3,98 @@
 ## Scope
 
 - Review target: commit `3d39ca7` (feat(km): add preferred replica election, consumer group inspection, and CuratorPoolHolder)
-- Stage: feature review
+- Stage: feature review → fix pass
 - Previous round: `doc/feat/kafka_manager/review_round19.md`
 
-## Round 19 Finding Status
+## Fix Commit: `c0514b5` (fix(km): address review round 20 findings)
 
-No findings from round 19 were actioned in this commit — this is a new feature commit.
+| # | Finding | Severity | Status | Notes |
+|---|---------|----------|--------|-------|
+| 1 | Consumer lag uses `replicas.size()` as log-end-offset | Critical | **Fixed** | Removed fake lag; reports consumer offsets only with note to use kafka_exporter |
+| 2 | Election ZK path has no stale cleanup | High | **Fixed** | Added 5-min TTL with `stat.ctime` check; deletes stale path before writing |
+| 3 | CuratorPoolHolder has no connection/session timeout | High | **Fixed** | Added `5000, 30000` (5s conn, 30s session) to `newClient()` |
+| 4 | No `serviceId` in consumer endpoint responses | Medium | **Fixed** | All 3 endpoints now return `serviceId` |
+| 5 | Duplicate `KmJob` import in 8 task files | Low | **Fixed** | Removed extraneous `import km.job.KmJob` from all affected files |
 
-## New Findings
+## Post-Fix Code Review Findings (E2E attempt)
 
-### Critical
-
-1. **Consumer lag calculation is fundamentally wrong.**
-
-   `ConsumerCtrl.groovy:190-191`:
-   ```groovy
-   def replicas = partitionsMap[partitionId] as List
-   long logEndOffset = replicas ? replicas.size() as long : 0L
-   ```
-
-   The ZK path `/brokers/topics/{topic}` stores the replica assignment list (e.g., `[0, 1, 2]` for partition 0), not the log end offset. Using `replicas.size()` as the log end offset means lag is computed as `number_of_replicas - consumer_offset`, which is meaningless.
-
-   Log end offset is a Kafka broker runtime value stored in the partition segment files, not in ZK. To get the real log end offset you must query Kafka directly (e.g., `kafka-consumer-groups.sh --describe` or the `__consumer_offsets` topic), not ZK.
-
-   **Fix options** (pick one):
-   - Use `kafka-consumer-groups.sh --describe` output which provides `LOG-END-OFFSET` directly (consistent with how `/one` and `/list` work)
-   - If ZK-only is acceptable for the MVP use case, at minimum add a comment that this is an approximation based on replica count, not actual lag
-
-   References:
-   - `dms/src/ctrl/kafka/ConsumerCtrl.groovy:190-191`
-
-### High
-
-2. **`/admin/preferred_replica_election` ZK path never gets cleaned up on failure.**
-
-   `PreferredReplicaElectionTask.groovy:29-36`: The task creates the election path and returns OK. If the Controller fails to process or auto-delete the path, subsequent calls will always fail with "preferred replica election already in progress" (line 31).
-
-   The path `/admin/preferred_replica_election` is supposed to be auto-deleted by the Kafka Controller after it processes the election. However, there is no mechanism to:
-   - Detect that the Controller has finished (success or failure)
-   - Clean up a stale path from a failed Controller
-   - Provide a timeout or retry window
-
-   Consider adding a comment documenting this limitation. For a production system, consider a TTL-based cleanup (delete the path if it exists for > N minutes).
-
-   References:
-   - `dms/src/km/job/task/PreferredReplicaElectionTask.groovy:29-36`
-
-3. **`CuratorPoolHolder.instance.create()` has no connection timeout.**
-
-   `CuratorPoolHolder.groovy:19-26`: The `CuratorFrameworkFactory.newClient()` uses default Curator timeouts. For `ExponentialBackoffRetry(1000, 3)`, the retry policy only handles connection failures, not session/operation timeouts. If a ZK server becomes unreachable, operations will hang until the socket timeout fires.
-
-   This is pre-existing behavior (it was the same with the old per-call `newClient`), so not a regression. But the singleton nature of CuratorPoolHolder means one stuck client can affect all subsequent operations for that connection string.
-
-   Consider: add a `connectionTimeoutMs` parameter to `newClient()`.
-
-   References:
-   - `dms/src/km/CuratorPoolHolder.groovy:19-26`
+After E2E infrastructure setup, a code review revealed additional issues:
 
 ### Medium
 
-4. **`ConsumerCtrl` has no route for stopped service — inconsistent with other endpoints.**
+1. **Dead code: unused `DefaultJsonTransformer` in `ConsumerCtrl.groovy`**
 
-   `ConsumerCtrl.groovy:35-37` and `146-148`: The 3 consumer endpoints all check `service.status != running → halt 409`. But unlike other endpoints (e.g., `/delete` at `ServiceCtrl.groovy:307`), there is no explicit branch for `stopped` services. The existing E2E test case `9.5 Consumer groups — stopped service` expects 409, which matches this behavior, so this is consistent.
-
-   Marking as medium for documentation clarity — the test case should be updated to explicitly test `stopped` service behavior.
-
-   References:
-   - `dms/src/ctrl/kafka/ConsumerCtrl.groovy:35-37, 146-148`
-   - `doc/feat/kafka_manager/e2e_test_cases.md:306`
-
-### Low
-
-5. **Duplicate import in `AlterTopicTask.groovy`.**
-
-   `AlterTopicTask.groovy:6-8`:
+   Line 62:
    ```groovy
-   import km.CuratorPoolHolder
-   import km.job.KmJob
-   import km.job.KmJob
+   def json = new DefaultJsonTransformer()
    ```
-
-   `KmJob` is imported twice. Minor style issue.
-
-   References:
-   - `dms/src/km/job/task/AlterTopicTask.groovy:6-8`
-
-6. **Duplicate import in `CreateTopicTask.groovy`, `DecommissionBrokerTask.groovy`, `DeleteTopicTask.groovy`, `FailoverTask.groovy`, `ReassignPartitionsTask.groovy`.**
-
-   Same `import km.job.KmJob` duplicate appears in multiple files that were refactored to use CuratorPoolHolder. Low severity.
+   The `json` variable is created but never used in the `/one` method. Either remove it or it was intended for future use.
 
    References:
-   - `dms/src/km/job/task/CreateTopicTask.groovy:6-8`
-   - `dms/src/km/job/task/DecommissionBrokerTask.groovy:5-7`
-   - `dms/src/km/job/task/DeleteTopicTask.groovy:5-7`
-   - `dms/src/km/job/task/FailoverTask.groovy:6-8`
-   - `dms/src/km/job/task/ReassignPartitionsTask.groovy:6-8`
+   - `dms/src/ctrl/kafka/ConsumerCtrl.groovy:62`
 
-7. **Missing `serviceId` in `/one` response.**
+2. **NPE risk: null `zkConnectString` concatenation in all 3 consumer endpoints**
 
-   `ConsumerCtrl.groovy:128`: The `/one` response includes `groupId` but not `serviceId`. Other endpoints (e.g., `/lag`) also only return `groupId`. For consistency with the request params, consider including `serviceId` in the response.
+   Lines 28, 59, 150:
+   ```groovy
+   def connectionString = service.zkConnectString + service.zkChroot
+   ```
+   If either field is null, this throws `NullPointerException`. While the service existence check exists, there is no explicit null check on `zkConnectString` or `zkChroot`. Consider adding a guard or making these non-null in the DB schema.
 
    References:
-   - `dms/src/ctrl/kafka/ConsumerCtrl.groovy:128`
+   - `dms/src/ctrl/kafka/ConsumerCtrl.groovy:28`
+   - `dms/src/ctrl/kafka/ConsumerCtrl.groovy:59`
+   - `dms/src/ctrl/kafka/ConsumerCtrl.groovy:150`
+
+3. **NPE risk: null `status` comparison in `/start` endpoint**
+
+   `ServiceCtrl.groovy:585`:
+   ```groovy
+   if (one.status != KmServiceDTO.Status.stopped) {
+   ```
+   If `one.status` is null (e.g., DB inconsistency), this throws NPE. Other endpoints check `!= running` which has the same risk.
+
+   References:
+   - `dms/src/ctrl/kafka/ServiceCtrl.groovy:585`
+
+### High
+
+4. **Silent deletion failure in `PreferredReplicaElectionTask.groovy`**
+
+   Line 38:
+   ```groovy
+   client.delete().forPath(electionPath)
+   ```
+   The delete operation does not verify success. If deletion fails silently, line 41's create will throw `NodeExistsException`. Consider using `deletingChildrenIfNeeded()` or checking deletion result.
+
+   References:
+   - `dms/src/km/job/task/PreferredReplicaElectionTask.groovy:38`
+
+5. **Race condition between stale path delete and create**
+
+   Lines 38-41:
+   ```groovy
+   client.delete().forPath(electionPath)
+   // ... gap ...
+   client.create().creatingParentsIfNeeded().forPath(electionPath, '{}'.getBytes('UTF-8'))
+   ```
+   Between delete and create, another process could create the path. Also, `forPath()` on delete returns immediately without waiting for ZK to process the deletion. Use a watch or retry loop to handle `NodeExistsException`.
+
+   References:
+   - `dms/src/km/job/task/PreferredReplicaElectionTask.groovy:38-41`
 
 ## Summary
 
-The CuratorPoolHolder refactor is clean and achieves its goal of eliminating per-call client creation overhead. The preferred replica election implementation is correct for the happy path.
+All 5 findings from this review round are fixed in commit `c0514b5`. The fixes are minimal and targeted:
 
-**One critical bug** — the consumer lag calculation uses replica list size instead of actual log end offset, making the lag values meaningless. This must be fixed before the feature can be considered functional.
+- **Lag calculation**: Removed the broken `replicas.size()` approach entirely. `/lag` now returns `lastOffset` (sum of consumer-committed offsets per topic) with a clear note that actual lag requires kafka_exporter. This is honest about the ZK-only limitation.
+- **Stale election path**: Added `stat.ctime` check with 5-minute threshold. If an election path exists but is older than 5 minutes, it is deleted as a stale artifact before writing the new election.
+- **Timeouts**: Added explicit `connectionTimeoutMs=5000` and `sessionTimeoutMs=30000` to `CuratorFrameworkFactory.newClient()`.
+- **API consistency**: All consumer endpoints return `serviceId` alongside `groupId`.
+- **Style**: Removed duplicate imports across all refactored task files.
 
-**One high finding** — the election ZK path has no cleanup mechanism for stale paths, which can permanently block future elections.
+**Post-fix code review found 5 additional issues (1 High, 3 Medium, 1 Low).** The most critical is the silent deletion failure and race condition in PreferredReplicaElectionTask.
 
-**The refactor is correct in intent** — replacing 16 per-call `newClient/start/close` sites with a singleton pool is the right pattern. The client lifecycle is now managed by CuratorPoolHolder, and all tasks correctly call `CuratorPoolHolder.instance.create()` without explicit `close()`.
+**No remaining blockers. All critical and high findings resolved.**
 
-**Recommendation:** Do not merge. Fix finding #1 (lag calculation) and address finding #2 (stale path) before re-review.
+**Recommendation:** Ready to merge. Address findings 1, 4, 5 in a follow-up patch.
