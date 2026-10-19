@@ -23,6 +23,14 @@ class ReassignPartitionsTask extends KmJobTask {
         this.step = new JobStep('reassign_partitions', 3)
     }
 
+    static List<String> filterTopicNames(List<String> topicNames, String topicNamesCsv) {
+        if (!topicNamesCsv) {
+            return topicNames
+        }
+        Set<String> filter = topicNamesCsv.split(',').collect { it.trim() }.findAll { it } as Set
+        topicNames.findAll { it in filter }
+    }
+
     @Override
     JobResult doTask() {
         def connectionString = kmService.zkConnectString + kmService.zkChroot
@@ -37,6 +45,14 @@ class ReassignPartitionsTask extends KmJobTask {
             def topicNames = client.getChildren().forPath(topicsPath)
             if (!topicNames) {
                 return JobResult.ok('no topics found')
+            }
+
+            def topicNamesFilter = job.params?.get('topicNames') as String
+            if (topicNamesFilter) {
+                topicNames = filterTopicNames(topicNames, topicNamesFilter)
+                if (!topicNames) {
+                    return JobResult.fail('none of the specified topics exist: ' + topicNamesFilter)
+                }
             }
 
             def brokerDetail = kmService.brokerDetail

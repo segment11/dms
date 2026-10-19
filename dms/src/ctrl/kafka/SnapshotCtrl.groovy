@@ -39,6 +39,8 @@ h.group('/kafka/snapshot') {
         def snapshotPath = body.snapshotPath as String
         def zkConnectString = body.zkConnectString as String
         def zkChroot = body.zkChroot as String
+        def nodeTags = body.nodeTags as String[]
+        def nodeTagsByBrokerIndex = body.nodeTagsByBrokerIndex as String[]
 
         if (!snapshotPath) {
             resp.halt(409, 'snapshotPath is required')
@@ -47,7 +49,8 @@ h.group('/kafka/snapshot') {
             resp.halt(409, 'zkConnectString is required')
         }
 
-        def serviceId = KmSnapshotManager.instance.importSnapshot(snapshotPath, zkConnectString, zkChroot)
+        def serviceId = KmSnapshotManager.instance.importSnapshot(snapshotPath, zkConnectString, zkChroot,
+                nodeTags, nodeTagsByBrokerIndex)
 
         [serviceId: serviceId]
     }

@@ -9,6 +9,7 @@ import km.job.KmJob
 import km.job.KmJobTypes
 import km.job.task.*
 import model.*
+import model.job.KmJobDTO
 import model.json.*
 import org.segment.web.handler.ChainHandler
 import org.slf4j.LoggerFactory
@@ -223,7 +224,7 @@ h.group('/kafka/service') {
 
         conf.isRunningUnbox = true
         conf.cmd = '/tmp/start-kafka.sh ${instanceIndex} ${appId}'
-        conf.deployFileIdList << 1
+        conf.deployFileIdList << KafkaManager.startKafkaDeployFileId()
 
         app.conf = conf
 
@@ -520,44 +521,29 @@ h.group('/kafka/service') {
             resp.halt(409, 'configOverrides is required')
         }
 
-        def brokerDetail = one.brokerDetail
-        if (!brokerDetail?.brokers) {
+        if (!one.brokerDetail?.brokers) {
             resp.halt(409, 'no broker detail found')
         }
 
-        def connectionString = one.zkConnectString + one.zkChroot
-        def client = CuratorPoolHolder.instance.create(connectionString)
-        try {
-            brokerDetail.brokers.each { broker ->
-                def configPath = '/config/brokers/' + broker.brokerId
-                Map existingConfig = [:]
-                if (client.checkExists().forPath(configPath) != null) {
-                    def existingData = new String(client.getData().forPath(configPath), 'UTF-8')
-                    def existingJson = com.alibaba.fastjson.JSON.parseObject(existingData, Map.class)
-                    existingConfig = (existingJson['config'] as Map) ?: [:]
-                }
-                existingConfig.putAll(configOverrides)
-                def configData = [version: 1, config: existingConfig]
-                def configJson = com.alibaba.fastjson.JSON.toJSONString(configData)
+        def kmJob = new KmJob()
+        kmJob.kmService = one
+        kmJob.type = KmJobTypes.UPDATE_CONFIG
+        kmJob.status = JobStatus.created
+        kmJob.params = new JobParams()
+        kmJob.params.put('kmServiceId', id.toString())
+        kmJob.params.put('configOverrides', com.alibaba.fastjson.JSON.toJSONString(configOverrides))
 
-                if (client.checkExists().forPath(configPath) != null) {
-                    client.setData().forPath(configPath, configJson.getBytes('UTF-8'))
-                } else {
-                    client.create().creatingParentsIfNeeded().forPath(configPath, configJson.getBytes('UTF-8'))
-                }
-            }
+        kmJob.taskList << new UpdateConfigTask(kmJob)
 
-            if (!one.configOverrides) {
-                one.configOverrides = new ExtendParams()
-            }
-            configOverrides.each { k, v -> one.configOverrides.put(k as String, v) }
-            new KmServiceDTO(id: id, configOverrides: one.configOverrides, updatedDate: new Date()).update()
+        kmJob.createdDate = new Date()
+        kmJob.updatedDate = new Date()
+        kmJob.save()
 
-            [id: id]
-        } catch (Exception e) {
-            log.error('update config error', e)
-            resp.halt(500, 'update config error: ' + e.message)
+        KmJobExecutor.instance.execute {
+            kmJob.run()
         }
+
+        [id: id]
     }
 
     h.post('/stop') { req, resp ->
@@ -569,8 +555,15 @@ h.group('/kafka/service') {
             resp.halt(404, 'service not found')
         }
 
-        if (one.status != KmServiceDTO.Status.running) {
-            resp.halt(409, 'service must be running')
+        if (one.status != KmServiceDTO.Status.running && one.status != KmServiceDTO.Status.creating) {
+            resp.halt(409, 'service must be running or creating')
+        }
+
+        def inFlightJobs = new KmJobDTO().noWhere().
+                where('busi_id = ? and status in (?, ?)', id, JobStatus.created.name(), JobStatus.processing.name()).
+                queryFields('id,type').list()
+        if (inFlightJobs) {
+            resp.halt(409, 'service has in-flight jobs: ' + inFlightJobs.collect { it.type }.unique().join(','))
         }
 
         KafkaManager.stopContainers(one.appId)

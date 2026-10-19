@@ -148,7 +148,8 @@ class KmSnapshotManager {
         }
     }
 
-    String importSnapshot(String snapshotPath, String zkConnectString, String zkChroot) {
+    String importSnapshot(String snapshotPath, String zkConnectString, String zkChroot,
+                          String[] nodeTags = null, String[] nodeTagsByBrokerIndex = null) {
         if (!zkConnectString) {
             throw new IllegalArgumentException('zkConnectString is required')
         }
@@ -216,6 +217,19 @@ class KmSnapshotManager {
             conf.networkMode = 'host'
             conf.portList << new PortMapping(privatePort: port, publicPort: port)
 
+            conf.targetNodeTagList = []
+            if (nodeTags) {
+                nodeTags.each {
+                    conf.targetNodeTagList << it
+                }
+            }
+            conf.targetNodeTagListByInstanceIndex = []
+            if (nodeTagsByBrokerIndex) {
+                nodeTagsByBrokerIndex.each {
+                    conf.targetNodeTagListByInstanceIndex << it
+                }
+            }
+
             final String dataDir = '/data'
             def serviceDataDir = dataDir + '/kafka_data_app_' + '_${appId}_${instanceIndex}'
             def nodeVolumeId = new NodeVolumeDTO(imageName: 'bitnami/kafka', name: 'for imported service ' + serviceName,
@@ -243,6 +257,10 @@ class KmSnapshotManager {
             mountOne.paramList << new KVPair<String>('heapMb', '' + heapMb)
             conf.fileVolumeList << mountOne
 
+            conf.isRunningUnbox = true
+            conf.cmd = '/tmp/start-kafka.sh ${instanceIndex} ${appId}'
+            conf.deployFileIdList << KafkaManager.startKafkaDeployFileId()
+
             app.conf = conf
             def appId = app.add()
             app.id = appId
@@ -259,6 +277,8 @@ class KmSnapshotManager {
             one.heapMb = heapMb
             one.defaultReplicationFactor = defaultReplicationFactor
             one.defaultPartitions = defaultPartitions
+            one.nodeTags = nodeTags
+            one.nodeTagsByBrokerIndex = nodeTagsByBrokerIndex
             one.status = KmServiceDTO.Status.creating
             one.extendParams = new ExtendParams()
             one.createdDate = new Date()

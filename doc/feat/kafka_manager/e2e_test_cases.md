@@ -38,7 +38,7 @@ Comprehensive operations for managing multiple Kafka standalone servers and clus
 - **Verify:** containers stopped, ZK chroot deleted, service status = `deleted`
 
 ### 1.7 Create standalone with config template
-- Create `KmConfigTemplateDTO` with custom `log.retention.hours=72`
+- Create config template via `POST /kafka/config-template/add` with custom `log.retention.hours=72`
 - POST `/kafka/service/add` with `configTemplateId`
 - **Verify:** `server.properties.template.tpl` used, custom config rendered into container mount
 
@@ -257,6 +257,8 @@ Comprehensive operations for managing multiple Kafka standalone servers and clus
 
 ## 9. Consumer Group Inspection
 
+Consumer endpoints run `kafka-consumer-groups.sh` via container/host exec first (`mode: 'cli'` in the response); the ZK `/consumers` path is a fallback for old-style consumers (`mode: 'zk'`).
+
 ### 9.1 List consumer groups
 - Produce messages to topic, start a Kafka consumer group (e.g., `test-group` with 2 members)
 - GET `/kafka/consumer/list?serviceId=X`
@@ -306,9 +308,9 @@ Comprehensive operations for managing multiple Kafka standalone servers and clus
 - **Verify:** status transitions to `creating`, Guardian restarts containers, `/one` eventually shows `running`
 
 ### 11.2 Stop a stuck service
-- Start a service that fails to reach `running` (stuck in `creating`)
+- Start a service that fails to reach `running` (stuck in `creating` with no in-flight job)
 - POST `/kafka/service/stop`
-- **Verify:** 409 "service must be running" — operator cannot stop a stuck service (known limitation)
+- **Verify:** status transitions to `stopped` — stop from `creating` is allowed; if a job is still `created`/`processing`, expect 409 "service has in-flight jobs"
 
 ### 11.3 Update broker config
 - POST `/kafka/service/update-config` with `{configOverrides: {num.io.threads: "8"}}`

@@ -15,6 +15,7 @@ class KmJobTypes {
     static final JobType REASSIGN_PARTITIONS = new JobType('reassign_partitions')
     static final JobType PREFERRED_REPLICA_ELECTION = new JobType('preferred_replica_election')
     static final JobType FAILOVER = new JobType('failover')
+    static final JobType UPDATE_CONFIG = new JobType('update_config')
     static final JobType SNAPSHOT = new JobType('snapshot')
     static final JobType IMPORT = new JobType('import')
 }

@@ -205,6 +205,7 @@ h.group('/kafka/topic') {
     h.post('/reassign') { req, resp ->
         def body = req.bodyAs(Map)
         def serviceId = body.serviceId as int
+        def topicNames = body.topicNames as List<String>
 
         def service = new KmServiceDTO(id: serviceId).one()
         if (!service) {
@@ -221,6 +222,9 @@ h.group('/kafka/topic') {
         kmJob.status = JobStatus.created
         kmJob.params = new JobParams()
         kmJob.params.put('kmServiceId', serviceId.toString())
+        if (topicNames) {
+            kmJob.params.put('topicNames', topicNames.join(','))
+        }
 
         kmJob.taskList << new ReassignPartitionsTask(kmJob)
         kmJob.taskList << new WaitReassignmentCompleteTask(kmJob)

@@ -2,31 +2,25 @@
 
 ## Status
 
-- Round 22 done: round 20 post-fix findings all fixed (election race retry, dead code, null guards)
-- Round 21 E2E host-process-mode bugs fixed (template eval, GString escaping, GetPid, health checker)
-- Backend API stage complete and reviewed (rounds 17-19); preferred replica election + consumer inspection in (round 20)
+- Round 23 done: design audit + all gaps closed (config template CRUD, consumer CLI inspection, import consistency + nodeTags, deferred R18/R19 findings)
+- Backend API stage complete and reviewed (rounds 17-23)
 
 ## Todo
 
 1. **E2E verification with live environment** (ZK + Kafka + DMS server currently down)
    - Restart local stack: see `doc/feat/kafka_manager/start-local.sh`, `start-zk-node.sh`
+   - New this round: consumer CLI endpoints 9.1-9.4 (`mode: 'cli'`), config template flow 1.7, stop guards 11.2, `/reassign` topicNames filter, async update-config 11.3/11.4 (verify via `/kafka/job/list`)
    - Verify health checker for existing Kafka services (8, 9): `creating` → `running` transition
-   - Topic create / produce / consume, consumer group inspection (`/kafka/consumer/*`)
-   - Preferred replica election (`/kafka/service/preferred-replica-election`) on a cluster-mode service
 
 2. **Test cluster mode** (3 brokers, not standalone)
 
-3. **Web UI stage** (per round 19 recommendation)
+3. **Web UI stage** — no design doc yet; needs planning (page list, mockups, segmentweb work)
 
-4. Deferred improvement items:
-   - `/kafka/service/stop` guard against in-flight jobs (round 18 F8)
-   - Make `update-config` async via `UpdateConfigTask` job (round 18 F10)
-   - `/kafka/topic/reassign` optional `topicNames` filter (round 18 F11)
-   - Allow `/stop` from `creating` status (round 19 F2)
+## Done This Session (round 23)
 
-## Done This Session (round 22)
-
-- `PreferredReplicaElectionTask`: `guaranteed().deletingChildrenIfNeeded()` + `NodeExistsException` retry loop (3 attempts) + extracted `isStaleElection` helper with Spock spec
-- `ConsumerCtrl`: removed dead `DefaultJsonTransformer`; null zk field guard via `zkConnectionString()` helper in all 3 endpoints
-- `ServiceCtrl` `/start`: explicit null status guard
-- `KafkaPlugin` health checker: null zk field guard (returns unhealthy instead of NPE)
+- `ConfigTemplateCtrl`: 4 CRUD routes at `/kafka/config-template` (+ in-use delete guard), route-tested over H2
+- Consumer group CLI: `KafkaManager.containerExec`, agent `ContainerInit` host-process `bash -c`, `ConsumerGroupParser` (6 specs), `ConsumerCtrl` CLI-first with ZK fallback
+- Import: host-process conf parity with `/add`, optional `nodeTags`/`nodeTagsByBrokerIndex`, `startKafkaDeployFileId()` dest-path lookup (spec)
+- `/stop`: in-flight job guard + allow stop from `creating` (R18 F8, R19 F2)
+- `/update-config`: async via new `UPDATE_CONFIG` job + `UpdateConfigTask` with read-merge-write (R18 F10, spec for mergeConfig)
+- `/reassign`: optional `topicNames` filter (R18 F11, spec)
