@@ -111,6 +111,13 @@ $(function () {
                 {title: 'Backup Template', page: 'redis_backup-template', icon: 'icon-cloud-upload'},
                 {title: 'Module Setting', page: 'redis_setting', icon: 'icon-gears'},
             ]
+        },
+        {
+            title: 'Kafka', icon: 'icon-save', list: [
+                {title: 'Overview', page: 'kafka_overview', icon: 'icon-dashboard'},
+                {title: 'Kafka Service', page: 'kafka_service', icon: 'icon-list'},
+                {title: 'Config Template', page: 'kafka_config-template', icon: 'icon-edit'},
+            ]
         }
     ];
 

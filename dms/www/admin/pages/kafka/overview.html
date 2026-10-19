@@ -1,0 +1,77 @@
+<div ng-controller="MainCtrl">
+
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Kafka Service Overview</h5>
+                    <div class="actions">
+                        <button class="btn" ng-click="refresh()">Refresh</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <table class="table table-bordered table-striped">
+                        <tr>
+                            <th width="25%">cluster number</th>
+                            <th width="25%">broker number</th>
+                            <th width="25%">running cluster number</th>
+                            <th width="25%">unhealthy cluster number</th>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="bg-info">{{stat.clusterCount}}</span>
+                            </td>
+                            <td>
+                                <span class="bg-info">{{stat.brokerCount}}</span>
+                            </td>
+                            <td>
+                                <span class="bg-success">{{stat.runningCount}}</span>
+                            </td>
+                            <td>
+                                <span class="bg-danger">{{stat.unhealthyCount}}</span>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <table class="table table-bordered table-striped">
+                        <tr>
+                            <th width="15%">name</th>
+                            <th width="10%">mode</th>
+                            <th width="8%">brokers</th>
+                            <th width="12%">status</th>
+                            <th width="25%">zk connect string</th>
+                            <th width="15%">zk chroot</th>
+                            <th width="10%">updated date</th>
+                            <th></th>
+                        </tr>
+                        <tr ng-repeat="one in ll">
+                            <td title="{{one.des}}">
+                                {{one.name}}
+                            </td>
+                            <td>{{one.mode}}</td>
+                            <td>
+                                <span class="bg-success">{{one.brokers}}</span>
+                            </td>
+                            <td>
+                                <span ng-class="{'bg-info': 'creating' == one.status, 'bg-success': 'running' == one.status, 'bg-tips': 'deleted' == one.status, 'bg-danger': 'unhealthy' == one.status}">{{one.status}}</span>
+                            </td>
+                            <td>{{one.zkConnectString}}</td>
+                            <td>{{one.zkChroot}}</td>
+                            <td>{{one.updatedDate | date:'yyyy/MM/dd HH:mm:ss'}}</td>
+                            <td class="opts">
+                                <div class="btn-line">
+                                    <button class="btn" ng-click="goOne(one)">Detail</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+        </div><!-- /.row-fluid -->
+
+    </div>
+</div>

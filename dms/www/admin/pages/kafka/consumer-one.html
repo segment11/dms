@@ -1,0 +1,131 @@
+<div ng-controller="MainCtrl">
+
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Kafka Service - {{params.serviceName}} - Consumer Group - {{params.groupId}}</h5>
+                    <div class="actions">
+                        <button class="btn" ng-click="queryOne()">Refresh</button>
+                        <button class="btn btn-gray" ng-click="back()">Back</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <p>
+                        <span class="bg-info">Mode</span>
+                        <span class="bg-success">{{one.mode}}</span>
+                        <span class="bg-info">Group Id</span>
+                        <span class="bg-success">{{one.groupId}}</span>
+                    </p>
+
+                    <table class="table table-bordered table-striped" ng-show="one.mode == 'cli'">
+                        <tr>
+                            <th width="15%">group</th>
+                            <th width="20%">topic</th>
+                            <th width="10%">partition</th>
+                            <th width="10%">current offset</th>
+                            <th width="10%">log end offset</th>
+                            <th width="10%">lag</th>
+                            <th width="10%">consumer id</th>
+                            <th width="10%">host</th>
+                            <th width="5%">client id</th>
+                        </tr>
+                        <tr ng-repeat="it in one.partitions">
+                            <td>{{it['GROUP']}}</td>
+                            <td>{{it['TOPIC']}}</td>
+                            <td>{{it['PARTITION']}}</td>
+                            <td>{{it['CURRENT-OFFSET']}}</td>
+                            <td>{{it['LOG-END-OFFSET']}}</td>
+                            <td>{{it['LAG']}}</td>
+                            <td>{{it['CONSUMER-ID']}}</td>
+                            <td>{{it['HOST']}}</td>
+                            <td>{{it['CLIENT-ID']}}</td>
+                        </tr>
+                    </table>
+
+                    <table class="table table-bordered table-striped" ng-show="one.mode == 'zk'">
+                        <tr>
+                            <th width="20%">member id</th>
+                        </tr>
+                        <tr ng-repeat="it in one.members">
+                            <td>{{it}}</td>
+                        </tr>
+                    </table>
+
+                    <table class="table table-bordered table-striped" ng-show="one.mode == 'zk'">
+                        <tr>
+                            <th width="40%">topic</th>
+                            <th width="20%">partition</th>
+                            <th width="40%">offset</th>
+                        </tr>
+                        <tr ng-repeat="it in one.offsets">
+                            <td>{{it.topic}}</td>
+                            <td>{{it.partition}}</td>
+                            <td>{{it.offset}}</td>
+                        </tr>
+                    </table>
+
+                    <table class="table table-bordered table-striped" ng-show="one.mode == 'zk'">
+                        <tr>
+                            <th width="40%">topic</th>
+                            <th width="20%">partition</th>
+                            <th width="40%">owner</th>
+                        </tr>
+                        <tr ng-repeat="it in one.owners">
+                            <td>{{it.topic}}</td>
+                            <td>{{it.partition}}</td>
+                            <td>{{it.owner}}</td>
+                        </tr>
+                    </table>
+
+                    <p ng-show="lagOne.totalLag != null">
+                        <span class="bg-info">Total Lag</span>
+                        <span class="bg-danger">{{lagOne.totalLag}}</span>
+                    </p>
+
+                    <table class="table table-bordered table-striped" ng-show="lagOne.totalLag != null">
+                        <tr>
+                            <th width="40%">topic</th>
+                            <th width="15%">lag</th>
+                            <th width="15%">log end offset</th>
+                            <th width="15%">current offset</th>
+                            <th width="15%">partition count</th>
+                        </tr>
+                        <tr ng-repeat="it in lagOne.topics">
+                            <td>{{it.topic}}</td>
+                            <td>
+                                <span ng-class="{'bg-success': it.lag == 0, 'bg-danger': it.lag != 0}">{{it.lag}}</span>
+                            </td>
+                            <td>{{it.logEndOffset}}</td>
+                            <td>{{it.currentOffset}}</td>
+                            <td>{{it.partitionCount}}</td>
+                        </tr>
+                    </table>
+
+                    <table class="table table-bordered table-striped" ng-show="lagOne.totalLag == null">
+                        <tr>
+                            <th width="50%">topic</th>
+                            <th width="25%">partition count</th>
+                            <th width="25%">last offset</th>
+                        </tr>
+                        <tr ng-repeat="it in lagOne.topics">
+                            <td>{{it.topic}}</td>
+                            <td>{{it.partitionCount}}</td>
+                            <td>{{it.lastOffset}}</td>
+                        </tr>
+                    </table>
+
+                    <p ng-show="lagOne.note">
+                        <span class="bg-info">Note</span>
+                        {{lagOne.note}}
+                    </p>
+                </div>
+            </div>
+
+        </div><!-- /.row-fluid -->
+
+    </div>
+</div>

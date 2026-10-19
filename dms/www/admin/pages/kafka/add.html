@@ -1,0 +1,120 @@
+<div ng-controller="MainCtrl">
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Add Kafka Service</h5>
+                    <div class="actions">
+                        <button class="btn" ng-click="back()">Back</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <form ng-form="tmp.addForm" style="width: 700px;">
+                        <table class="table table-bordered table-striped">
+                            <tr>
+                                <td width="25%">Name</td>
+                                <td>
+                                    <input type="text" ng-model="editOne.name" ui-valid="r"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Des</td>
+                                <td>
+                                    <input type="text" ng-model="editOne.des"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Mode</td>
+                                <td>
+                                    <select ng-model="editOne.mode" ng-change="onModeChange()">
+                                        <option value="standalone">standalone</option>
+                                        <option value="cluster">cluster</option>
+                                    </select>
+                                    <span class="bg-info" ng-show="editOne.mode == 'cluster'">cluster mode needs at least 3 brokers</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Kafka Version</td>
+                                <td>
+                                    <select ng-model="editOne.kafkaVersion">
+                                        <option value="2.8.2">2.8.2</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Zookeeper Connect</td>
+                                <td>
+                                    <input type="text" ng-model="editOne.zkConnectString" ui-valid="r"
+                                           placeholder="zk1:2181,zk2:2181"/>
+                                    <span class="bg-info">zookeeper ensemble must already exist, km does not manage it</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Config Template</td>
+                                <td>
+                                    <select ng-model="editOne.configTemplateId" ng-options="t.id as t.name for t in templateList">
+                                        <option value="">--none--</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Port</td>
+                                <td>
+                                    <input type="text" ng-model="editOne.port"
+                                           ui-valid="r int minval:int:1024 maxval:int:65535"
+                                           style="width: 120px;"/>
+                                    <span class="bg-info">broker port = port + broker index</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Brokers</td>
+                                <td>
+                                    <input type="text" ng-model="editOne.brokers"
+                                           ui-valid="r int minval:int:1 maxval:int:32"
+                                           style="width: 120px;"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Default Partitions</td>
+                                <td>
+                                    <input type="text" ng-model="editOne.defaultPartitions"
+                                           ui-valid="r int minval:int:1 maxval:int:256"
+                                           style="width: 120px;"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Default Replication Factor</td>
+                                <td>
+                                    <input type="text" ng-model="editOne.defaultReplicationFactor"
+                                           ui-valid="r int minval:int:1 maxval:int:32"
+                                           style="width: 120px;"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Heap (MB)</td>
+                                <td>
+                                    <input type="text" ng-model="editOne.heapMb"
+                                           ui-valid="r int minval:int:256 maxval:int:65536"
+                                           style="width: 120px;"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Node Tags</td>
+                                <td>
+                                    <input type="text" ng-model="tmp.nodeTags" placeholder="comma separated node tags"/>
+                                </td>
+                            </tr>
+                        </table>
+                        <button class="btn btn-blue" ng-click="save()">Save</button>
+                        <button class="btn" ng-click="back()">Close</button>
+                    </form>
+                </div>
+            </div>
+
+
+        </div><!-- /.row-fluid -->
+    </div>
+</div>

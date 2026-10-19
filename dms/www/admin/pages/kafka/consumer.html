@@ -1,0 +1,101 @@
+<div ng-controller="MainCtrl">
+
+    <div class="container-fluid">
+
+        <div class="row-fluid">
+
+            <div class="widget-box">
+                <div class="widget-title">
+                    <span class="icon"><i class="icon-info"></i></span>
+                    <h5>Kafka Service - {{params.serviceName}} - Consumer Group List</h5>
+                    <div class="actions">
+                        <button class="btn" ng-click="queryLl()">Refresh</button>
+                    </div>
+                </div>
+                <div class="widget-content">
+                    <p>
+                        <span class="bg-info">Query Mode</span>
+                        <span class="bg-success">{{mode}}</span>
+                    </p>
+                    <table class="table table-bordered table-striped">
+                        <tr>
+                            <th width="60%">group id</th>
+                            <th></th>
+                        </tr>
+                        <tr ng-repeat="one in ll">
+                            <td>{{one}}</td>
+                            <td class="opts">
+                                <div class="btn-line">
+                                    <button class="btn" ng-click="showLag(one)">Lag</button>
+                                </div>
+                                <div class="btn-line">
+                                    <button class="btn" ng-click="goOne(one)">Detail</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+        </div><!-- /.row-fluid -->
+
+    </div>
+
+    <script type="text/x-template"
+            ui-dialog="{showModel: 'ctrl.isShowLag', title: 'Consumer Group Lag', dialogId: 'dialogConsumerLag', lock: true, fixed: true, ext: {max: false}}">
+        <table class="table table-bordered table-striped" style="width: 800px;">
+            <tr>
+                <td width="20%">Group Id</td>
+                <td>{{lagOne.groupId}}</td>
+            </tr>
+            <tr>
+                <td>Mode</td>
+                <td>{{lagOne.mode}}</td>
+            </tr>
+            <tr ng-show="lagOne.totalLag != null">
+                <td>Total Lag</td>
+                <td>
+                    <span class="bg-danger">{{lagOne.totalLag}}</span>
+                </td>
+            </tr>
+        </table>
+
+        <table class="table table-bordered table-striped" style="width: 800px;" ng-show="lagOne.totalLag != null">
+            <tr>
+                <th width="40%">topic</th>
+                <th width="15%">lag</th>
+                <th width="15%">log end offset</th>
+                <th width="15%">current offset</th>
+                <th width="15%">partition count</th>
+            </tr>
+            <tr ng-repeat="it in lagOne.topics">
+                <td>{{it.topic}}</td>
+                <td>
+                    <span ng-class="{'bg-success': it.lag == 0, 'bg-danger': it.lag != 0}">{{it.lag}}</span>
+                </td>
+                <td>{{it.logEndOffset}}</td>
+                <td>{{it.currentOffset}}</td>
+                <td>{{it.partitionCount}}</td>
+            </tr>
+        </table>
+
+        <table class="table table-bordered table-striped" style="width: 800px;" ng-show="lagOne.totalLag == null">
+            <tr>
+                <th width="50%">topic</th>
+                <th width="25%">partition count</th>
+                <th width="25%">last offset</th>
+            </tr>
+            <tr ng-repeat="it in lagOne.topics">
+                <td>{{it.topic}}</td>
+                <td>{{it.partitionCount}}</td>
+                <td>{{it.lastOffset}}</td>
+            </tr>
+        </table>
+
+        <p ng-show="lagOne.note">
+            <span class="bg-info">Note</span>
+            {{lagOne.note}}
+        </p>
+        <button class="btn" ng-click="ctrl.isShowLag = false">Close</button>
+    </script>
+</div>
