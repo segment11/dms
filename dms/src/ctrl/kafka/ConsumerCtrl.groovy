@@ -2,13 +2,20 @@ package ctrl.kafka
 
 import km.CuratorPoolHolder
 import model.KmServiceDTO
-import org.segment.d.json.DefaultJsonTransformer
 import org.segment.web.handler.ChainHandler
+import org.segment.web.handler.Resp
 import org.slf4j.LoggerFactory
 
 def h = ChainHandler.instance
 
 def log = LoggerFactory.getLogger(this.getClass())
+
+private String zkConnectionString(KmServiceDTO service, Resp resp) {
+    if (!service.zkConnectString || !service.zkChroot) {
+        resp.halt(500, 'service zk connect string or chroot not set, service id: ' + service.id)
+    }
+    service.zkConnectString + service.zkChroot
+}
 
 h.group('/kafka/consumer') {
     h.get('/list') { req, resp ->
@@ -25,7 +32,7 @@ h.group('/kafka/consumer') {
             resp.halt(409, 'service must be running')
         }
 
-        def connectionString = service.zkConnectString + service.zkChroot
+        def connectionString = zkConnectionString(service, resp)
         def client = CuratorPoolHolder.instance.create(connectionString)
         try {
             def consumersPath = '/consumers'
@@ -56,11 +63,9 @@ h.group('/kafka/consumer') {
             resp.halt(409, 'service must be running')
         }
 
-        def connectionString = service.zkConnectString + service.zkChroot
+        def connectionString = zkConnectionString(service, resp)
         def client = CuratorPoolHolder.instance.create(connectionString)
         try {
-            def json = new DefaultJsonTransformer()
-
             def groupPath = '/consumers/' + groupId
             if (client.checkExists().forPath(groupPath) == null) {
                 resp.halt(404, 'consumer group not found')
@@ -147,7 +152,7 @@ h.group('/kafka/consumer') {
             resp.halt(409, 'service must be running')
         }
 
-        def connectionString = service.zkConnectString + service.zkChroot
+        def connectionString = zkConnectionString(service, resp)
         def client = CuratorPoolHolder.instance.create(connectionString)
         try {
             def offsetsPath = '/consumers/' + groupId + '/offsets'

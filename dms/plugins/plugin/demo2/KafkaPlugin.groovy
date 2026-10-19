@@ -210,9 +210,13 @@ class KafkaPlugin extends BasePlugin {
                     return true
                 }
 
-                def connectionString = kmService.zkConnectString + kmService.zkChroot
-                def client = CuratorPoolHolder.instance.create(connectionString)
                 try {
+                    if (!kmService.zkConnectString || !kmService.zkChroot) {
+                        log.warn 'kafka health check: zk connect string or chroot not set for kmService: {}', kmService.name
+                        return false
+                    }
+                    def connectionString = kmService.zkConnectString + kmService.zkChroot
+                    def client = CuratorPoolHolder.instance.create(connectionString)
                     def brokersPath = '/brokers/ids'
                     if (client.checkExists().forPath(brokersPath) == null) {
                         log.warn 'kafka health check: brokers path not found in zk for kmService: {}', kmService.name

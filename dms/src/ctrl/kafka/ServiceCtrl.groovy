@@ -588,7 +588,7 @@ h.group('/kafka/service') {
             resp.halt(404, 'service not found')
         }
 
-        if (one.status != KmServiceDTO.Status.stopped) {
+        if (!one.status || one.status != KmServiceDTO.Status.stopped) {
             resp.halt(409, 'service must be stopped')
         }
 
