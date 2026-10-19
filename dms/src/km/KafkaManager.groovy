@@ -4,6 +4,7 @@ import groovy.transform.CompileStatic
 import groovy.util.logging.Slf4j
 import metric.SimpleGauge
 import model.AppDTO
+import model.DeployFileDTO
 import model.DynConfigDTO
 import model.KmServiceDTO
 import plugin.BasePlugin
@@ -26,6 +27,24 @@ class KafkaManager {
     static String dataDir() {
         def one = new DynConfigDTO(name: 'kafka_manager.data.dir').one()
         return one?.vv ?: DEFAULT_DATA_DIR
+    }
+
+    static final String START_KAFKA_SH = '/tmp/start-kafka.sh'
+
+    static int startKafkaDeployFileId() {
+        def one = new DeployFileDTO(destPath: START_KAFKA_SH).queryFields('id').one()
+        return one?.id ?: 1
+    }
+
+    static String containerExec(int clusterId, String nodeIp, String containerId, String cmd) {
+        def r = AgentCaller.instance.agentScriptExe(clusterId, nodeIp,
+                'container init', [id: containerId, initCmd: cmd])
+        def message = r?.getString('message')
+        Boolean flag = r?.getBoolean('flag')
+        if (flag == null || !flag.booleanValue() || !message) {
+            throw new RuntimeException('container exec failed, cmd: ' + cmd + ' - ' + message)
+        }
+        message
     }
 
     static final SimpleGauge globalGauge = new SimpleGauge('Kafka Manager', 'Kafka Manager Metrics.', ['cluster_id'])

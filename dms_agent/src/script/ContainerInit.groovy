@@ -24,8 +24,9 @@ for (cmdLine in initCmd.readLines().findAll { it.trim() }) {
     log.info 'ready to exec cmd - ' + cmdLine
 
     if (isProcess(id)) {
-        def process = Runtime.getRuntime().exec(cmdLine)
-        def isOk = process.waitFor(5, TimeUnit.SECONDS)
+        String[] cmd = ['bash', '-c', cmdLine]
+        def process = Runtime.getRuntime().exec(cmd)
+        def isOk = process.waitFor(10, TimeUnit.SECONDS)
         log.info 'host shell execute is ok: {}', isOk
         def is = process.inputStream
         String shellResult = Utils.readFully(is)

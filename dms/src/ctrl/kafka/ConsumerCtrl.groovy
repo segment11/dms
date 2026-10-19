@@ -1,20 +1,61 @@
 package ctrl.kafka
 
+import groovy.transform.Field
+import km.ConsumerGroupParser
 import km.CuratorPoolHolder
+import km.KafkaManager
 import model.KmServiceDTO
 import org.segment.web.handler.ChainHandler
 import org.segment.web.handler.Resp
 import org.slf4j.LoggerFactory
+import server.InMemoryAllContainerManager
+import transfer.ContainerInfo
 
 def h = ChainHandler.instance
 
-def log = LoggerFactory.getLogger(this.getClass())
+@Field org.slf4j.Logger log = LoggerFactory.getLogger(this.getClass())
 
 private String zkConnectionString(KmServiceDTO service, Resp resp) {
     if (!service.zkConnectString || !service.zkChroot) {
         resp.halt(500, 'service zk connect string or chroot not set, service id: ' + service.id)
     }
     service.zkConnectString + service.zkChroot
+}
+
+private ContainerInfo findRunningBrokerContainer(KmServiceDTO service) {
+    if (!service.appId) {
+        return null
+    }
+    def instance = InMemoryAllContainerManager.instance
+    def containerList = instance.getContainerList(KafkaManager.CLUSTER_ID, service.appId)
+    containerList.find { x -> x.running() }
+}
+
+private String bootstrapAddr(ContainerInfo containerInfo, KmServiceDTO service) {
+    int port = (service.port ?: 9092) + containerInfo.instanceIndex()
+    containerInfo.nodeIp + ':' + port
+}
+
+// one shell line that works for both docker exec (sh -c) and host process (bash -c)
+private String consumerGroupsSh(String bootstrap, String cliArgs) {
+    'KCGS=$(ls /opt/bitnami/kafka/bin/kafka-consumer-groups.sh 2>/dev/null || command -v kafka-consumer-groups.sh 2>/dev/null || ' +
+            'ls /tmp/kafka*/bin/kafka-consumer-groups.sh 2>/dev/null | head -1); ' +
+            '[ -n "$KCGS" ] && "$KCGS" --bootstrap-server ' + bootstrap + ' ' + cliArgs
+}
+
+private Map runCli(KmServiceDTO service, String cliArgs) {
+    def containerInfo = findRunningBrokerContainer(service)
+    if (!containerInfo) {
+        return null
+    }
+    try {
+        def cmd = consumerGroupsSh(bootstrapAddr(containerInfo, service), cliArgs)
+        def output = KafkaManager.containerExec(KafkaManager.CLUSTER_ID, containerInfo.nodeIp, containerInfo.id, cmd)
+        return [containerInfo: containerInfo, output: output]
+    } catch (Exception e) {
+        log.warn 'consumer group cli exec fail, service: {}, fallback to zk, {}', service.name, e.message
+        return null
+    }
 }
 
 h.group('/kafka/consumer') {
@@ -32,16 +73,21 @@ h.group('/kafka/consumer') {
             resp.halt(409, 'service must be running')
         }
 
+        def cli = runCli(service, '--list')
+        if (cli != null) {
+            return [serviceId: serviceId, mode: 'cli', list: ConsumerGroupParser.parseGroupList(cli.output as String)]
+        }
+
         def connectionString = zkConnectionString(service, resp)
         def client = CuratorPoolHolder.instance.create(connectionString)
         try {
             def consumersPath = '/consumers'
             if (client.checkExists().forPath(consumersPath) == null) {
-                return [list: []]
+                return [serviceId: serviceId, mode: 'zk', list: []]
             }
 
             List<String> groups = client.getChildren().forPath(consumersPath)
-            [serviceId: serviceId, list: groups]
+            [serviceId: serviceId, mode: 'zk', list: groups]
         } catch (Exception e) {
             log.error('list consumer groups error', e)
             resp.halt(500, 'list consumer groups error: ' + e.message)
@@ -61,6 +107,14 @@ h.group('/kafka/consumer') {
 
         if (service.status != KmServiceDTO.Status.running) {
             resp.halt(409, 'service must be running')
+        }
+
+        def cli = runCli(service, '--describe --group ' + groupId)
+        if (cli != null) {
+            def r = ConsumerGroupParser.parseGroupDescribe(cli.output as String, groupId)
+            r.serviceId = serviceId
+            r.mode = 'cli'
+            return r
         }
 
         def connectionString = zkConnectionString(service, resp)
@@ -130,7 +184,7 @@ h.group('/kafka/consumer') {
                 }
             }
 
-            [serviceId: serviceId, groupId: groupId, members: memberIds, offsets: partitionOffsets, owners: owners]
+            [serviceId: serviceId, mode: 'zk', groupId: groupId, members: memberIds, offsets: partitionOffsets, owners: owners]
         } catch (Exception e) {
             log.error('describe consumer group error', e)
             resp.halt(500, 'describe consumer group error: ' + e.message)
@@ -152,12 +206,20 @@ h.group('/kafka/consumer') {
             resp.halt(409, 'service must be running')
         }
 
+        def cli = runCli(service, '--describe --group ' + groupId)
+        if (cli != null) {
+            def r = ConsumerGroupParser.parseGroupLag(cli.output as String, groupId)
+            r.serviceId = serviceId
+            r.mode = 'cli'
+            return r
+        }
+
         def connectionString = zkConnectionString(service, resp)
         def client = CuratorPoolHolder.instance.create(connectionString)
         try {
             def offsetsPath = '/consumers/' + groupId + '/offsets'
             if (client.checkExists().forPath(offsetsPath) == null) {
-                return [serviceId: serviceId, groupId: groupId, topics: [], note: 'ZK-based lag requires kafka-consumer-groups.sh for actual LOG_END_OFFSET; use kafka_exporter for new-style consumers']
+                return [serviceId: serviceId, mode: 'zk', groupId: groupId, topics: [], note: 'ZK-based lag requires kafka-consumer-groups.sh for actual LOG_END_OFFSET; use kafka_exporter for new-style consumers']
             }
 
             List<String> topicNames = client.getChildren().forPath(offsetsPath)
@@ -186,7 +248,7 @@ h.group('/kafka/consumer') {
                 ]
             }
 
-            [serviceId: serviceId, groupId: groupId, topics: topicSummaries,
+            [serviceId: serviceId, mode: 'zk', groupId: groupId, topics: topicSummaries,
              note     : 'ZK stores consumer offsets only, not LOG_END_OFFSET. Use kafka_exporter for actual lag.']
         } catch (Exception e) {
             log.error('consumer lag error', e)
